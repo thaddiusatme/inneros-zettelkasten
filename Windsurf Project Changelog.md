@@ -8,6 +8,11 @@ status: active
 # Windsurf Project Changelog
 
 ## 2025-07-20
+### Pre-Commit Hook Enhancement (14:22)
+- Fixed a critical bug in the pre-commit hook that allowed commits to pass despite validation failures.
+- Improved the hook's file selection logic to exclude project-level markdown files (e.g., README, Changelog) and the entire `.automation` directory.
+- The hook now correctly validates only the intended note files, ensuring repository integrity.
+
 ### TDD Setup & Validation Test Suite (14:18)
 - Established a Test-Driven Development (TDD) environment to improve code quality and reliability.
 - Created a `tests` directory within the `.automation` folder.
