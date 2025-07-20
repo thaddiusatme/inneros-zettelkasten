@@ -1,0 +1,77 @@
+---
+title: Windsurf Project Changelog
+author: myung (and Cascade)
+created: 2025-07-19 19:28
+status: active
+---
+
+# Windsurf Project Changelog
+
+## 2025-07-19
+### Version Control Setup (22:51)
+- Initialized Git repository for version control of InnerOS directory
+- Created appropriate .gitignore file to exclude temporary and system files
+- Performed initial commit of organized directory structure
+- Documented version control setup and benefits in README.md
+
+### Cleanup (22:50)
+- Removed temporary scripts and log files created during extension fix process:
+  - Deleted fix_double_md_extensions.sh, fix_extensions.sh, and fix_md_extensions.py scripts
+  - Removed log files: double_md_fix_log.txt, extension_fix_log.txt, python_fix_log.txt
+- Ensured clean directory structure with only essential files
+
+### File Extension Fix (20:14)
+- Fixed double ".md.md" extensions in Content Pipeline files:
+  - Renamed 16 files in Idea Backlog directory to have single .md extension
+  - Renamed 5 files in Pre-Prooduction directory to have single .md extension
+  - Created Python script (`fix_md_extensions.py`) to handle the renaming with proper path handling
+  - Updated internal links in markdown files to reference the corrected filenames
+  - Generated detailed log of all changes in `python_fix_log.txt`
+
+### Broken Links Resolution (20:05)
+- Created missing concept notes to fix broken links in Permanent Notes:
+  - Whisper + LLM Prompt Engineering
+  - Voice-First Ops for Lean Teams
+  - Support SOP System Map
+  - Vibe Coding Needs Guardrails
+  - AI Needs Rituals
+  - Structured Flow States in Development
+  - TDD as Creative Constraint
+  - Perplexity Integration Workflow
+- Fixed misspelled file reference with redirect (Vibe Coding Needs Gaurdrails → Guardrails)
+- Fixed external link formatting in reference-exclusion-list.md
+- Created Media/Pasted Images directory with placeholder images for missing references
+- Updated image references in Content Pipeline files to point to correct locations
+- Identified double ".md.md" extension issue in Content Pipeline files for future resolution
+
+## 2025-07-19
+### Directory Reorganization (19:53)
+- Created new directories: `Inbox`, `People`, and `Media` to improve organization
+- Moved timestamped notes (202507191634.md, 202507191758.md) to `Fleeting Notes`
+- Moved media files (images, recordings) to the new `Media` directory
+- Moved template files to the `Templates` directory
+- Moved miscellaneous notes to `Inbox` for future triage
+- Created missing notes referenced in Home Note:
+  - Weekly review note
+  - Three fleeting notes on Zettelkasten entry logic, AI notebook strategy, and Obsidian templates
+- Updated Home Note to reflect organizational changes
+- Enhanced AHS MOC with proper structure and formatting
+
+### Initial Context & Structure (19:28)
+- Created the project manifest to capture context, goals, and the current Zettelkasten + AI workflow.
+- Documented the directory structure: `Fleeting Notes`, `Permanent Notes`, `Templates`, and supporting folders.
+- Confirmed use of Templater scripts for file creation, movement, and metadata insertion.
+- Standardized note types: Fleeting, Permanent, Literature, Reference/MOC.
+- Metadata fields in use: `Type`, `Created`, `Tags`, and (proposed) `visibility`.
+- Promotion flow: Fleeting → Permanent Notes with manual and (future) LLM-assisted triage.
+- Privacy and multi-user support flagged as essential for all future development.
+
+### Current State
+- No destructive changes made; all notes preserved.
+- No existing automation scripts for LLM integration yet—schema and workflow improvements are next.
+- YAML/markdown metadata is present in templates and most notes; standardization is ongoing.
+- AI/LLM integration points and privacy fields proposed in the manifest, not yet implemented.
+
+---
+
+_This changelog tracks major project changes, schema updates, and workflow improvements. Update with each significant iteration._

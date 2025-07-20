@@ -1,0 +1,29 @@
+{
+  "templater-obsidian:create-new-note-from-template": [
+    {
+      "modifiers": [
+        "Alt",
+        "Ctrl"
+      ],
+      "key": "N"
+    }
+  ],
+  "find-unlinked-files:create-files-of-broken-links": [
+    {
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "key": "N"
+    }
+  ],
+  "find-unlinked-files:find-unresolved-link": [
+    {
+      "modifiers": [
+        "Ctrl",
+        "Shift"
+      ],
+      "key": "M"
+    }
+  ]
+}

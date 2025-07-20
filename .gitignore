@@ -1,0 +1,35 @@
+# InnerOS .gitignore file
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Log files
+*.log
+
+# Obsidian workspace files (if using Obsidian)
+.obsidian/workspace*
+.obsidian/cache
+
+# Personal or sensitive data (customize as needed)
+# private/
+
+# Backup files
+*.bak
+
+# Temporary scripts
+fix_*.sh
+fix_*.py
+
+# Large media files (optional, uncomment if needed)
+# *.mp4
+# *.mov
+# *.mp3
+# *.wav
