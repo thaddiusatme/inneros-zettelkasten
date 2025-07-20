@@ -8,6 +8,8 @@ status: active
 # Windsurf Project Changelog
 
 ## 2025-07-20
+
+### Test: Add temporary file to verify post-commit hook (15:41)
 ### Pre-Commit Hook Enhancement (14:22)
 - Fixed a critical bug in the pre-commit hook that allowed commits to pass despite validation failures.
 - Improved the hook's file selection logic to exclude project-level markdown files (e.g., README, Changelog) and the entire `.automation` directory.
