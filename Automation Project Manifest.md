@@ -1,69 +1,141 @@
----
-title: InnerOS Automation Project Manifest
-author: myung (and Cascade)
-created: 2025-07-20 15:50
-status: active
-version: 0.2
----
+## Project Overview
+InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge management. The automation project aims to reduce manual overhead, standardize metadata, integrate Git version control, and prepare for AI-assisted workflows.
 
-# InnerOS Automation Project Manifest
+## Current Implementation State
+- **Phase 1 Complete**: Basic automation infrastructure established
+- **Phase 2 Complete**: Auto-repair and batch processing capabilities implemented
+- **Phase 3 In Progress**: Template migration system completed, workflow standardization in progress
+- **Directory Structure**: `.automation/` with subdirectories for scripts, hooks, config, logs, reports, backups
+- **Git Integration**: Robust pre-commit hook for metadata validation installed.
+- **TDD Framework**: `pytest` environment with comprehensive test coverage
+- **Template System**: 
+  - Standardized YAML frontmatter templates for all note types
+  - Migration tool for legacy templates with backup/restore
+  - Validation against metadata schema
+- **Validation System**: Python scripts for YAML frontmatter validation
+- **Configuration**: External YAML config for validation parameters
+- **CLI Tools**: 
+  - Manual validation tool with basic fix suggestions
+  - Comprehensive auto-repair tool with batch processing
+  - Template migration tool with dry-run and validation
 
-## Project Overview & Goals
+## Key Components
+1. **Template Migration System**: `.automation/scripts/migrate_templates.py`
+   - Converts legacy templates to standardized YAML frontmatter
+   - Preserves Templater functionality
+   - Creates backups before making changes
+   - Validates against metadata schema
+   - Supports dry-run mode for testing
 
-This document serves as the foundation for implementing automation within the InnerOS Zettelkasten + AI workflow system. The primary goals of this automation project are to:
+2. **Pre-commit Hook**: [.git/hooks/pre-commit](cci:7://file:///Users/myung/Documents/InnerOS/.git/hooks/pre-commit:0:0-0:0)
+   - Validates metadata in staged markdown files
+   - Prevents commits with invalid metadata by validating notes (and only notes).
 
-1. Reduce manual overhead in note management and organization
-2. Enhance consistency across the knowledge base
-3. Leverage AI for intelligent connections and insights
-4. Maintain data integrity and version history
-5. Support the existing workflow while reducing friction
+3. **Validation Script**: [.automation/scripts/validate_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_metadata.py:0:0-0:0)
+   - Extracts and validates YAML frontmatter
+   - Checks required fields, types, dates, tags
+   - Non-destructive (reports only)
 
-## Automation Modules & Components
+4. **Configuration**: [.automation/config/metadata_config.yaml](cci:7://file:///Users/myung/Documents/InnerOS/.automation/config/metadata_config.yaml:0:0-0:0)
+   - Defines valid note types, statuses, visibility options
+   - Specifies required fields and date formats
 
-### 1. Git Integration Layer
-- **`pre-commit` hook**: Validates metadata in staged markdown files to prevent commits with invalid frontmatter.
-- **`post-commit` hook**: Automatically updates `Windsurf Project Changelog.md` with the commit message, ensuring all changes are documented.
-- **Change Tracking**: Enhanced logging of note evolution via Git history and the automated changelog.
+5. **Validation CLI Tool**: [.automation/scripts/validate_notes.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_notes.py:0:0-0:0)
+   - Manual validation of single files or directories
+   - Basic fix suggestions
 
-### 2. Note Management System
-- **Metadata Standardizer**: Ensure YAML frontmatter consistency
-- **Link Validator**: Detect and report broken internal links
-- **Tag Analyzer**: Track tag usage and suggest consolidation
-- **Orphaned Content Detector**: Identify disconnected notes
+6. **Auto-Repair Tool**: [.automation/scripts/repair_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/repair_metadata.py:0:0-0:0)
+   - Automatically adds missing YAML frontmatter
+   - Fixes malformed YAML (especially tag formatting)
+   - Adds missing required fields with sensible defaults
+   - Converts datetime objects to proper string format
+   - Creates backups before making changes
+   - Generates detailed reports of all modifications
+   - Supports batch processing of entire directories
 
-### 3. AI Enhancement Layer
-- **Smart Tagging**: AI-suggested tags based on note content
-- **Related Notes Engine**: Semantic matching of related content
-- **Summary Generator**: Create note summaries and collection overviews
-- **Insight Extractor**: Surface patterns and connections
+7. **Test Suite**: [.automation/tests/](cci:7://file:///Users/myung/Documents/InnerOS/.automation/tests/:0:0-0:0)
+   - Automated tests for validation scripts using `pytest`.
+   - Includes test data for various scenarios (valid, invalid, missing metadata).
+   - Ensures code quality and prevents regressions.
 
-### 4. Workflow Automation
-- **Promotion Pipeline**: Assist fleeting → permanent note conversion
-- **Review Cycle Manager**: Schedule and prepare periodic reviews
-- **Content Pipeline Tracker**: Monitor idea progression through stages
-- **Weekly Insights Generator**: Compile activity and growth metrics
+## Current Status
+- **Validation**: All notes can be validated against schema
+- **Auto-Repair**: Comprehensive repair tool implemented and tested
+- **Batch Processing**: Full system scan and repair capability available
+- **Backup System**: Automatic timestamped backups before any changes
+- **Reporting**: Detailed markdown reports of all modifications
+- **Testing**: Automated test suite implemented with `pytest`, providing coverage for the validation logic. All tests are passing.
 
-## Technical Implementation Approach
+## Current Challenges
+- Need to establish standardized workflow for new note creation
+- Integration with AI-assisted workflows pending
 
-### Technology Stack
-- **Scripting**: Python for core automation logic
-- **Version Control**: Git hooks and custom scripts
-- **AI Integration**: Local LLM APIs where possible, external APIs as needed
-- **Scheduling**: Cron jobs or equivalent for timed operations
+## Next Actions (Phase 4)
+1. **Develop AI-assisted workflows**:
+   - Note classification and tagging assistance
+   - Content summarization and linking suggestions
+   - Knowledge graph visualization
 
-### File Structure
-```
-/InnerOS
-  /.git
-  /.automation
-    /scripts          # Python automation scripts
-    /hooks            # Git hooks
-    /config           # Configuration files
-    /logs             # Automation logs
-    /reports          # Generated reports
-  /...existing folders...
-```
+## Technical Environment
+- **OS**: macOS
+- **Dependencies**: Python 3 with pyyaml
+- **Version Control**: Git
 
----
+## Project Requirements
+- Non-destructive operations (preserve original content) ✅
+- macOS compatibility ✅
+- Documentation of all actions in Changelog ✅
+- Adherence to schema defined in Project Manifest ✅
 
-_This document is a living artifact. Update as the automation project evolves._
+## Reference Files
+- Windsurf Project Manifest.md: Project overview, schema, metadata fields
+- Automation Project Manifest.md: Implementation plan, directory structure
+- README.md: Directory structure, note schema, version control setup
+- Templates/*.md: Current templating approach
+- Windsurf Project Changelog.md: Documentation of all project changes
+
+## Psychological Steps in Project Development
+1. **Template Migration Phase**:
+   - Implemented TDD test suite for template migration (16 tests)
+   - Developed `TemplateParser` to handle legacy template formats
+   - Created `TemplateGenerator` for standardized YAML frontmatter output
+   - Built `TemplateMigrator` with backup/restore functionality
+   - Validated all templates against metadata schema
+   - Ensured backward compatibility with Templater scripts
+
+2. **Analysis Phase**:
+   - Examined existing validation system to understand its structure and limitations
+   - Identified key pain points: missing frontmatter, malformed YAML, inconsistent dates
+   - Recognized need for non-destructive, reversible operations with backups
+
+3. **Design Phase**:
+   - Planned modular approach building on existing validation framework
+   - Designed for flexibility: single file, directory, or system-wide processing
+   - Prioritized safety features: dry-run mode, backups, detailed reporting
+
+4. **Implementation Phase**:
+   - Created MetadataRepairer class with specialized methods for different repair tasks
+   - Implemented smart metadata inference from file paths and content
+   - Added robust date format normalization supporting multiple input formats
+   - Built tag cleaning functionality to handle hashtags and various separators
+
+5. **Testing Phase**:
+   - Used dry-run mode to validate repairs without modifying files
+   - Confirmed 51 out of 53 notes would be successfully repaired
+   - Verified backup system and reporting functionality
+
+6. **Documentation Phase**:
+   - Updated project changelog with detailed implementation notes
+   - Created comprehensive help text and command-line options
+   - Ensured code comments explain complex operations
+
+7. **Alignment Check**:
+   - Verified implementation meets all project requirements
+   - Confirmed non-destructive operation with backup system
+   - Validated adherence to metadata schema defined in project manifest
+
+8. **TDD & Refinement Phase**:
+   - Established a Test-Driven Development (TDD) workflow with `pytest`.
+   - Created a test suite for the validation script, including mock data.
+   - Debugged and fixed a critical bug in the pre-commit hook that allowed invalid commits.
+   - Refined the hook to intelligently exclude non-note files from validation, improving accuracy and reliability.
