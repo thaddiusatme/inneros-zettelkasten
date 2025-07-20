@@ -9,6 +9,8 @@ status: active
 
 ## 2025-07-20
 
+### Docs: Document Git hooks and ignore temp files (15:46)
+
 ### Chore: Remove temporary test file (15:42)
 
 ### Test: Add temporary file to verify post-commit hook (15:41)

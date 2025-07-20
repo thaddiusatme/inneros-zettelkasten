@@ -10,6 +10,8 @@ desktop.ini
 *.temp
 *.swp
 *~
+Current State - *.md
+fleeting-*.md
 
 # Log files
 *.log
@@ -23,6 +25,7 @@ desktop.ini
 
 # Backup files
 *.bak
+*.backup.*
 
 # Temporary scripts
 fix_*.sh

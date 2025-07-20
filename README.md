@@ -32,6 +32,19 @@ visibility: private | shared | team
 - All notes default to private. Future-proofed for multi-user and compliance needs.
 - Manifest and Changelog document all conventions and changes.
 
+## Version Control
+This repository is version controlled with Git to:
+- Track changes to notes and organizational structure over time
+- Enable safe experimentation with new workflows and organization
+- Facilitate collaboration while maintaining change history
+- Provide backup and restore capabilities
+- Support branching for experimental features or major reorganizations
+
+Key Git files:
+- `.gitignore` — Excludes temporary files, system files, and optional private content
+- `.git/hooks/pre-commit` — Validates metadata in staged markdown files before committing.
+- `.git/hooks/post-commit` — Automatically updates `Windsurf Project Changelog.md` with the commit message after a successful commit.
+
 ## Getting Started
 1. Read the Manifest and Changelog for project context.
 2. Use provided templates for new notes.
