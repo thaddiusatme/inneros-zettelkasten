@@ -47,10 +47,11 @@ visibility: private | shared | team
 - Document privacy principles and compliance roadmap in this manifest
 
 ## Next Steps & Open Questions
-- Standardize YAML frontmatter for all notes
+- ✅ Standardize YAML frontmatter for all notes (Template migration system implemented)
 - Define clear LLM entry points and automation triggers
 - Explore privacy-preserving multi-user workflows
 - Collect feedback and iterate on schema and workflow
+- Test and deploy template migration system to convert legacy templates
 
 ---
 

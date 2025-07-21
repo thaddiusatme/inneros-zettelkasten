@@ -27,24 +27,24 @@ InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge m
    - Validates against metadata schema
    - Supports dry-run mode for testing
 
-2. **Pre-commit Hook**: [.git/hooks/pre-commit](cci:7://file:///Users/myung/Documents/InnerOS/.git/hooks/pre-commit:0:0-0:0)
+1. **Pre-commit Hook**: [.git/hooks/pre-commit](cci:7://file:///Users/myung/Documents/InnerOS/.git/hooks/pre-commit:0:0-0:0)
    - Validates metadata in staged markdown files
    - Prevents commits with invalid metadata by validating notes (and only notes).
 
-3. **Validation Script**: [.automation/scripts/validate_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_metadata.py:0:0-0:0)
+2. **Validation Script**: [.automation/scripts/validate_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_metadata.py:0:0-0:0)
    - Extracts and validates YAML frontmatter
    - Checks required fields, types, dates, tags
    - Non-destructive (reports only)
 
-4. **Configuration**: [.automation/config/metadata_config.yaml](cci:7://file:///Users/myung/Documents/InnerOS/.automation/config/metadata_config.yaml:0:0-0:0)
+3. **Configuration**: [.automation/config/metadata_config.yaml](cci:7://file:///Users/myung/Documents/InnerOS/.automation/config/metadata_config.yaml:0:0-0:0)
    - Defines valid note types, statuses, visibility options
    - Specifies required fields and date formats
 
-5. **Validation CLI Tool**: [.automation/scripts/validate_notes.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_notes.py:0:0-0:0)
+4. **Validation CLI Tool**: [.automation/scripts/validate_notes.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/validate_notes.py:0:0-0:0)
    - Manual validation of single files or directories
    - Basic fix suggestions
 
-6. **Auto-Repair Tool**: [.automation/scripts/repair_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/repair_metadata.py:0:0-0:0)
+5. **Auto-Repair Tool**: [.automation/scripts/repair_metadata.py](cci:7://file:///Users/myung/Documents/InnerOS/.automation/scripts/repair_metadata.py:0:0-0:0)
    - Automatically adds missing YAML frontmatter
    - Fixes malformed YAML (especially tag formatting)
    - Adds missing required fields with sensible defaults
@@ -53,11 +53,6 @@ InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge m
    - Generates detailed reports of all modifications
    - Supports batch processing of entire directories
 
-7. **Test Suite**: [.automation/tests/](cci:7://file:///Users/myung/Documents/InnerOS/.automation/tests/:0:0-0:0)
-   - Automated tests for validation scripts using `pytest`.
-   - Includes test data for various scenarios (valid, invalid, missing metadata).
-   - Ensures code quality and prevents regressions.
-
 ## Current Status
 - **Validation**: All notes can be validated against schema
 - **Auto-Repair**: Comprehensive repair tool implemented and tested
@@ -65,13 +60,24 @@ InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge m
 - **Backup System**: Automatic timestamped backups before any changes
 - **Reporting**: Detailed markdown reports of all modifications
 - **Testing**: Automated test suite implemented with `pytest`, providing coverage for the validation logic. All tests are passing.
+- **Template Migration**: Library implementation complete with `TemplateParser`, `TemplateGenerator`, and `TemplateMigrator` classes
 
 ## Current Challenges
+- Template migration system ready for testing and deployment
 - Need to establish standardized workflow for new note creation
 - Integration with AI-assisted workflows pending
 
-## Next Actions (Phase 4)
-1. **Develop AI-assisted workflows**:
+## Next Actions (Phase 3)
+1. **Create template migration system**:
+   - Develop standardized templates for different note types
+   - Create migration tool for legacy templates
+   - Implement template selection in note creation workflow
+
+2. **Enhance Git integration**:
+   - Add post-commit hooks for additional automation
+   - Implement automatic changelog updates
+
+3. **Develop AI-assisted workflows**:
    - Note classification and tagging assistance
    - Content summarization and linking suggestions
    - Knowledge graph visualization
@@ -80,6 +86,11 @@ InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge m
 - **OS**: macOS
 - **Dependencies**: Python 3 with pyyaml
 - **Version Control**: Git
+
+6. **Test Suite**: [.automation/tests/](cci:7://file:///Users/myung/Documents/InnerOS/.automation/tests/:0:0-0:0)
+   - Automated tests for validation scripts using `pytest`.
+   - Includes test data for various scenarios (valid, invalid, missing metadata).
+   - Ensures code quality and prevents regressions.
 
 ## Project Requirements
 - Non-destructive operations (preserve original content) ✅
@@ -103,38 +114,38 @@ InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge m
    - Validated all templates against metadata schema
    - Ensured backward compatibility with Templater scripts
 
-2. **Analysis Phase**:
+1. **Analysis Phase**:
    - Examined existing validation system to understand its structure and limitations
    - Identified key pain points: missing frontmatter, malformed YAML, inconsistent dates
    - Recognized need for non-destructive, reversible operations with backups
 
-3. **Design Phase**:
+2. **Design Phase**:
    - Planned modular approach building on existing validation framework
    - Designed for flexibility: single file, directory, or system-wide processing
    - Prioritized safety features: dry-run mode, backups, detailed reporting
 
-4. **Implementation Phase**:
+3. **Implementation Phase**:
    - Created MetadataRepairer class with specialized methods for different repair tasks
    - Implemented smart metadata inference from file paths and content
    - Added robust date format normalization supporting multiple input formats
    - Built tag cleaning functionality to handle hashtags and various separators
 
-5. **Testing Phase**:
+4. **Testing Phase**:
    - Used dry-run mode to validate repairs without modifying files
    - Confirmed 51 out of 53 notes would be successfully repaired
    - Verified backup system and reporting functionality
 
-6. **Documentation Phase**:
+5. **Documentation Phase**:
    - Updated project changelog with detailed implementation notes
    - Created comprehensive help text and command-line options
    - Ensured code comments explain complex operations
 
-7. **Alignment Check**:
+6. **Alignment Check**:
    - Verified implementation meets all project requirements
    - Confirmed non-destructive operation with backup system
    - Validated adherence to metadata schema defined in project manifest
 
-8. **TDD & Refinement Phase**:
+7. **TDD & Refinement Phase**:
    - Established a Test-Driven Development (TDD) workflow with `pytest`.
    - Created a test suite for the validation script, including mock data.
    - Debugged and fixed a critical bug in the pre-commit hook that allowed invalid commits.
