@@ -1,9 +1,9 @@
-
-
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-04 00:59  
-**Tags**: #fleeting #inbox  
-
+---
+type: fleeting
+created: 2025-07-04 00:59
+status: inbox
+tags: [fleeting, inbox]
+visibility: private
 ---
 
 ## Thought  

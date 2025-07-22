@@ -7,7 +7,45 @@ status: active
 
 # Windsurf Project Changelog
 
+## 2025-07-21
+
+### feat: Complete Fleeting Notes workflow standardization and template migration (19:54)
+
+### chore: Clarified Inbox Workflow and Updated Templates (17:00)
+- Updated Fleeting Notes Manifest to clearly distinguish between `status: inbox`/`inbox` tag (YAML, workflow state) and the physical `Inbox/` folder (staging area).
+- Documented recommended process: all new notes start in `Inbox/` folder with `status: inbox`, then are sorted during triage.
+- Updated `fleeting.md` template to include workflow guidance in comments.
+- Ensured all documentation and templates are aligned to prevent parallel/ambiguous inbox workflows.
+
 ## 2025-07-20
+
+### feat: Implement Fleeting Notes Project Manifest and schema standardization (22:54)
+- Created comprehensive Fleeting Notes Project Manifest defining workflow, schema, and compliance rules
+- Fixed all non-compliant fleeting notes to use proper YAML frontmatter schema
+- Updated 6 fleeting notes from markdown formatting (**Type**: 🧠 Fleeting Note) to YAML schema
+- Generated complete manifest table with all current fleeting notes and recommended next steps
+- Validated templates: `fleeting.md` and `permament.md` already compliant with new schema
+- All fleeting notes now follow standardized workflow: Capture → Triage → Promotion → Archive/Delete
+- Established audit trail requirements and privacy defaults (`visibility: private`)
+- Notes affected: context-window-metaphor, tdd-context-code-review, freelancing-for-work, diablo-2-druid-alt, automated-voice-memo-routing
+
+### feat: Complete template migration to YAML frontmatter schema (18:55)
+- Successfully migrated all note templates to use standardized YAML frontmatter
+- Updated templates: `fleeting.md`, `permament.md`, `weekly-review.md`, `permanent Note Mornign Check In Template.md`
+- Template `content-idea.md` already had proper YAML frontmatter
+- All templates now follow schema: `type`, `created`, `status`, `tags`, `visibility`
+- Preserved all existing Templater script functionality
+- Default privacy setting: all notes set to `visibility: private`
+- Tested successfully: created `fleeting-2025-07-20-test.md` with proper YAML frontmatter
+- Templates now fully compatible with Obsidian plugins (Dataview, etc.)
+
+### feat: Update privacy model and gitignore configuration (19:05)
+- Updated `.gitignore` to remove blanket exclusion of `fleeting-*.md` files
+- Privacy control now managed through YAML frontmatter `visibility` field
+- Fleeting notes can now be tracked in git while maintaining privacy through metadata
+- Added guidance comments in gitignore for future sensitive content handling
+- Updated Automation Project Manifest to reflect Phase 3 completion
+- Documented all template migration achievements and current project state
 
 ### feat: Implement template migration system for Obsidian templates (18:44)
 

@@ -1,8 +1,12 @@
-✏️ Permanent Note — Morning Check-In Template
+---
+type: permanent
+created: 2025-07-05 00:00
+status: published
+tags: [permanent, morningcheckin, productivity, template]
+visibility: private
+---
 
-Created: 2025-07-05
-Tags: #permanent #morningcheckin #productivity
-
+# ✏️ Permanent Note — Morning Check-In Template
 
 ---
 

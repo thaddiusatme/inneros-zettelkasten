@@ -11,7 +11,10 @@ desktop.ini
 *.swp
 *~
 Current State - *.md
-fleeting-*.md
+
+# Private or sensitive notes (use visibility: private in YAML frontmatter instead)
+# fleeting-*.md  # Commented out - now using YAML visibility field
+# private-*.md   # Use for truly sensitive content
 
 # Log files
 *.log

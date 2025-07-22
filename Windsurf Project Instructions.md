@@ -18,6 +18,7 @@ Before starting any new conversation or automation in this workspace, Windsurf (
 2. **Use these documents to understand:**
     - The project’s scope, requirements, and privacy/compliance needs
     - The current note-taking workflow, automation, and AI integration points
+    - The clarified inbox workflow: `status: inbox` in YAML is the workflow indicator; `Inbox/` folder is a staging area only; templates (e.g., fleeting.md) now include workflow guidance
     - Any recent updates or changes that may affect the workflow
 
 3. **If these documents are missing or outdated:**

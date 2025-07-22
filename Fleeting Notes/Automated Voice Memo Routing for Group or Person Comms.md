@@ -1,9 +1,9 @@
-
-
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-08 21:55  
-**Tags**: #fleeting #inbox  #project #automation #make_com #voice_to_text #productivity #10k_mrr_goal #claude #communication
-
+---
+type: fleeting
+created: 2025-07-08 21:55
+status: inbox
+tags: [fleeting, inbox, project, automation, make_com, voice_to_text, productivity, 10k_mrr_goal, claude, communication]
+visibility: private
 ---
 
 

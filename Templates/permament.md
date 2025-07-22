@@ -9,11 +9,12 @@ if (topic) {
     await tp.file.move(`${newFolder}/${newFileName}`); // Move to folder
 }
 %>
-
-**Type**: 📌 Permanent Note  
-**Created**: <% tp.date.now("YYYY-MM-DD") %> <% tp.date.now("HH:mm") %>  
-**Tags**: #permanent #zettelkasten  
-
+---
+type: permanent
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+status: draft
+tags: [permanent, zettelkasten]
+visibility: private
 ---
 
 ## Core Idea  

@@ -8,9 +8,10 @@ Welcome to the `innerOS` workspace! This vault is designed for frictionless idea
 - **Windsurf Project Instructions.md** — Ensures every new session references the Manifest and Changelog for context.
 
 ## Directory Structure
-- `Fleeting Notes/` — Quick idea capture, triaged for promotion.
+- `Inbox/` — Staging area for new, unsorted notes. All new notes (fleeting, reference, actionable) start here with `status: inbox` in YAML.
+- `Fleeting Notes/` — Quick idea capture, triaged for promotion. Only notes with proper YAML frontmatter and `status: inbox` are in the active fleeting workflow.
 - `Permanent Notes/` — Atomic, evergreen notes with rich metadata and links.
-- `Templates/` — Templater scripts for note creation and automation.
+- `Templates/` — Templater scripts for note creation and automation, now updated with workflow guidance comments.
 - Additional folders: `Content Pipeline/`, `Protocols/`, `Reviews/`, etc.
 
 ## Note Schema (YAML/Markdown Example)
@@ -19,13 +20,24 @@ Welcome to the `innerOS` workspace! This vault is designed for frictionless idea
 type: permanent | fleeting | literature | MOC
 created: YYYY-MM-DD HH:mm
 status: inbox | promoted | draft | published
-tags: [#permanent, #zettelkasten, ...]
+tags: [permanent, zettelkasten, ...]
 visibility: private | shared | team
 ---
 ```
+- **status: inbox** in YAML is the primary indicator for notes needing triage, regardless of folder location.
+- The `Inbox/` folder is a temporary staging area, not a workflow state.
+
+## How Inbox Works
+- All new notes are created in the `Inbox/` folder with `status: inbox` in YAML.
+- During triage (weekly or as needed), notes are moved to their permanent location:
+    - Fleeting notes → `Fleeting Notes/`
+    - Permanent notes → `Permanent Notes/`
+    - Reference/actionable notes → appropriate folder
+- Only notes with `status: inbox` in YAML are considered active for triage, regardless of folder.
+- The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
 
 ## AI & Automation
-- Templater scripts automate file naming, sorting, and metadata.
+- Templater scripts automate file naming, sorting, and metadata, now with workflow guidance.
 - LLM/AI integration points for summarization, tagging, linking, and triage (see Manifest).
 
 ## Privacy & Collaboration
@@ -34,7 +46,7 @@ visibility: private | shared | team
 
 ## Version Control
 This repository is version controlled with Git to:
-- Track changes to notes and organizational structure over time
+- Track changes to notes, templates, and workflow documentation (see recent changelog entries for template and workflow alignment)
 - Enable safe experimentation with new workflows and organization
 - Facilitate collaboration while maintaining change history
 - Provide backup and restore capabilities

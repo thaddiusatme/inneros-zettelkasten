@@ -5,6 +5,13 @@ const folder = "Reviews"; // optional — change or remove if you don’t want a
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>
+---
+type: review
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+status: draft
+tags: [review, weekly]
+visibility: private
+---
 
 # 🧠 Weekly Review — Week of <% date %>
 

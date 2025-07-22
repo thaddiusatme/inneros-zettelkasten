@@ -2,14 +2,28 @@
 InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge management. The automation project aims to reduce manual overhead, standardize metadata, integrate Git version control, and prepare for AI-assisted workflows.
 
 ## Current Implementation State
+- **Inbox Workflow Clarified**: `status: inbox` in YAML is the single source of truth for triage; `Inbox/` folder is a staging area only. Updated all documentation and templates to reflect this.
+- **Template System Updated**: `fleeting.md` template now includes workflow guidance comment at the top.
+
 - **Phase 1 Complete**: Basic automation infrastructure established
 - **Phase 2 Complete**: Auto-repair and batch processing capabilities implemented
-- **Phase 3 In Progress**: Template migration system completed, workflow standardization in progress
+- **Phase 3 Complete**: Template migration system completed, all templates migrated to YAML frontmatter
+- **Phase 4 In Progress**: AI workflow integration and advanced automation features
 - **Directory Structure**: `.automation/` with subdirectories for scripts, hooks, config, logs, reports, backups
-- **Git Integration**: Robust pre-commit hook for metadata validation installed.
+- **Git Integration**: 
+  - ✅ Robust pre-commit hook for metadata validation installed
+  - ✅ Gitignore updated to use YAML frontmatter privacy model (2025-07-20)
+  - ✅ Fleeting notes now trackable in git with visibility: private metadata
+  - ✅ Privacy control moved from gitignore to YAML frontmatter schema
 - **TDD Framework**: `pytest` environment with comprehensive test coverage
 - **Template System**: 
-  - Standardized YAML frontmatter templates for all note types
+  - ✅ All templates migrated to standardized YAML frontmatter (2025-07-20)
+  - ✅ Templates validated: fleeting.md, permament.md, weekly-review.md, morning check-in template
+  - ✅ content-idea.md already had proper YAML frontmatter
+  - ✅ All templates follow schema: type, created, status, tags, visibility
+  - ✅ Templater script functionality preserved
+  - ✅ Default privacy setting: visibility: private
+  - ✅ Templates tested successfully in Obsidian
   - Migration tool for legacy templates with backup/restore
   - Validation against metadata schema
 - **Validation System**: Python scripts for YAML frontmatter validation
