@@ -9,6 +9,8 @@ status: active
 
 ## 2025-07-23
 
+### chore: Clean up old notes and add daily workflow validation (11:41)
+
 ### feat: Add workflow validation results and permanent note creation (11:39)
 
 ### feat: Update fleeting notes workflow and manifest system (11:39)
