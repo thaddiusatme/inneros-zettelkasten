@@ -1,14 +1,10 @@
 ---
 type: fleeting
-created: 2025-07-21 19:31
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
-tags: [#fleeting, #inbox]
+tags: ["#fleeting", "#inbox"]
 visibility: private
 ---
-<!--
-NOTE: For actual note creation, use:
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
--->
 <%*
 // WORKFLOW: New fleeting notes should be created in the Inbox folder (or your default note location) with status: inbox in the YAML frontmatter.
 // During triage, move the note to the Fleeting Notes folder to enter the main fleeting note workflow.
@@ -21,13 +17,6 @@ if (topic) {
     await tp.file.move(`${newFolder}/${newFileName}`); // Then move it into folder
 }
 %>
----
-type: fleeting
-created: 2025-07-21 19:31
-status: inbox
-tags: [#fleeting, #inbox]
-visibility: private
----
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>

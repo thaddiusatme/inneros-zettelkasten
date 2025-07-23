@@ -6,10 +6,10 @@ await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>
 ---
-type: review
+type: permanent
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: draft
-tags: [review, weekly]
+tags: ["#review", "#weekly"]
 visibility: private
 ---
 

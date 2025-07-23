@@ -13,7 +13,7 @@ if (topic) {
 type: permanent
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: draft
-tags: [permanent, zettelkasten]
+tags: ["#permanent", "#zettelkasten"]
 visibility: private
 ---
 
