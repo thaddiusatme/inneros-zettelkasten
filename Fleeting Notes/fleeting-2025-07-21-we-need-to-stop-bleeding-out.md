@@ -1,9 +1,8 @@
-
 ---
 type: fleeting
 created: 2025-07-21 17:49
 status: inbox
-tags: [fleeting, inbox]
+tags: ["#fleeting", "#inbox"]
 visibility: private
 ---
 
@@ -13,12 +12,11 @@ OpenPhoneAcorns
 Uber
 Reinvent
 Optery
-NordVPN
-Descript
-SquareSpace
 
 ## Context  
-Where did this come from? (Article, conversation, reflection, etc.)
+Need to stop bleeding out - these are potential revenue sources or cost savings
 
-## Next Step  
-- [ ] Convert to permanent note?
+## Next Steps  
+- [ ] Research each opportunity
+- [ ] Prioritize by potential impact
+- [ ] Create action plan for top priorities
