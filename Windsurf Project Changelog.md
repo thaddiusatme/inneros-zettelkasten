@@ -9,6 +9,8 @@ status: active
 
 ## 2025-07-23
 
+### feat: Add workflow validation results and permanent note creation (11:39)
+
 ### feat: Update fleeting notes workflow and manifest system (11:39)
 
 ### feat: Update project manifests with Phase 4 completion status (11:38)
