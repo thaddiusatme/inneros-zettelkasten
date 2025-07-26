@@ -1,5 +1,12 @@
 
 ### 2025-07-25
+- ✚ Added  Permanent Notes/zettel-202507231648-context-engineering-improves-tdd-automation.md
+- ✚ Added  Permanent Notes/zettel-202507231650-printing-paper-metaphor-for-llm-context.md
+- ✚ Added  Permanent Notes/zettel-202507231652-principles-for-zettelkasten-entry-and-promotion.md
+- ✚ Added  Permanent Notes/zettel-202507231655-strategy-for-ai-augmented-zettelkasten.md
+- ✚ Added  Permanent Notes/zettel-202507231700-project-automated-voice-memo-routing.md
+- ✚ Added  Permanent Notes/zettel-202507231705-project-freelancing-plan.md
+- ✚ Added  Permanent Notes/zettel-202507231710-project-financial-optimization.md
 - ✚ Added  Permanent Notes/AI and Prompting MOC.md
 - ✚ Added  Permanent Notes/Career & Entrepreneurship MOC.md
 - ✚ Added  Permanent Notes/Project - Pharmacy Scraper MOC.md
@@ -14,6 +21,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Add new permanent notes from recent knowledge work (21:00)
 
 ### feat: Add Maps of Content (MOCs) for knowledge organization (21:00)
 
