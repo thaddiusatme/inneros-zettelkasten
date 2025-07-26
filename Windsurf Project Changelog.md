@@ -1,5 +1,10 @@
 
 ### 2025-07-25
+- ✚ Added  Content Pipeline/Idea Backlog/20250723-1208-lovable-hits-100m-arr-after-8-months.md.md
+- ✚ Added  Projects/Automated Voice Memo Routing for Group or Person Comms.md
+- ✚ Added  Projects/Financial Optimization Plan.md
+- ✚ Added  Projects/Freelancing Plan.md
+- ✚ Added  Reviews/weekly-review-2025-07-23.md
 - ✖ Deleted Fleeting Notes/Automated Voice Memo Routing for Group or Person Comms.md
 - ✚ Added  Fleeting Notes/Untitled.md
 - ✹ Edited Fleeting Notes/fleeting-2025-05-19-ai-notebook-strategy.md
@@ -81,6 +86,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Add new project structure and content organization (21:05)
 
 ### feat: Update fleeting notes with metadata standardization and workflow compliance (21:03)
 
