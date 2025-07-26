@@ -1,8 +1,17 @@
+---
+type: fleeting
+created: '2025-05-20'
+status: inbox
+tags:
+- fleeting
+- inbox
+- website-funnels
+- wordpress
+- scaling
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-05-20 18:22  
-**Tags**: #fleeting #inbox  #website-funnels #wordpress #scaling
+
 [[AHS MOC]]
 
 ---

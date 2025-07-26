@@ -1,8 +1,14 @@
+---
+type: fleeting
+created: '2025-07-05'
+status: inbox
+tags:
+- fleeting
+- inbox
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-05 20:27  
-**Tags**: #fleeting #inbox  
+
 
 ---
 

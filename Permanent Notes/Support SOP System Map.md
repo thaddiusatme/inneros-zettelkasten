@@ -1,12 +1,9 @@
 ---
-title: Support SOP System Map
-created: 2025-07-19 19:58
-status: draft
 type: permanent
-tags: [#sop, #support, #system, #documentation]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # Support SOP System Map
 
 ## Core Idea

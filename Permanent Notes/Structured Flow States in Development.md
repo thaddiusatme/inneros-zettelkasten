@@ -1,12 +1,9 @@
 ---
-title: Structured Flow States in Development
-created: 2025-07-19 20:01
-status: draft
 type: permanent
-tags: [#development, #productivity, #flow, #psychology]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # Structured Flow States in Development
 
 ## Core Idea

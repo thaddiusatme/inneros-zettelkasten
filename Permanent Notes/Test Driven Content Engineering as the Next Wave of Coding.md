@@ -1,8 +1,23 @@
+---
+type: fleeting
+created: '2025-07-03'
+status: inbox
+tags:
+- fleeting
+- inbox
+- project
+- active
+- content_engineering
+- automation
+- claude
+- make_com
+- process_innovation
+- 10k_mrr_goal
+- tdd
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-03 23:39  
-**Tags**: #fleeting #inbox  #project #active #content_engineering #automation #claude #make_com #process_innovation #10k_mrr_goal #tdd 
+
 
 ---
 

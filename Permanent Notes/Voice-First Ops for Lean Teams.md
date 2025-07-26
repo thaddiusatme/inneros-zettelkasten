@@ -1,12 +1,9 @@
 ---
-title: Voice-First Ops for Lean Teams
-created: 2025-07-19 19:57
-status: draft
 type: permanent
-tags: [#voice, #operations, #productivity, #teams]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # Voice-First Ops for Lean Teams
 
 ## Core Idea

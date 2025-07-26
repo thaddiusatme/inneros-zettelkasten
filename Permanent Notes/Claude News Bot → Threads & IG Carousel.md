@@ -1,7 +1,18 @@
+---
+type: fleeting
+created: '2025-07-01'
+status: inbox
+tags:
+- fleeting
+- inbox
+- '='
+- 10k_mrr_goal
+- content_scaling`
+- '|'
+- '|'
+---
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-01 16:56  
-**Tags**: #fleeting #inbox  = #10k_mrr_goal, #content_scaling`, |   |
+
 #claude, #ghl, #make_com
 
 ---

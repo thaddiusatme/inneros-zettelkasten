@@ -1,5 +1,45 @@
 
 ### 2025-07-25
+- ✹ Edited Permanent Notes/AI Needs Rituals.md
+- ✹ Edited Permanent Notes/AI-Based Project Storyteller for GitHub Repos.md
+- ✹ Edited Permanent Notes/Content Calendar Upgrade Tied to Financial Responsibility.md
+- ✹ Edited Permanent Notes/Fleeting Note Triage Workflow for Evergreen Note Promotion.md
+- ✹ Edited Permanent Notes/Framing code state as a prompt snapshot after each commit maintains LLM flow and clarity in TDD workflows.md
+- ✹ Edited Permanent Notes/Perplexity AI Pharmacy Research Prompt - Raw..md
+- ✹ Edited Permanent Notes/Perplexity AI Pharmacy Research.md
+- ✹ Edited Permanent Notes/Perplexity Integration Workflow.md
+- ✹ Edited Permanent Notes/Pharmacy Scraper Classification Module.md
+- ✹ Edited Permanent Notes/Post-Commit Prompt Workflow for Pharmacy Scraper Development.md
+- ✹ Edited Permanent Notes/Real-time LLM Outage Posting for Trust and Visibility.md
+- ✹ Edited Permanent Notes/Reflections on Enjoying Employment While Pursuing Digital Entrepreneurship.md
+- ✹ Edited Permanent Notes/Reusable ChatGPT Prompt for Lovable Website MVPs.md
+- ✹ Edited Permanent Notes/SOP  Rapid Pharmacy Verification Project Workflow.md
+- ✹ Edited Permanent Notes/Structured Flow States in Development.md
+- ✹ Edited Permanent Notes/Support SOP System Map.md
+- ✹ Edited Permanent Notes/TDD Ritual for AI Tools.md
+- ✹ Edited Permanent Notes/TDD as Creative Constraint.md
+- ✹ Edited Permanent Notes/Test Driven Content Engineering as the Next Wave of Coding.md
+- ✖ Deleted Permanent Notes/Untitled 1.md
+- ✹ Edited Permanent Notes/Untitled.md
+- ✖ Deleted Permanent Notes/Vibe Coding Needs Gaurdrails.md
+- ✹ Edited Permanent Notes/Vibe Coding Needs Guardrails.md
+- ✹ Edited Permanent Notes/Voice-First Ops for Lean Teams.md
+- ✹ Edited Permanent Notes/Whisper + LLM Prompt Engineering.md
+- ✹ Edited Permanent Notes/prompt-library.md
+- ✚ Added  Permanent Notes/qr link.md
+- ✹ Edited Permanent Notes/reference-ai-humble-servant-audience-profile.md
+- ✹ Edited Permanent Notes/reference-context-token.md
+- ✹ Edited Permanent Notes/reference-exclusion-list.md
+- ✹ Edited Permanent Notes/zettel-2025-05-20-wordpress-aha.md
+- ✖ Deleted Permanent Notes/zettel-202505192230-testing.md
+- ✹ Edited Permanent Notes/zettel-202506302053-mastering-zettelkasten-with-obsidian.md
+- ✹ Edited Permanent Notes/zettel-202506302056-prompt-library.md
+- ✖ Deleted Permanent Notes/zettel-202506302134-obsidian-1-1.md
+- ✹ Edited Permanent Notes/zettel-202507071534-prompt-brits-voxer-to-ticket.md
+- ✹ Edited Permanent Notes/zettel-202507071934-prompt-content-seed-builder.md
+- ✹ Edited Permanent Notes/zettel-growth.md
+- ✖ Deleted Permanent Notes/zettel-moc.md
+- ✹ Edited Permanent Notes/zettelkasten-note-taking-sop-with-obsidian.md
 - ✚ Added  Fleeting Notes/fleeting-2025-07-23-2-billion-prompts-a-day.md
 - ✚ Added  Fleeting Notes/fleeting-2025-07-23-200-layoffs.md
 - ✚ Added  Fleeting Notes/fleeting-2025-07-23-human-coder-beats-open-ai.md
@@ -29,6 +69,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Update permanent notes with metadata standardization and content improvements (21:03)
 
 ### feat: Add recent fleeting notes from daily capture (21:01)
 

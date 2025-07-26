@@ -1,12 +1,9 @@
 ---
-title: Perplexity Integration Workflow
-created: 2025-07-19 20:03
-status: draft
 type: permanent
-tags: [#perplexity, #research, #workflow, #ai]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # Perplexity Integration Workflow
 
 ## Core Idea

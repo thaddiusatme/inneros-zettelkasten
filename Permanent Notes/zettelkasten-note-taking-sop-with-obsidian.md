@@ -1,8 +1,13 @@
+---
+type: permanent
+created: '2025-06-19'
+status: inbox
+tags:
+- inbox
+---
 
 
-**Type**: 🧠 Reference Note  
-**Created**: 2025-06-19 00:06  
-**Tags**:  #inbox  
+
 
 ---
 

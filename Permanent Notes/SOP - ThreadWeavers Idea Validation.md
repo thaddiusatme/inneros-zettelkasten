@@ -1,8 +1,23 @@
+---
+type: permanent
+created: '2025-07-04'
+status: inbox
+tags: []
+---
 
 
-**Type**: 📌 Permanent Note  
-**Created**: 2025-07-04 00:38  
-**Tags**: #permanent #zettelkasten  : #permanent #zettelkasten #content_strategy #idea_validation #ThreadWeavers
+
+---
+type: permanent
+created: 2025-07-04 00:38
+status: evergreen
+tags:
+  - "#sop"
+  - "#content_strategy"
+  - "#idea_validation"
+  - "#ThreadWeavers"
+visibility: private
+---
 
 ---
 

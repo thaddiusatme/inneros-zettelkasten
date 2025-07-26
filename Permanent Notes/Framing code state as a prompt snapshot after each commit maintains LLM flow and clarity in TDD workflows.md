@@ -1,9 +1,19 @@
+---
+type: permanent
+created: '2025-06-30'
+status: inbox
+tags:
+- permanent
+- windsurf
+- llm
+- tdd
+- promptdesign
+- workflow
+---
+
 
 ---
 
-**Type**: 📌 Permanent Note  
-**Created**: 2025-06-30  
-**Tags**: #permanent #windsurf #llm #tdd #promptdesign #workflow
 
 ---
 

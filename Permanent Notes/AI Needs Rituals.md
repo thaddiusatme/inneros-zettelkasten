@@ -1,12 +1,9 @@
 ---
-title: AI Needs Rituals
-created: 2025-07-19 20:00
-status: draft
 type: permanent
-tags: [#ai, #workflow, #productivity, #rituals]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # AI Needs Rituals
 
 ## Core Idea

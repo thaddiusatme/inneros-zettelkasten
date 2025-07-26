@@ -1,12 +1,9 @@
 ---
-title: TDD as Creative Constraint
-created: 2025-07-19 20:02
-status: draft
 type: permanent
-tags: [#development, #tdd, #creativity, #constraints]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # TDD as Creative Constraint
 
 ## Core Idea

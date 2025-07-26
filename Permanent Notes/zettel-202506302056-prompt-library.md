@@ -1,8 +1,14 @@
+---
+type: permanent
+created: '2025-06-30'
+status: inbox
+tags:
+- permanent
+- zettelkasten
+---
 
 
-**Type**: 📌 Permanent Note  
-**Created**: 2025-06-30 20:56  
-**Tags**: #permanent #zettelkasten  
+
 
 ---
 

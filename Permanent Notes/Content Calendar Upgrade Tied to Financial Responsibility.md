@@ -1,8 +1,30 @@
+---
+type: permanent
+created: '2025-07-06'
+status: inbox
+tags: []
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-06 18:44  
-**Tags**: #fleeting #inbox  
+
+---
+type: permanent
+created: 2025-07-06 18:44
+status: evergreen
+tags:
+  - "#project"
+  - "#content_calendar"
+  - "#instagram"
+  - "#feedback_collection"
+  - "#freelancing"
+  - "#revenue_goals"
+  - "#active"
+  - "#process"
+visibility: private
+---
+
+Up: [[Career & Entrepreneurship MOC]]
+
 
 ---
 
@@ -35,7 +57,3 @@
 - Template updated calendar to include upcoming freelancing activity
 - Research best practices for Instagram feedback loops
 - Set review checkpoints for financial and content KPIs
-
-## Tag recommendations
-
-#project, #content_calendar, #instagram, #feedback_collection, #freelancing, #revenue_goals, #active, #process

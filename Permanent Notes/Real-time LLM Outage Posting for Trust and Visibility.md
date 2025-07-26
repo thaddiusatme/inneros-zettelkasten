@@ -1,8 +1,14 @@
+---
+type: fleeting
+created: '2025-07-01'
+status: inbox
+tags:
+- fleeting
+- inbox
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-01 16:54  
-**Tags**: #fleeting #inbox  
+
 #project #active #news_curation #automation #threads #twitter #linkedin #10k_mrr_goal
 
 ---

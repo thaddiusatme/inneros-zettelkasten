@@ -1,8 +1,14 @@
+---
+type: fleeting
+created: '2025-05-20'
+status: inbox
+tags:
+- fleeting
+- inbox
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-05-20 18:20  
-**Tags**: #fleeting #inbox  
+
 [[Zettelkasten OS v1 – Setup Notes]]
 
 ---

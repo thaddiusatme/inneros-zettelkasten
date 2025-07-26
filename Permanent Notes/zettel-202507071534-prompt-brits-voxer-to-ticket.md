@@ -1,8 +1,14 @@
+---
+type: permanent
+created: '2025-07-07'
+status: inbox
+tags:
+- permanent
+- zettelkasten
+---
 
 
-**Type**: 📌 Permanent Note  
-**Created**: 2025-07-07 15:34  
-**Tags**: #permanent #zettelkasten  
+
 
 ---
 
@@ -16,11 +22,11 @@ You are going to read a transcript (from descript) for my client, Brit. I am his
 
 I want you to help craft a 'support ticket' type object that will be used to help us transcribe, process Brit's response. We want a follow up and a possible troubleshooting step involved with that. 
 
-[ transcript here] 
+[transcript here]
 
 ## Why It Matters  
 
 
 ## Links  
-- Related: [[Note A]], [[Note B]]  
+- Related:   
 - Source (if applicable): URL or citation

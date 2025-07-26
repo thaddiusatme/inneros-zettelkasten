@@ -1,8 +1,15 @@
+---
+type: literature
+created: '2025-06-30'
+status: inbox
+tags:
+- fliterature
+- inbox
+- prompt
+---
 
 
-**Type**:  Literature Note  
-**Created**: 2025-06-30 00:13  
-**Tags**: #fliterature #inbox  #prompt
+
 
 
 ---

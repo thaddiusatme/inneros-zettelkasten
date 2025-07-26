@@ -1,12 +1,9 @@
 ---
-title: Whisper + LLM Prompt Engineering
-created: 2025-07-19 19:56
-status: draft
 type: permanent
-tags: [#ai, #whisper, #prompt-engineering, #voice]
-visibility: private
+created: '2025-07-25'
+modified: '2025-07-25'
+status: inbox
 ---
-
 # Whisper + LLM Prompt Engineering
 
 ## Core Idea

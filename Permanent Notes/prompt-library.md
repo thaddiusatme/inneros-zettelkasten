@@ -1,9 +1,13 @@
-
-
-**Type**: 📌 MOC
-**Created**: 2025-06-30 21:16  
-**Tags**: #permanent #zettelkasten  #MoC
-
+---
+type: permanent
+created: '2025-06-30'
+modified: '2025-07-25'
+status: inbox
+tags:
+- permanent
+- zettelkasten
+- MoC
+---
 ---
 
 ## "Foundational Prompting Principles"

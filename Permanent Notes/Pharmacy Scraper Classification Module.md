@@ -1,3 +1,10 @@
+---
+type: permanent
+created: '2025-06-30'
+status: inbox
+tags: []
+---
+
 # Pharmacy Scraper: Classification Module  
   
 ## Project Status  

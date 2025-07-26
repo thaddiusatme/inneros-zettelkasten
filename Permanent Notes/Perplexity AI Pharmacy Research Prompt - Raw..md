@@ -1,8 +1,14 @@
+---
+type: permanent
+created: '2025-06-30'
+status: inbox
+tags:
+- fleeting
+- inbox
+---
 
 
-**Type**: 🧠 Reference Note
-**Created**: 2025-06-30 00:13  
-**Tags**: #fleeting #inbox  
+
 
 ---
 

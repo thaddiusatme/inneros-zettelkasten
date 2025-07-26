@@ -1,3 +1,10 @@
+---
+type: permanent
+created: '2025-07-18'
+status: inbox
+tags: []
+---
+
 
 **Why it matters**  
 Efficiently organizing fleeting notes into actionable, permanent knowledge assets helps drive clarity and speed in decision making, directly supporting faster execution for 2025 business and revenue goals. This structured triage process ensures key information is not lost and is instantly actionable for any team member or automation.

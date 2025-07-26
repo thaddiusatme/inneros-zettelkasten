@@ -1,11 +1,31 @@
+---
+type: permanent
+created: '2025-07-07'
+status: inbox
+tags: []
+---
 
 
-**Type**: 🧠 Fleeting Note  
-**Created**: 2025-07-07 20:04  
-**Tags**: #fleeting #inbox  #reflection #work_life_balance #permanent #10k_mrr_goal #mindset #career #newsletter_content #entrepreneurship
+
+---
+type: permanent
+created: 2025-07-07 20:04
+status: evergreen
+tags:
+  - "#reflection"
+  - "#work_life_balance"
+  - "#permanent"
+  - "#10k_mrr_goal"
+  - "#mindset"
+  - "#career"
+  - "#newsletter_content"
+  - "#entrepreneurship"
+visibility: private
+---
 
 ---
 
+Up: [[Career & Entrepreneurship MOC]]
 
 
 **Why it matters** Recognizing the unexpected enjoyment of traditional work alongside freelance and entrepreneurial projects creates perspective and gratitude. This reflection can help shape future decisions on work-life structure, reduce burnout risk, and reinforce commitment to digital business growth tied to strategic goals for freedom and revenue.
@@ -36,5 +56,5 @@
 4. Set calendar reminders for quarterly mindset check-ins (employment & freelance)
 5. Explore potential content angles on this theme for blog or email
 
-## Tag recommendations
+
 
