@@ -1,5 +1,13 @@
 
 ### 2025-07-25
+- ✚ Added  Fleeting Notes/fleeting-2025-07-23-2-billion-prompts-a-day.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-23-200-layoffs.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-23-human-coder-beats-open-ai.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-23-openai-wins-gold-at-the-math-olympics.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-23-yahoo-japan-mandates-ai-use.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-24-daily-note-7-24-2025.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-24-threadweavers-i-need-to-finish-editting-and-get-ready-to-launch-threadweavers.md
+- ✚ Added  Fleeting Notes/fleeting-2025-07-24-watch-amazon-sales-of-popular-books-to-then-understand-themes-that-people-will-pull.md
 - ✚ Added  Permanent Notes/zettel-202507231648-context-engineering-improves-tdd-automation.md
 - ✚ Added  Permanent Notes/zettel-202507231650-printing-paper-metaphor-for-llm-context.md
 - ✚ Added  Permanent Notes/zettel-202507231652-principles-for-zettelkasten-entry-and-promotion.md
@@ -21,6 +29,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Add recent fleeting notes from daily capture (21:01)
 
 ### feat: Add new permanent notes from recent knowledge work (21:00)
 
