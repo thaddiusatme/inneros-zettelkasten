@@ -1,71 +1,56 @@
 ---
-title: Windsurf Project Manifest
-author: myung (and Cascade)
-created: 2025-07-19 19:26
+type: permanent
+created: 2025-07-25 20:10
 status: active
+tags: [project, manifest]
+visibility: private
 ---
 
-# Windsurf Project Manifest
+# InnerOS Project Manifest (v2)
 
-## Project Overview & Goals
-This document serves as the context-engineering foundation and project manifest for the Zettelkasten + AI workflow improvements in the `innerOS` directory. The goal is to minimize friction from idea to note, blend manual and AI-assisted processes, and future-proof the system for privacy and multi-user scenarios.
+## Purpose
+A single source-of-truth describing the InnerOS Zettelkasten-plus-AI workspace—its philosophy, file conventions, automation stack, and immediate roadmap.
 
-## Workflow Diagram (Described)
-1. **Capture Fleeting Note** → Templater Script
-2. **Summarize (Local Model)** & **Suggest Tags (LLM Tagger)**
-3. **Create/Update Permanent Note**
-4. **Literature Pipeline:** Import reference → Extract highlights → Create literature note → Tag/Link
-5. **Linking & Refinement:** LLM workspace, surface related notes, add "See Also" links, smart auto-linking
-6. **Daily Journal Loop:** Morning prompt, reflection, daily insights (local model), smart connections
-7. **Downstream Uses:** Content bank, GPT training data, social post generator, SOP drafts
+## Guiding Principles
+1. **Frictionless capture → insight**: every thought should become a compliant note in <15 s.
+2. **Metadata first**: valid YAML drives all automation; pre-commit hooks enforce it.
+3. **Incremental AI**: add machine assistance only where it compounds human creativity.
+4. **Privacy by default**: all notes default to `visibility: private`; sharing is explicit.
+5. **Audit-trail**: never delete knowledge; deprecate or archive with context.
 
-## Note Types & Templates
-- **Fleeting Notes:** Quick capture, minimal structure, triage checklist for promotion
-- **Permanent Notes:** Atomic ideas, clear metadata, "Core Idea," "Why It Matters," "Links"
-- **Literature Notes:** Reference highlights, context, source links
-- **Reference/MOC Notes:** Maps of Content for navigation and structure
+## Directory & Workflow Overview
+| Stage | Folder | Key Status Values | Automation |
+|-------|--------|------------------|------------|
+| Capture | `Inbox/` | `inbox` | Hotkey spawns `Templates/fleeting.md` |
+| Triage  | `Fleeting Notes/` | `inbox` → `promoted` | Validator reports promotion candidates |
+| Permanent | `Permanent Notes/` | `draft` → `published` | AI tagging, summarisation (Phase-5) |
+| Archive | `Archive/` | `archived` | Auto-move via script after 90 d inactivity |
 
-### Example Metadata Schema (YAML/Markdown)
-```markdown
----
-type: permanent | fleeting | literature | MOC
-created: YYYY-MM-DD HH:mm
-status: inbox | promoted | draft | published
-tags: [#permanent, #zettelkasten, ...]
-visibility: private | shared | team
----
-```
+## Current Automation Stack
+- **Metadata Validator** (`.automation/scripts/validate_metadata.py`)
+- **Link Checker** (`.automation/scripts/link_checker.py`)
+- **Changelog Updater** (`.automation/scripts/update_changelog.py`)
+- **Pre-commit Hook** (`.automation/hooks/pre_commit`)
 
-## Automation & AI Integration Points
-- **Templater Scripts:** Automate file naming, folder sorting, metadata insertion
-- **LLM Hooks:** Summarization, tag suggestion, smart linking, triage checklists
-- **Promotion Flow:** Automated checklist for fleeting → permanent note, with optional LLM assistance
+## Phase Roadmap
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 1 | YAML standardisation | ✅ Complete |
+| 2 | End-to-end workflow validation | ✅ Complete |
+| 3 | Git + Changelog discipline | ✅ Complete |
+| 4 | Capture friction removal | 🚧 In Progress |
+| 5 | AI Tagging & Summaries | 🔜 Next |
+| 6 | Multi-user & Sharing | ⏳ Future |
 
-## Privacy & Multi-user Considerations
-- All notes default to private; add `visibility` metadata field for future sharing/compliance
-- No overwriting of original notes—preserve all edits, enable audit trail if possible
-- Document privacy principles and compliance roadmap in this manifest
+## Near-Term Objectives (Q3-2025)
+1. Obsidian hotkeys/macros for instant fleeting, reference, literature notes.
+2. Extend test suite to cover all `.automation/scripts` and reach ≥ 80 % coverage.
+3. GitHub Actions CI: run validators + tests on every push.
+4. Basic AI auto-tagging (local model) POC.
+5. Weekly review automation: generate report of `status: inbox` & `promoted` notes.
 
-## Implementation Status & Next Steps
-- ✅ **Standardize YAML frontmatter for all notes** (Template migration system implemented)
-- ✅ **End-to-end workflow validation** (Capture → Triage → Promotion → Archive/Delete tested and production-ready)
-- ✅ **Audit trail and privacy model** (Full metadata tracking with `visibility: private` default)
-- ✅ **Template system with validation** (Templater scripts generate compliant YAML, excluded from pre-commit validation)
-- ✅ **Git integration with metadata validation** (Pre-commit hooks ensure schema compliance)
-
-### Ready for Phase 2: LLM Integration
-- **Smart Tagging**: Implement AI-assisted tag suggestions during capture
-- **Automated Summarization**: LLM-powered content analysis and summary generation
-- **Connection Discovery**: Automatic linking between related notes
-- **Triage Assistance**: AI-powered promotion recommendations
-- **Privacy-Preserving Workflows**: Explore local model integration for sensitive content
-
-### Future Considerations
-- Multi-user workflows and sharing capabilities
-- Advanced automation triggers and workflows
-- Integration with external knowledge sources
-- Performance optimization for large note collections
+## Governance
+All structural changes (templates, validation rules, hooks) **must** be logged in `Windsurf Project Changelog.md` and linked to a commit. Deprecated docs are moved to `Archive/` with a timestamp suffix.
 
 ---
-
-_This document is a living artifact. Update as the project evolves._
+_This manifest supersedes earlier versions (now archived). Update it as the project evolves._

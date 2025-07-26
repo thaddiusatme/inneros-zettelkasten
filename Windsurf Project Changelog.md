@@ -5,7 +5,35 @@ created: 2025-07-19 19:28
 status: active
 ---
 
+## 2025-07-25
+
+### Add core Phase 4 automation infrastructure (20:55)
+
 # Windsurf Project Changelog
+
+## 2025-07-23
+
+### feat: Simplify Zettel filenames and update templates (22:27)
+- **Summary**: Removed `zettel-` prefix and timestamps from all permanent-note filenames for brevity and readability.
+- **Actions**:
+  - Renamed 13 `zettel-*` files to slug-only filenames.
+  - Updated every markdown link across the vault to reference new names.
+  - Refactored `Templates/permament.md` Templater script to generate slug-only filenames going forward.
+- **Outcome**: Cleaner filenames and simpler linking; future notes will follow the streamlined convention.
+
+
+
+## 2025-07-23
+
+### feat: Complete orphan note integration and knowledge housekeeping (20:59)
+- **Summary**: Successfully integrated all 28 identified orphan notes, completing a comprehensive knowledge housekeeping initiative.
+- **Actions**:
+  - Created three new Maps of Content (MOCs) for `Zettelkasten`, `AI and Prompting`, and the `Pharmacy Scraper Project` to cluster related notes.
+  - Standardized metadata for all processed notes to the vault's YAML schema.
+  - Renamed notes for improved clarity and discoverability (e.g., `Zettelkasten Method in Obsidian.md`).
+  - Deleted obsolete placeholder and test notes to reduce clutter.
+  - Corrected filename typos.
+- **Outcome**: The vault's orphan note count is now zero, significantly improving knowledge graph connectivity, organization, and usability. All related tasks in the weekly review have been marked as complete.
 
 ## 2025-07-23
 
