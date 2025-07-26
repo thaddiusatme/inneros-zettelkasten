@@ -1,3 +1,11 @@
+
+### 2025-07-25
+- ✚ Added  Permanent Notes/AI and Prompting MOC.md
+- ✚ Added  Permanent Notes/Career & Entrepreneurship MOC.md
+- ✚ Added  Permanent Notes/Project - Pharmacy Scraper MOC.md
+- ✚ Added  Permanent Notes/Zettelkasten MOC.md
+- ✚ Added  Permanent Notes/Zettelkasten Method in Obsidian.md
+
 ---
 title: Windsurf Project Changelog
 author: myung (and Cascade)
@@ -6,6 +14,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Add Maps of Content (MOCs) for knowledge organization (21:00)
 
 ### Add core Phase 4 automation infrastructure (20:55)
 
