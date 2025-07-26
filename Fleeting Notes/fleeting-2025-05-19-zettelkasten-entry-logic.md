@@ -1,10 +1,11 @@
 ---
-title: Zettelkasten Entry Logic
-created: 2025-05-19 14:30
-status: inbox
 type: fleeting
-tags: [#zettelkasten, #workflow]
+created: 2025-05-19 14:30
+status: promoted
 visibility: private
+tags: [zettelkasten, workflow]
+title: Zettelkasten Entry Logic
+promoted_to: "[[zettel-202507231652-principles-for-zettelkasten-entry-and-promotion]]"
 ---
 
 # Zettelkasten Entry Logic

@@ -1,5 +1,17 @@
 
 ### 2025-07-25
+- ✖ Deleted Fleeting Notes/Automated Voice Memo Routing for Group or Person Comms.md
+- ✚ Added  Fleeting Notes/Untitled.md
+- ✹ Edited Fleeting Notes/fleeting-2025-05-19-ai-notebook-strategy.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-05-19-obsidian-template-trouble.md
+- ✹ Edited Fleeting Notes/fleeting-2025-05-19-zettelkasten-entry-logic.md
+- ✹ Edited Fleeting Notes/fleeting-2025-07-04-context-window-metaphor-printing-paper.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-07-09-freelancing-for-work.md
+- ✹ Edited Fleeting Notes/fleeting-2025-07-20-tdd-context-code-review-step.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-07-20-test.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-07-21-we-need-to-stop-bleeding-out.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-07-21-workflow-testing-ai-assisted-note-taking.md
+- ✖ Deleted Fleeting Notes/fleeting-2025-07-23-daily-notes-7-23-2025.md
 - ✹ Edited Permanent Notes/AI Needs Rituals.md
 - ✹ Edited Permanent Notes/AI-Based Project Storyteller for GitHub Repos.md
 - ✹ Edited Permanent Notes/Content Calendar Upgrade Tied to Financial Responsibility.md
@@ -69,6 +81,8 @@ status: active
 ---
 
 ## 2025-07-25
+
+### feat: Update fleeting notes with metadata standardization and workflow compliance (21:03)
 
 ### feat: Update permanent notes with metadata standardization and content improvements (21:03)
 

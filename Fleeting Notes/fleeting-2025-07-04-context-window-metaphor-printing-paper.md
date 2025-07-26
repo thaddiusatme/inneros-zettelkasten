@@ -1,7 +1,8 @@
 ---
 type: fleeting
 created: 2025-07-04 00:59
-status: inbox
+status: promoted
+promoted_to: "[[zettel-202507231650-printing-paper-metaphor-for-llm-context]]"
 tags: [fleeting, inbox]
 visibility: private
 ---

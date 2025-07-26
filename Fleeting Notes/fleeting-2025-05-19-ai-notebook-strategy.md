@@ -1,10 +1,11 @@
 ---
-title: AI Notebook Strategy
-created: 2025-05-19 15:45
-status: inbox
 type: fleeting
-tags: [#ai, #workflow, #productivity]
+created: 2025-05-19 15:45
+status: promoted
 visibility: private
+tags: [ai, workflow, productivity]
+title: AI Notebook Strategy
+promoted_to: "[[zettel-202507231655-strategy-for-ai-augmented-zettelkasten]]"
 ---
 
 # AI Notebook Strategy
