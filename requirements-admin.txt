@@ -1,0 +1,11 @@
+# Administrative tools dependencies
+# Core AI processing
+requests>=2.25.0
+pyyaml>=5.4.0
+
+# Optional: for advanced file watching
+# watchdog>=2.1.0  # Uncomment if you want to install watchdog
+
+# Development
+pytest>=6.0.0
+pytest-cov>=2.12.0
