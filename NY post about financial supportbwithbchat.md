@@ -1,0 +1,1 @@
+https://nypost.com/2025/07/14/lifestyle/people-drowning-in-debt-are-turning-to-chatgpt-for-help-i-need-to-do-something-about-it/?utm_source=chatgpt.com

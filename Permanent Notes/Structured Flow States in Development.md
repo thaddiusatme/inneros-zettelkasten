@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [development, flow-state, productivity, coding]
+visibility: private
 ---
 # Structured Flow States in Development
 

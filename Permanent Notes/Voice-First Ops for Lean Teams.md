@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [voice-first, operations, lean-teams, productivity]
+visibility: private
 ---
 # Voice-First Ops for Lean Teams
 

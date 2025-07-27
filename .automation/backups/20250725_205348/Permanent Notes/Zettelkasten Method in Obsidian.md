@@ -1,0 +1,84 @@
+
+
+---
+type: permanent
+created: 2025-06-30 21:34
+status: evergreen
+tags:
+  - "#zettelkasten"
+  - "#obsidian"
+visibility: private
+---  
+
+---
+**Zettelkasten Method in Obsidian**
+
+**Overview**  
+The Zettelkasten method is a note-taking and knowledge-management system that helps you link ideas and develop new insights over time. In Obsidian—a markdown editor built around bi-directional links—you can implement Zettelkasten effectively.
+
+**Key Components**
+
+- **Fleeting Notes**: Quick jottings of thoughts, observations or tasks
+    
+- **Literature Notes**: Summaries and reflections on external sources such as articles or books
+    
+- **Permanent Notes**: Atomic ideas written in your own words that are ready to be linked and reused
+    
+
+**Obsidian Features**
+
+- File-based folder structure for organizing note types
+    
+- Tags, internal links and embeds to connect related ideas
+    
+- Templates (via the core Templates plugin) for rapid note creation
+    
+
+**Recommended Folder Structure**
+
+1. `/fleeting` – Temporary notes to be processed
+    
+2. `/literature` – Source summaries and citations
+    
+3. `/permanent` – Final, evergreen ideas ready for linking
+    
+
+**Templates to Use**
+
+- **Fleeting Note Template**
+    
+- **Literature Note Template**
+    
+- **Permanent Note Template**
+    
+- **Map of Content (MOC)** – an outline of major topics with links to related notes
+    
+
+**Suggested Workflow**
+
+1. Capture brief thoughts as fleeting notes
+    
+2. Process external readings into literature notes
+    
+3. Distill enduring insights into permanent notes
+    
+4. Use MOCs and links to group notes for ongoing projects
+    
+
+**Benefits**
+
+- Encourages active learning and deep understanding
+    
+- Makes gaps in your knowledge visible
+    
+- Fuels idea generation for blog posts, videos and more
+    
+
+**Additional Tool: Flowtelic App**  
+A bootstrapped note-taking app focused on consistency and daily study sessions.
+
+**Core Principle**  
+Consistency in capturing, processing and linking notes is what makes your Zettelkasten truly powerful.
+
+
+[[zettel-202506302053-mastering-zettelkasten-with-obsidian]]

@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [whisper, llm, prompt-engineering, ai]
+visibility: private
 ---
 # Whisper + LLM Prompt Engineering
 

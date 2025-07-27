@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [sop, support, systems, workflow]
+visibility: private
 ---
 # Support SOP System Map
 

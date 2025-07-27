@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [tdd, development, creativity, constraints]
+visibility: private
 ---
 # TDD as Creative Constraint
 

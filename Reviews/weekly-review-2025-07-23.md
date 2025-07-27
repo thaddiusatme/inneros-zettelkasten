@@ -1,9 +1,8 @@
-
 ---
 type: permanent
 created: 2025-07-23 22:14
 status: draft
-tags: ["#review", "#weekly"]
+tags: [review, weekly]
 visibility: private
 ---
 

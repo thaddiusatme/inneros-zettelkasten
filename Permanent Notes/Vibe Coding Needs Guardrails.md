@@ -1,7 +1,16 @@
-**Type**: 📌 Permanent Note  
-**Created**: 2025-06-30  
-**Tags**: #permanent #tdd #ai #flowstate #windSurf #devpractices
-
+---
+type: permanent
+created: '2025-06-30'
+modified: '2025-07-25'
+status: published
+visibility: private
+tags:
+- permanent
+- tdd
+- ai
+- flowstate
+- windsurf
+- devpractices
 ---
 ## Core Idea
 

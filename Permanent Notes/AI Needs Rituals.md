@@ -3,6 +3,8 @@ type: permanent
 created: '2025-07-25'
 modified: '2025-07-25'
 status: inbox
+tags: [ai, workflows, productivity]
+visibility: private
 ---
 # AI Needs Rituals
 

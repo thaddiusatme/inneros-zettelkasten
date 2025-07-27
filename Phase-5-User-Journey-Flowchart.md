@@ -191,15 +191,35 @@ flowchart TD
 ## Technical Integration Points
 
 ### 🔧 **Existing System Leverage**
-- Builds on current validation/repair framework
-- Uses existing backup and reporting systems
-- Integrates with established Git workflow
-- Extends current CLI tools
+- Builds on current validation/repair framework established in Phases 1-4
+- Uses existing backup and reporting systems with timestamped backups
+- Integrates with systematic Git workflow and pre-commit hooks
+- Extends current CLI tools in `.automation/scripts/` directory
+- Leverages established pytest testing framework for AI feature validation
+- Follows project management workflow with changelog updates and logical commits
 
 ### 📊 **Configuration Management**
-- AI settings in `.automation/config/ai_config.yaml`
-- Feature toggles and thresholds
-- Privacy and processing preferences
+- AI settings in `.automation/config/ai_config.yaml` (extends existing config structure)
+- Feature toggles and confidence thresholds per AI component
+- Privacy and processing preferences (local vs. API processing)
+- CLI command aliases and shortcuts for frequent operations
+- Integration with existing `metadata_config.yaml` validation rules
+
+### 🎯 **CLI-First Architecture**
+- All AI features implemented as interactive CLI commands
+- Designed for easy evolution into app/applet functions
+- Consistent command structure: `python .automation/scripts/ai_[feature].py`
+- Interactive prompts with numbered selections and batch operations
+- Progress indicators and detailed feedback for all operations
+- Command chaining and pipeline support for complex workflows
+
+### 🔄 **Project Management Integration**
+- All AI development follows systematic commit organization established
+- AI feature changes documented in Windsurf Project Changelog.md
+- AI actions logged in relevant manifests (Fleeting Notes, Automation Project)
+- Context preservation through established documentation hierarchy
+- Graduated implementation with proper testing and validation phases
+- Non-destructive operations with complete audit trail maintenance
 
 ### 🧪 **Testing & Validation**
 - Extends existing pytest framework
@@ -210,23 +230,63 @@ flowchart TD
 ## Success Metrics
 
 ### 📈 **Efficiency Gains**
-- Reduced time in triage sessions
-- Faster note promotion decisions
-- Improved connection discovery
-- Enhanced weekly review insights
+- Reduced time in triage sessions (target: 50% reduction)
+- Faster note promotion decisions with AI scoring assistance
+- Improved connection discovery through semantic analysis
+- Enhanced weekly review insights with automated preparation
+- Streamlined CLI operations with interactive batch processing
+- Reduced manual link creation through AI-assisted suggestions
 
 ### 🎯 **Quality Improvements**
-- More consistent tagging
-- Better note organization
-- Stronger knowledge connections
-- Reduced orphaned notes
+- More consistent tagging across knowledge base
+- Better note organization with AI classification assistance
+- Stronger knowledge connections through semantic similarity
+- Reduced orphaned notes via proactive connection discovery
+- Improved metadata compliance through AI-assisted validation
+- Enhanced permanent note quality with AI summarization
 
 ### 🤝 **User Satisfaction**
-- Configurable to user preferences
-- Non-intrusive suggestions
-- Maintains user agency
-- Preserves existing workflow familiarity
+- Configurable to user preferences with granular feature controls
+- Non-intrusive suggestions that respect user workflow
+- Maintains user agency with human-in-the-loop design
+- Preserves existing workflow familiarity while adding AI enhancement
+- CLI-first design aligns with future app development goals
+- Systematic project management ensures reliable, documented progress
+
+### 🔧 **Technical Excellence**
+- Clean Git history with logical AI feature commits
+- Complete documentation in established changelog and manifest system
+- Robust testing framework with AI-specific test cases
+- Privacy-first architecture with local processing options
+- Seamless integration with existing automation infrastructure
+- Scalable architecture ready for future app/applet evolution
+
+## New Assumptions and Design Principles (2025-07-23)
+
+### 🏗️ **Project Management Integration**
+- All AI features follow systematic commit organization and changelog management
+- AI development leverages established pre-commit hooks and metadata validation
+- Context preservation through existing manifest and documentation hierarchy
+- Graduated implementation with proper testing and validation at each phase
+
+### 🖥️ **CLI-First Architecture**
+- All AI tools designed as CLI commands that evolve into app functions
+- Interactive interface preference with numbered selections and batch operations
+- Command structure follows `.automation/scripts/ai_[feature].py` pattern
+- Future app development supported by modular CLI foundation
+
+### ⚙️ **Configuration and Integration**
+- AI settings extend existing `.automation/config/` YAML structure
+- Feature toggles and thresholds configurable per user preferences
+- Privacy controls with local vs. API processing options
+- Seamless integration with current validation and backup systems
+
+### 📋 **Documentation and Audit Trail**
+- All AI actions documented in established changelog system
+- AI development progress tracked in project manifests
+- Complete audit trail for all AI suggestions and user decisions
+- Context management follows proven project documentation patterns
 
 ---
 
-*This flowchart represents the planned Phase 5 integration of AI features into the existing InnerOS workflow. All AI enhancements are designed to augment, not replace, human decision-making and creativity.*
+*This flowchart represents the planned Phase 5 integration of AI features into the existing InnerOS workflow, updated to reflect the systematic project management framework established in 2025-07-23. All AI enhancements are designed to augment, not replace, human decision-making and creativity while maintaining the organized, documented approach that characterizes the InnerOS system.*
