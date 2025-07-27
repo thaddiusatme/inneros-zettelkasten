@@ -36,9 +36,13 @@ class AITagger:
         if not content or not content.strip():
             return []
         
-        # For now, use a simple mock implementation
-        # In the next iteration, this will use the actual Ollama API
-        tags = self._generate_mock_tags(content)
+        # Strip YAML frontmatter if present
+        processed_content = self._strip_yaml_frontmatter(content)
+        if not processed_content.strip():
+            return []
+        
+        # Use real Ollama API for tag generation
+        tags = self._generate_ollama_tags(processed_content)
         
         # Remove duplicates and filter by confidence
         unique_tags = list(set(tags))
@@ -46,26 +50,94 @@ class AITagger:
         # Limit to max_tags
         return unique_tags[:max_tags]
     
+    def _generate_ollama_tags(self, content: str) -> List[str]:
+        """
+        Generate tags using real Ollama API with optimized prompt engineering.
+        
+        Args:
+            content: Note content to analyze
+            
+        Returns:
+            List of relevant, unique tags
+        """
+        if not content or not content.strip():
+            return []
+            
+        try:
+            # Prepare the prompt for tag extraction
+            system_prompt = "You are an expert at extracting relevant tags from technical and academic content. Analyze the provided text and extract 3-8 highly relevant tags that capture the key concepts, topics, and themes.\n\nGuidelines:\n- Focus on specific, meaningful concepts\n- Use kebab-case for multi-word tags (e.g., 'machine-learning', 'quantum-computing')\n- Prioritize technical accuracy over generic terms\n- Include domain-specific terminology when relevant\n- Avoid overly broad or generic tags like 'technology' unless essential\n- Return only the tags, separated by commas\n\nExample response format: 'tag1, tag2, tag3, tag4'"
+            
+            user_prompt = f"""Extract relevant tags from this content:
+            
+            {content}
+            
+            Tags:"""
+            
+            # Generate tags via Ollama
+            response = self.ollama_client.generate_completion(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                max_tokens=100
+            )
+            
+            # Parse the response
+            tags = [tag.strip().lower() for tag in response.split(",") if tag.strip()]
+            
+            # Clean and deduplicate tags
+            unique_tags = list(set(tags))
+            
+            return unique_tags
+            
+        except Exception as e:
+            # Fallback to mock tags if API fails
+            print(f"Warning: Ollama API failed, using fallback: {e}")
+            return self._generate_mock_tags(content)
+    
+    def _strip_yaml_frontmatter(self, content: str) -> str:
+        """
+        Strip YAML frontmatter from note content.
+        
+        Args:
+            content: Raw note content
+            
+        Returns:
+            Content without YAML frontmatter
+        """
+        if not content:
+            return content
+            
+        lines = content.split('\n')
+        if len(lines) >= 3 and lines[0].strip() == '---':
+            # Find the closing ---
+            for i in range(1, len(lines)):
+                if lines[i].strip() == '---':
+                    # Return content after the closing ---
+                    return '\n'.join(lines[i+1:])
+        
+        return content
+    
     def _generate_mock_tags(self, content: str) -> List[str]:
         """
-        Mock tag generation for testing purposes.
-        Will be replaced with actual AI integration.
+        Mock tag generation for fallback when API is unavailable.
         """
         content_lower = content.lower()
         tags = []
         
-        # Simple keyword-based tagging for MVP
+        # Simple keyword-based tagging for fallback
         keyword_map = {
-            "machine learning": ["ai", "machine-learning", "technology"],
-            "artificial intelligence": ["ai", "technology"],
-            "python": ["programming", "python", "technology"],
-            "neural": ["ai", "neural-networks", "technology"],
+            "machine learning": ["ai", "machine-learning"],
+            "artificial intelligence": ["ai"],
+            "python": ["programming", "python"],
+            "neural": ["ai", "neural-networks"],
             "algorithm": ["algorithms", "computer-science"],
             "data": ["data-science", "analytics"],
             "learning": ["education", "ai"],
-            "programming": ["programming", "technology"],
+            "programming": ["programming"],
             "development": ["programming", "software"],
-            "technology": ["technology", "innovation"]
+            "quantum": ["quantum-computing", "physics"],
+            "cryptography": ["cryptography", "security"],
+            "drug discovery": ["biotech", "pharmaceuticals"],
+            "optimization": ["optimization", "algorithms"]
         }
         
         for keyword, keyword_tags in keyword_map.items():

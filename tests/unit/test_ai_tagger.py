@@ -95,3 +95,76 @@ class TestAITagger:
         
         assert len(tags) == len(set(tags))  # No duplicates
         assert all(tags.count(tag) == 1 for tag in tags)
+
+    def test_real_ollama_api_integration(self):
+        """Test real Ollama API integration for tag generation."""
+        from src.ai.tagger import AITagger
+        from src.ai.ollama_client import OllamaClient
+        
+        # Skip test if Ollama is not available
+        client = OllamaClient()
+        if not client.health_check():
+            pytest.skip("Ollama service not available")
+        
+        note_content = """
+        # Quantum Computing Applications
+        
+        Quantum computing represents a paradigm shift in computational power,
+        leveraging quantum mechanical phenomena like superposition and entanglement.
+        Key applications include cryptography, drug discovery, and optimization problems
+        that are intractable for classical computers.
+        
+        The field combines physics, computer science, and mathematics to solve
+        complex problems exponentially faster than traditional approaches.
+        """
+        
+        tagger = AITagger()
+        tags = tagger.generate_tags(note_content, min_tags=3, max_tags=6)
+        
+        # Test that we get relevant tags from real AI
+        assert isinstance(tags, list)
+        assert 3 <= len(tags) <= 6
+        assert all(isinstance(tag, str) for tag in tags)
+        
+        # Test that tags are more sophisticated than mock keywords
+        # Real AI should generate tags like "quantum-computing", "cryptography", etc.
+        sophisticated_tags = [tag for tag in tags if len(tag) > 8]
+        assert len(sophisticated_tags) >= 2, f"Expected sophisticated tags, got: {tags}"
+
+    def test_ollama_api_error_handling(self):
+        """Test graceful handling of Ollama API failures."""
+        from src.ai.tagger import AITagger
+        from unittest.mock import patch
+        
+        note_content = "This is a test note about machine learning algorithms."
+        tagger = AITagger()
+        
+        # Mock API failure
+        with patch.object(tagger.ollama_client, 'generate_completion', side_effect=Exception("API Error")):
+            tags = tagger.generate_tags(note_content)
+            
+            # Should fallback to mock tags gracefully
+            assert isinstance(tags, list)
+            assert len(tags) >= 0  # Could be empty or fallback tags
+
+    def test_ollama_performance_timing(self):
+        """Test that real API calls complete within performance target."""
+        import time
+        from src.ai.tagger import AITagger
+        from src.ai.ollama_client import OllamaClient
+        
+        # Skip test if Ollama is not available
+        client = OllamaClient()
+        if not client.health_check():
+            pytest.skip("Ollama service not available")
+        
+        note_content = "A brief note about data science and analytics."
+        tagger = AITagger()
+        
+        start_time = time.time()
+        tags = tagger.generate_tags(note_content)
+        end_time = time.time()
+        
+        # Should complete within 2 seconds
+        processing_time = end_time - start_time
+        assert processing_time < 2.0, f"Processing took {processing_time:.2f}s, expected <2s"

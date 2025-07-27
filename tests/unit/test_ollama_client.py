@@ -19,7 +19,7 @@ class TestOllamaClient:
         client = OllamaClient()
         assert client.base_url == "http://localhost:11434"
         assert client.timeout == 30
-        assert client.model == "llama3.1:8b"
+        assert client.model == "llama3:latest"
     
     def test_client_initialization_with_custom_config(self):
         """Test that Ollama client accepts custom configuration."""
