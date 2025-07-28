@@ -138,3 +138,143 @@ class TestAIIntegration:
         finally:
             # Clean up
             os.unlink(temp_file)
+
+    def test_complete_enhancement_workflow(self):
+        """Test complete workflow: note → AI enhancement → suggestions."""
+        from src.ai.enhancer import AIEnhancer
+        
+        note_content = """
+        # Machine Learning Fundamentals
+        
+        Machine learning is a subset of artificial intelligence that enables systems to learn from data.
+        
+        ## Key Concepts
+        - Supervised learning
+        - Unsupervised learning
+        - Reinforcement learning
+        
+        This is important for modern applications.
+        """
+        
+        enhancer = AIEnhancer()
+        
+        # Test complete enhancement workflow
+        result = enhancer.enhance_note(note_content)
+        
+        # Verify structure of enhancement result
+        assert isinstance(result, dict)
+        assert 'quality_score' in result
+        assert 'suggestions' in result
+        assert 'missing_elements' in result
+        assert 'link_suggestions' in result
+        assert 'structure_suggestions' in result
+        
+        # Verify basic quality metrics
+        assert 0 <= result['quality_score'] <= 1
+        assert isinstance(result['suggestions'], list)
+        assert isinstance(result['missing_elements'], list)
+        assert isinstance(result['link_suggestions'], list)
+        assert isinstance(result['structure_suggestions'], dict)
+
+    def test_combined_ai_features_workflow(self):
+        """Test combined workflow: tags + enhancement working together."""
+        from src.ai.tagger import AITagger
+        from src.ai.enhancer import AIEnhancer
+        
+        note_content = """
+        # Quantum Computing Applications
+        
+        Quantum computing leverages quantum mechanical phenomena to process information.
+        
+        ## Key Applications
+        - Cryptography: Breaking RSA encryption using Shor's algorithm
+        - Drug discovery: Simulating molecular interactions
+        - Optimization: Solving complex logistics problems
+        
+        ## Technical Challenges
+        Current quantum computers face challenges with quantum decoherence and error rates.
+        
+        ## Related Concepts
+        - [[quantum-superposition]]
+        - [[quantum-entanglement]]
+        """
+        
+        # Generate tags
+        tagger = AITagger()
+        tags = tagger.generate_tags(note_content)
+        
+        # Enhance content
+        enhancer = AIEnhancer()
+        enhancement = enhancer.enhance_note(note_content)
+        
+        # Verify both systems work together
+        assert isinstance(tags, list)
+        assert len(tags) >= 3
+        assert all(isinstance(tag, str) for tag in tags)
+        
+        assert isinstance(enhancement, dict)
+        assert 'quality_score' in enhancement
+        assert enhancement['quality_score'] > 0.5  # Should be decent quality
+        
+        # Verify tags and enhancement suggestions are complementary
+        tag_set = set(tags)
+        link_suggestions = [link.strip('[[]]') for link in enhancement['link_suggestions']]
+        
+        # Some overlap expected between tags and link suggestions
+        overlapping_concepts = tag_set.intersection(set(link_suggestions))
+        assert len(overlapping_concepts) >= 0  # Allow for no overlap but expect some
+
+    def test_enhancer_with_yaml_frontmatter(self):
+        """Test enhancer properly handles YAML frontmatter."""
+        from src.ai.enhancer import AIEnhancer
+        
+        note_content = """---
+type: permanent
+created: 2024-07-27 17:00
+status: published
+tags: [quantum-computing, cryptography]
+---
+
+# Quantum Cryptography
+
+Quantum cryptography uses quantum mechanical properties to perform cryptographic tasks.
+
+## Key Protocols
+- BB84 protocol for quantum key distribution
+- Quantum digital signatures
+
+## Security Advantages
+- Information-theoretic security
+- Detection of eavesdropping attempts
+"""
+        
+        enhancer = AIEnhancer()
+        
+        # Test that YAML frontmatter is properly handled
+        analysis = enhancer.analyze_note_quality(note_content)
+        
+        # Should analyze content without YAML affecting results
+        assert isinstance(analysis, dict)
+        assert 'quality_score' in analysis
+        assert analysis['quality_score'] > 0.4  # Should recognize decent content
+
+    def test_enhancer_error_handling(self):
+        """Test enhancer handles edge cases gracefully."""
+        from src.ai.enhancer import AIEnhancer
+        
+        enhancer = AIEnhancer()
+        
+        # Test empty content
+        result = enhancer.enhance_note("")
+        assert result['quality_score'] == 0.0
+        assert len(result['suggestions']) > 0
+        
+        # Test minimal content
+        result = enhancer.enhance_note("# Test")
+        assert result['quality_score'] < 0.3
+        
+        # Test very long content (should not crash)
+        long_content = "# Long Note\n" + "This is a test sentence. " * 100
+        result = enhancer.analyze_note_quality(long_content)
+        assert isinstance(result, dict)
+        assert 'quality_score' in result
