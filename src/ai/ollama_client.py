@@ -4,7 +4,7 @@ Provides health checks and basic API interactions.
 """
 
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 
 class OllamaClient:
@@ -106,4 +106,48 @@ class OllamaClient:
         except requests.Timeout:
             raise Exception("Request to Ollama service timed out")
         except Exception as e:
-            raise Exception(f"Ollama API error: {str(e)}")
+            raise Exception(f"Unexpected error: {str(e)}")
+
+    def generate(self, prompt: str, system_prompt: str = "", max_tokens: int = 150) -> str:
+        """Alias for generate_completion for backward compatibility."""
+        return self.generate_completion(prompt, system_prompt, max_tokens)
+
+    def generate_embedding(self, text: str) -> List[float]:
+        """
+        Generate embedding vector for text using Ollama API.
+        
+        Args:
+            text: Text to generate embedding for
+            
+        Returns:
+            List[float]: Embedding vector
+            
+        Raises:
+            Exception: If API call fails
+        """
+        try:
+            payload = {
+                "model": self.model,
+                "prompt": text
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/api/embeddings",
+                json=payload,
+                timeout=self.timeout
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result.get("embedding", [])
+            else:
+                raise Exception(f"Embedding API error: {response.status_code} - {response.text}")
+                
+        except requests.ConnectionError:
+            raise Exception("Failed to connect to Ollama service")
+        except requests.Timeout:
+            raise Exception("Request to Ollama service timed out")
+        except Exception as e:
+            if "Embedding API error" in str(e) or "Failed to connect" in str(e) or "timed out" in str(e):
+                raise e
+            raise Exception(f"Unexpected error generating embedding: {str(e)}")
