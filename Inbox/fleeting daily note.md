@@ -1,3 +1,7 @@
+---
+tags: ["content-calendar", "document-as-you-go", "llm", "obsidian", "project-planning", "tw-sop", "voice-notes", "workflow-management"]
+ai_processed: 2025-07-28T20:05:12.795002
+---
 Intentions today- I wish to have a successful and laid back WFM shift
 
 I hope to make a good impression with my leaders

@@ -2,16 +2,11 @@
 type: fleeting
 created: 2025-07-25 22:02
 status: inbox
+tags: ["business-strategy", "channel-optimization", "daily-leverage-activities", "deep-work-sprint", "goal-alignment", "gpt-workshop-materials", "offer-audit", "retention-strategies"]
+ai_processed: 2025-07-28T20:04:23.403897
 visibility: private
-tags:
-  - fleeting
-  - business
-  - nextsteps
-linked_notes:
-  - [[zettel-business-strategy-pivot]]
-  - [[zettel-revenue-retention-tactics]]
+linked_notes: 
 ---
-
 # Thought
 I'm at a pivot point in my business. I’ve shipped enough to know what’s resonating, and now it’s time to refocus on what drives revenue and retention. I need to align my energy with the offers and channels that actually convert.
 
