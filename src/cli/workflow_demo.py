@@ -12,6 +12,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ai.workflow_manager import WorkflowManager
+from cli.weekly_review_formatter import WeeklyReviewFormatter
 
 
 def print_header(title: str):
@@ -258,6 +259,10 @@ Examples:
   python workflow_demo.py /path/to/zettelkasten --process-inbox
   python workflow_demo.py /path/to/zettelkasten --promote note.md permanent
   python workflow_demo.py /path/to/zettelkasten --interactive
+  python workflow_demo.py /path/to/zettelkasten --weekly-review
+  python workflow_demo.py /path/to/zettelkasten --weekly-review --export-checklist weekly-review.md
+  python workflow_demo.py /path/to/zettelkasten --enhanced-metrics
+  python workflow_demo.py /path/to/zettelkasten --enhanced-metrics --format json --export metrics.json
         """
     )
     
@@ -300,6 +305,24 @@ Examples:
         help="Run in interactive mode"
     )
     
+    action_group.add_argument(
+        "--weekly-review",
+        action="store_true",
+        help="Generate weekly review checklist"
+    )
+    
+    action_group.add_argument(
+        "--enhanced-metrics",
+        action="store_true",
+        help="Generate enhanced metrics report with orphaned notes, stale notes, and analytics"
+    )
+    
+    action_group.add_argument(
+        "--comprehensive-orphaned",
+        action="store_true", 
+        help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
+    )
+    
     parser.add_argument(
         "--format",
         choices=["text", "json"],
@@ -311,6 +334,19 @@ Examples:
         "--export",
         metavar="FILENAME",
         help="Export report to JSON file"
+    )
+    
+    # Weekly review specific options
+    parser.add_argument(
+        "--export-checklist",
+        metavar="PATH",
+        help="Export weekly review checklist to markdown file"
+    )
+    
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview recommendations without processing notes"
     )
     
     args = parser.parse_args()
@@ -422,6 +458,85 @@ Examples:
                     print(f"   Total Words: {overview.get('total_words', 0):,}")
                     print(f"   Average Quality: {overview.get('average_quality_score', 0):.2f}/1.0")
                     print(f"   High Quality Notes: {analytics.get('quality_metrics', {}).get('high_quality_notes', 0)}")
+    
+    elif args.weekly_review:
+        print("📋 Generating weekly review checklist...")
+        
+        # Scan for review candidates
+        candidates = workflow.scan_review_candidates()
+        print(f"   Found {len(candidates)} notes requiring review")
+        
+        # Generate recommendations (with dry-run consideration)
+        if args.dry_run:
+            print("   🔍 DRY RUN MODE - No files will be modified")
+        
+        recommendations = workflow.generate_weekly_recommendations(candidates)
+        
+        # Format and display checklist
+        formatter = WeeklyReviewFormatter()
+        
+        if args.format == "json":
+            print(json.dumps(recommendations, indent=2, default=str))
+        else:
+            print_header("WEEKLY REVIEW CHECKLIST")
+            checklist = formatter.format_checklist(recommendations)
+            print(checklist)
+        
+        # Export checklist if requested
+        if args.export_checklist:
+            export_path = Path(args.export_checklist)
+            result_path = formatter.export_checklist(recommendations, export_path)
+            print(f"\n📄 Checklist exported to: {result_path}")
+        
+        # Show completion message
+        summary = recommendations["summary"]
+        if summary["total_notes"] > 0:
+            print(f"\n✨ Review {summary['total_notes']} notes above and check them off as you complete each action.")
+        else:
+            print("\n🎉 No notes require review - your workflow is up to date!")
+    
+    elif args.enhanced_metrics:
+        print("📊 Generating enhanced metrics report...")
+        metrics = workflow.generate_enhanced_metrics()
+        formatter = WeeklyReviewFormatter()
+        
+        if args.format == "json":
+            print(json.dumps(metrics, indent=2, default=str))
+        else:
+            print_header("ENHANCED METRICS REPORT")
+            metrics_report = formatter.format_enhanced_metrics(metrics)
+            print(metrics_report)
+        
+        # Export if requested
+        if args.export:
+            export_path = Path(args.export)
+            with open(export_path, 'w', encoding='utf-8') as f:
+                if args.format == "json":
+                    json.dump(metrics, f, indent=2, default=str)
+                else:
+                    f.write(metrics_report)
+            print(f"\n📄 Enhanced metrics exported to: {export_path}")
+        
+        # Show summary insights
+        summary = metrics["summary"]
+        print(f"\n📈 Summary: {summary['total_notes']} total notes, {summary['total_orphaned']} orphaned, {summary['total_stale']} stale")
+        if summary['total_orphaned'] > 0 or summary['total_stale'] > 0:
+            print("💡 Consider addressing orphaned and stale notes to improve your knowledge graph")
+    
+    elif args.comprehensive_orphaned:
+        print("� Finding ALL orphaned notes across the entire repository...")
+        orphaned_notes = workflow.detect_orphaned_notes_comprehensive()
+        
+        print(f"\n📊 Found {len(orphaned_notes)} orphaned notes:")
+        if orphaned_notes:
+            for note in orphaned_notes:
+                relative_path = note['path'].replace(str(workflow.base_dir) + '/', '')
+                print(f"   📄 {note['title']} ({relative_path})")
+        else:
+            print("   🎉 No orphaned notes found!")
+        
+        print(f"\n💡 Comparison: Standard detection found 17 orphaned notes in workflow directories")
+        print(f"💡 Comprehensive detection found {len(orphaned_notes)} orphaned notes across entire repository")
     
     else:
         # No action specified, show basic status

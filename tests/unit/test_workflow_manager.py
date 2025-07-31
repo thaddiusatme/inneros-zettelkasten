@@ -722,24 +722,171 @@ Content 3""")
         assert rec["action"] == "manual_review"
     
     def test_generate_weekly_recommendations_result_structure(self):
-        """Test that weekly recommendations return the expected structure."""
-        candidates = []
-        result = self.workflow.generate_weekly_recommendations(candidates)
+        """Test that generate_weekly_recommendations returns properly structured results."""
+        # Create empty test directory
+        test_dir = self.temp_dir / "test_zettelkasten"
+        test_dir.mkdir()
+        (test_dir / "Inbox").mkdir()
+        (test_dir / "Fleeting Notes").mkdir()
+        (test_dir / "Permanent Notes").mkdir()
         
-        # Verify top-level structure
-        assert "summary" in result
-        assert "recommendations" in result
-        assert "generated_at" in result
+        # Initialize workflow manager
+        workflow = WorkflowManager(str(test_dir))
+        
+        # Test with empty candidates
+        candidates = []
+        result = workflow.generate_weekly_recommendations(candidates)
+        
+        # Verify structure
+        self.assertIn("summary", result)
+        self.assertIn("recommendations", result)
+        self.assertIn("generated_at", result)
         
         # Verify summary structure
         summary = result["summary"]
-        expected_summary_keys = [
-            "total_notes", "promote_to_permanent", "move_to_fleeting", 
-            "needs_improvement", "processing_errors"
-        ]
-        for key in expected_summary_keys:
-            assert key in summary
-            assert isinstance(summary[key], int)
+        self.assertIn("total_notes", summary)
+        self.assertIn("promote_to_permanent", summary)
+        self.assertIn("move_to_fleeting", summary)
+        self.assertIn("needs_improvement", summary)
+        self.assertIn("processing_errors", summary)
         
-        # Verify recommendations is a list
-        assert isinstance(result["recommendations"], list)
+        # Verify all counts are zero
+        for key in ["total_notes", "promote_to_permanent", "move_to_fleeting", "needs_improvement", "processing_errors"]:
+            self.assertEqual(summary[key], 0)
+        
+        # Verify recommendations is empty list
+        self.assertEqual(result["recommendations"], [])
+
+    # Phase 5.5.4 Enhanced Features Tests
+    def test_detect_orphaned_notes_empty_collection(self):
+        """Test orphaned note detection with empty collection."""
+        # Create empty test directory
+        test_dir = Path(self.temp_dir) / "test_zettelkasten"
+        test_dir.mkdir()
+        (test_dir / "Inbox").mkdir()
+        (test_dir / "Fleeting Notes").mkdir()
+        (test_dir / "Permanent Notes").mkdir()
+        
+        # Initialize workflow manager
+        workflow = WorkflowManager(str(test_dir))
+        
+        # Should return empty list for empty collection
+        orphaned_notes = workflow.detect_orphaned_notes()
+        assert isinstance(orphaned_notes, list)
+        assert len(orphaned_notes) == 0
+    
+    def test_detect_stale_notes_empty_collection(self):
+        """Test stale note detection with empty collection."""
+        # Create empty test directory
+        test_dir = Path(self.temp_dir) / "test_zettelkasten"
+        test_dir.mkdir()
+        (test_dir / "Inbox").mkdir()
+        (test_dir / "Fleeting Notes").mkdir()
+        (test_dir / "Permanent Notes").mkdir()
+        
+        # Initialize workflow manager
+        workflow = WorkflowManager(str(test_dir))
+        
+        # Should return empty list for empty collection
+        stale_notes = workflow.detect_stale_notes()
+        assert isinstance(stale_notes, list)
+        assert len(stale_notes) == 0
+    
+    def test_generate_enhanced_metrics_empty_collection(self):
+        """Test enhanced metrics generation with empty collection."""
+        # Create empty test directory
+        test_dir = Path(self.temp_dir) / "test_zettelkasten"
+        test_dir.mkdir()
+        (test_dir / "Inbox").mkdir()
+        (test_dir / "Fleeting Notes").mkdir()
+        (test_dir / "Permanent Notes").mkdir()
+        
+        # Initialize workflow manager
+        workflow = WorkflowManager(str(test_dir))
+        
+        # Should return structured metrics for empty collection
+        metrics = workflow.generate_enhanced_metrics()
+        assert isinstance(metrics, dict)
+        assert "orphaned_notes" in metrics
+        assert "stale_notes" in metrics
+        assert "summary" in metrics
+        assert metrics["summary"]["total_notes"] == 0
+        assert metrics["summary"]["total_orphaned"] == 0
+        assert metrics["summary"]["total_stale"] == 0
+    
+    def test_detect_orphaned_notes_with_linked_notes(self):
+        """Test orphaned note detection with linked and unlinked notes."""
+        # Create notes with proper linking
+        linked_note = self.create_test_note("Permanent Notes", "linked.md", 
+            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[target]]")
+        orphan_note = self.create_test_note("Permanent Notes", "orphan.md", 
+            "---\ntype: permanent\n---\n# Orphan Note\nThis has no links to other notes.")
+        target_note = self.create_test_note("Permanent Notes", "target.md", 
+            "---\ntype: permanent\n---\n# Target Note\nThis is linked to by [[linked]].")
+        
+        orphaned_notes = self.workflow.detect_orphaned_notes()
+        
+        # Only the orphan note should be detected as orphaned (linked and target have bidirectional links)
+        assert len(orphaned_notes) == 1
+        assert orphaned_notes[0]["title"] == "Orphan Note"
+        assert "orphan.md" in orphaned_notes[0]["path"]
+    
+    def test_detect_stale_notes_with_old_notes(self):
+        """Test stale note detection with notes of different ages."""
+        import time
+        from datetime import datetime, timedelta
+        
+        # Create a note and artificially age it
+        old_note = self.create_test_note("Permanent Notes", "old.md", 
+            "---\ntype: permanent\n---\n# Old Note\nThis is an old note.")
+        
+        # Artificially set the modification time to 100 days ago
+        old_time = datetime.now() - timedelta(days=100)
+        old_timestamp = old_time.timestamp()
+        
+        import os
+        os.utime(str(old_note), (old_timestamp, old_timestamp))
+        
+        # Create a fresh note
+        fresh_note = self.create_test_note("Permanent Notes", "fresh.md", 
+            "---\ntype: permanent\n---\n# Fresh Note\nThis is a fresh note.")
+        
+        stale_notes = self.workflow.detect_stale_notes(days_threshold=90)
+        
+        # Only the old note should be detected as stale
+        assert len(stale_notes) == 1
+        assert stale_notes[0]["title"] == "Old Note"
+        assert stale_notes[0]["days_since_modified"] >= 90
+    
+    def test_generate_enhanced_metrics_with_notes(self):
+        """Test enhanced metrics generation with actual notes."""
+        # Create various types of notes
+        linked_note = self.create_test_note("Permanent Notes", "linked.md", 
+            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[other]]")
+        orphan_note = self.create_test_note("Permanent Notes", "orphan.md", 
+            "---\ntype: permanent\n---\n# Orphan Note\nNo links here.")
+        inbox_note = self.create_test_note("Inbox", "inbox.md", 
+            "---\ntype: fleeting\n---\n# Inbox Note\nIn the inbox.")
+        
+        metrics = self.workflow.generate_enhanced_metrics()
+        
+        # Verify metrics structure and content
+        assert isinstance(metrics, dict)
+        assert "orphaned_notes" in metrics
+        assert "stale_notes" in metrics
+        assert "link_density" in metrics
+        assert "note_age_distribution" in metrics
+        assert "productivity_metrics" in metrics
+        assert "summary" in metrics
+        
+        # Should detect the orphan note
+        assert metrics["summary"]["total_orphaned"] == 1
+        assert metrics["summary"]["total_notes"] == 3
+        
+        # Link density should be > 0 due to the linked note
+        assert metrics["link_density"] > 0
+        
+        # Age distribution should have all notes in "new" category
+        age_dist = metrics["note_age_distribution"]
+        assert age_dist["new"] == 3
+        assert age_dist["recent"] == 0
