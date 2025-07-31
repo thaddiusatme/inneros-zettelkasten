@@ -536,3 +536,210 @@ Content 3""")
         # Should only find the markdown file
         assert len(candidates) == 1
         assert candidates[0]["path"].suffix == ".md"
+
+    # ========================= WEEKLY RECOMMENDATIONS TESTS =========================
+    
+    def test_generate_weekly_recommendations_empty_candidates(self):
+        """Test weekly recommendations with no candidates."""
+        candidates = []
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        # Should return empty results
+        assert recommendations["summary"]["total_notes"] == 0
+        assert recommendations["summary"]["promote_to_permanent"] == 0
+        assert recommendations["summary"]["move_to_fleeting"] == 0
+        assert recommendations["summary"]["needs_improvement"] == 0
+        assert len(recommendations["recommendations"]) == 0
+    
+    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    def test_generate_weekly_recommendations_high_quality_note(self, mock_process):
+        """Test recommendations for high-quality note (should promote)."""
+        # Mock high-quality processing result
+        mock_process.return_value = {
+            "quality_score": 0.85,
+            "recommendations": [{
+                "action": "promote_to_permanent",
+                "reason": "High quality content with comprehensive analysis",
+                "confidence": 0.9
+            }],
+            "processing": {
+                "ai_tags": ["machine-learning", "deep-learning"]
+            }
+        }
+        
+        # Create test candidate
+        note_path = self.create_test_note("Inbox", "high_quality.md", 
+                                         "---\ntype: fleeting\nstatus: inbox\n---\nDetailed content")
+        candidates = [{
+            "path": note_path,
+            "source": "inbox", 
+            "metadata": {"type": "fleeting", "status": "inbox"}
+        }]
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        # Verify summary counts
+        assert recommendations["summary"]["total_notes"] == 1
+        assert recommendations["summary"]["promote_to_permanent"] == 1
+        assert recommendations["summary"]["move_to_fleeting"] == 0
+        assert recommendations["summary"]["needs_improvement"] == 0
+        
+        # Verify recommendation details
+        rec = recommendations["recommendations"][0]
+        assert rec["file_name"] == "high_quality.md"
+        assert rec["action"] == "promote_to_permanent"
+        assert rec["quality_score"] == 0.85
+        assert "High quality" in rec["reason"]
+        assert rec["confidence"] == 0.9
+        assert rec["source"] == "inbox"
+    
+    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    def test_generate_weekly_recommendations_medium_quality_note(self, mock_process):
+        """Test recommendations for medium-quality note (further develop)."""
+        mock_process.return_value = {
+            "quality_score": 0.55,
+            "recommendations": [{
+                "action": "move_to_fleeting", 
+                "reason": "Good start but needs more development",
+                "confidence": 0.7
+            }]
+        }
+        
+        note_path = self.create_test_note("Fleeting Notes", "medium_quality.md",
+                                         "---\ntype: fleeting\nstatus: inbox\n---\nSome content")
+        candidates = [{
+            "path": note_path,
+            "source": "fleeting",
+            "metadata": {"type": "fleeting", "status": "inbox"}
+        }]
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        assert recommendations["summary"]["total_notes"] == 1
+        assert recommendations["summary"]["promote_to_permanent"] == 0
+        assert recommendations["summary"]["move_to_fleeting"] == 1
+        assert recommendations["summary"]["needs_improvement"] == 0
+        
+        rec = recommendations["recommendations"][0]
+        assert rec["action"] == "move_to_fleeting"
+        assert rec["quality_score"] == 0.55
+        assert "develop" in rec["reason"].lower()
+    
+    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    def test_generate_weekly_recommendations_low_quality_note(self, mock_process):
+        """Test recommendations for low-quality note (needs improvement)."""
+        mock_process.return_value = {
+            "quality_score": 0.25,
+            "recommendations": [{
+                "action": "improve_or_archive",
+                "reason": "Content is too brief and lacks detail", 
+                "confidence": 0.8
+            }]
+        }
+        
+        note_path = self.create_test_note("Inbox", "low_quality.md",
+                                         "---\ntype: fleeting\nstatus: inbox\n---\nBrief")
+        candidates = [{
+            "path": note_path,
+            "source": "inbox",
+            "metadata": {"type": "fleeting", "status": "inbox"}
+        }]
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        assert recommendations["summary"]["total_notes"] == 1
+        assert recommendations["summary"]["promote_to_permanent"] == 0
+        assert recommendations["summary"]["move_to_fleeting"] == 0
+        assert recommendations["summary"]["needs_improvement"] == 1
+        
+        rec = recommendations["recommendations"][0]
+        assert rec["action"] == "improve_or_archive"
+        assert rec["quality_score"] == 0.25
+        assert "brief" in rec["reason"].lower()
+    
+    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    def test_generate_weekly_recommendations_mixed_quality(self, mock_process):
+        """Test recommendations with mixed quality notes."""
+        # Mock different responses for different files
+        def mock_process_side_effect(note_path):
+            if "high" in str(note_path):
+                return {
+                    "quality_score": 0.8,
+                    "recommendations": [{"action": "promote_to_permanent", "reason": "High quality", "confidence": 0.9}]
+                }
+            elif "medium" in str(note_path):
+                return {
+                    "quality_score": 0.5, 
+                    "recommendations": [{"action": "move_to_fleeting", "reason": "Needs development", "confidence": 0.7}]
+                }
+            else:
+                return {
+                    "quality_score": 0.2,
+                    "recommendations": [{"action": "improve_or_archive", "reason": "Too brief", "confidence": 0.8}]
+                }
+        
+        mock_process.side_effect = mock_process_side_effect
+        
+        # Create mixed quality candidates
+        high_path = self.create_test_note("Inbox", "high_note.md", "---\ntype: fleeting\n---\nContent")
+        medium_path = self.create_test_note("Inbox", "medium_note.md", "---\ntype: fleeting\n---\nContent")
+        low_path = self.create_test_note("Inbox", "low_note.md", "---\ntype: fleeting\n---\nContent")
+        
+        candidates = [
+            {"path": high_path, "source": "inbox", "metadata": {}},
+            {"path": medium_path, "source": "inbox", "metadata": {}},
+            {"path": low_path, "source": "inbox", "metadata": {}}
+        ]
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        # Verify mixed results
+        assert recommendations["summary"]["total_notes"] == 3
+        assert recommendations["summary"]["promote_to_permanent"] == 1
+        assert recommendations["summary"]["move_to_fleeting"] == 1
+        assert recommendations["summary"]["needs_improvement"] == 1
+        assert len(recommendations["recommendations"]) == 3
+    
+    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    def test_generate_weekly_recommendations_handles_processing_errors(self, mock_process):
+        """Test that recommendation generation handles processing errors gracefully."""
+        # Mock an error response
+        mock_process.return_value = {"error": "Failed to process note"}
+        
+        note_path = self.create_test_note("Inbox", "error_note.md", "---\ntype: fleeting\n---\nContent")
+        candidates = [{"path": note_path, "source": "inbox", "metadata": {}}]
+        
+        recommendations = self.workflow.generate_weekly_recommendations(candidates)
+        
+        # Should handle gracefully
+        assert recommendations["summary"]["total_notes"] == 1
+        assert recommendations["summary"]["processing_errors"] == 1
+        
+        # Error should be recorded in recommendation
+        rec = recommendations["recommendations"][0]
+        assert "error" in rec
+        assert rec["action"] == "manual_review"
+    
+    def test_generate_weekly_recommendations_result_structure(self):
+        """Test that weekly recommendations return the expected structure."""
+        candidates = []
+        result = self.workflow.generate_weekly_recommendations(candidates)
+        
+        # Verify top-level structure
+        assert "summary" in result
+        assert "recommendations" in result
+        assert "generated_at" in result
+        
+        # Verify summary structure
+        summary = result["summary"]
+        expected_summary_keys = [
+            "total_notes", "promote_to_permanent", "move_to_fleeting", 
+            "needs_improvement", "processing_errors"
+        ]
+        for key in expected_summary_keys:
+            assert key in summary
+            assert isinstance(summary[key], int)
+        
+        # Verify recommendations is a list
+        assert isinstance(result["recommendations"], list)

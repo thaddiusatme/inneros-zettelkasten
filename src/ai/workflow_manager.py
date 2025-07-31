@@ -607,6 +607,154 @@ class WorkflowManager:
             "source": source_type,
             "metadata": metadata
         }
+    
+    def generate_weekly_recommendations(self, candidates: List[Dict]) -> Dict:
+        """Generate AI-powered recommendations for weekly review candidates.
+        
+        Processes each candidate using existing AI quality assessment and generates
+        structured recommendations for weekly review sessions.
+        
+        Args:
+            candidates: List of candidate dictionaries from scan_review_candidates()
+            
+        Returns:
+            Dictionary with:
+                - summary: Counts by recommendation type
+                - recommendations: List of detailed recommendation objects
+                - generated_at: ISO timestamp of generation
+        """
+        result = self._initialize_recommendations_result(len(candidates))
+        
+        # Process each candidate with error handling
+        for candidate in candidates:
+            recommendation = self._process_candidate_for_recommendation(candidate)
+            result["recommendations"].append(recommendation)
+            
+            # Update summary counts based on action
+            self._update_summary_counts(result["summary"], recommendation["action"])
+        
+        return result
+    
+    def _initialize_recommendations_result(self, total_candidates: int) -> Dict:
+        """Initialize the weekly recommendations result structure.
+        
+        Args:
+            total_candidates: Number of candidates being processed
+            
+        Returns:
+            Initialized result dictionary
+        """
+        from datetime import datetime
+        
+        return {
+            "summary": {
+                "total_notes": total_candidates,
+                "promote_to_permanent": 0,
+                "move_to_fleeting": 0,
+                "needs_improvement": 0,
+                "processing_errors": 0
+            },
+            "recommendations": [],
+            "generated_at": datetime.now().isoformat()
+        }
+    
+    def _process_candidate_for_recommendation(self, candidate: Dict) -> Dict:
+        """Process a single candidate and generate its recommendation.
+        
+        Args:
+            candidate: Candidate dictionary with path, source, metadata
+            
+        Returns:
+            Recommendation dictionary for the candidate
+        """
+        try:
+            # Use existing AI processing for quality assessment
+            processing_result = self.process_inbox_note(str(candidate["path"]))
+            
+            if "error" in processing_result:
+                return self._create_error_recommendation(
+                    candidate, 
+                    "Processing failed - manual review required",
+                    processing_result["error"]
+                )
+            
+            # Extract and format the recommendation
+            return self._extract_weekly_recommendation(candidate, processing_result)
+            
+        except Exception as e:
+            return self._create_error_recommendation(
+                candidate,
+                "Unexpected error during processing", 
+                str(e)
+            )
+    
+    def _create_error_recommendation(self, candidate: Dict, reason: str, error: str) -> Dict:
+        """Create a recommendation for a candidate that failed processing.
+        
+        Args:
+            candidate: Original candidate dictionary
+            reason: Human-readable reason for the error
+            error: Technical error message
+            
+        Returns:
+            Error recommendation dictionary
+        """
+        return {
+            "file_name": candidate["path"].name,
+            "source": candidate["source"],
+            "action": "manual_review",
+            "reason": reason,
+            "error": error,
+            "quality_score": None,
+            "confidence": None,
+            "ai_tags": [],
+            "metadata": candidate.get("metadata", {})
+        }
+    
+    def _update_summary_counts(self, summary: Dict, action: str) -> None:
+        """Update summary counts based on recommendation action.
+        
+        Args:
+            summary: Summary dictionary to update
+            action: Recommendation action type
+        """
+        if action == "promote_to_permanent":
+            summary["promote_to_permanent"] += 1
+        elif action == "move_to_fleeting":
+            summary["move_to_fleeting"] += 1
+        elif action == "improve_or_archive":
+            summary["needs_improvement"] += 1
+        elif action == "manual_review":
+            summary["processing_errors"] += 1
+    
+    def _extract_weekly_recommendation(self, candidate: Dict, processing_result: Dict) -> Dict:
+        """Extract weekly recommendation from processing result.
+        
+        Args:
+            candidate: Original candidate dictionary
+            processing_result: Result from process_inbox_note()
+            
+        Returns:
+            Formatted recommendation dictionary
+        """
+        # Get first recommendation (most important)
+        recommendations = processing_result.get("recommendations", [])
+        primary_rec = recommendations[0] if recommendations else {
+            "action": "manual_review",
+            "reason": "No specific recommendation generated",
+            "confidence": 0.5
+        }
+        
+        return {
+            "file_name": candidate["path"].name,
+            "source": candidate["source"],
+            "action": primary_rec["action"],
+            "reason": primary_rec["reason"],
+            "quality_score": processing_result.get("quality_score"),
+            "confidence": primary_rec.get("confidence", 0.5),
+            "ai_tags": processing_result.get("processing", {}).get("ai_tags", []),
+            "metadata": candidate["metadata"]
+        }
 
 
 def main():
