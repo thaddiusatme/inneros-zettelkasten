@@ -90,6 +90,23 @@ python3 src/cli/summarizer_demo.py /path/to/notes
 - **Extractive**: Keyword-based sentence selection
 - **Smart Length Detection**: Automatic threshold handling
 
+#### 📈 **Enhanced Weekly Review Analytics**
+```bash
+# Generate comprehensive weekly metrics
+python3 src/cli/workflow_demo.py . --enhanced-metrics
+
+# Export enhanced metrics to markdown
+python3 src/cli/workflow_demo.py . --enhanced-metrics --export metrics.md
+
+# JSON output for automation
+python3 src/cli/workflow_demo.py . --enhanced-metrics --format json
+```
+- **Orphaned Note Detection**: Identifies notes with no incoming/outgoing links
+- **Stale Note Analysis**: Flags notes not updated in 90+ days
+- **Link Density Metrics**: Average connections per note
+- **Productivity Insights**: Creation/modification patterns
+- **Actionable Recommendations**: Specific improvement suggestions
+
 #### 🎮 **Interactive Demos**
 ```bash
 # Experience complete user journeys
