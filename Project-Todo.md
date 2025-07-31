@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo List
 
-## Current Status: Phase 6 Ready (Multi-user & Collaboration)
-*Last Updated: 2025-07-28*
+## Current Status: Phase 5.5 Active (Weekly Review Automation)
+*Last Updated: 2025-07-30*
 
 ## 🎉 Phase 5 COMPLETED ✅
 
@@ -31,7 +31,66 @@
 
 ---
 
-## 🎯 Active Sprint: Phase 6 (Multi-user & Collaboration)
+## 🎯 Active Sprint: Phase 5.5 (Weekly Review Automation)
+
+### **Goal**: Complete AI-enhanced workflow management with automated weekly review system that surfaces promotion candidates and generates actionable checklists.
+
+### **Priority Features**:
+
+#### 📋 Weekly Review Checklist Command
+- [ ] **Aggregate Inbox Notes Scanner**
+  - [ ] Scan `Inbox/` directory for all markdown files
+  - [ ] Scan `Fleeting Notes/` directory for notes with `status: inbox` in YAML frontmatter
+  - [ ] Combine both sources into unified review list
+  - [ ] Handle edge cases (missing YAML, malformed files)
+
+- [ ] **AI-Powered Promotion Recommendations**
+  - [ ] Leverage existing `WorkflowManager.process_inbox_note()` for quality assessment
+  - [ ] Generate recommendations: `promote_to_permanent`, `move_to_fleeting`, `improve_or_archive`
+  - [ ] Use quality score thresholds: >0.7 promote, >0.4 fleeting, <0.4 improve
+  - [ ] Include AI rationale and confidence scores
+
+- [ ] **Checklist-Style Output**
+  - [ ] Format each note as `- [ ] NoteTitle.md — **Action** (rationale)`
+  - [ ] Group by recommendation type with clear visual separation
+  - [ ] Include summary stats: "X notes to promote, Y to refine, Z need work"
+  - [ ] Add emoji indicators for quick visual scanning
+
+- [ ] **CLI Integration**
+  - [ ] Add `--weekly-review` flag to existing `workflow_demo.py`
+  - [ ] Create interactive mode for step-by-step processing
+  - [ ] Add `--export-checklist` option to save markdown checklist file
+  - [ ] Include `--dry-run` mode for safe preview without modifications
+
+#### 🔄 Enhanced Review Features
+- [ ] **Extended Note Scanning**
+  - [ ] Include `Permanent Notes/` with `status: draft` (ready for publishing)
+  - [ ] Identify orphaned notes (no incoming/outgoing links)
+  - [ ] Flag stale notes (not updated in configurable days, default 30)
+  - [ ] Detect duplicate or similar content candidates
+
+- [ ] **Automation & Scheduling**
+  - [ ] Create schedulable review reports (weekly cron job compatibility)
+  - [ ] Generate time-series metrics for workflow health tracking
+  - [ ] Auto-update changelog with review completion summaries
+  - [ ] Integration with existing `NoteAnalytics` dashboard
+
+- [ ] **Export & Tracking**
+  - [ ] Export checklists to markdown files with date stamps
+  - [ ] Track completion rates and promotion success metrics
+  - [ ] Generate workflow improvement recommendations
+  - [ ] Create review session templates for consistent process
+
+#### 🎯 Success Criteria
+- [ ] **Performance**: Weekly review completes in <30 seconds for 100+ notes
+- [ ] **Accuracy**: AI recommendations achieve >80% user acceptance rate
+- [ ] **Usability**: Single command generates actionable checklist requiring no manual aggregation
+- [ ] **Integration**: Seamlessly works with existing Phase 5.4 analytics and workflow systems
+- [ ] **Testing**: Comprehensive test suite with real-world note scenarios
+
+---
+
+## 🔜 Next Sprint: Phase 6 (Multi-user & Collaboration)
 
 ### Phase 6.1: Multi-user Foundation
 - [ ] **User Management System**
@@ -83,22 +142,35 @@
 - [ ] Check analytics for collection health: `python3 quick_demo.py`
 
 ### Weekly Tasks
-- [ ] Review project todo list and update priorities
+- [ ] **Run Weekly Review**: `python3 src/cli/workflow_demo.py . --weekly-review`
+- [ ] Process weekly review checklist and complete promotion actions
 - [ ] Run comprehensive analytics: `python3 src/cli/analytics_demo.py . --interactive`
-- [ ] Generate workflow reports and review recommendations
-- [ ] Update documentation as needed
+- [ ] Update project todo list and sprint priorities
 - [ ] Review AI feature adoption and usage patterns
+- [ ] Export and archive completed review checklists
 
 ### Monthly Tasks
-- [ ] Review AI model performance and update if needed
-- [ ] Run full test suite and ensure all 66 tests pass
-- [ ] Review and optimize AI cache performance
-- [ ] Update dependencies and security patches
-- [ ] Backup embedding cache and analytics reports
+- [ ] Draft and finalize Windsurf Project Manifest.md
+  - [ ] Write new Manifest file with project goals, workflow, schema, privacy, and automation
+  - [ ] Reference Manifest in onboarding and documentation
+- [ ] Align Templater scripts and note creation flow with Manifest
+  - [ ] Ensure all new notes start in Inbox/ with status: inbox in YAML
+  - [ ] Update templates with workflow guidance comments
+- [ ] Review and validate workflow automation and AI feature health
+  - [ ] Confirm automations trigger only on Inbox/ notes with status: inbox
+  - [ ] Audit workflow logs and Changelog for all status transitions
+- [ ] Update README and Changelog after major workflow/schema changes
+- [ ] Prepare for Phase 6: Multi-user collaboration and sharing features (add to backlog)
 
 ---
 
 ## 📝 Backlog (Future Phases)
+
+### Phase 6: Multi-user Collaboration & Sharing
+- [ ] Design user roles and permissions system
+- [ ] Implement audit trail for multi-user edits
+- [ ] Add note sharing and visibility controls
+- [ ] Prepare compliance and privacy documentation
 
 ### Phase 7: Production & Distribution
 - [ ] **Production Deployment**

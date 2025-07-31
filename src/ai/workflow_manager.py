@@ -511,6 +511,102 @@ class WorkflowManager:
         
         yaml_lines.extend(["---", ""])
         return "\n".join(yaml_lines) + body
+    
+    def scan_review_candidates(self) -> List[Dict]:
+        """Scan for notes that need weekly review attention.
+        
+        Finds all notes that require review:
+        - All .md files in Inbox/ directory (regardless of status)
+        - Files in Fleeting Notes/ directory with status: inbox
+        
+        Returns:
+            List of candidate dictionaries with:
+                - path: Path object to the note file
+                - source: "inbox" or "fleeting" indicating origin
+                - metadata: Parsed YAML frontmatter (empty dict if invalid)
+        """
+        candidates = []
+        
+        # Scan inbox directory - all .md files are candidates
+        candidates.extend(self._scan_directory_for_candidates(
+            self.inbox_dir, 
+            source_type="inbox", 
+            filter_func=None  # All inbox files are candidates
+        ))
+        
+        # Scan fleeting notes directory - only notes with status: inbox
+        candidates.extend(self._scan_directory_for_candidates(
+            self.fleeting_dir,
+            source_type="fleeting",
+            filter_func=lambda metadata: metadata.get("status") == "inbox"
+        ))
+        
+        return candidates
+    
+    def _scan_directory_for_candidates(self, directory: Path, source_type: str, 
+                                     filter_func: Optional[callable] = None) -> List[Dict]:
+        """Helper method to scan a directory for review candidates.
+        
+        Args:
+            directory: Path to scan
+            source_type: Type identifier ("inbox" or "fleeting")
+            filter_func: Optional function to filter candidates based on metadata
+            
+        Returns:
+            List of candidate dictionaries
+        """
+        candidates = []
+        
+        if not directory.exists():
+            return candidates
+            
+        try:
+            for note_path in directory.glob("*.md"):
+                try:
+                    candidate = self._create_candidate_dict(note_path, source_type)
+                    
+                    # Apply filter if provided
+                    if filter_func is None or filter_func(candidate["metadata"]):
+                        candidates.append(candidate)
+                        
+                except Exception as e:
+                    # Log error but continue processing other files
+                    # For now, include problematic files with empty metadata
+                    candidates.append({
+                        "path": note_path,
+                        "source": source_type,
+                        "metadata": {},
+                        "error": str(e)
+                    })
+        except Exception:
+            # Handle directory access errors gracefully
+            pass
+            
+        return candidates
+    
+    def _create_candidate_dict(self, note_path: Path, source_type: str) -> Dict:
+        """Create a candidate dictionary from a note file.
+        
+        Args:
+            note_path: Path to the note file
+            source_type: Source type ("inbox" or "fleeting")
+            
+        Returns:
+            Dictionary with path, source, and metadata
+            
+        Raises:
+            Exception: If file cannot be read or processed
+        """
+        with open(note_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        metadata, _ = self._extract_frontmatter(content)
+        
+        return {
+            "path": note_path,
+            "source": source_type,
+            "metadata": metadata
+        }
 
 
 def main():

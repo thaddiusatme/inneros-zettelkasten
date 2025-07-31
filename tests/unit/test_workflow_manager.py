@@ -427,3 +427,112 @@ Content 3""")
         promote_rec = any("promoting" in rec.lower() or "fleeting" in rec.lower() 
                          for rec in recommendations)
         assert promote_rec
+
+    # ========================= WEEKLY REVIEW TESTS =========================
+    
+    def test_scan_review_candidates_inbox_only(self):
+        """Test scanning for review candidates in inbox directory only."""
+        # Create notes in inbox
+        self.create_test_note("Inbox", "note1.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 1")
+        self.create_test_note("Inbox", "note2.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 2")
+        
+        # Create notes in other directories (should not be included)
+        self.create_test_note("Fleeting Notes", "note3.md", "---\ntype: fleeting\nstatus: promoted\n---\nContent 3")
+        
+        candidates = self.workflow.scan_review_candidates()
+        
+        # Should find 2 candidates from inbox
+        assert len(candidates) == 2
+        assert all("Inbox" in str(candidate["path"]) for candidate in candidates)
+        
+        # Verify candidate structure
+        for candidate in candidates:
+            assert "path" in candidate
+            assert "source" in candidate
+            assert "metadata" in candidate
+            assert candidate["source"] == "inbox"
+    
+    def test_scan_review_candidates_fleeting_inbox_status(self):
+        """Test scanning for fleeting notes with inbox status."""
+        # Create fleeting notes with different statuses
+        self.create_test_note("Fleeting Notes", "inbox_note.md", 
+                             "---\ntype: fleeting\nstatus: inbox\n---\nNeeds review")
+        self.create_test_note("Fleeting Notes", "promoted_note.md", 
+                             "---\ntype: fleeting\nstatus: promoted\n---\nAlready promoted")
+        self.create_test_note("Fleeting Notes", "draft_note.md", 
+                             "---\ntype: fleeting\nstatus: draft\n---\nIn draft")
+        
+        candidates = self.workflow.scan_review_candidates()
+        
+        # Should find only the inbox status note
+        assert len(candidates) == 1
+        assert "fleeting" in str(candidates[0]["path"]).lower()
+        assert candidates[0]["source"] == "fleeting"
+        assert candidates[0]["metadata"]["status"] == "inbox"
+    
+    def test_scan_review_candidates_combined(self):
+        """Test scanning combines inbox and fleeting notes with inbox status."""
+        # Create notes in inbox
+        self.create_test_note("Inbox", "inbox1.md", "---\ntype: fleeting\nstatus: inbox\n---\nInbox content")
+        self.create_test_note("Inbox", "inbox2.md", "---\ntype: fleeting\nstatus: inbox\n---\nMore inbox content")
+        
+        # Create fleeting notes with inbox status
+        self.create_test_note("Fleeting Notes", "fleeting1.md", 
+                             "---\ntype: fleeting\nstatus: inbox\n---\nFleeting inbox content")
+        
+        # Create fleeting notes with other statuses (should not be included)
+        self.create_test_note("Fleeting Notes", "fleeting2.md", 
+                             "---\ntype: fleeting\nstatus: promoted\n---\nPromoted content")
+        
+        candidates = self.workflow.scan_review_candidates()
+        
+        # Should find 3 total candidates (2 inbox + 1 fleeting)
+        assert len(candidates) == 3
+        
+        # Verify sources
+        inbox_candidates = [c for c in candidates if c["source"] == "inbox"]
+        fleeting_candidates = [c for c in candidates if c["source"] == "fleeting"]
+        
+        assert len(inbox_candidates) == 2
+        assert len(fleeting_candidates) == 1
+    
+    def test_scan_review_candidates_handles_missing_yaml(self):
+        """Test scanner handles notes with missing or malformed YAML."""
+        # Create notes with various YAML issues
+        self.create_test_note("Inbox", "no_yaml.md", "Just plain content without frontmatter")
+        self.create_test_note("Inbox", "malformed_yaml.md", "---\ntype: fleeting\nstatus: inbox\ninvalid yaml\n---\nContent")
+        self.create_test_note("Fleeting Notes", "missing_status.md", "---\ntype: fleeting\n---\nNo status field")
+        
+        # This should not raise an exception
+        candidates = self.workflow.scan_review_candidates()
+        
+        # Should handle gracefully - inbox files always included regardless of YAML
+        inbox_candidates = [c for c in candidates if c["source"] == "inbox"]
+        assert len(inbox_candidates) == 2  # Both inbox files included
+        
+        # Fleeting note without status should not be included
+        fleeting_candidates = [c for c in candidates if c["source"] == "fleeting"]
+        assert len(fleeting_candidates) == 0
+    
+    def test_scan_review_candidates_empty_directories(self):
+        """Test scanner handles empty directories gracefully."""
+        # No notes created - directories are empty
+        candidates = self.workflow.scan_review_candidates()
+        
+        assert len(candidates) == 0
+        assert isinstance(candidates, list)
+    
+    def test_scan_review_candidates_non_markdown_files(self):
+        """Test scanner ignores non-markdown files."""
+        # Create non-markdown files
+        (self.base_dir / "Inbox" / "text_file.txt").write_text("Not markdown")
+        (self.base_dir / "Inbox" / "image.png").write_text("Binary data")
+        
+        # Create one valid markdown file
+        self.create_test_note("Inbox", "valid.md", "---\ntype: fleeting\nstatus: inbox\n---\nValid content")
+        
+        candidates = self.workflow.scan_review_candidates()
+        
+        # Should only find the markdown file
+        assert len(candidates) == 1
+        assert candidates[0]["path"].suffix == ".md"
