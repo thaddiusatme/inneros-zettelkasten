@@ -2,10 +2,10 @@
 type: fleeting
 created: 2025-07-24 19:06
 status: inbox
-tags: ["#fleeting", "#inbox"]
+tags: ["#fleeting", "#inbox", "book-sales", "personal-development", "popular-culture", "self-help", "self-help-books", "trend-following"]
+ai_processed: 2025-07-31T19:16:43.047005
 visibility: private
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-07-24 19:07

@@ -1,4 +1,5 @@
 ---
+<% await tp.file.move(`Inbox/${tp.file.title}`) %>
 type: permanent
 created: 2025-07-05 00:00
 status: published

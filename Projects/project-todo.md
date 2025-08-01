@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo List
 
 ## Current Status: Phase 5.5 Active (Weekly Review Automation)
-*Last Updated: 2025-07-30*
+*Last Updated: 2025-07-31*
 
 ## 🎉 Phase 5 COMPLETED ✅
 
@@ -35,7 +35,14 @@
 
 ### **Goal**: Complete AI-enhanced workflow management with automated weekly review system that surfaces promotion candidates and generates actionable checklists.
 
-### **Priority Features**:
+### **Priority Features & Recent Fixes**:
+
+#### ✅ Infrastructure Fix Completed (2025-07-31)
+- [x] Implement **Default Vault Path Resolver** (env-vars + `.inneros.*` configs)
+- [x] Update `WorkflowManager` to auto-detect vault when no path supplied
+- [x] Add unit tests `test_vault_path.py`, `test_workflow_manager_default_path.py` (all green)
+
+
 
 #### 📋 Weekly Review Checklist Command
 - [ ] **Aggregate Inbox Notes Scanner**
@@ -80,6 +87,11 @@
   - [ ] Track completion rates and promotion success metrics
   - [ ] Generate workflow improvement recommendations
   - [ ] Create review session templates for consistent process
+
+#### 🐞 Tech-Debt / Test Failures
+- [ ] Fix 13 remaining failing integration & unit tests unrelated to vault resolver
+- [ ] Investigate accuracy threshold failures in analytics & AI modules
+- [ ] Re-enable full test suite to green before refactor phase
 
 #### 🎯 Success Criteria
 - [ ] **Performance**: Weekly review completes in <30 seconds for 100+ notes

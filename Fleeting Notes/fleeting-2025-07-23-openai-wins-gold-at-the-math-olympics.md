@@ -2,10 +2,10 @@
 type: fleeting
 created: 2025-07-23 20:10
 status: inbox
-tags: ["#fleeting", "#inbox"]
+tags: ["#fleeting", "#inbox", "ai-reasoning", "imo", "language-model", "language-understanding", "machine-learning", "math-olympiad"]
+ai_processed: 2025-07-31T19:17:21.357593
 visibility: private
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-07-23 20:11

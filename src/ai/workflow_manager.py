@@ -21,14 +21,25 @@ from .analytics import NoteAnalytics
 class WorkflowManager:
     """Manages the complete AI-enhanced Zettelkasten workflow."""
     
-    def __init__(self, base_directory: str):
-        """
-        Initialize workflow manager.
-        
+    def __init__(self, base_directory: str | None = None):
+        """Initialize workflow manager.
+
         Args:
-            base_directory: Root directory of the Zettelkasten
+            base_directory: Explicit path to the Zettelkasten root. If ``None`` the
+                resolver in ``utils.vault_path`` is used. Raises ``ValueError`` if
+                no valid directory can be resolved.
         """
-        self.base_dir = Path(base_directory)
+        if base_directory is None:
+            from src.utils.vault_path import get_default_vault_path
+            resolved = get_default_vault_path()
+            if resolved is None:
+                raise ValueError(
+                    "No vault path supplied and none could be resolved via "
+                    "INNEROS_VAULT_PATH or .inneros.* config files."
+                )
+            self.base_dir = resolved
+        else:
+            self.base_dir = Path(base_directory).expanduser()
         
         # Define workflow directories
         self.inbox_dir = self.base_dir / "Inbox"

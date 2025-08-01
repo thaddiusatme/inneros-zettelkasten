@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-25 22:02
 status: inbox
-tags: ["business-strategy", "channel-optimization", "daily-leverage-activities", "deep-work-sprint", "goal-alignment", "gpt-workshop-materials", "offer-audit", "retention-strategies"]
-ai_processed: 2025-07-28T20:04:23.403897
+tags: ["business-growth", "business-strategy", "channel-optimization", "customer-retention", "daily-leverage-activities", "deep-work-sprint", "energy-leverage", "entrepreneurship"]
+ai_processed: 2025-07-30T23:52:15.741859
 visibility: private
 linked_notes: 
 ---

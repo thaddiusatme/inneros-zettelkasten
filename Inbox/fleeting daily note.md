@@ -1,6 +1,6 @@
 ---
-tags: ["content-calendar", "document-as-you-go", "llm", "obsidian", "project-planning", "tw-sop", "voice-notes", "workflow-management"]
-ai_processed: 2025-07-28T20:05:12.795002
+tags: ["content-calendar", "document-as-i-go", "document-as-you-go", "documentation", "energy-management", "llm", "morning-routine", "obsidian"]
+ai_processed: 2025-07-30T23:53:00.923866
 ---
 Intentions today- I wish to have a successful and laid back WFM shift
 

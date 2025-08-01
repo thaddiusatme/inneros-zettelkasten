@@ -1,4 +1,6 @@
 <%*
+await tp.file.move(`Inbox/${tp.file.title}`);
+
 const date = tp.date.now("YYYY-MM-DD");
 const fileName = `weekly-review-${date}`;
 const folder = "Reviews"; // optional — change or remove if you don’t want a folder

@@ -1,4 +1,6 @@
 <%*
+await tp.file.move(`Inbox/${tp.file.title}`);
+
 const topic = await tp.system.prompt("Enter topic");
 if (topic) {
     const sanitizedTopic = topic.toLowerCase().trim().replace(/\s+/g, "-");

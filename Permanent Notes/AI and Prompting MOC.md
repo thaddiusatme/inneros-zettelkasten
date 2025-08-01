@@ -13,6 +13,11 @@ tags:
 
 This is the central hub for notes related to AI, Large Language Models (LLMs), and prompt engineering.
 
+## Strategy & Implementation
+- [[zettel-202507231655-strategy-for-ai-augmented-zettelkasten]] - Core AI integration strategy
+- [[zettel-202507231648-context-engineering-improves-tdd-automation]] - Context engineering for automation
+- [[fleeting-2025-05-19-ai-notebook-strategy]] - Original AI workflow ideas
+
 ## Concepts & Best Practices
 - [[Best Practices for Lovable Prompting – Handbook Highlights]]
 - [[Test Driven Content Engineering as the Next Wave of Coding]]

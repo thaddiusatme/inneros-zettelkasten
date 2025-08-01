@@ -2,10 +2,10 @@
 type: fleeting
 created: 2025-07-24 09:45
 status: inbox
-tags: ["#fleeting", "#inbox"]
+tags: ["#fleeting", "#inbox", "financial-stress", "financial-struggles", "goal-setting", "mental-health", "personal-growth", "productivity"]
+ai_processed: 2025-07-31T19:14:14.669591
 visibility: private
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-07-24 09:45

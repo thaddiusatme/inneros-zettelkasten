@@ -1,6 +1,6 @@
 ---
-tags: ["ai-driven-development", "context-engineering", "tdd"]
-ai_processed: 2025-07-28T20:05:35.136312
+tags: ["", " ", "-", ":", "[", "a", "ai-driven-code-development", "context-engineering"]
+ai_processed: 2025-07-30T23:53:16.619139
 ---
 https://youtu.be/4GiqzUHD5AA?si=MqxQURqrXx786-nP
 

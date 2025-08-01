@@ -1,4 +1,5 @@
 ---
+<% await tp.file.move(`Inbox/${tp.file.title}`) %>
 type: literature
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox

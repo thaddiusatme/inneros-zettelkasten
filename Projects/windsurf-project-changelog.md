@@ -358,7 +358,21 @@ status: active
 - Exclude templates from pre-commit validation to prevent Templater conflicts
 - **Commit**: f9334a6 - All notes now follow standardized workflow with compliant YAML frontmatter
 
-## 2025-07-31 - Phase 5.5.4 COMPLETED: Enhanced Weekly Review Analytics
+## 2025-07-31## 🛠️ 2025-07-31: Template Auto-Inbox Enhancement
+
+### Added
+- Obsidian template snippets now immediately relocate generated notes to `Inbox/` using `tp.file.move()`.
+- New TDD unit test `test_templates_auto_inbox.py` ensures every template contains a `tp.file.move()` call.
+
+### Changed
+- Updated `Templates/fleeting.md` and `Templates/literature.md` with auto-Inbox move snippets.
+
+### Rationale
+Keeps `Templates/**` clean and prevents Weekly-Review scanner from detecting template instances as review candidates.
+
+---
+
+## ✅ PHASE 5.5.4 SPRINT COMPLETED: Enhanced Weekly Review Featureslytics
 
 ### 🎯 **Enhanced Review Features: Orphaned Note Detection & Comprehensive Metrics**
 **Status**: ✅ **PRODUCTION READY** - All enhanced features fully implemented with 100% test coverage

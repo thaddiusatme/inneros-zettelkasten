@@ -30,5 +30,13 @@ Integrating AI into a Zettelkasten requires a deliberate strategy that enhances 
 2.  **Develop Task-Specific Prompts:** Create a library of prompt templates tailored for different note-processing tasks (e.g., `prompt-for-tagging.md`, `prompt-for-linking.md`).
 3.  **Pilot Program:** Test the AI-assisted workflows on a small, controlled sample of notes to evaluate their effectiveness and refine the process before a full rollout.
 
+## Related Notes
+- [[fleeting-2025-05-19-ai-notebook-strategy]] - Original AI strategy fleeting note (source)
+- [[zettel-202507231648-context-engineering-improves-tdd-automation]] - Context engineering for automation
+- [[fleeting-2025-07-28-context-enginering-tdd-zettelkasten-note-oadministrator]] - Practical implementation thoughts
+- [[fleeting-2025-07-23-2-billion-prompts-a-day]] - AI usage trends
+- [[fleeting-2025-07-29-here-are-the-10-jobs-ai-is-most-likely-to-automate,-according-to-a-microsoft-study]] - AI automation impact
+- [[fleeting-2025-07-20-tdd-context-code-review-step]] - TDD + AI workflow integration
+
 ---
 *Source: [[fleeting-2025-05-19-ai-notebook-strategy]]*

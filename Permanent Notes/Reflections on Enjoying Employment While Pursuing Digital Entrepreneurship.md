@@ -30,6 +30,15 @@ Up: [[Career & Entrepreneurship MOC]]
 
 **Why it matters** Recognizing the unexpected enjoyment of traditional work alongside freelance and entrepreneurial projects creates perspective and gratitude. This reflection can help shape future decisions on work-life structure, reduce burnout risk, and reinforce commitment to digital business growth tied to strategic goals for freedom and revenue.
 
+**Reflection**: This is a daily practice of gratitude and intentionality that serves both short-term satisfaction and long-term goal achievement.
+
+## Related Notes
+- [[fleeting-2025-07-31-upwork-get-clients-on-upwork-in-2025-for-beginners-video]] - Practical Upwork strategies
+- [[fleeting-2025-07-31-upwork-top-5-for-beginners]] - Upwork beginner tips
+- [[fleeting-2025-07-31-upwork-what-should-i-do-before-i-get-even-started]] - Pre-freelancing preparation
+- [[Upwork as Revenue]] - Revenue strategy through freelancing
+- [[fleeting-2025-07-30-woes-of-not-having-a-boss]] - Independence vs employment trade-offs
+
 **Desired outcome**
 
 - Regularly clarify what each role (employment, freelancing) brings to motivation and well-being

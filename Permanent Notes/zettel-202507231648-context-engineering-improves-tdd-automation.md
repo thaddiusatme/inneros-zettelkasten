@@ -30,5 +30,10 @@ This leads to defining clear requirements for incoming notes, such as:
 
 Ultimately, the discipline of TDD in a Zettelkasten context shifts the focus from simply writing prompts to building a resilient system that gathers and provides the necessary context for successful automation.
 
+## Related Notes
+- [[fleeting-2025-05-19-ai-notebook-strategy]] - Original AI strategy fleeting note
+- [[fleeting-2025-07-28-context-enginering-tdd-zettelkasten-note-oadministrator]] - Practical application of context engineering concepts
+- [[zettel-202507231655-strategy-for-ai-augmented-zettelkasten]] - Broader AI integration strategy
+
 ---
 *Source: [[fleeting-2025-07-20-tdd-context-code-review-step]]*
