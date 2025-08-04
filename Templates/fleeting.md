@@ -1,21 +1,39 @@
 ---
 type: fleeting
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+created: {{date:YYYY-MM-DD HH:mm}}
 status: inbox
-tags: ["#fleeting", "#inbox"]
+tags: [fleeting, inbox]
 visibility: private
 ---
 <%*
-const fname = tp.file.title;
-await tp.file.move(`Inbox/${fname}`);
+/*------------------------------------------------------------------
+  1. Capture Topic/Idea
+------------------------------------------------------------------*/
+const rawTopic = await tp.system.prompt("What's the main topic or idea?");
+if (!rawTopic) {
+  await tp.system.alert("Cancelled – no topic given.");
+  return;
+}
 
-// WORKFLOW: New fleeting notes should be created in the Inbox folder (or your default note location) with status: inbox in the YAML frontmatter.
-// During triage, move the note to the Fleeting Notes folder to enter the main fleeting note workflow.
-const topic = await tp.system.prompt("Enter topic");
-if (topic) {
-    const sanitizedTopic = topic.toLowerCase().replace(/\s+/g, "-");
-    const newFileName = `fleeting-${tp.date.now("YYYY-MM-DD")}-${sanitizedTopic}`;
-    await tp.file.move(`Inbox/${newFileName}`);
+/*------------------------------------------------------------------
+  2. Build File Name & Path
+------------------------------------------------------------------*/
+const slug   = rawTopic.toLowerCase()
+                       .replace(/[^a-z0-9]+/g,"-")
+                       .replace(/(^-|-$)/g,"");
+const stamp  = tp.date.now("YYYYMMDD-HHmm");
+const fname  = `fleeting-${stamp}-${slug}.md`;
+const target = `Inbox/${fname}`;
+
+/*------------------------------------------------------------------
+  3. Rename & Move (with graceful error)
+------------------------------------------------------------------*/
+try {
+  await tp.file.rename(fname);
+  await tp.file.move(target);
+} catch (e) {
+  await tp.system.alert("Rename/Move failed – " + e.message);
+  return;
 }
 %>
 <!--

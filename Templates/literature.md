@@ -1,13 +1,47 @@
 ---
-<% await tp.file.move(`Inbox/${tp.file.title}`) %>
 type: literature
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+created: {{date:YYYY-MM-DD HH:mm}}
 status: inbox
-tags: [literature, <% tp.system.prompt("Add relevant tags (comma-separated)") %>]
+tags: [literature]
 visibility: private
-source: <% tp.system.prompt("Source (URL, book title, etc.)") %>
-author: <% tp.system.prompt("Author name") %>
+source: 
+author: 
 ---
+<%*
+/*------------------------------------------------------------------
+  1. Capture Source Information
+------------------------------------------------------------------*/
+const sourceTitle = await tp.system.prompt("Source title (article, book, etc.)");
+if (!sourceTitle) {
+  await tp.system.alert("Cancelled – no source title given.");
+  return;
+}
+
+const author = await tp.system.prompt("Author name");
+const sourceUrl = await tp.system.prompt("URL or citation (optional)", "");
+const tags = await tp.system.prompt("Additional tags (comma-separated, optional)", "");
+
+/*------------------------------------------------------------------
+  2. Build File Name & Path
+------------------------------------------------------------------*/
+const slug   = sourceTitle.toLowerCase()
+                          .replace(/[^a-z0-9]+/g,"-")
+                          .replace(/(^-|-$)/g,"");
+const stamp  = tp.date.now("YYYYMMDD-HHmm");
+const fname  = `lit-${stamp}-${slug}.md`;
+const target = `Inbox/${fname}`;
+
+/*------------------------------------------------------------------
+  3. Rename & Move (with graceful error)
+------------------------------------------------------------------*/
+try {
+  await tp.file.rename(fname);
+  await tp.file.move(target);
+} catch (e) {
+  await tp.system.alert("Rename/Move failed – " + e.message);
+  return;
+}
+%>
 
 # <% tp.file.title %>
 
