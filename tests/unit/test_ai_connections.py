@@ -188,21 +188,25 @@ It discusses artificial intelligence research.
     
     def test_generate_ollama_embedding_success(self):
         """Test Ollama embedding generation."""
-        with patch.object(self.connections.ollama_client, 'health_check', return_value=True), \
-             patch.object(self.connections.ollama_client, 'generate_embedding', return_value=[0.1, 0.2, 0.3, 0.4]) as mock_embedding:
+        # Mock the embedding cache to return our test embedding
+        with patch.object(self.connections, 'embedding_cache') as mock_cache:
+            mock_cache.get_or_generate_embedding.return_value = [0.1, 0.2, 0.3, 0.4]
             
             text = "Test text for embedding"
             result = self.connections._generate_ollama_embedding(text)
             
             assert result == [0.1, 0.2, 0.3, 0.4]
-            mock_embedding.assert_called_once_with(text)
+            mock_cache.get_or_generate_embedding.assert_called_once_with(text)
     
     def test_generate_ollama_embedding_api_down(self):
         """Test Ollama embedding when API is down."""
-        with patch.object(self.connections.ollama_client, 'health_check', return_value=False):
+        # Mock the embedding cache to raise an exception (simulating API failure)
+        with patch.object(self.connections, 'embedding_cache') as mock_cache:
+            mock_cache.get_or_generate_embedding.side_effect = Exception("Failed to generate embedding: Ollama service is not available")
+            
             text = "Test text"
             
-            with pytest.raises(Exception, match="Ollama service is not available"):
+            with pytest.raises(Exception, match="Failed to generate embedding"):
                 self.connections._generate_ollama_embedding(text)
     
     def test_cosine_similarity_identical_vectors(self):

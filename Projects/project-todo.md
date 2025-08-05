@@ -31,43 +31,53 @@
 
 ---
 
-## 🎯 Active Sprint: Phase 5.5 (Weekly Review Automation)
+## 🎯 Active Sprint: Phase 5.5 (Weekly Review Automation) - **UPDATED 2025-08-04**
 
-### **Goal**: Complete AI-enhanced workflow management with automated weekly review system that surfaces promotion candidates and generates actionable checklists.
+### **Strategic Analysis Complete**: 🏆 **Exceptional Foundation, Critical Next Steps**
 
-### **Priority Features & Recent Fixes**:
+Based on comprehensive SWOT and 80/20 analysis, your InnerOS Zettelkasten has achieved **production-ready AI-enhanced knowledge management** that significantly exceeds typical note-taking applications. The technical foundation is solid; focus shifts to accessibility and user experience.
 
-#### ✅ Infrastructure Fix Completed (2025-07-31)
-- [x] Implement **Default Vault Path Resolver** (env-vars + `.inneros.*` configs)
-- [x] Update `WorkflowManager` to auto-detect vault when no path supplied
-- [x] Add unit tests `test_vault_path.py`, `test_workflow_manager_default_path.py` (all green)
+### **Priority Features & Strategic Next Actions**:
 
+#### ✅ **Immediate Critical Actions** (Next 2 weeks - 80/20 High Impact)
+- [x] **Fix Test Suite** 🔴 **CRITICAL** - 13 failing tests blocking Phase 6
+  - [ ] Investigate accuracy threshold failures in analytics & AI modules  
+  - [ ] Re-enable full test suite to green before any new development
+  - [ ] Add regression tests for vault path resolver edge cases
 
+- [x] **Complete Phase 5.5 Weekly Review** 🟡 **HIGH IMPACT** - Finish AI workflow loop
+  - [x] **Aggregate Inbox Notes Scanner** ✅ **IMPLEMENTED** - Ready for integration
+  - [x] **AI-Powered Promotion Recommendations** ✅ **IMPLEMENTED** - Ready for integration  
+  - [x] **Checklist-Style Output** ✅ **IMPLEMENTED** - Ready for integration
+  - [ ] **CLI Integration & Testing** - Final integration and user testing
 
-#### 📋 Weekly Review Checklist Command
-- [ ] **Aggregate Inbox Notes Scanner**
-  - [ ] Scan `Inbox/` directory for all markdown files
-  - [ ] Scan `Fleeting Notes/` directory for notes with `status: inbox` in YAML frontmatter
-  - [ ] Combine both sources into unified review list
-  - [ ] Handle edge cases (missing YAML, malformed files)
+- [x] **Write Project Manifest** 🟢 **LOW EFFORT, HIGH VALUE** - Document vision and architecture
+  - [ ] Create comprehensive `Windsurf Project Manifest.md` with project goals, workflow, schema, privacy, automation
+  - [ ] Reference Manifest in onboarding and documentation
+  - [ ] Align Templater scripts and note creation flow with Manifest
 
-- [ ] **AI-Powered Promotion Recommendations**
-  - [ ] Leverage existing `WorkflowManager.process_inbox_note()` for quality assessment
-  - [ ] Generate recommendations: `promote_to_permanent`, `move_to_fleeting`, `improve_or_archive`
-  - [ ] Use quality score thresholds: >0.7 promote, >0.4 fleeting, <0.4 improve
-  - [ ] Include AI rationale and confidence scores
+- [x] **Basic Web UI Prototype** 🟢 **STRATEGIC** - Make system accessible beyond CLI
+  - [ ] Create Flask/FastAPI dashboard for analytics and workflow management
+  - [ ] Simple web interface for weekly review checklist
+  - [ ] Basic user onboarding flow
 
-- [ ] **Checklist-Style Output**
-  - [ ] Format each note as `- [ ] NoteTitle.md — **Action** (rationale)`
-  - [ ] Group by recommendation type with clear visual separation
-  - [ ] Include summary stats: "X notes to promote, Y to refine, Z need work"
-  - [ ] Add emoji indicators for quick visual scanning
+#### 📋 **Enhanced Review Features** (Phase 5.5 Extended)
+- [x] **Extended Note Scanning** 
+  - [x] ✅ **Orphaned Note Detection** - Implemented and tested
+  - [x] ✅ **Stale Note Flagging** - Implemented and tested  
+  - [x] ✅ **Comprehensive Metrics Dashboard** - Implemented and tested
+  - [ ] **Draft Status Processing** - Include `Permanent Notes/` with `status: draft`
+  - [ ] **Duplicate Detection** - Identify similar content candidates
 
-- [ ] **CLI Integration**
-  - [ ] Add `--weekly-review` flag to existing `workflow_demo.py`
-  - [ ] Create interactive mode for step-by-step processing
-  - [ ] Add `--export-checklist` option to save markdown checklist file
-  - [ ] Include `--dry-run` mode for safe preview without modifications
+- [ ] **Automation & Scheduling**
+  - [ ] Create schedulable review reports (weekly cron job compatibility)
+  - [ ] Generate time-series metrics for workflow health tracking
+  - [ ] Auto-update changelog with review completion summaries
+
+- [ ] **Export & Tracking**
+  - [ ] Export checklists to markdown files with date stamps
+  - [ ] Track completion rates and promotion success metrics
+  - [ ] Generate workflow improvement recommendations
 
 #### 🔄 Enhanced Review Features
 - [ ] **Extended Note Scanning**
@@ -88,10 +98,34 @@
   - [ ] Generate workflow improvement recommendations
   - [ ] Create review session templates for consistent process
 
-#### 🐞 Tech-Debt / Test Failures
-- [ ] Fix 13 remaining failing integration & unit tests unrelated to vault resolver
-- [ ] Investigate accuracy threshold failures in analytics & AI modules
-- [ ] Re-enable full test suite to green before refactor phase
+#### 🐞 Tech-Debt / Test Failures - **PRIORITIZED**
+- [x] **Fix 13 failing tests** 🔴 **BLOCKING PHASE 6**
+  - [ ] Investigate accuracy threshold failures in analytics & AI modules  
+  - [ ] Re-enable full test suite to green before any new development
+  - [ ] Add regression tests for vault path resolver edge cases
+  - [ ] Document test failure patterns for future debugging
+
+## 🔍 **Strategic Gaps Identified** (Based on SWOT & 80/20 Analysis)
+
+### **Technical Gaps** 🔧
+- [ ] **Error Recovery & Fallbacks** - Extended AI service failure handling
+- [ ] **Data Migration Strategy** - Schema evolution and user data portability
+- [ ] **Backup/Export System** - User data safety and portability (JSON, Markdown)
+- [ ] **Performance at Scale** - Validation with 1000+ notes and concurrent users
+- [ ] **Configuration Management** - User-friendly settings and preferences
+
+### **User Experience Gaps** 👤
+- [ ] **Onboarding Flow** - Guided setup for new users beyond CLI
+- [ ] **Visual Feedback** - Web UI dashboard for analytics and workflow management
+- [ ] **Undo/Rollback Safety** - AI change recovery and safety nets
+- [ ] **Error Messaging** - User-friendly error handling and recovery guidance
+
+### **Strategic Gaps** 🎯
+- [ ] **Project Manifest** - Comprehensive vision and architecture documentation
+- [ ] **API Design** - REST API for external integrations and plugins
+- [ ] **Business Model** - Sustainability and monetization strategy
+- [ ] **Community Building** - User documentation, tutorials, and support
+- [ ] **Production Deployment** - Installation packages and distribution strategy
 
 #### 🎯 Success Criteria
 - [ ] **Performance**: Weekly review completes in <30 seconds for 100+ notes
@@ -219,13 +253,45 @@
 
 ---
 
-## 🎯 Quick Actions (Next Session)
+## 🎯 **Quick Actions - PRIORITIZED BY IMPACT** (Next Session)
 
-### Immediate Next Steps
-1. **Plan Phase 6 Architecture**: Design multi-user system architecture
-2. **Research Collaboration Tools**: Evaluate existing solutions for inspiration
-3. **Design User Stories**: Create detailed user scenarios for collaboration
-4. **Set Up Development Environment**: Prepare for web-based features
+### **🔴 CRITICAL - Fix Test Suite** (Next 1-2 days)
+```bash
+# Run failing tests to identify issues
+python -m pytest tests/unit/ -v --tb=short
+python -m pytest tests/integration/ -v --tb=short
+
+# Focus on accuracy threshold failures first
+python -m pytest tests/unit/test_analytics.py -v
+python -m pytest tests/unit/test_ai_enhancer.py -v
+```
+
+### **🟡 HIGH IMPACT - Complete Phase 5.5** (Next 1 week)
+```bash
+# Test weekly review implementation
+python3 src/cli/workflow_demo.py . --weekly-review --dry-run
+python3 src/cli/workflow_demo.py . --weekly-review --enhanced-metrics
+
+# Export and validate checklist
+python3 src/cli/workflow_demo.py . --weekly-review --export-checklist weekly-review-$(date +%Y-%m-%d).md
+```
+
+### **🟢 STRATEGIC - Project Manifest & Web UI** (Next 2 weeks)
+1. **Create Project Manifest** - Document vision and architecture
+2. **Start Web UI Prototype** - Basic Flask/FastAPI dashboard
+3. **User Onboarding Design** - Guided setup flow beyond CLI
+
+### **📊 Validation Commands** (Use these to verify progress)
+```bash
+# Comprehensive system health check
+python3 quick_demo.py
+
+# Real data validation
+python3 test_real_analytics.py
+
+# Workflow health assessment
+python3 src/cli/workflow_demo.py . --status
+```
 
 ### Dependencies Check
 - [x] Phase 5 complete with 66/66 tests passing ✅

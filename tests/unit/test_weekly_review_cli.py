@@ -200,7 +200,10 @@ class TestWeeklyReviewFormatter:
             assert result_path.parent == export_dir
             assert result_path.name.startswith("weekly-review-")
             assert result_path.name.endswith(".md")
-            assert "2025-07-30" in result_path.name
+            # Check that today's date is in the filename
+            from datetime import datetime
+            today = datetime.now().strftime("%Y-%m-%d")
+            assert today in result_path.name
     
     def test_format_for_interactive_mode(self):
         """Test formatting for interactive step-by-step mode."""

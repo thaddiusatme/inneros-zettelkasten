@@ -372,7 +372,7 @@ This is a note for fleeting promotion."""
             ("note1.md", """---
 ai_summary: AI generated summary
 ai_processed: 2024-01-01T10:00:00
-tags: ["machine-learning", "deep-learning"]
+tags: ["machine-learning", "deep-learning", "artificial-intelligence"]
 ---
 Content 1"""),
             ("note2.md", """---
@@ -399,7 +399,7 @@ Content 3""")
         """Test workflow recommendation generation."""
         directory_counts = {
             "Inbox": 25,  # High inbox count
-            "Fleeting Notes": 10,
+            "Fleeting Notes": 11,  # Greater than permanent * 2 (5 * 2 = 10)
             "Permanent Notes": 5,
             "Archive": 0
         }
@@ -724,7 +724,7 @@ Content 3""")
     def test_generate_weekly_recommendations_result_structure(self):
         """Test that generate_weekly_recommendations returns properly structured results."""
         # Create empty test directory
-        test_dir = self.temp_dir / "test_zettelkasten"
+        test_dir = Path(self.temp_dir) / "test_zettelkasten"
         test_dir.mkdir()
         (test_dir / "Inbox").mkdir()
         (test_dir / "Fleeting Notes").mkdir()
@@ -738,24 +738,24 @@ Content 3""")
         result = workflow.generate_weekly_recommendations(candidates)
         
         # Verify structure
-        self.assertIn("summary", result)
-        self.assertIn("recommendations", result)
-        self.assertIn("generated_at", result)
+        assert "summary" in result
+        assert "recommendations" in result
+        assert "generated_at" in result
         
         # Verify summary structure
         summary = result["summary"]
-        self.assertIn("total_notes", summary)
-        self.assertIn("promote_to_permanent", summary)
-        self.assertIn("move_to_fleeting", summary)
-        self.assertIn("needs_improvement", summary)
-        self.assertIn("processing_errors", summary)
+        assert "total_notes" in summary
+        assert "promote_to_permanent" in summary
+        assert "move_to_fleeting" in summary
+        assert "needs_improvement" in summary
+        assert "processing_errors" in summary
         
         # Verify all counts are zero
         for key in ["total_notes", "promote_to_permanent", "move_to_fleeting", "needs_improvement", "processing_errors"]:
-            self.assertEqual(summary[key], 0)
+            assert summary[key] == 0
         
         # Verify recommendations is empty list
-        self.assertEqual(result["recommendations"], [])
+        assert result["recommendations"] == []
 
     # Phase 5.5.4 Enhanced Features Tests
     def test_detect_orphaned_notes_empty_collection(self):

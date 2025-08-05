@@ -3,9 +3,9 @@
     Welcome to the `innerOS` workspace! This vault is designed for frictionless idea capture, structured Zettelkasten note-taking, and AI-assisted workflows, with privacy and future collaboration in mind.
 
     ## Key Documents
-    - **Windsurf Project Manifest.md** — Project overview, workflow, schema, privacy/compliance, and next steps.
-    - **Windsurf Project Changelog.md** — Tracks major changes, schema updates, and workflow improvements.
-    - **Windsurf Project Instructions.md** — Ensures every new session references the Manifest and Changelog for context.
+    - **inneros-manifest.md** — Comprehensive project overview, architecture, AI features, and roadmap
+    - **windsurf-project-changelog.md** — Detailed change history and development milestones
+    - **project-todo.md** — Current priorities and next development steps
 
     ## Directory Structure
     - `Inbox/` — Staging area for new, unsorted notes. All new notes (fleeting, reference, actionable) start here with `status: inbox` in YAML.
@@ -152,10 +152,11 @@ python3 test_real_analytics.py
     - `.git/hooks/post-commit` — Automatically updates `Windsurf Project Changelog.md` with the commit message after a successful commit.
 
     ## Getting Started
-    1. Read the Manifest and Changelog for project context.
-    2. Use provided templates for new notes.
-    3. Follow the triage flow for fleeting → permanent note promotion.
-    4. Update the Changelog with major changes.
+    1. **Read the Manifest**: Start with `inneros-manifest.md` for complete project context
+    2. **Quick Demo**: Run `python3 quick_demo.py` to see AI features in action
+    3. **Process Your Notes**: Use `python3 src/cli/workflow_demo.py . --process-inbox`
+    4. **Explore Templates**: Use provided templates for consistent note creation
+    5. **Weekly Review**: Run `python3 src/cli/workflow_demo.py . --weekly-review`
 
     ---
 
