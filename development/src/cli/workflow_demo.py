@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add development directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ..ai.workflow_manager import WorkflowManager
-from ..cli.weekly_review_formatter import WeeklyReviewFormatter
+from src.ai.workflow_manager import WorkflowManager
+from src.cli.weekly_review_formatter import WeeklyReviewFormatter
 
 
 def print_header(title: str):

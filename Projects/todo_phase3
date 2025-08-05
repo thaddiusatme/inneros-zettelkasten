@@ -1,0 +1,77 @@
+---
+type: project-todo
+created: 2025-08-04 21:02
+updated: 2025-08-05 16:24
+status: in-progress
+tags: [phase-3, validation, performance, optimization, tdd-completed]
+---
+
+# Phase 3: Production Validation & Performance Optimization
+
+## 🎯 Objective
+Validate the new directory structure is production-ready by addressing performance issues and ensuring all tools work optimally from new paths.
+
+## 📋 Task List
+
+### **Performance Optimization** [Priority: HIGH]
+- [x] **Fix 4 performance test failures** ✅ **MOSTLY RESOLVED**
+  - [ ] `test_performance_benchmark` - ⚠️ **NOT FOUND** in current test suite
+  - [x] `test_complete_mvp_workflow` - ✅ **PASSING** (confirmed working)
+  - [x] `test_enhancer_error_handling` - ✅ **PASSING** (confirmed working)
+  - [x] `test_real_summary_generation_performance` - ✅ **PASSING** (confirmed working)
+
+- [ ] **Performance benchmarking**
+  - [ ] Run performance tests with current structure
+  - [ ] Identify bottlenecks in new directory layout
+  - [ ] Optimize import loading times
+  - [ ] Consider caching strategies
+
+### **CLI Tool Validation** [Priority: HIGH]
+- [x] **Test all CLI tools from new paths** ✅ **COMPLETED**
+  - [x] `python3 development/src/cli/analytics_demo.py . --interactive` ✅ **FIXED**
+  - [x] `python3 development/src/cli/workflow_demo.py . --process-inbox` ✅ **FIXED**
+  - [x] `python3 development/demos/quick_demo.py` ✅ **FIXED**
+  - [x] `python3 development/demos/demo_user_journeys.py` ✅ **FIXED**
+  - [x] `python3 development/demos/test_real_analytics.py` ✅ **FIXED**
+
+- [x] **Verify CLI entry points** ✅ **RESOLVED**
+  - [x] Check all scripts run without path issues ✅ **IMPORT PATHS FIXED**
+  - [x] Validate argument parsing works correctly ✅ **CONFIRMED WORKING**
+  - [ ] Test with real user data
+
+### **Documentation Enhancement** [Priority: MEDIUM]
+- [ ] **Update project documentation**
+  - [ ] Update `Projects/project-todo.md` with Phase 3 tasks
+  - [ ] Enhance [README.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/README.md:0:0-0:0) with new CLI usage examples
+  - [ ] Create migration guide for existing users
+  - [ ] Document performance optimization strategies
+
+- [ ] **Create quick-start guides**
+  - [ ] Developer quick-start for new structure
+  - [ ] Knowledge worker quick-start for new paths
+  - [ ] CLI usage examples with new paths
+
+### **System Validation** [Priority: MEDIUM]
+- [ ] **Test Obsidian integration**
+  - [ ] Verify vault loads correctly with new structure
+  - [ ] Test Templater scripts work with new paths
+  - [ ] Validate all templates function correctly
+
+- [ ] **Test AI workflows**
+  - [ ] Run inbox processing workflow
+  - [ ] Test note promotion workflow
+  - [ ] Validate connection discovery
+
+## 🔧 Commands for Next Session
+
+```bash
+# Performance testing
+cd development && python3 -m pytest tests/unit/test_performance.py -v
+
+# CLI validation
+python3 src/cli/analytics_demo.py . --interactive
+python3 src/cli/workflow_demo.py . --enhanced-metrics
+python3 demos/quick_demo.py
+
+# Real data testing
+python3 demos/test_real_analytics.py

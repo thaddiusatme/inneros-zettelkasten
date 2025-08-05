@@ -9,8 +9,8 @@ import tempfile
 import shutil
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Add development directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.ai.analytics import NoteAnalytics
 from src.ai.workflow_manager import WorkflowManager
