@@ -8,10 +8,10 @@ import os
 import argparse
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add development directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ..ai.summarizer import AISummarizer
+from src.ai.summarizer import AISummarizer
 
 
 def load_note_content(file_path: str) -> str:
