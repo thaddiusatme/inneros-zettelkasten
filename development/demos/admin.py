@@ -15,8 +15,8 @@ import logging
 # Add src directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from ai.tagger import AITagger
-from ai.ollama_client import OllamaClient
+from src.ai.tagger import AITagger
+from src.ai.ollama_client import OllamaClient
 
 # Configure logging
 logging.basicConfig(

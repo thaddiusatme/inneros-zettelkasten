@@ -12,8 +12,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from ai.analytics import NoteAnalytics
-from ai.workflow_manager import WorkflowManager
+from src.ai.analytics import NoteAnalytics
+from src.ai.workflow_manager import WorkflowManager
 
 
 class DemoEnvironment:

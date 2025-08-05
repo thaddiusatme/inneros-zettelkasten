@@ -14,11 +14,11 @@ from typing import Dict, List
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ai.tagger import AITagger
-from ai.summarizer import AISummarizer
-from ai.connections import AIConnections
-from ai.enhancer import AIEnhancer
-from ai.ollama_client import OllamaClient
+from ..ai.tagger import AITagger
+from ..ai.summarizer import AISummarizer
+from ..ai.connections import AIConnections
+from ..ai.enhancer import AIEnhancer
+from ..ai.ollama_client import OllamaClient
 
 
 class AIAssistant:

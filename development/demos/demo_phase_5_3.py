@@ -10,9 +10,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from ai.summarizer import AISummarizer
-from ai.connections import AIConnections
-from ai.ollama_client import OllamaClient
+from src.ai.summarizer import AISummarizer
+from src.ai.connections import AIConnections
+from src.ai.ollama_client import OllamaClient
 
 
 def create_sample_notes():

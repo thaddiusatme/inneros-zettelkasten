@@ -2,43 +2,90 @@
 
     Welcome to the `innerOS` workspace! This vault is designed for frictionless idea capture, structured Zettelkasten note-taking, and AI-assisted workflows, with privacy and future collaboration in mind.
 
-    ## Key Documents
-    - **inneros-manifest.md** — Comprehensive project overview, architecture, AI features, and roadmap
-    - **windsurf-project-changelog.md** — Detailed change history and development milestones
-    - **project-todo.md** — Current priorities and next development steps
+## Key Documents
+- **inneros-manifest.md** — Comprehensive project overview, architecture, AI features, and roadmap
+- **windsurf-project-changelog.md** — Detailed change history and development milestones
+- **project-todo.md** — Current priorities and next development steps
 
-    ## Directory Structure
-    - `Inbox/` — Staging area for new, unsorted notes. All new notes (fleeting, reference, actionable) start here with `status: inbox` in YAML.
-    - `Fleeting Notes/` — Quick idea capture, triaged for promotion. Only notes with proper YAML frontmatter and `status: inbox` are in the active fleeting workflow.
-    - `Permanent Notes/` — Atomic, evergreen notes with rich metadata and links.
-    - `Templates/` — Templater scripts for note creation and automation, now updated with workflow guidance comments.
-    - Additional folders: `Content Pipeline/`, `Protocols/`, `Reviews/`, etc.
+## 🏗️ Project Structure
 
-    ## Note Schema (YAML/Markdown Example)
-    ```markdown
-    ---
-    type: permanent | fleeting | literature | MOC
-    created: YYYY-MM-DD HH:mm
-    status: inbox | promoted | draft | published
-    tags: [permanent, zettelkasten, ...]
-    visibility: private | shared | team
-    ---
-    ```
-    - **status: inbox** in YAML is the primary indicator for notes needing triage, regardless of folder location.
-    - The `Inbox/` folder is a temporary staging area, not a workflow state.
+### **Clean Separation Architecture**
+```
+/ (ROOT - Clean Navigation)
+├── development/           # 🔧 ALL CODE & DEV ARTIFACTS
+│   ├── src/              # Python AI/workflow code
+│   ├── tests/            # Test suites
+│   ├── demos/            # CLI demonstration tools
+│   └── README-dev.md     # Developer documentation
+├── knowledge/            # 📚 ALL KNOWLEDGE CONTENT
+│   ├── Inbox/            # Staging area for new notes
+│   ├── Fleeting Notes/   # Quick captures and temporary notes
+│   ├── Permanent Notes/  # Atomic, evergreen knowledge
+│   ├── Archive/          # Old/deprecated content
+│   ├── Templates/        # Obsidian templates and Templater scripts
+│   ├── .obsidian/        # Obsidian configuration
+│   └── README-knowledge.md # Knowledge worker documentation
+├── Projects/             # 📋 Project documentation
+├── Reviews/              # 📊 Weekly reviews and retrospectives
+├── Workflows/            # 🔄 Process documentation
+└── Media/                # 🖼️ Images and attachments
+```
 
-    ## How Inbox Works
-    - All new notes are created in the `Inbox/` folder with `status: inbox` in YAML.
-    - During triage (weekly or as needed), notes are moved to their permanent location:
-        - Fleeting notes → `Fleeting Notes/`
-        - Permanent notes → `Permanent Notes/`
-        - Reference/actionable notes → appropriate folder
-    - Only notes with `status: inbox` in YAML are considered active for triage, regardless of folder.
-    - The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
+### **Directory Purpose**
+- **development/**: All Python code, tests, and technical artifacts
+- **knowledge/**: Complete Zettelkasten system (Obsidian vault)
+- **Projects/**: Project management and planning documents
+- **Reviews/**: Weekly reviews and progress tracking
+- **Workflows/**: Process documentation and SOPs
 
-    ## AI & Automation
-    - Templater scripts automate file naming, sorting, and metadata, now with workflow guidance.
-    - LLM/AI integration points for summarization, tagging, linking, and triage (see Manifest).
+## Note Schema (YAML/Markdown Example)
+```markdown
+---
+type: permanent | fleeting | literature | MOC
+created: YYYY-MM-DD HH:mm
+status: inbox | promoted | draft | published
+tags: [permanent, zettelkasten, ...]
+visibility: private | shared | team
+---
+```
+- **status: inbox** in YAML is the primary indicator for notes needing triage, regardless of folder location.
+- The `Inbox/` folder is a temporary staging area, not a workflow state.
+
+## How Inbox Works
+- All new notes are created in the `Inbox/` folder with `status: inbox` in YAML.
+- During triage (weekly or as needed), notes are moved to their permanent location:
+    - Fleeting notes → `Fleeting Notes/`
+    - Permanent notes → `Permanent Notes/`
+    - Reference/actionable notes → appropriate folder
+- Only notes with `status: inbox` in YAML are considered active for triage, regardless of folder.
+- The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
+
+## 🤖 AI & Automation
+
+### **Development Tools** (in `development/`)
+```bash
+# Run AI analytics on knowledge base
+python3 development/src/cli/analytics_demo.py knowledge/ --interactive
+
+# Process inbox with AI
+python3 development/src/cli/workflow_demo.py knowledge/ --process-inbox
+
+# Weekly review automation
+python3 development/src/cli/workflow_demo.py knowledge/ --weekly-review
+```
+
+### **Knowledge Base Tools** (from `knowledge/`)
+```bash
+# AI-enhanced note processing
+python3 ../development/src/cli/workflow_demo.py . --process-inbox
+
+# Analytics dashboard
+python3 ../development/src/cli/analytics_demo.py . --interactive
+```
+
+- **Templater scripts** automate file naming, sorting, and metadata
+- **LLM/AI integration** for summarization, tagging, linking, and triage
+- **Zero setup required** - tools work from both directories
 
 ## 🤖 AI Features (Production Ready)
 

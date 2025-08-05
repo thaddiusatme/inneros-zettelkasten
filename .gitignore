@@ -42,13 +42,19 @@ wheels/
 *.egg
 
 # Testing
+.c# Coverage reports
+htmlcov/
 .coverage
-.pytest_cache/
-.tox/
-.nox/
+.coverage.*
 coverage.xml
 *.cover
 .hypothesis/
+development/.pytest_cache/
+development/htmlcov/
+development/.coverage
+.pytest_cache/
+.tox/
+.nox/
 
 # AI and ML
 .embedding_cache/
@@ -60,8 +66,7 @@ analytics_report.json
 # IDE
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
+*.sublime-*
 
 # Environment
 .env

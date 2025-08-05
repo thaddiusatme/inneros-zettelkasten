@@ -12,7 +12,7 @@ import glob
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ai.connections import AIConnections
+from ..ai.connections import AIConnections
 
 
 def load_note_corpus(directory: str) -> dict:

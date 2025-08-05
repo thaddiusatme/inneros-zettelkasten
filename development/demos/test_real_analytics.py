@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from ai.analytics import NoteAnalytics
+from src.ai.analytics import NoteAnalytics
 
 
 def analyze_real_notes(notes_path):
