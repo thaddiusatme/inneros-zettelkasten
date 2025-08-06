@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>📊 Analytics Dashboard</h1>
+                <div>
+                    <small class="text-muted">Last updated: {{ data.generated_at }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ data.total_notes }}</h3>
+                    <h6>Total Notes</h6>
+                    <p class="text-muted mb-0">In your collection</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ data.quality_distribution.high }}</h3>
+                    <h6>High Quality</h6>
+                    <p class="text-muted mb-0">Ready for promotion</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <h3 class="text-warning">{{ data.quality_distribution.medium }}</h3>
+                    <h6>Medium Quality</h6>
+                    <p class="text-muted mb-0">Need refinement</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <h3 class="text-danger">{{ data.quality_distribution.low }}</h3>
+                    <h6>Low Quality</h6>
+                    <p class="text-muted mb-0">Need improvement</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quality Distribution Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">📈 Quality Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <div class="quality-bar-chart">
+                        {% set total_notes = data.quality_distribution.high + data.quality_distribution.medium + data.quality_distribution.low %}
+                        {% if total_notes > 0 %}
+                            {% set high_percent = (data.quality_distribution.high / total_notes * 100) | round(1) %}
+                            {% set medium_percent = (data.quality_distribution.medium / total_notes * 100) | round(1) %}
+                            {% set low_percent = (data.quality_distribution.low / total_notes * 100) | round(1) %}
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>High Quality (≥0.7)</span>
+                                    <small class="text-muted">{{ data.quality_distribution.high }} notes ({{ high_percent }}%)</small>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ high_percent }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>Medium Quality (0.4-0.7)</span>
+                                    <small class="text-muted">{{ data.quality_distribution.medium }} notes ({{ medium_percent }}%)</small>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ medium_percent }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>Low Quality (<0.4)</span>
+                                    <small class="text-muted">{{ data.quality_distribution.low }} notes ({{ low_percent }}%)</small>
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ low_percent }}%"></div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No notes found for analysis.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Adoption Stats -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">🤖 AI Features Adoption</h5>
+                </div>
+                <div class="card-body">
+                    <div class="ai-stats">
+                        {% if data.ai_adoption %}
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <div class="text-center">
+                                        <h4 class="text-primary">{{ data.ai_adoption.get('tagged_notes', 0) }}</h4>
+                                        <small>AI Tagged</small>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="text-center">
+                                        <h4 class="text-info">{{ data.ai_adoption.get('enhanced_notes', 0) }}</h4>
+                                        <small>Enhanced</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h4 class="text-success">{{ data.ai_adoption.get('summarized_notes', 0) }}</h4>
+                                        <small>Summarized</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <h4 class="text-warning">{{ data.ai_adoption.get('connected_notes', 0) }}</h4>
+                                        <small>Connected</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">AI adoption metrics will appear here after processing notes.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Notes -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">📝 Recent Notes</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.recent_notes %}
+                        <div class="list-group list-group-flush">
+                            {% for note in data.recent_notes %}
+                                <div class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{{ note.get('title', 'Untitled') }}</div>
+                                        <small class="text-muted">{{ note.get('created', 'Unknown date') }}</small>
+                                        {% if note.get('tags') %}
+                                            <div class="mt-1">
+                                                {% for tag in note.get('tags', [])[:3] %}
+                                                    <span class="badge bg-secondary me-1">{{ tag }}</span>
+                                                {% endfor %}
+                                                {% if note.get('tags')|length > 3 %}
+                                                    <span class="text-muted">+{{ note.get('tags')|length - 3 }} more</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if note.get('quality_score') %}
+                                        {% set quality = note.get('quality_score', 0) %}
+                                        {% if quality >= 0.7 %}
+                                            <span class="badge quality-badge quality-high text-white">{{ (quality * 100) | round }}%</span>
+                                        {% elif quality >= 0.4 %}
+                                            <span class="badge quality-badge quality-medium text-white">{{ (quality * 100) | round }}%</span>
+                                        {% else %}
+                                            <span class="badge quality-badge quality-low text-white">{{ (quality * 100) | round }}%</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent notes available. Connect your vault to see note activity.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">💡 Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    {% if data.recommendations %}
+                        <div class="list-group list-group-flush">
+                            {% for rec in data.recommendations[:5] %}
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ rec.get('title', 'Recommendation') }}</h6>
+                                        <small class="text-muted">{{ rec.get('priority', 'medium') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ rec.get('description', 'No description') }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3" style="font-size: 3rem; opacity: 0.3;">💡</div>
+                            <p class="text-muted">AI recommendations will appear here after analyzing your notes.</p>
+                            <a href="{{ url_for('weekly_review') }}" class="btn btn-primary btn-sm">
+                                Start Weekly Review
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vault Info -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">📁 Vault Location</h6>
+                            <code class="text-muted">{{ data.vault_path }}</code>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('settings') }}" class="btn btn-outline-secondary btn-sm">
+                                Change Vault
+                            </a>
+                            <button onclick="location.reload()" class="btn btn-primary btn-sm">
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

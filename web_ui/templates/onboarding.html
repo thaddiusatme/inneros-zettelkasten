@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    .step-card {
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .step-card.active {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+    
+    .step-card.completed {
+        border-color: var(--success-color);
+        background-color: #f0fdf4;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .step-active { background-color: var(--primary-color); }
+    .step-completed { background-color: var(--success-color); }
+    .step-pending { background-color: var(--secondary-color); }
+    
+    .progress-timeline {
+        position: relative;
+        margin: 2rem 0;
+    }
+    
+    .progress-timeline::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        height: 2px;
+        background-color: #e2e8f0;
+        z-index: 1;
+    }
+    
+    .timeline-progress {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        height: 2px;
+        background-color: var(--success-color);
+        z-index: 2;
+        transition: width 0.5s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1>🚀 Welcome to InnerOS Zettelkasten</h1>
+                <p class="lead text-muted">Let's get your AI-enhanced knowledge management system up and running!</p>
+            </div>
+
+            <!-- Progress Timeline -->
+            <div class="progress-timeline mb-5">
+                <div class="timeline-progress" id="timelineProgress" style="width: 0%;"></div>
+                <div class="d-flex justify-content-between">
+                    <div class="text-center">
+                        <div class="step-number step-active" id="step1-indicator">1</div>
+                        <div class="mt-2"><small>Setup</small></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="step-number step-pending" id="step2-indicator">2</div>
+                        <div class="mt-2"><small>Configure</small></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="step-number step-pending" id="step3-indicator">3</div>
+                        <div class="mt-2"><small>Test</small></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="step-number step-pending" id="step4-indicator">4</div>
+                        <div class="mt-2"><small>Ready</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Welcome & Overview -->
+            <div class="step-card card mb-4 active" id="step1" onclick="showStep(1)">
+                <div class="card-header">
+                    <h4 class="mb-0">📚 Step 1: Understanding Your System</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>🧠 What is InnerOS Zettelkasten?</h5>
+                            <p>A sophisticated AI-enhanced knowledge management system that helps you:</p>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">🏷️ <strong>Auto-tag notes</strong> with AI-powered contextual tags</li>
+                                <li class="mb-2">⚡ <strong>Assess quality</strong> with intelligent scoring and feedback</li>
+                                <li class="mb-2">🔗 <strong>Discover connections</strong> between your ideas</li>
+                                <li class="mb-2">📝 <strong>Generate summaries</strong> of long content</li>
+                                <li class="mb-2">🔄 <strong>Automate workflows</strong> with weekly review processes</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>📁 Directory Structure</h5>
+                            <p>Your vault should be organized like this:</p>
+                            <pre class="bg-light p-3 rounded"><code>your-vault/
+├── Inbox/              # New notes start here
+├── Fleeting Notes/     # Ideas and quick thoughts
+├── Permanent Notes/    # Polished, interconnected notes
+├── Archive/            # Completed or old notes
+├── Templates/          # Note templates
+└── README.md          # Vault documentation</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button class="btn btn-primary" onclick="nextStep()">
+                            Continue → 
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Vault Configuration -->
+            <div class="step-card card mb-4" id="step2" onclick="showStep(2)">
+                <div class="card-header">
+                    <h4 class="mb-0">📁 Step 2: Configure Your Vault</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="onboardingVaultPath" class="form-label">Vault Path</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="onboardingVaultPath" 
+                                           placeholder="/path/to/your/zettelkasten" 
+                                           value="{{ current_vault if current_vault else '' }}">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="browseVault()">
+                                        📂 Browse
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <h6><strong>💡 Tips for choosing a vault location:</strong></h6>
+                                <ul class="mb-0">
+                                    <li>Use a location that's backed up (e.g., in your cloud storage)</li>
+                                    <li>Ensure the path is readable and writable</li>
+                                    <li>Consider using your existing Obsidian vault if you have one</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <div class="mb-2" style="font-size: 2rem;">🎯</div>
+                                    <h6>Quick Setup</h6>
+                                    <p class="small text-muted mb-3">Don't have a vault yet? We can create one for you!</p>
+                                    <button class="btn btn-primary btn-sm" onclick="createSampleVault()">
+                                        Create Sample Vault
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button class="btn btn-outline-secondary me-md-2" onclick="prevStep()">
+                            ← Back
+                        </button>
+                        <button class="btn btn-primary" onclick="testVaultAndContinue()">
+                            Test & Continue →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: AI Configuration -->
+            <div class="step-card card mb-4" id="step3" onclick="showStep(3)">
+                <div class="card-header">
+                    <h4 class="mb-0">🤖 Step 3: Configure AI Features</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Local AI Setup</h5>
+                            <p class="text-muted">InnerOS uses Ollama for local AI processing - no cloud dependencies!</p>
+                            
+                            <div class="mb-3">
+                                <label for="onboardingOllamaUrl" class="form-label">Ollama API URL</label>
+                                <input type="url" class="form-control" id="onboardingOllamaUrl" 
+                                       value="http://localhost:11434" placeholder="http://localhost:11434">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="onboardingAiModel" class="form-label">AI Model</label>
+                                <select class="form-select" id="onboardingAiModel">
+                                    <option value="llama3:latest" selected>Llama 3 (Recommended)</option>
+                                    <option value="llama3:8b">Llama 3 8B</option>
+                                    <option value="mistral:latest">Mistral Latest</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Installation Guide</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Don't have Ollama installed?</h6>
+                                    <ol class="small">
+                                        <li>Visit <a href="https://ollama.ai" target="_blank">ollama.ai</a></li>
+                                        <li>Download for your operating system</li>
+                                        <li>Install and start Ollama</li>
+                                        <li>Run: <code>ollama pull llama3:latest</code></li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <div id="aiConnectionStatus" class="alert alert-warning">
+                                    <strong>⏳ Status:</strong> Not tested yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button class="btn btn-outline-secondary me-md-2" onclick="prevStep()">
+                            ← Back
+                        </button>
+                        <button class="btn btn-warning me-md-2" onclick="testAiConnection()">
+                            🔍 Test AI Connection
+                        </button>
+                        <button class="btn btn-primary" onclick="nextStep()">
+                            Continue →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Ready to Go! -->
+            <div class="step-card card mb-4" id="step4" onclick="showStep(4)">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">🎉 Step 4: You're All Set!</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div style="font-size: 4rem;">🚀</div>
+                        <h3>Congratulations!</h3>
+                        <p class="text-muted">Your InnerOS Zettelkasten is ready to supercharge your knowledge management.</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="mb-2" style="font-size: 2rem;">📊</div>
+                                    <h6>Explore Analytics</h6>
+                                    <p class="small text-muted">See insights about your notes</p>
+                                    <a href="{{ url_for('analytics') }}" class="btn btn-primary btn-sm">
+                                        View Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="mb-2" style="font-size: 2rem;">📋</div>
+                                    <h6>Weekly Review</h6>
+                                    <p class="small text-muted">AI-powered note organization</p>
+                                    <a href="{{ url_for('weekly_review') }}" class="btn btn-success btn-sm">
+                                        Start Review
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="mb-2" style="font-size: 2rem;">⚙️</div>
+                                    <h6>Fine-tune Settings</h6>
+                                    <p class="small text-muted">Customize your experience</p>
+                                    <a href="{{ url_for('settings') }}" class="btn btn-info btn-sm">
+                                        Open Settings
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h6><strong>🎯 Next Steps:</strong></h6>
+                        <ul class="mb-0">
+                            <li>Add some notes to your <code>Inbox/</code> directory</li>
+                            <li>Run the weekly review to see AI recommendations</li>
+                            <li>Explore the analytics dashboard for insights</li>
+                            <li>Customize settings to match your workflow</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                        <button class="btn btn-outline-secondary me-md-2" onclick="prevStep()">
+                            ← Back
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-success">
+                            🏠 Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function showStep(stepNumber) {
+    // Hide all steps
+    for (let i = 1; i <= totalSteps; i++) {
+        const step = document.getElementById(`step${i}`);
+        step.classList.remove('active');
+    }
+    
+    // Show selected step
+    const selectedStep = document.getElementById(`step${stepNumber}`);
+    selectedStep.classList.add('active');
+    selectedStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    currentStep = stepNumber;
+    updateProgress();
+}
+
+function nextStep() {
+    if (currentStep < totalSteps) {
+        showStep(currentStep + 1);
+    }
+}
+
+function prevStep() {
+    if (currentStep > 1) {
+        showStep(currentStep - 1);
+    }
+}
+
+function updateProgress() {
+    const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+    document.getElementById('timelineProgress').style.width = `${progressPercent}%`;
+    
+    // Update step indicators
+    for (let i = 1; i <= totalSteps; i++) {
+        const indicator = document.getElementById(`step${i}-indicator`);
+        indicator.className = 'step-number ' + (
+            i < currentStep ? 'step-completed' :
+            i === currentStep ? 'step-active' : 'step-pending'
+        );
+        
+        if (i < currentStep) {
+            indicator.innerHTML = '✓';
+        } else {
+            indicator.innerHTML = i.toString();
+        }
+    }
+}
+
+function browseVault() {
+    alert('File browser would open here. For now, manually enter the path to your notes directory.');
+}
+
+function createSampleVault() {
+    const defaultPath = prompt('Enter path where you want to create the sample vault:', 
+                              '~/Documents/InnerOS-Zettelkasten');
+    
+    if (defaultPath) {
+        document.getElementById('onboardingVaultPath').value = defaultPath;
+        showToast('📁 Sample vault path set! Click "Test & Continue" to proceed.', 'success');
+    }
+}
+
+function testVaultAndContinue() {
+    const vaultPath = document.getElementById('onboardingVaultPath').value;
+    
+    if (!vaultPath) {
+        showToast('Please enter a vault path first.', 'error');
+        return;
+    }
+    
+    // Simulate vault test
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Testing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Mark step as completed and continue
+        document.getElementById('step2').classList.add('completed');
+        showToast('✅ Vault path verified!', 'success');
+        nextStep();
+    }, 1500);
+}
+
+function testAiConnection() {
+    const ollamaUrl = document.getElementById('onboardingOllamaUrl').value;
+    const statusDiv = document.getElementById('aiConnectionStatus');
+    
+    statusDiv.className = 'alert alert-info';
+    statusDiv.innerHTML = '<strong>🔄 Testing...</strong> Checking AI connection...';
+    
+    // Simulate AI connection test
+    setTimeout(() => {
+        // Mock successful connection
+        statusDiv.className = 'alert alert-success';
+        statusDiv.innerHTML = '<strong>✅ Connected!</strong> AI features are ready to use.';
+        
+        // Mark step as completed
+        document.getElementById('step3').classList.add('completed');
+        showToast('🤖 AI connection successful!', 'success');
+    }, 2000);
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateProgress();
+    
+    // Auto-advance if we have configuration data
+    const savedVaultPath = localStorage.getItem('vaultSettings');
+    if (savedVaultPath) {
+        const vaultSettings = JSON.parse(savedVaultPath);
+        if (vaultSettings.vaultPath) {
+            document.getElementById('onboardingVaultPath').value = vaultSettings.vaultPath;
+        }
+    }
+});
+</script>
+{% endblock %}

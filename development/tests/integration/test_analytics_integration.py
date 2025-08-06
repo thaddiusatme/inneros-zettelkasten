@@ -2,6 +2,15 @@
 Integration tests for the analytics module with real data.
 """
 
+import sys
+import os
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+src_dir = os.path.join(project_root, 'src')
+sys.path.insert(0, src_dir)
+
 import pytest
 import tempfile
 import shutil
@@ -9,7 +18,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-from src.ai.analytics import NoteAnalytics
+from ai.analytics import NoteAnalytics
 
 
 @pytest.mark.integration

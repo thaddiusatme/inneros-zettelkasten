@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    .review-item {
+        border-left: 4px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    
+    .review-item:hover {
+        border-left-color: var(--primary-color);
+        background-color: #f8fafc;
+    }
+    
+    .review-item.completed {
+        border-left-color: var(--success-color);
+        background-color: #f0fdf4;
+    }
+    
+    .action-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .action-promote { background-color: var(--success-color); }
+    .action-keep { background-color: var(--warning-color); }
+    .action-improve { background-color: var(--danger-color); }
+    
+    .confidence-bar {
+        height: 4px;
+        border-radius: 2px;
+        background-color: #e2e8f0;
+        overflow: hidden;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--danger-color) 0%, var(--warning-color) 50%, var(--success-color) 100%);
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1>📋 Weekly Review</h1>
+                    <p class="text-muted mb-0">AI-powered recommendations for note promotion and organization</p>
+                </div>
+                <div>
+                    <small class="text-muted">Generated: {{ data.generated_at }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ data.candidates_count }}</h3>
+                    <h6>Notes to Review</h6>
+                    <p class="text-muted mb-0">Requiring attention</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    {% set promote_count = data.recommendations.get('promote', [])|length %}
+                    <h3 class="text-success">{{ promote_count }}</h3>
+                    <h6>Ready to Promote</h6>
+                    <p class="text-muted mb-0">High quality notes</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    {% set keep_count = data.recommendations.get('keep', [])|length %}
+                    <h3 class="text-warning">{{ keep_count }}</h3>
+                    <h6>Keep as Fleeting</h6>
+                    <p class="text-muted mb-0">Medium quality</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    {% set improve_count = data.recommendations.get('improve', [])|length %}
+                    <h3 class="text-danger">{{ improve_count }}</h3>
+                    <h6>Need Improvement</h6>
+                    <p class="text-muted mb-0">Require work</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Batch Actions</h6>
+                            <small class="text-muted">Process multiple notes at once</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="processAllByAction('promote')">
+                                ✅ Promote All High Quality
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="markAllComplete()">
+                                ✓ Mark All Complete
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="exportChecklist()">
+                                📥 Export Checklist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Checklist -->
+    <div class="row">
+        <div class="col-12">
+            {% if data.recommendations %}
+                <!-- High Priority: Promote Recommendations -->
+                {% if data.recommendations.get('promote') %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">🚀 Ready for Promotion ({{ data.recommendations.promote|length }})</h5>
+                        <small>High quality notes ready to become permanent</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for item in data.recommendations.promote %}
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="promote">
+                            <div class="row align-items-center">
+                                <div class="col-md-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="promote_{{ loop.index }}" 
+                                               onchange="toggleReviewItem(this)">
+                                        <label class="form-check-label" for="promote_{{ loop.index }}"></label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <div class="small text-muted">{{ item.rationale }}</div>
+                                    {% if item.tags %}
+                                        <div class="mt-1">
+                                            {% for tag in item.tags[:3] %}
+                                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge action-badge action-promote text-white">PROMOTE</span>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-sm btn-success" onclick="processNote('{{ item.filename }}', 'promote')">
+                                        ✅
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Medium Priority: Keep as Fleeting -->
+                {% if data.recommendations.get('keep') %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">📝 Keep as Fleeting ({{ data.recommendations.keep|length }})</h5>
+                        <small>Medium quality notes that need more development</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for item in data.recommendations.keep %}
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="keep">
+                            <div class="row align-items-center">
+                                <div class="col-md-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="keep_{{ loop.index }}" 
+                                               onchange="toggleReviewItem(this)">
+                                        <label class="form-check-label" for="keep_{{ loop.index }}"></label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <div class="small text-muted">{{ item.rationale }}</div>
+                                    {% if item.tags %}
+                                        <div class="mt-1">
+                                            {% for tag in item.tags[:3] %}
+                                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge action-badge action-keep text-white">KEEP</span>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-sm btn-warning" onclick="processNote('{{ item.filename }}', 'keep')">
+                                        📝
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Low Priority: Need Improvement -->
+                {% if data.recommendations.get('improve') %}
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">🔧 Need Improvement ({{ data.recommendations.improve|length }})</h5>
+                        <small>Low quality notes requiring significant work</small>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for item in data.recommendations.improve %}
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="improve">
+                            <div class="row align-items-center">
+                                <div class="col-md-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="improve_{{ loop.index }}" 
+                                               onchange="toggleReviewItem(this)">
+                                        <label class="form-check-label" for="improve_{{ loop.index }}"></label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <div class="small text-muted">{{ item.rationale }}</div>
+                                    {% if item.suggestions %}
+                                        <div class="small text-info mt-1">💡 {{ item.suggestions[:100] }}...</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge action-badge action-improve text-white">IMPROVE</span>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-sm btn-danger" onclick="processNote('{{ item.filename }}', 'improve')">
+                                        🔧
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <!-- No Notes to Review -->
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-3" style="font-size: 4rem; opacity: 0.3;">📋</div>
+                        <h4>No Notes to Review</h4>
+                        <p class="text-muted">Your inbox is empty! All notes have been processed.</p>
+                        <div class="mt-4">
+                            <a href="{{ url_for('analytics') }}" class="btn btn-primary me-2">
+                                📊 View Analytics
+                            </a>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                🏠 Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Vault Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">📁 Vault Location</h6>
+                            <code class="text-muted">{{ data.vault_path }}</code>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button onclick="location.reload()" class="btn btn-outline-primary btn-sm">
+                                🔄 Refresh Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Weekly review interactive functionality
+function toggleReviewItem(checkbox) {
+    const reviewItem = checkbox.closest('.review-item');
+    if (checkbox.checked) {
+        reviewItem.classList.add('completed');
+    } else {
+        reviewItem.classList.remove('completed');
+    }
+    updateProgress();
+}
+
+function processNote(filename, action) {
+    const vaultPath = '{{ data.vault_path }}';
+    
+    // Show processing state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '⏳';
+    button.disabled = true;
+    
+    fetch('/api/process-note', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            vault_path: vaultPath,
+            filename: filename,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mark as completed
+            const reviewItem = button.closest('.review-item');
+            reviewItem.classList.add('completed');
+            const checkbox = reviewItem.querySelector('input[type="checkbox"]');
+            checkbox.checked = true;
+            
+            // Update button
+            button.innerHTML = '✅';
+            button.className = 'btn btn-sm btn-success';
+            
+            // Show success message
+            showToast(`Successfully ${action}d ${filename}`, 'success');
+        } else {
+            // Show error
+            button.innerHTML = originalText;
+            button.disabled = false;
+            showToast(`Error processing ${filename}: ${data.error}`, 'error');
+        }
+    })
+    .catch(error => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        showToast(`Network error: ${error.message}`, 'error');
+    });
+}
+
+function processAllByAction(action) {
+    const items = document.querySelectorAll(`[data-action="${action}"]`);
+    items.forEach(item => {
+        const filename = item.dataset.filename;
+        const button = item.querySelector('button');
+        if (button && !button.disabled) {
+            button.click();
+        }
+    });
+}
+
+function markAllComplete() {
+    const checkboxes = document.querySelectorAll('.review-item input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            toggleReviewItem(checkbox);
+        }
+    });
+}
+
+function exportChecklist() {
+    window.open(window.location.href + '&export=true', '_blank');
+}
+
+function updateProgress() {
+    const total = document.querySelectorAll('.review-item').length;
+    const completed = document.querySelectorAll('.review-item.completed').length;
+    
+    // Update progress in title or status bar if needed
+    if (completed === total && total > 0) {
+        showToast('🎉 All notes reviewed!', 'success');
+    }
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

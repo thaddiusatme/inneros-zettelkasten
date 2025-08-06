@@ -2,10 +2,19 @@
 Integration tests for AI summarizer with real Ollama API.
 """
 
+import sys
+import os
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+src_dir = os.path.join(project_root, 'src')
+sys.path.insert(0, src_dir)
+
 import pytest
 import time
-from src.ai.summarizer import AISummarizer
-from src.ai.ollama_client import OllamaClient
+from ai.summarizer import AISummarizer
+from ai.ollama_client import OllamaClient
 
 
 class TestAISummarizerIntegration:

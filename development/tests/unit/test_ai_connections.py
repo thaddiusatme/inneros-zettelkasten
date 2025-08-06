@@ -2,9 +2,18 @@
 Unit tests for AI-powered connection discovery and semantic similarity.
 """
 
+import sys
+import os
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+src_dir = os.path.join(project_root, 'src')
+sys.path.insert(0, src_dir)
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from src.ai.connections import AIConnections
+from ai.connections import AIConnections
 
 
 class TestAIConnections:
@@ -63,7 +72,7 @@ It discusses artificial intelligence research.
         assert self.connections._normalize_text("") == ""
         assert self.connections._normalize_text("   ") == ""
     
-    @patch('src.ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
     def test_find_similar_notes_success(self, mock_similarity):
         """Test finding similar notes successfully."""
         target_note = "This note is about machine learning and AI."
@@ -82,7 +91,7 @@ It discusses artificial intelligence research.
         assert result[0] == ("note1.md", 0.85)
         assert result[1] == ("note3.md", 0.75)
     
-    @patch('src.ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
     def test_find_similar_notes_no_matches(self, mock_similarity):
         """Test finding similar notes with no matches above threshold."""
         target_note = "This note is about quantum physics."
@@ -97,7 +106,7 @@ It discusses artificial intelligence research.
         
         assert len(result) == 0
     
-    @patch('src.ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
     def test_find_similar_notes_max_suggestions(self, mock_similarity):
         """Test that max_suggestions limit is respected."""
         target_note = "AI research note."
@@ -116,7 +125,7 @@ It discusses artificial intelligence research.
         result = self.connections.suggest_links(target_note, {})
         assert result == []
     
-    @patch('src.ai.connections.AIConnections.find_similar_notes')
+    @patch('ai.connections.AIConnections.find_similar_notes')
     def test_suggest_links_success(self, mock_find_similar):
         """Test successful link suggestions."""
         target_note = "Machine learning research."
@@ -135,7 +144,7 @@ It discusses artificial intelligence research.
         ]
         assert result == expected
     
-    @patch('src.ai.connections.AIConnections._generate_ollama_embedding')
+    @patch('ai.connections.AIConnections._generate_ollama_embedding')
     def test_calculate_semantic_similarity_success(self, mock_embedding):
         """Test semantic similarity calculation."""
         text1 = "Machine learning algorithms"
@@ -153,7 +162,7 @@ It discusses artificial intelligence research.
         assert 0 <= result <= 1
         assert isinstance(result, float)
     
-    @patch('src.ai.connections.AIConnections._generate_ollama_embedding')
+    @patch('ai.connections.AIConnections._generate_ollama_embedding')
     def test_calculate_semantic_similarity_api_error(self, mock_embedding):
         """Test semantic similarity with API error."""
         text1 = "Test text 1"
@@ -234,7 +243,7 @@ It discusses artificial intelligence research.
         result = self.connections.build_connection_map({})
         assert result == {}
     
-    @patch('src.ai.connections.AIConnections.find_similar_notes')
+    @patch('ai.connections.AIConnections.find_similar_notes')
     def test_build_connection_map_success(self, mock_find_similar):
         """Test successful connection map building."""
         note_corpus = {

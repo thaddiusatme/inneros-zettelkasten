@@ -2,9 +2,18 @@
 Unit tests for AI-powered note summarization.
 """
 
+import sys
+import os
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+src_dir = os.path.join(project_root, 'src')
+sys.path.insert(0, src_dir)
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from src.ai.summarizer import AISummarizer
+from ai.summarizer import AISummarizer
 
 
 class TestAISummarizer:
@@ -74,7 +83,7 @@ It should be preserved after stripping YAML.
         assert self.summarizer._count_words("") == 0
         assert self.summarizer._count_words("   ") == 0
     
-    @patch('src.ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
     def test_generate_summary_success(self, mock_ollama):
         """Test successful summary generation."""
         long_content = " ".join(["word"] * 600)
@@ -85,7 +94,7 @@ It should be preserved after stripping YAML.
         assert result == "This is a concise summary of the content."
         mock_ollama.assert_called_once()
     
-    @patch('src.ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
     def test_generate_summary_short_content(self, mock_ollama):
         """Test summary generation with short content."""
         short_content = "This is too short to summarize."
@@ -95,7 +104,7 @@ It should be preserved after stripping YAML.
         assert result is None
         mock_ollama.assert_not_called()
     
-    @patch('src.ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
     def test_generate_summary_api_failure(self, mock_ollama):
         """Test summary generation when API fails."""
         long_content = " ".join(["word"] * 600)
@@ -105,7 +114,7 @@ It should be preserved after stripping YAML.
         
         assert result is None
     
-    @patch('src.ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
     def test_generate_summary_with_metadata(self, mock_ollama):
         """Test summary generation with metadata context."""
         content_with_yaml = """---

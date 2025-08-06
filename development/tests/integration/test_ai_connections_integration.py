@@ -2,10 +2,19 @@
 Integration tests for AI connections with real Ollama API.
 """
 
+import sys
+import os
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+src_dir = os.path.join(project_root, 'src')
+sys.path.insert(0, src_dir)
+
 import pytest
 import time
-from src.ai.connections import AIConnections
-from src.ai.ollama_client import OllamaClient
+from ai.connections import AIConnections
+from ai.ollama_client import OllamaClient
 
 
 class TestAIConnectionsIntegration:

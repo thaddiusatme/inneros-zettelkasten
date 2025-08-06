@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">⚠️ Error</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div style="font-size: 4rem; opacity: 0.3;">🚨</div>
+                    </div>
+                    
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">Something went wrong:</h6>
+                        <p class="mb-0">{{ error }}</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Possible solutions:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <strong>📁 Check vault path:</strong> Ensure your vault directory exists and is accessible
+                            </li>
+                            <li class="mb-2">
+                                <strong>🔍 Verify permissions:</strong> Make sure the application can read your notes directory
+                            </li>
+                            <li class="mb-2">
+                                <strong>🤖 AI Services:</strong> Check that Ollama is running and accessible (for AI features)
+                            </li>
+                            <li class="mb-2">
+                                <strong>📝 Note format:</strong> Ensure notes have proper YAML frontmatter if required
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button onclick="history.back()" class="btn btn-secondary me-md-2">
+                            ← Go Back
+                        </button>
+                        <a href="{{ url_for('settings') }}" class="btn btn-primary">
+                            ⚙️ Check Settings
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                            🏠 Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

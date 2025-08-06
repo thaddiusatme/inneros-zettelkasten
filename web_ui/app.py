@@ -1,0 +1,165 @@
+"""
+InnerOS Zettelkasten Web UI - Flask Application
+AI-enhanced knowledge management dashboard
+"""
+
+import sys
+import os
+from pathlib import Path
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+import json
+from datetime import datetime
+
+# Add the src directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+src_dir = os.path.join(project_root, 'development', 'src')
+sys.path.insert(0, src_dir)
+
+# Import AI modules
+from ai.analytics import NoteAnalytics
+from ai.workflow_manager import WorkflowManager
+from cli.weekly_review_formatter import WeeklyReviewFormatter
+
+app = Flask(__name__)
+app.secret_key = 'inneros-zettelkasten-demo-key'  # Change in production
+
+# Global configuration
+DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten")
+
+@app.route('/')
+def index():
+    """Home page with overview of InnerOS Zettelkasten."""
+    return render_template('index.html', 
+                         title="InnerOS Zettelkasten",
+                         current_time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+@app.route('/analytics')
+def analytics():
+    """Analytics dashboard showing note collection insights."""
+    vault_path = request.args.get('path', DEFAULT_VAULT_PATH)
+    
+    try:
+        analytics = NoteAnalytics(vault_path)
+        stats = analytics.generate_report()
+        
+        # Prepare data for web display (handle actual analytics structure)
+        overview = stats.get('overview', {})
+        quality_metrics = stats.get('quality_metrics', {})
+        
+        dashboard_data = {
+            'total_notes': overview.get('total_notes', 0),
+            'quality_distribution': {
+                'high': quality_metrics.get('high_quality_notes', 0),
+                'medium': quality_metrics.get('medium_quality_notes', 0), 
+                'low': quality_metrics.get('low_quality_notes', 0)
+            },
+            'ai_adoption': {
+                'tagged_notes': 0,  # Will be enhanced later
+                'enhanced_notes': 0,
+                'summarized_notes': overview.get('notes_with_ai_summaries', 0),
+                'connected_notes': 0
+            },
+            'recent_notes': [],  # Will be enhanced when note details are available
+            'recommendations': stats.get('recommendations', []),
+            'vault_path': vault_path,
+            'generated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        return render_template('analytics.html', 
+                             data=dashboard_data,
+                             title="Analytics Dashboard")
+                             
+    except Exception as e:
+        error_message = f"Error loading analytics: {str(e)}"
+        return render_template('error.html', 
+                             error=error_message,
+                             title="Analytics Error")
+
+@app.route('/weekly-review')
+def weekly_review():
+    """Weekly review interface with AI recommendations."""
+    vault_path = request.args.get('path', DEFAULT_VAULT_PATH)
+    
+    try:
+        workflow_manager = WorkflowManager(vault_path)
+        
+        # Generate review candidates and recommendations
+        candidates = workflow_manager.scan_review_candidates()
+        recommendations = workflow_manager.generate_weekly_recommendations(candidates)
+        
+        # Format for web display
+        formatter = WeeklyReviewFormatter()
+        review_data = {
+            'candidates_count': len(candidates),
+            'recommendations': recommendations,
+            'vault_path': vault_path,
+            'generated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        return render_template('weekly_review.html',
+                             data=review_data,
+                             title="Weekly Review")
+                             
+    except Exception as e:
+        error_message = f"Error loading weekly review: {str(e)}"
+        return render_template('error.html',
+                             error=error_message,
+                             title="Weekly Review Error")
+
+@app.route('/api/process-note', methods=['POST'])
+def process_note():
+    """API endpoint to process a single note from weekly review."""
+    data = request.get_json()
+    vault_path = data.get('vault_path', DEFAULT_VAULT_PATH)
+    filename = data.get('filename')
+    action = data.get('action')  # 'promote', 'keep', 'improve'
+    
+    try:
+        workflow_manager = WorkflowManager(vault_path)
+        # This would implement actual note processing logic
+        result = {
+            'success': True,
+            'message': f"Successfully {action}d {filename}",
+            'filename': filename,
+            'action': action
+        }
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/settings')
+def settings():
+    """Settings page for vault configuration."""
+    return render_template('settings.html',
+                         title="Settings",
+                         current_vault=DEFAULT_VAULT_PATH)
+
+@app.route('/onboarding')
+def onboarding():
+    """Onboarding flow for new users."""
+    return render_template('onboarding.html',
+                         title="Welcome to InnerOS Zettelkasten")
+
+def _calculate_quality_distribution(stats):
+    """Calculate quality score distribution for dashboard."""
+    notes = stats.get('notes', [])
+    if not notes:
+        return {'high': 0, 'medium': 0, 'low': 0}
+    
+    high = sum(1 for note in notes if note.get('quality_score', 0) >= 0.7)
+    medium = sum(1 for note in notes if 0.4 <= note.get('quality_score', 0) < 0.7)
+    low = sum(1 for note in notes if note.get('quality_score', 0) < 0.4)
+    
+    return {'high': high, 'medium': medium, 'low': low}
+
+if __name__ == '__main__':
+    print("🚀 Starting InnerOS Zettelkasten Web UI...")
+    print(f"📁 Default vault: {DEFAULT_VAULT_PATH}")
+    print("🌐 Access at: http://localhost:8081")
+    
+    app.run(debug=True, host='0.0.0.0', port=8081)

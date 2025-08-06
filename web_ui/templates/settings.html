@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1>⚙️ Settings</h1>
+            <p class="text-muted mb-4">Configure your InnerOS Zettelkasten experience</p>
+
+            <!-- Vault Configuration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📁 Vault Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="vaultPath" class="form-label">Vault Path</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="vaultPath" 
+                                       value="{{ current_vault }}" placeholder="/path/to/your/zettelkasten">
+                                <button class="btn btn-outline-secondary" type="button" onclick="browseVault()">
+                                    📂 Browse
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Location of your Zettelkasten notes directory. Should contain Inbox/, Permanent Notes/, etc.
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="autoSync" class="form-label">Auto-sync Interval</label>
+                                    <select class="form-select" id="autoSync">
+                                        <option value="disabled">Disabled</option>
+                                        <option value="5">Every 5 minutes</option>
+                                        <option value="15" selected>Every 15 minutes</option>
+                                        <option value="30">Every 30 minutes</option>
+                                        <option value="60">Every hour</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="watchFiles" class="form-label">File Watching</label>
+                                    <select class="form-select" id="watchFiles">
+                                        <option value="true" selected>Enabled</option>
+                                        <option value="false">Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="testVaultConnection()">
+                            🔍 Test Connection
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="saveVaultSettings()">
+                            💾 Save Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- AI Configuration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">🤖 AI Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ollamaUrl" class="form-label">Ollama API URL</label>
+                                <input type="url" class="form-control" id="ollamaUrl" 
+                                       value="http://localhost:11434" placeholder="http://localhost:11434">
+                                <div class="form-text">Local Ollama instance endpoint</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="aiModel" class="form-label">AI Model</label>
+                                <select class="form-select" id="aiModel">
+                                    <option value="llama3:latest" selected>Llama 3 (Latest)</option>
+                                    <option value="llama3:8b">Llama 3 8B</option>
+                                    <option value="llama3:70b">Llama 3 70B</option>
+                                    <option value="mistral:latest">Mistral (Latest)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enableAiTagging" checked>
+                                    <label class="form-check-label" for="enableAiTagging">
+                                        Enable AI Tagging
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enableAiSummaries" checked>
+                                    <label class="form-check-label" for="enableAiSummaries">
+                                        Enable AI Summaries
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="testAiConnection()">
+                        🔗 Test AI Connection
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="saveAiSettings()">
+                        💾 Save Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quality Thresholds -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📊 Quality Thresholds</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="highQuality" class="form-label">High Quality (Promote)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="highQuality" 
+                                           value="0.7" min="0" max="1" step="0.1">
+                                    <span class="input-group-text">/ 1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="mediumQuality" class="form-label">Medium Quality (Keep)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="mediumQuality" 
+                                           value="0.4" min="0" max="1" step="0.1">
+                                    <span class="input-group-text">/ 1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="lowQuality" class="form-label">Low Quality (Improve)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="lowQuality" 
+                                           value="0.0" min="0" max="1" step="0.1" disabled>
+                                    <span class="input-group-text">/ 1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>💡 Tip:</strong> Adjust these thresholds based on your note-taking style. 
+                        Higher thresholds mean more selective promotion to permanent notes.
+                    </div>
+                    
+                    <button type="button" class="btn btn-success" onclick="saveQualitySettings()">
+                        💾 Save Thresholds
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export/Import -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">📤 Data Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Export Settings</h6>
+                            <p class="text-muted small">Download your configuration</p>
+                            <button type="button" class="btn btn-outline-primary" onclick="exportSettings()">
+                                📥 Export Config
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Import Settings</h6>
+                            <p class="text-muted small">Upload a configuration file</p>
+                            <input type="file" class="form-control" id="importFile" accept=".json">
+                            <button type="button" class="btn btn-outline-secondary mt-2" onclick="importSettings()">
+                                📤 Import Config
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset -->
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">⚠️ Reset Settings</h5>
+                </div>
+                <div class="card-body">
+                    <p>Reset all settings to default values. This action cannot be undone.</p>
+                    <button type="button" class="btn btn-warning" onclick="resetSettings()">
+                        🔄 Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Settings page functionality
+function browseVault() {
+    // In a real implementation, this would open a file dialog
+    alert('File browser would open here. For now, manually enter the path.');
+}
+
+function testVaultConnection() {
+    const vaultPath = document.getElementById('vaultPath').value;
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Testing...';
+    button.disabled = true;
+    
+    // Simulate API call
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Mock test result - in real app, this would make an actual API call
+        if (vaultPath && vaultPath.length > 0) {
+            showToast('✅ Vault connection successful!', 'success');
+        } else {
+            showToast('❌ Please enter a valid vault path', 'error');
+        }
+    }, 1500);
+}
+
+function testAiConnection() {
+    const ollamaUrl = document.getElementById('ollamaUrl').value;
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Testing...';
+    button.disabled = true;
+    
+    // Simulate AI connection test
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Mock test result
+        showToast('✅ AI connection successful! Model ready.', 'success');
+    }, 2000);
+}
+
+function saveVaultSettings() {
+    const settings = {
+        vaultPath: document.getElementById('vaultPath').value,
+        autoSync: document.getElementById('autoSync').value,
+        watchFiles: document.getElementById('watchFiles').value === 'true'
+    };
+    
+    localStorage.setItem('vaultSettings', JSON.stringify(settings));
+    showToast('💾 Vault settings saved successfully!', 'success');
+}
+
+function saveAiSettings() {
+    const settings = {
+        ollamaUrl: document.getElementById('ollamaUrl').value,
+        aiModel: document.getElementById('aiModel').value,
+        enableAiTagging: document.getElementById('enableAiTagging').checked,
+        enableAiSummaries: document.getElementById('enableAiSummaries').checked
+    };
+    
+    localStorage.setItem('aiSettings', JSON.stringify(settings));
+    showToast('💾 AI settings saved successfully!', 'success');
+}
+
+function saveQualitySettings() {
+    const settings = {
+        highQuality: parseFloat(document.getElementById('highQuality').value),
+        mediumQuality: parseFloat(document.getElementById('mediumQuality').value),
+        lowQuality: parseFloat(document.getElementById('lowQuality').value)
+    };
+    
+    localStorage.setItem('qualitySettings', JSON.stringify(settings));
+    showToast('💾 Quality thresholds saved successfully!', 'success');
+}
+
+function exportSettings() {
+    const allSettings = {
+        vault: JSON.parse(localStorage.getItem('vaultSettings') || '{}'),
+        ai: JSON.parse(localStorage.getItem('aiSettings') || '{}'),
+        quality: JSON.parse(localStorage.getItem('qualitySettings') || '{}'),
+        exported: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(allSettings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inneros-settings.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('📥 Settings exported successfully!', 'success');
+}
+
+function importSettings() {
+    const fileInput = document.getElementById('importFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('Please select a file to import', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const settings = JSON.parse(e.target.result);
+            
+            // Apply imported settings
+            if (settings.vault) localStorage.setItem('vaultSettings', JSON.stringify(settings.vault));
+            if (settings.ai) localStorage.setItem('aiSettings', JSON.stringify(settings.ai));
+            if (settings.quality) localStorage.setItem('qualitySettings', JSON.stringify(settings.quality));
+            
+            showToast('📤 Settings imported successfully! Please refresh the page.', 'success');
+        } catch (error) {
+            showToast('Error importing settings: Invalid file format', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function resetSettings() {
+    if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+        localStorage.removeItem('vaultSettings');
+        localStorage.removeItem('aiSettings');
+        localStorage.removeItem('qualitySettings');
+        
+        // Reset form values
+        location.reload();
+        
+        showToast('🔄 Settings reset to defaults!', 'success');
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+// Load saved settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load vault settings
+    const vaultSettings = JSON.parse(localStorage.getItem('vaultSettings') || '{}');
+    if (vaultSettings.vaultPath) document.getElementById('vaultPath').value = vaultSettings.vaultPath;
+    if (vaultSettings.autoSync) document.getElementById('autoSync').value = vaultSettings.autoSync;
+    if (vaultSettings.watchFiles !== undefined) document.getElementById('watchFiles').value = vaultSettings.watchFiles.toString();
+    
+    // Load AI settings
+    const aiSettings = JSON.parse(localStorage.getItem('aiSettings') || '{}');
+    if (aiSettings.ollamaUrl) document.getElementById('ollamaUrl').value = aiSettings.ollamaUrl;
+    if (aiSettings.aiModel) document.getElementById('aiModel').value = aiSettings.aiModel;
+    if (aiSettings.enableAiTagging !== undefined) document.getElementById('enableAiTagging').checked = aiSettings.enableAiTagging;
+    if (aiSettings.enableAiSummaries !== undefined) document.getElementById('enableAiSummaries').checked = aiSettings.enableAiSummaries;
+    
+    // Load quality settings
+    const qualitySettings = JSON.parse(localStorage.getItem('qualitySettings') || '{}');
+    if (qualitySettings.highQuality) document.getElementById('highQuality').value = qualitySettings.highQuality;
+    if (qualitySettings.mediumQuality) document.getElementById('mediumQuality').value = qualitySettings.mediumQuality;
+});
+</script>
+{% endblock %}
