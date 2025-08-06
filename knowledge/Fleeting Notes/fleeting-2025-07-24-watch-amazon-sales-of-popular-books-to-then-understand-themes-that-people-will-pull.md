@@ -3,7 +3,7 @@ type: fleeting
 created: 2025-07-24 19:06
 status: inbox
 tags: ["#fleeting", "#inbox", "book-sales", "personal-development", "popular-culture", "self-help", "self-help-books", "trend-following"]
-ai_processed: 2025-07-31T19:16:43.047005
+ai_processed: 2025-08-05T18:15:06.536902
 visibility: private
 ---
 <!--

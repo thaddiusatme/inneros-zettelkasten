@@ -3,7 +3,7 @@ type: fleeting
 created: 2025-07-24 09:45
 status: inbox
 tags: ["#fleeting", "#inbox", "financial-stress", "financial-struggles", "goal-setting", "mental-health", "personal-growth", "productivity"]
-ai_processed: 2025-07-31T19:14:14.669591
+ai_processed: 2025-08-05T18:13:17.833448
 visibility: private
 ---
 <!--

@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-30 14:08
 status: inbox
-tags: ["#fleeting", "#inbox", "career-development", "entrepreneurship", "freelancing", "job-search", "personal-growth", "productivity"]
-ai_processed: 2025-07-31T19:14:35.321123
+tags: ["#fleeting", "#inbox", "career-development", "entrepreneurship", "freelance-work", "freelancing", "job-search", "personal-growth"]
+ai_processed: 2025-08-05T18:13:40.194691
 visibility: private
 ---
 <!--

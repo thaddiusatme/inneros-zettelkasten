@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-30 23:53
 status: inbox
-tags: ["#fleeting", "#inbox", "metadata", "note-taking-system", "notes", "organization", "productivity", "static-date"]
-ai_processed: 2025-07-31T19:14:55.933029
+tags: ["#fleeting", "#inbox", "knowledge-management", "metadata", "note-taking-system", "notes", "organization", "personal-knowledge-base"]
+ai_processed: 2025-08-05T18:13:58.121605
 visibility: private
 ---
 <!--

@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-31 09:07
 status: inbox
-tags: [" ", """, ",", "-", ":", "[", "a", "c"]
-ai_processed: 2025-07-31T19:17:41.673431
+tags: ["", " ", "-", ":", "[", "a", "c", "career-development"]
+ai_processed: 2025-08-05T18:15:48.709240
 visibility: private
 ---
 <!--

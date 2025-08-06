@@ -1,8 +1,8 @@
 ---
 created: 2025-07-19 19:50
 status: active
-tags: ["categorization", "content-linking", "information-management", "information-organization", "information-processing", "knowledge-management", "knowledge-organization", "link-building"]
-ai_processed: 2025-07-30T23:51:53.941675
+tags: ["categorization", "content-linking", "information-management", "information-organization", "information-processing", "knowledge-management", "knowledge-organization", "knowledge-organization-system"]
+ai_processed: 2025-08-05T18:09:35.464063
 title: Inbox
 ---
 # 📥 Inbox

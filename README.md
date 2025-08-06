@@ -93,13 +93,16 @@ python3 ../development/src/cli/analytics_demo.py . --interactive
 
 The InnerOS Zettelkasten now includes a comprehensive AI-powered knowledge management system:
 
-#### 📊 **Analytics Dashboard**
+#### 📊 **Analytics & Quality Assessment**
 ```bash
-# Analyze your entire collection
-python3 src/cli/analytics_demo.py . --interactive
+# Interactive analytics with rich visuals
+inneros analytics --interactive
 
-# Quick analysis
-python3 quick_demo.py
+# Targeted quality analysis
+inneros analytics --section quality
+
+# Quick analysis with default knowledge directory
+inneros analytics
 ```
 - **Quality Scoring**: 0-1 assessment based on content, tags, links, metadata
 - **Temporal Analysis**: Creation patterns and date range insights
@@ -109,10 +112,16 @@ python3 quick_demo.py
 #### 🔄 **Smart Workflow Management**
 ```bash
 # Process inbox with AI assistance
-python3 src/cli/workflow_demo.py . --process-inbox
+inneros workflow --process-inbox
 
 # Interactive workflow management
-python3 src/cli/workflow_demo.py . --interactive
+inneros workflow --interactive
+
+# Check workflow health status
+inneros workflow --status
+
+# Generate weekly review
+inneros workflow --weekly-review
 ```
 - **AI-Enhanced Processing**: Automatic tagging and quality assessment
 - **Intelligent Promotion**: Inbox → Fleeting → Permanent with AI guidance
@@ -140,13 +149,13 @@ python3 src/cli/summarizer_demo.py /path/to/notes
 #### 📈 **Enhanced Weekly Review Analytics**
 ```bash
 # Generate comprehensive weekly metrics
-python3 src/cli/workflow_demo.py . --enhanced-metrics
+inneros workflow --enhanced-metrics
 
 # Export enhanced metrics to markdown
-python3 src/cli/workflow_demo.py . --enhanced-metrics --export metrics.md
+inneros workflow --enhanced-metrics --export metrics.md
 
 # JSON output for automation
-python3 src/cli/workflow_demo.py . --enhanced-metrics --format json
+inneros workflow --enhanced-metrics --format json
 ```
 - **Orphaned Note Detection**: Identifies notes with no incoming/outgoing links
 - **Stale Note Analysis**: Flags notes not updated in 90+ days
@@ -169,10 +178,11 @@ python3 test_real_analytics.py
 ### 🚀 **Getting Started with AI Features**
 
 1. **Ensure Ollama is running**: `ollama serve` (with llama3:latest model)
-2. **Quick demo**: `python3 quick_demo.py`
-3. **Analyze your notes**: `python3 test_real_analytics.py`
-4. **Process inbox**: `python3 src/cli/workflow_demo.py . --process-inbox`
-5. **Explore features**: `python3 demo_user_journeys.py`
+2. **Quick analysis**: `inneros analytics`
+3. **Check workflow status**: `inneros workflow --status`
+4. **Process inbox**: `inneros workflow --process-inbox`
+5. **Generate weekly review**: `inneros workflow --weekly-review`
+6. **Enhance a note**: `inneros enhance knowledge/Inbox/your-note.md`
 
 ### 📊 **Proven Results**
 - **66/66 tests passing** with comprehensive coverage

@@ -2,8 +2,10 @@
 type: fleeting
 created: 2025-07-23 20:10
 status: inbox
-tags: ["#fleeting", "#inbox", "ai-reasoning", "imo", "language-model", "language-understanding", "machine-learning", "math-olympiad"]
-ai_processed: 2025-07-31T19:17:21.357593
+tags: ["#fleeting", "#inbox", "ai-reasoning", "here are the extracted tags:
+
+openai", "imo", "language-model", "language-understanding", "machine-learning"]
+ai_processed: 2025-08-05T18:15:28.796723
 visibility: private
 ---
 <!--

@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-29 14:30
 status: inbox
-tags: ["#fleeting", "#inbox", "age-verification", "anonymity-online", "government-identification", "identity-verification", "internet-regulation", "online-pornography"]
-ai_processed: 2025-07-31T19:21:38.324426
+tags: ["#fleeting", "#inbox", "age-verification", "anonymity-online", "anonymous-access", "biometric-authentication", "data-privacy", "gaming-restrictions"]
+ai_processed: 2025-08-05T18:18:09.981176
 visibility: private
 ---
 <!--

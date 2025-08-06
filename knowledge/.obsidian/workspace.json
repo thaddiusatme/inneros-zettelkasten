@@ -11,10 +11,14 @@
             "id": "60e1fd7f65b35f31",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Permanent Notes/AI and Prompting MOC.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "AI and Prompting MOC"
             }
           }
         ]
@@ -179,8 +183,10 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "60e1fd7f65b35f31",
+  "active": "0fc1b8796927161e",
   "lastOpenFiles": [
+    "Inbox/reorganization-test-note.md",
+    "Fleeting Notes/Shambhala.md",
     "Untitled.canvas",
     "README-knowledge.md",
     "Note B.md",
@@ -212,7 +218,6 @@
     "Fleeting Notes/avoid being \"on the hamster wheel.md",
     "Inbox/fleeting-20250804-1204-testing2.md.md",
     "Templates/content-idea-raw.md",
-    "Templates/fleeting.md",
-    "Inbox/fleeting-20250804-1202-te123.md.md"
+    "Templates/fleeting.md"
   ]
 }

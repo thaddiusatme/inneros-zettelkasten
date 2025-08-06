@@ -1,3 +1,7 @@
+---
+tags: ["chrome-extensions", "facebook", "lovable", "obsidian-publish"]
+ai_processed: 2025-08-05T18:09:16.293820
+---
 > ,
 
 Clipped from [Chrome Extensions - Obsidian Hub - Obsidian Publish](https://publish.obsidian.md/hub/02+-+Community+Expansions/02.04+Auxiliary+Tools+by+Category/Chrome+Extensions) at 2025-06-03.

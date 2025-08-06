@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-28 19:53
 status: inbox
-tags: ["#fleeting", "#inbox", "journaling", "linking-notes", "metadata", "note-taking", "personal-knowledge-management", "self-organization"]
-ai_processed: 2025-07-31T19:19:24.485226
+tags: ["#fleeting", "#inbox", "ai-augmented-zettelkasten", "automation", "context-engineering", "creative-constraint", "journaling", "linking-notes"]
+ai_processed: 2025-08-05T18:16:36.834317
 visibility: private
 ---
 <!--

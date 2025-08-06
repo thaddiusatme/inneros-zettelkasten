@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-23 20:12
 status: inbox
-tags: ["#fleeting", "#inbox", "ai", "chatgpt", "idea-generation", "innovation", "language-model", "note-taking"]
-ai_processed: 2025-07-31T19:23:27.706541
+tags: ["#fleeting", "#inbox", "ai", "ai-assisted", "chatbot", "chatgpt", "context-aware", "idea-generation"]
+ai_processed: 2025-08-05T18:20:00.012261
 visibility: private
 ---
 <!--

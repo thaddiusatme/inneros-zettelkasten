@@ -26,12 +26,19 @@ development/
 ### Installation
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
-# Run tests
+# Run tests (from development directory)
 python3 -m pytest tests/
 
-# Run demos
+# Or run tests from project root
+PYTHONPATH=development python3 -m pytest development/tests/
+
+# Run demos using new unified CLI (from project root)
+../inneros analytics --interactive
+../inneros workflow --status
+
+# Or run demos directly (from development directory)
 python3 src/cli/analytics_demo.py ../knowledge/ --interactive
 ```
 

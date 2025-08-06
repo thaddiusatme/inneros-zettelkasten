@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-30 14:07
 status: inbox
-tags: [" ", """, "#", ",", ":", "[", "a", "b"]
-ai_processed: 2025-07-31T19:20:40.007784
+tags: ["", " ", "#", ":", "[", "a", "b", "fomo"]
+ai_processed: 2025-08-05T18:17:17.868716
 visibility: private
 ---
 <!--

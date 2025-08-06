@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-29 18:27
 status: inbox
-tags: [" ", """, "#", ",", "-", ":", "[", "a"]
-ai_processed: 2025-07-31T19:23:08.286661
+tags: ["", " ", "#", "-", ":", "[", "a", "ai-driven travel booking"]
+ai_processed: 2025-08-05T18:19:39.002770
 visibility: private
 ---
 <!--
