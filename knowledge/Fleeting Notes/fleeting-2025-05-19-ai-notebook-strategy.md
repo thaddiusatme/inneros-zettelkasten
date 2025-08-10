@@ -16,7 +16,7 @@ Quick thoughts on integrating AI more effectively into my note-taking workflow.
 - Use local LLMs for sensitive content processing
 - Create templater scripts that can call AI for auto-tagging
 - Consider different AI models for different note types
-- Explore ways to use AI for connecting ideas across notes
+- Explore ways to use AI for connecting ideas acrnoss notes
 
 ## Potential Tools
 - Obsidian Copilot plugin

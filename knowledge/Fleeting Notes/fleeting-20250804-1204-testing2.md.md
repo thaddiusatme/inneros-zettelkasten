@@ -1,9 +1,9 @@
 ---
 type: fleeting
-created: {{date:YYYY-MM-DD HH:mm}}
-status: inbox
-tags: ["fleeting", "inbox", "note-taking", "personal-knowledge-management", "productivity", "thought-management"]
-ai_processed: 2025-08-05T18:11:46.956798
+created: 2025-08-04 12:04
+status: promoted
+tags: ["fleeting", "inbox", "note-taking", "personal-knowledge-management", "productivity", "productivity-systems", "thought-management"]
+ai_processed: 2025-08-05T22:06:23.654581
 visibility: private
 ---
 <!--

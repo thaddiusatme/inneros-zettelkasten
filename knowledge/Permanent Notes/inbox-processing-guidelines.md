@@ -1,9 +1,11 @@
 ---
+type: permanent
 created: 2025-07-19 19:50
-status: active
+status: published
+visibility: private
 tags: ["categorization", "content-linking", "information-management", "information-organization", "information-processing", "knowledge-management", "knowledge-organization", "knowledge-organization-system"]
-ai_processed: 2025-08-05T18:09:35.464063
-title: Inbox
+ai_processed: 2025-08-05T22:03:59.232620
+title: Inbox Processing Guidelines
 ---
 # 📥 Inbox
 

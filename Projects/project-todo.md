@@ -207,8 +207,8 @@ Based on comprehensive SWOT and 80/20 analysis, your InnerOS Zettelkasten has ac
 ### Daily Tasks
 - [ ] Review and triage new Inbox items
 - [ ] Process fleeting notes to permanent notes
-- [ ] Run AI-enhanced inbox processing: `python3 src/cli/workflow_demo.py . --process-inbox`
-- [ ] Check analytics for collection health: `python3 quick_demo.py`
+- [ ] Run AI-enhanced inbox processing: `python3 development/src/cli/workflow_demo.py knowledge --process-inbox`
+- [ ] Check analytics for collection health: `python3 development/demos/quick_demo.py`
 
 ### Weekly Tasks
 - [ ] **Run Weekly Review**: `python3 src/cli/workflow_demo.py . --weekly-review`

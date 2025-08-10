@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "8eea9a7a9238c3af",
+        "id": "bbfe516a95c4f6a2",
         "type": "tabs",
         "children": [
           {
-            "id": "60e1fd7f65b35f31",
+            "id": "e2ec3df53285cc89",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Permanent Notes/AI and Prompting MOC.md",
+                "file": "Inbox/fleeting-20250806-1520-bug-images-dissapear.md.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "AI and Prompting MOC"
+              "title": "fleeting-20250806-1520-bug-images-dissapear.md"
             }
           }
         ]
@@ -183,41 +183,51 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "0fc1b8796927161e",
+  "active": "e2ec3df53285cc89",
   "lastOpenFiles": [
-    "Inbox/reorganization-test-note.md",
-    "Fleeting Notes/Shambhala.md",
+    "Inbox/fleeting-20250806-1520-bug-created-time-property-returning-array.md.md",
+    "Inbox/fleeting-20250806-1519-improvements-for-threadweavers.md.md",
+    "Inbox/fleeting-20250806-1504-prompt-gap-analysis.md.md",
+    "Content Pipeline/Pre-Prooduction/i-almost-quit-today.md",
+    "Content Pipeline/Pre-Prooduction/how-do-we-wow-the-customer.md",
+    "Content Pipeline/Pre-Prooduction/burnout-out-prompts.md",
+    "Content Pipeline/Pre-Prooduction/ai-terminology.md",
+    "Content Pipeline/Pre-Prooduction/ai-culture-and-society-stories-sample.md",
+    "Content Pipeline/Pre-Prooduction/5-questions-that-will-help-you-determine-if-your-product-is-compellin g.md",
+    "Content Pipeline/Pre-Prooduction/5-excuses-for-not-making-quality.md",
+    "Content Pipeline/Idea Backlog/20250725-2154-stop-start-ai-for-you.md.md",
+    "Content Pipeline/Idea Backlog/20250725-2152-hormozi-dont-quit.md.md",
+    "Content Pipeline/Idea Backlog/20250725-2151-men-you-can.md.md",
+    "Content Pipeline/Idea Backlog/20250723-1208-lovable-hits-100m-arr-after-8-months.md.md",
+    "Content Pipeline/Idea Backlog/20250714-1515-the-un-making-deepfake-twins.md",
+    "Content Pipeline/Idea Backlog/20250714-1508-privacy-cases-are-expensive.md",
+    "Content Pipeline/Idea Backlog/20250714-1506-claude-can-now-work-on-canva.md",
+    "Content Pipeline/Idea Backlog/20250714-1505-chamber-of-commerce-ai-is-transforming-small-business.md",
+    "Content Pipeline/Idea Backlog/20250714-1502-automation-for-small-business.md",
+    "Content Pipeline/Idea Backlog/20250711-2148-you-can-use-chatgpt-to-screenshot-and-read-your-rune-words.md",
+    "Content Pipeline/Idea Backlog/20250707-1933-audience-appeal-threadweavers-ai-persona.md",
+    "Content Pipeline/Idea Backlog/20250707-1530-chatgpt-nut.md",
+    "Content Pipeline/Idea Backlog/20250704-0006-are-exlcusion-lists-still-in-2025.md",
+    "Content Pipeline/Idea Backlog/20250704-0005-digital-bea-chatgpt-too-long.md",
+    "Content Pipeline/Idea Backlog/20250702-2220-shes-a-10.md",
+    "Content Pipeline/Idea Backlog/20250627-2047-how-to-choose-different-chatgpt-models-for-paid-users.md",
+    "Content Pipeline/Pre-Prooduction",
+    "Content Pipeline/Idea Backlog",
+    "Content Pipeline",
+    "Mobile Notes",
+    "Pasted image 20250806152036.png",
     "Untitled.canvas",
-    "README-knowledge.md",
-    "Note B.md",
-    "Permanent Notes/Vibe Coding Needs Guardrails.md",
-    "Permanent Notes/TDD as Creative Constraint.md",
-    "Permanent Notes/Reflections on Enjoying Employment While Pursuing Digital Entrepreneurship.md",
+    "Templates",
+    "Permanent Notes",
+    "People",
+    "Inbox",
+    "Fleeting Notes/image.png",
+    "Fleeting Notes",
+    "Archive/Content Pipeline/Pre-Prooduction",
     "htmlcov/keybd_closed_cb_ce680311.png",
     "htmlcov/favicon_32_cb_58284776.png",
     "Media/502411464_1150261997140534_1261923335124955180_n.jpg_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=9NEyrBdn2FoQ7kNvwENyZ2i&_nc_oc=AdnJqlEphlb7NlbMEp9DlS9E1VZtcUS3g4KcdqUbXbqGWtORKXkzfeEegMjSNzH-kDU&_nc_zt=23&_nc_ht=scontent-sea1-1.jpg",
     "Media/pasted-image-20250725215117.png",
-    "Media/pasted-image-20250725215404.png",
-    "Media/Recording 20250719163500.m4a",
-    "Fleeting Notes/Pasted image 20250730235358.png.md",
-    "Pasted image 20250729144519.png.md",
-    "Fleeting Notes/fleeting-2025-07-31-testing.md",
-    "Fleeting Notes/fleeting-2025-07-31-upwork-get-clients-on-upwork-in-2025-for-beginners-video.md",
-    "Fleeting Notes/fleeting-2025-07-31-upwork-top-5-for-beginners.md",
-    "Fleeting Notes/fleeting-2025-07-31-upwork-what-should-i-do-before-i-get-even-started.md",
-    "Fleeting Notes/image.png",
-    "Fleeting Notes/teach a class on creating your own textbooks and pdfs in napkin.ai.md",
-    "Fleeting Notes/Upwork as Revenue.md",
-    "Fleeting Notes/fleeting-2025-07-24-threadweavers-i-need-to-finish-editting-and-get-ready-to-launch-threadweavers.md",
-    "Fleeting Notes/fleeting-2025-07-24-daily-note-7-24-2025.md",
-    "Fleeting Notes/fleeting-2025-07-23-openai-wins-gold-at-the-math-olympics.md",
-    "Fleeting Notes/fleeting-2025-07-23-human-coder-beats-open-ai.md",
-    "Fleeting Notes/fleeting-2025-07-20-tdd-context-code-review-step.md",
-    "Fleeting Notes/fleeting-2025-05-19-ai-notebook-strategy.md",
-    "Fleeting Notes/Fleeting Notes Manifest.md",
-    "Fleeting Notes/avoid being \"on the hamster wheel.md",
-    "Inbox/fleeting-20250804-1204-testing2.md.md",
-    "Templates/content-idea-raw.md",
-    "Templates/fleeting.md"
+    "Media/pasted-image-20250725215404.png"
   ]
 }

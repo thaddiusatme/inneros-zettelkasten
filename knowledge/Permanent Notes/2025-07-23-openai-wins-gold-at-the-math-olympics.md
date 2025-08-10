@@ -1,11 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-23 20:10
 status: inbox
-tags: ["#fleeting", "#inbox", "ai-reasoning", "here are the extracted tags:
-
-openai", "imo", "language-model", "language-understanding", "machine-learning"]
-ai_processed: 2025-08-05T18:15:28.796723
+tags: [" ", """, "#", ",", "-", ":", "[", "a"]
+ai_processed: 2025-08-05T22:21:24.533430
 visibility: private
 ---
 <!--

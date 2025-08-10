@@ -1,9 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-31 14:17
 status: inbox
 tags: ["#fleeting", "#inbox", "automation", "business-growth", "digital-sales", "entrepreneurship", "freelancing", "gig-economy"]
-ai_processed: 2025-08-05T18:12:36.888245
+ai_processed: 2025-08-05T22:18:33.208265
 visibility: private
 ---
 <!--

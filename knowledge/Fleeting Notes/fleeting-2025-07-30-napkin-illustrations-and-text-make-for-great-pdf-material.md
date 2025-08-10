@@ -2,10 +2,8 @@
 type: fleeting
 created: 2025-07-30 20:43
 status: inbox
-tags: ["", " ", "#", "-", ":", "[", "a", "here are the extracted tags:
-
-napkin.ai"]
-ai_processed: 2025-08-05T18:18:58.446556
+tags: [" ", """, "#", ",", "-", ":", "[", "a"]
+ai_processed: 2025-08-05T22:25:15.579543
 visibility: private
 ---
 <!--

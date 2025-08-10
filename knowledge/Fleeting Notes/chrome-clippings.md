@@ -1,6 +1,11 @@
 ---
-tags: ["chrome-extensions", "facebook", "lovable", "obsidian-publish"]
-ai_processed: 2025-08-05T18:09:16.293820
+type: fleeting
+created: 2025-06-03 00:00
+status: promoted
+visibility: private
+tags: ["chrome-extensions", "facebook", "lovable", "obsidian-publish", "web-clippings"]
+ai_processed: 2025-08-05T22:03:41.904109
+title: Chrome Extension and Web Clippings
 ---
 > ,
 

@@ -1,4 +1,20 @@
 
+### 2025-08-10 - Batch Promotion of High-Quality Notes
+
+#### 🎯 **Fleeting → Permanent Promotion COMPLETED**
+**Status**: ✅ **PRODUCTION READY**
+
+**🔧 Details:**
+- Promoted 15 high-quality notes (quality ≥ 0.80) from `knowledge/Fleeting Notes/` to `knowledge/Permanent Notes/`.
+- Updated YAML metadata in-place (`type: permanent`, `status: published`) during migration.
+- Promotion executed via one-off Python script (temporary solution; planned CLI integration via WorkflowManager).
+- `upwork-as-revenue.md` not found during batch ‑ flagged for follow-up investigation.
+
+**📁 Files Affected:**
+- 15 promoted notes now reside in `Permanent Notes/` (see commit diff for full list).
+
+---
+
 ### 2025-08-04 - Template Workflow System Overhaul
 
 #### 🎯 **Template Reliability & Workflow Compliance COMPLETED**

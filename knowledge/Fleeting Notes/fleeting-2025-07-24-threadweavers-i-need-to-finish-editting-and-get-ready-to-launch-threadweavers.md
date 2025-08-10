@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-24 21:02
 status: inbox
-tags: [" ", """, "#", ",", "-", ":", "[", "a"]
-ai_processed: 2025-08-05T18:14:17.848926
+tags: ["", " ", "#", "-", ":", "[", "a", "demographic-targeting"]
+ai_processed: 2025-08-05T22:20:11.985860
 visibility: private
 ---
 <!--

@@ -1,9 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-28 19:53
 status: inbox
-tags: ["#fleeting", "#inbox", "ai-augmented-zettelkasten", "automation", "context-engineering", "creative-constraint", "journaling", "linking-notes"]
-ai_processed: 2025-08-05T18:16:36.834317
+tags: ["#fleeting", "#inbox", "ai-augmentation", "ai-augmented-zettelkasten", "automation", "context-engineering", "creative-constraint", "journaling"]
+ai_processed: 2025-08-05T22:22:37.594122
 visibility: private
 ---
 <!--

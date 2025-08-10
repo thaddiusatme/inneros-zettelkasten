@@ -1,9 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-23 20:15
 status: inbox
 tags: ["", " ", "#", "-", ":", "[", "a", "automation"]
-ai_processed: 2025-08-05T18:16:57.159480
+ai_processed: 2025-08-05T22:22:58.343789
 visibility: private
 ---
 <!--

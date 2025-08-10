@@ -1,9 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-30 14:07
 status: inbox
-tags: ["", " ", "#", ":", "[", "a", "b", "fomo"]
-ai_processed: 2025-08-05T18:17:17.868716
+tags: ["", " ", "#", ":", "[", "a", "anxiety", "b"]
+ai_processed: 2025-08-05T22:23:22.452235
 visibility: private
 ---
 <!--

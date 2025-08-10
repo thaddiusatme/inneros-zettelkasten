@@ -2,8 +2,8 @@
 type: fleeting
 created: 2025-07-31 18:32
 status: inbox
-tags: ["ai-humble-servant", "consulting", "consulting-marketing", "fleeting-income-streams", "freelance-writing", "freelancing", "gpt", "gpt-audits"]
-ai_processed: 2025-08-05T18:12:55.182138
+tags: ["ai-humble-servant", "consulting", "consulting-marketing", "consulting-proof-points", "fleeting-income-streams", "freelance-writing", "freelancing", "gpt"]
+ai_processed: 2025-08-05T22:18:51.843075
 visibility: private
 ---
 - **Type**: Fleeting

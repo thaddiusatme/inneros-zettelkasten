@@ -1,9 +1,9 @@
 ---
 type: fleeting
 created: 2025-07-25 22:02
-status: inbox
-tags: ["business-growth", "business-strategy", "channel-optimization", "customer-retention", "daily-leverage-activities", "deep-work-sprint", "energy-leverage", "entrepreneurship"]
-ai_processed: 2025-08-05T18:10:14.967877
+status: promoted
+tags: ["business-growth", "business-strategy", "channel-optimization", "customer-retention", "daily-leverage-activities", "deep-work", "deep-work-sprint", "energy-leverage"]
+ai_processed: 2025-08-05T22:04:39.951761
 visibility: private
 linked_notes: 
 ---

@@ -1,9 +1,9 @@
 ---
-type: fleeting
+type: permanent
 created: 2025-07-31 15:21
 status: inbox
-tags: ["#fleeting", "#inbox", "bad-clients", "career-development", "client-selection", "freelancing", "freelancing-challenges", "freelancing-not-for-everyone"]
-ai_processed: 2025-08-05T18:17:44.381107
+tags: ["#fleeting", "#inbox", "bad-clients", "career-development", "client-selection", "entrepreneurship", "freelancing", "freelancing-challenges"]
+ai_processed: 2025-08-05T22:23:51.637170
 visibility: private
 ---
 <!--

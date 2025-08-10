@@ -1,6 +1,11 @@
 ---
-tags: ["content-calendar", "document-as-i-go", "document-as-you-go", "documentation", "energy-management", "llm", "llm-obsidian-workflow", "morning-routine"]
-ai_processed: 2025-08-05T18:10:57.856872
+type: fleeting
+created: 2025-08-05 09:00
+status: promoted
+visibility: private
+tags: ["content-calendar", "document-as-i-go", "documentation", "energy-management", "llm", "llm-obsidian-workflow", "daily-intentions"]
+ai_processed: 2025-08-05T22:05:19.113425
+title: Daily Work Intentions and LLM Workflow
 ---
 Intentions today- I wish to have a successful and laid back WFM shift
 
