@@ -3,7 +3,6 @@
 ## 📚 InnerOS Zettelkasten - Knowledge Base
 
 This directory contains the complete Zettelkasten knowledge management system - all notes, templates, and Obsidian configuration.
-
 ## 📁 Directory Structure
 
 ```

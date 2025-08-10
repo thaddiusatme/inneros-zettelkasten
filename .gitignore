@@ -97,3 +97,4 @@ fix_*.py
 # *.mov
 # *.mp3
 # *.wav
+.obsidian/
