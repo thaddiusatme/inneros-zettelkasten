@@ -1,7 +1,15 @@
 <%*
-const date = tp.date.now("YYYY-MM-DD");
-const fileName = `daily-${date}`;
 const folder = "Reviews";
+// Ensure destination folder exists
+try { await app.vault.createFolder(folder); } catch(e) { /* ignore if exists */ }
+
+const date = tp.date.now("YYYY-MM-DD");
+let fileName = `daily-${date}`;
+let target = `${folder}/${fileName}.md`;
+// Avoid collisions by adding time suffix if needed
+if (await app.vault.adapter.exists(target)) {
+  fileName = `daily-${date}-${tp.date.now("HHmm")}`;
+}
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>

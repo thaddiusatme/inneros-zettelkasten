@@ -1,9 +1,15 @@
 <%*
-await tp.file.move(`Inbox/${tp.file.title}`);
+const folder = "Reviews"; // optional — change or remove if you don’t want a folder
+// Ensure destination folder exists
+try { await app.vault.createFolder(folder); } catch(e) { /* ignore if exists */ }
 
 const weekId = tp.date.now("YYYY-[W]WW");
-const fileName = `weekly-${weekId}`;
-const folder = "Reviews"; // optional — change or remove if you don’t want a folder
+let fileName = `weekly-${weekId}`;
+let target = `${folder}/${fileName}.md`;
+// Avoid collisions by adding time suffix if needed
+if (await app.vault.adapter.exists(target)) {
+  fileName = `weekly-${weekId}-${tp.date.now("HHmm")}`;
+}
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>
