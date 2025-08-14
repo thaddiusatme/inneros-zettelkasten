@@ -98,3 +98,6 @@ fix_*.py
 # *.mp3
 # *.wav
 .obsidian/
+
+# Ignore dev temp artifacts
+development/tmp/
