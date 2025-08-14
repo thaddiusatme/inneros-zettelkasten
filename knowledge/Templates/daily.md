@@ -6,32 +6,37 @@ await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>
 ---
-type: review
-scope: daily
+type: daily
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: draft
-tags: ["#review", "#daily"]
-tz: America/Los_Angeles
+status: promoted
+tags: [daily, zettelkasten, scrum]
+visibility: private
+sprint_id: <% tp.date.now("YYYY-[W]WW") %>
 ---
 
-# 🌅 Daily Review — <% date %>
+# Daily Note — <% tp.date.now("YYYY-MM-DD") %>
 
-## 📈 Metrics
-- Content published:
-- Leads created:
-- Days of consistency (streak):
-- Sentiment (1–5):
+## Focus
+- <1 to 3 bullets for today’s single theme>
 
-## ✅ Top 3
-1.
-2.
-3.
+## Standup
+- Yesterday: 
+- Today: 
+- Blockers: 
 
-## 🧠 Notes / Reflection
--
+## Links Added
+- [[note-id-or-title]] short why it matters
 
-## 🔜 Tomorrow's Focus
--
+## Wins
+- <fast wins and tiny proofs>
 
-## 📌 Actions (in-note only)
-- [ ] 
+## Next
+- <top 3 actions, smallest viable steps>
+
+## Journal
+- <freeform>
+
+## EOD Micro Retro
+- What moved the needle:
+- What felt hard:
+- What to change tomorrow:

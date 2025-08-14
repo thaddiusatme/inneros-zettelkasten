@@ -1,50 +1,50 @@
 <%*
 await tp.file.move(`Inbox/${tp.file.title}`);
 
-const date = tp.date.now("YYYY-MM-DD");
-const fileName = `weekly-review-${date}`;
+const weekId = tp.date.now("YYYY-[W]WW");
+const fileName = `weekly-${weekId}`;
 const folder = "Reviews"; // optional — change or remove if you don’t want a folder
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
 %>
 ---
-type: permanent
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: draft
-tags: ["#review", "#weekly"]
+type: weekly
+week_id: <% tp.date.now("YYYY-[W]WW") %>
+period_start: <% tp.date.now("YYYY-MM-DD", -7) %>
+period_end: <% tp.date.now("YYYY-MM-DD") %>
+status: promoted
+tags: [weekly, review, retrospective, scrum]
 visibility: private
 ---
 
-# 🧠 Weekly Review — Week of <% date %>
+# Weekly Review — <% tp.date.now("YYYY-[W]WW") %>
 
-## 🎯 Goals Check-in
-- What worked?
-- What didn’t?
-- What surprised me?
+## Highlights
+- <3 to 5 outcomes, not activities>
 
----
+## Metrics
+- Notes created: <n>
+- Orphans before → after: <n> → <n>
+- Link density avg: <n>
+- Stale notes touched: <n>
+- Focus days this week: <n>
 
-## 📥 Fleeting Notes to Process
-- [ ] Review all notes tagged with `#fleeting`
-- [ ] Archive/delete anything that’s noise
-- [ ] Convert top 1–3 into permanent notes
+## Bridges Created
+- [[note-a]] ↔ [[note-b]] why the link matters
+- [[note-c]] ↔ [[note-d]]
 
----
+## What Went Well
+- 
 
-## 🧠 New Permanent Notes This Week
-- [[zettel-...]]
-- [[zettel-...]]
+## What I Will Improve
+- 
 
----
+## Next Week Goals
+- Outcome 1:
+- Outcome 2:
+- Outcome 3:
 
-## 🧭 Patterns, Themes, or Questions
-- Any ideas worth revisiting?
-- Topics you keep circling back to?
-- Confusions to explore?
-
----
-
-## 🧹 Knowledge Housekeeping
-- [ ] Tag untagged notes
-- [ ] Link orphan notes
-- [ ] Backup vault (if not synced)
+## Sprint Reflection
+- Did scope match capacity
+- Top blocker pattern
+- Experiment to try next sprint
