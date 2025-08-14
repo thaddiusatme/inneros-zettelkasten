@@ -15,6 +15,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
+from src.ai.import_manager import (
+    CSVImportAdapter,
+    JSONImportAdapter,
+    NoteWriter,
+)
 
 
 def print_header(title: str):
@@ -371,6 +376,12 @@ Examples:
         help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
     )
     
+    action_group.add_argument(
+        "--remediate-orphans",
+        action="store_true",
+        help="Remediate orphaned notes by inserting bidirectional links into a target note or generate a checklist"
+    )
+    
     parser.add_argument(
         "--format",
         choices=["text", "json"],
@@ -397,6 +408,37 @@ Examples:
         help="Preview recommendations without processing notes"
     )
     
+    # Orphan remediation options
+    parser.add_argument(
+        "--remediate-mode",
+        choices=["link", "checklist"],
+        default="link",
+        help="Remediation mode: insert links directly (link) or generate a checklist (checklist)"
+    )
+    parser.add_argument(
+        "--remediate-scope",
+        choices=["permanent", "fleeting", "all"],
+        default="permanent",
+        help="Which orphaned notes to consider (default: permanent)"
+    )
+    parser.add_argument(
+        "--remediate-limit",
+        type=int,
+        default=10,
+        help="Maximum number of orphaned notes to remediate (default: 10)"
+    )
+    parser.add_argument(
+        "--target-note",
+        metavar="PATH",
+        default=None,
+        help="Explicit target note/MOC path (relative to vault root or absolute). Defaults to 'Home Note.md' or first MOC."
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply changes (disable dry-run) for orphan remediation"
+    )
+    
     # Reading Intake Pipeline (PR1 Skeleton) options
     action_group.add_argument(
         "--import-csv",
@@ -418,6 +460,11 @@ Examples:
         metavar="PATH",
         default=None,
         help="Destination directory for notes (default: knowledge/Inbox)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force write even if (url, saved_at) duplicate detected"
     )
     
     args = parser.parse_args()
@@ -476,20 +523,18 @@ Examples:
         if not source_path.exists():
             print(f"❌ Error: CSV file not found: {source_path}")
             sys.exit(1)
-        print("📥 Reading Intake (CSV) — PR1 Skeleton")
+        print("📥 Reading Intake (CSV)")
         print(f"   Source: {source_path}")
         try:
-            rows = _load_csv_rows(source_path)
+            raw_rows = _load_csv_rows(source_path)
         except Exception as e:
             print(f"❌ Error loading CSV: {e}")
             sys.exit(1)
 
-        print(f"   Loaded {len(rows)} rows")
-        # Validation-only: basic field presence check (non-fatal in skeleton)
-        missing_required = 0
-        for r in rows:
-            if not r.get("title") or not r.get("url"):
-                missing_required += 1
+        print(f"   Loaded {len(raw_rows)} rows")
+
+        # Basic validation preview (as in PR1)
+        missing_required = sum(1 for r in raw_rows if not r.get("title") or not r.get("url"))
         if args.validate_only:
             print("   🔎 VALIDATE-ONLY: Basic checks complete")
             if missing_required:
@@ -497,37 +542,48 @@ Examples:
             print("   ✅ No files written (validate-only)")
             return
 
-        # Plan filenames (dry-run only in PR1)
-        planned = [_plan_filename_for_row(r) for r in rows]
+        # Parse/validate into ImportItem objects
+        items = CSVImportAdapter.load(source_path)
+        print(f"   Parsed {len(items)} valid items")
+
         dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
-        if args.dry_run or True:
-            print("   🔍 DRY RUN MODE (PR1 Skeleton) - No files will be written")
-            preview = planned[:5]
+        if args.dry_run:
+            print("   🔍 DRY RUN MODE - Planned files (no write):")
+            writer = NoteWriter(workflow.base_dir)
+            preview = [writer._base_filename(it) for it in items][:5]
             for name in preview:
                 print(f"      → {dest_dir / name}")
-            if len(planned) > 5:
-                print(f"      … and {len(planned) - 5} more")
+            extra = max(0, len(items) - len(preview))
+            if extra:
+                print(f"      … and {extra} more")
             return
-    
+
+        # Real write
+        writer = NoteWriter(workflow.base_dir)
+        written, skipped, paths = writer.write_items(items, dest_dir=dest_dir, force=args.force)
+        print("   ✅ Write complete")
+        print(f"   Written: {written}, Skipped (duplicates): {skipped}")
+        if paths:
+            for p in paths[:3]:
+                print(f"      + {p}")
+            if len(paths) > 3:
+                print(f"      … and {len(paths) - 3} more")
+        
     elif args.import_json:
         source_path = Path(args.import_json)
         if not source_path.exists():
             print(f"❌ Error: JSON file not found: {source_path}")
             sys.exit(1)
-        print("📥 Reading Intake (JSON) — PR1 Skeleton")
+        print("📥 Reading Intake (JSON)")
         print(f"   Source: {source_path}")
         try:
-            rows = _load_json_rows(source_path)
+            raw_rows = _load_json_rows(source_path)
         except Exception as e:
             print(f"❌ Error loading JSON: {e}")
             sys.exit(1)
 
-        print(f"   Loaded {len(rows)} items")
-        # Validation-only: basic field presence check (non-fatal in skeleton)
-        missing_required = 0
-        for r in rows:
-            if not r.get("title") or not r.get("url"):
-                missing_required += 1
+        print(f"   Loaded {len(raw_rows)} items")
+        missing_required = sum(1 for r in raw_rows if not r.get("title") or not r.get("url"))
         if args.validate_only:
             print("   🔎 VALIDATE-ONLY: Basic checks complete")
             if missing_required:
@@ -535,47 +591,30 @@ Examples:
             print("   ✅ No files written (validate-only)")
             return
 
-        # Plan filenames (dry-run only in PR1)
-        planned = [_plan_filename_for_row(r) for r in rows]
+        items = JSONImportAdapter.load(source_path)
+        print(f"   Parsed {len(items)} valid items")
+
         dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
-        if args.dry_run or True:
-            print("   🔍 DRY RUN MODE (PR1 Skeleton) - No files will be written")
-            preview = planned[:5]
+        if args.dry_run:
+            print("   🔍 DRY RUN MODE - Planned files (no write):")
+            writer = NoteWriter(workflow.base_dir)
+            preview = [writer._base_filename(it) for it in items][:5]
             for name in preview:
                 print(f"      → {dest_dir / name}")
-            if len(planned) > 5:
-                print(f"      … and {len(planned) - 5} more")
+            extra = max(0, len(items) - len(preview))
+            if extra:
+                print(f"      … and {extra} more")
             return
-    
-    elif args.promote:
-        filename, note_type = args.promote
-        
-        # Find the file
-        inbox_path = workflow.inbox_dir / filename
-        fleeting_path = workflow.fleeting_dir / filename
-        
-        if inbox_path.exists():
-            file_path = str(inbox_path)
-        elif fleeting_path.exists():
-            file_path = str(fleeting_path)
-        else:
-            print(f"❌ Error: File '{filename}' not found in inbox or fleeting notes")
-            sys.exit(1)
-        
-        print(f"📈 Promoting {filename} to {note_type}...")
-        result = workflow.promote_note(file_path, note_type)
-        
-        if args.format == "json":
-            print(json.dumps(result, indent=2, default=str))
-        else:
-            if result.get("success"):
-                print(f"✅ Successfully promoted to {result['type']}")
-                print(f"   From: {result['source']}")
-                print(f"   To: {result['target']}")
-                if result.get("has_summary"):
-                    print(f"   Added AI summary")
-            else:
-                print(f"❌ Error: {result.get('error', 'Unknown error')}")
+
+        writer = NoteWriter(workflow.base_dir)
+        written, skipped, paths = writer.write_items(items, dest_dir=dest_dir, force=args.force)
+        print("   ✅ Write complete")
+        print(f"   Written: {written}, Skipped (duplicates): {skipped}")
+        if paths:
+            for p in paths[:3]:
+                print(f"      + {p}")
+            if len(paths) > 3:
+                print(f"      … and {len(paths) - 3} more")
     
     elif args.report:
         print("📊 Generating comprehensive workflow report...")
@@ -641,6 +680,59 @@ Examples:
             print(f"\n✨ Review {summary['total_notes']} notes above and check them off as you complete each action.")
         else:
             print("\n🎉 No notes require review - your workflow is up to date!")
+    
+    elif args.remediate_orphans:
+        print("🔗 Orphaned note remediation...")
+        # Default to dry-run unless --apply is provided
+        effective_dry_run = not args.apply
+        if effective_dry_run:
+            print("   🔍 DRY RUN MODE - No files will be modified")
+        print(f"   Mode: {args.remediate_mode}, Scope: {args.remediate_scope}, Limit: {args.remediate_limit}")
+        if args.target_note:
+            print(f"   Target: {args.target_note}")
+        
+        result = workflow.remediate_orphaned_notes(
+            mode=args.remediate_mode,
+            scope=args.remediate_scope,
+            limit=args.remediate_limit,
+            target=args.target_note,
+            dry_run=effective_dry_run,
+        )
+        
+        if args.format == "json":
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            if result.get("error"):
+                print(f"❌ Error: {result['error']}")
+            else:
+                if args.remediate_mode == "checklist":
+                    print_header("ORPHAN REMEDIATION CHECKLIST")
+                    print(result.get("checklist_markdown", "(no items)"))
+                else:
+                    print_header("ORPHAN REMEDIATION RESULTS")
+                    summary = result.get("summary", {})
+                    print(f"   Considered: {summary.get('considered', 0)}")
+                    print(f"   Processed:  {summary.get('processed', 0)}")
+                    print(f"   Errors:     {summary.get('errors', 0)}")
+                    # Show first few actions
+                    actions = result.get("actions", [])
+                    if actions:
+                        print_section("ACTIONS (First 3)")
+                        for a in actions[:3]:
+                            if a.get("error"):
+                                print(f"   ⚠️  {a['orphan']} → {a['target']} :: {a['error']}")
+                            else:
+                                print(f"   ✅ {a['orphan']} ↔ {a['target']} (orphan:{a.get('modified_orphan')}, target:{a.get('modified_target')})")
+        
+        # Export results if requested
+        if args.export:
+            export_path = Path(args.export)
+            with open(export_path, 'w', encoding='utf-8') as f:
+                if args.format == "json" or args.remediate_mode == "link":
+                    json.dump(result, f, indent=2, default=str)
+                else:
+                    f.write(result.get("checklist_markdown", ""))
+            print(f"\n📄 Remediation output exported to: {export_path}")
     
     elif args.enhanced_metrics:
         print("📊 Generating enhanced metrics report...")

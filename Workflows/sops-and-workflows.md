@@ -10,6 +10,9 @@ type: SOP
 
 A living collection of repeatable processes for MOC review, orphaned note management, and more.
 
+## Related SOPs
+- [Review & Retrospectives](./review-and-retrospectives.md)
+
 ## 🧠 MOC Review Workflow (Weekly)
 - [ ] Review Home Note for broken/missing links and update/create stubs as needed.
 - [ ] Visit each MOC (Projects, Concepts, Books, AHS) and add/remove links for new or completed items.

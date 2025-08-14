@@ -110,6 +110,12 @@ Options:
   --interactive            # Run in interactive mode
   --weekly-review          # Generate weekly review checklist
   --enhanced-metrics       # Enhanced metrics with orphaned/stale detection
+  --remediate-orphans      # Remediate orphaned notes (insert links or checklist)
+  --remediate-mode MODE    # Remediation mode: link|checklist (default: link)
+  --remediate-scope SCOPE  # Scope: permanent|fleeting|all (default: permanent)
+  --remediate-limit N      # Max number of orphans to process (default: 10)
+  --target-note PATH       # Explicit target note/MOC (relative to vault or absolute)
+  --apply                  # Apply changes (disable dry-run); default is dry-run preview
   --format {text,json}     # Output format (default: text)
   --export FILENAME        # Export report to JSON file
   --export-checklist PATH  # Export weekly review checklist to markdown
@@ -135,6 +141,16 @@ inneros workflow --weekly-review --export-checklist weekly-review.md
 
 # Enhanced metrics with orphaned note detection
 inneros workflow --enhanced-metrics
+
+# Orphan remediation (dry-run by default)
+inneros workflow --remediate-orphans --remediate-scope permanent --remediate-limit 5
+
+# Apply link insertions to Home Note (be careful; creates backups)
+inneros workflow --remediate-orphans --apply --target-note "knowledge/Home Note.md" \
+  --remediate-scope permanent --remediate-limit 10
+
+# Generate a remediation checklist instead of making changes
+inneros workflow --remediate-orphans --remediate-mode checklist --export checklist.md
 
 # Interactive workflow management
 inneros workflow --interactive
@@ -224,6 +240,13 @@ inneros workflow --weekly-review --export-checklist this-week.md
 # Export analytics for deeper analysis
 inneros analytics --export weekly-analytics.json
 ```
+
+### **Review Templates (Obsidian Templater)**
+- Templates live in `knowledge/Templates/`: `daily.md`, `weekly-review.md`, `sprint-review.md`, `sprint-retro.md`.
+- Obsidian: Command Palette → “Templater: Insert template”, then select a template.
+- Behavior: renames to canonical name, moves into `Reviews/`, and stamps `created` in America/Los_Angeles.
+- Sprint templates prompt for `sprint_id` (e.g., 001).
+- Actions are tracked in-note only.
 
 ### **Knowledge Audit**
 ```bash
