@@ -81,13 +81,15 @@ class WorkflowManager:
         
         return default_config
     
-    def process_inbox_note(self, note_path: str) -> Dict:
+    def process_inbox_note(self, note_path: str, dry_run: bool = False, fast: bool | None = None) -> Dict:
         """
         Process a note in the inbox with AI assistance.
         
         Args:
             note_path: Path to the note in inbox
-            
+            dry_run: If True, do not write any changes to disk
+            fast: If True, skip heavy AI calls and use heuristics (defaults to dry_run)
+        
         Returns:
             Processing results and recommendations
         """
@@ -110,6 +112,75 @@ class WorkflowManager:
         
         # Extract frontmatter and body
         frontmatter, body = self._extract_frontmatter(content)
+
+        # Determine fast-mode (heuristic, no external AI calls)
+        fast_mode = fast if fast is not None else dry_run
+
+        if fast_mode:
+            # Heuristic-only path to avoid network/AI latency for dry runs
+            results["processing"] = {}
+            existing_tags = frontmatter.get("tags", []) if isinstance(frontmatter.get("tags", []), list) else []
+
+            # Simple word count heuristic
+            body_text = body if isinstance(body, str) else ""
+            # Normalize whitespace for a rough tokenization
+            try:
+                normalized = re.sub(r"\s+", " ", body_text).strip()
+            except Exception:
+                normalized = body_text
+            word_count = len(normalized.split()) if normalized else 0
+
+            # Score: emphasize length and presence of tags
+            quality_score = 0.0
+            if word_count >= 500:
+                quality_score = 0.8
+            elif word_count >= 200:
+                quality_score = 0.55
+            elif word_count >= 80:
+                quality_score = 0.42
+            else:
+                quality_score = 0.30
+
+            # Small boost for tags present
+            if len(existing_tags) >= 3:
+                quality_score = min(1.0, quality_score + 0.05)
+
+            # Populate processing info without AI calls
+            results["processing"]["quality"] = {
+                "score": quality_score,
+                "suggestions": [
+                    "Add more detail and structure to improve quality" if word_count < 200 else "Refine key points and add links to related notes",
+                ],
+            }
+            results["processing"]["tags"] = {
+                "added": [],
+                "total": len(existing_tags),
+            }
+
+            # Primary recommendation based on heuristic score
+            if quality_score > 0.7:
+                primary = {
+                    "action": "promote_to_permanent",
+                    "reason": "High quality (heuristic) suitable for permanent notes",
+                    "confidence": "medium",
+                }
+            elif quality_score > 0.4:
+                primary = {
+                    "action": "move_to_fleeting",
+                    "reason": "Medium quality (heuristic) needs development",
+                    "confidence": "medium",
+                }
+            else:
+                primary = {
+                    "action": "improve_or_archive",
+                    "reason": "Low quality (heuristic) needs significant improvement",
+                    "confidence": "high",
+                }
+
+            results["recommendations"].append(primary)
+            results["quality_score"] = quality_score
+            results["file_updated"] = False
+            return results
         
         # Auto-tag if enabled
         if self.config["auto_tag_inbox"]:
@@ -185,21 +256,26 @@ class WorkflowManager:
         except Exception as e:
             results["processing"]["connections"] = {"error": str(e)}
         
-        # Update note with AI enhancements
+        # Update note with AI enhancements (skip when dry_run)
         if any(key in results["processing"] for key in ["tags", "quality"]):
-            try:
-                # Update status to indicate AI processing
+            if dry_run:
+                # Indicate what would have happened without modifying files
                 frontmatter["ai_processed"] = datetime.now().isoformat()
-                
-                # Rebuild content
-                updated_content = self._rebuild_content(frontmatter, body)
-                
-                with open(note_file, 'w', encoding='utf-8') as f:
-                    f.write(updated_content)
-                
-                results["file_updated"] = True
-            except Exception as e:
-                results["file_update_error"] = str(e)
+                results["file_updated"] = False
+            else:
+                try:
+                    # Update status to indicate AI processing
+                    frontmatter["ai_processed"] = datetime.now().isoformat()
+                    
+                    # Rebuild content
+                    updated_content = self._rebuild_content(frontmatter, body)
+                    
+                    with open(note_file, 'w', encoding='utf-8') as f:
+                        f.write(updated_content)
+                    
+                    results["file_updated"] = True
+                except Exception as e:
+                    results["file_update_error"] = str(e)
         
         return results
     
@@ -619,7 +695,7 @@ class WorkflowManager:
             "metadata": metadata
         }
     
-    def generate_weekly_recommendations(self, candidates: List[Dict]) -> Dict:
+    def generate_weekly_recommendations(self, candidates: List[Dict], dry_run: bool = False) -> Dict:
         """Generate AI-powered recommendations for weekly review candidates.
         
         Processes each candidate using existing AI quality assessment and generates
@@ -638,7 +714,7 @@ class WorkflowManager:
         
         # Process each candidate with error handling
         for candidate in candidates:
-            recommendation = self._process_candidate_for_recommendation(candidate)
+            recommendation = self._process_candidate_for_recommendation(candidate, dry_run=dry_run)
             result["recommendations"].append(recommendation)
             
             # Update summary counts based on action
@@ -669,7 +745,7 @@ class WorkflowManager:
             "generated_at": datetime.now().isoformat()
         }
     
-    def _process_candidate_for_recommendation(self, candidate: Dict) -> Dict:
+    def _process_candidate_for_recommendation(self, candidate: Dict, dry_run: bool = False) -> Dict:
         """Process a single candidate and generate its recommendation.
         
         Args:
@@ -680,7 +756,8 @@ class WorkflowManager:
         """
         try:
             # Use existing AI processing for quality assessment
-            processing_result = self.process_inbox_note(str(candidate["path"]))
+            # In dry-run, force fast-mode to avoid external AI calls that may stall
+            processing_result = self.process_inbox_note(str(candidate["path"]), dry_run=dry_run, fast=dry_run)
             
             if "error" in processing_result:
                 return self._create_error_recommendation(
