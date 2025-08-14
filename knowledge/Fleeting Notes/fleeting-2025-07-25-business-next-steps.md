@@ -20,3 +20,14 @@ I'm at a pivot point in my business. I’ve shipped enough to know what’s reso
 
 # Reflection Prompt
 What will matter most 30 days from now—volume, depth, or clarity?
+
+---
+
+## 🔗 Strategic Connections
+- **Business Strategy**: [[AHS MOC]] - Core AI Humble Servant positioning and revenue goals
+- **Revenue Framework**: [[bridge-content-to-revenue-pipeline-strategy]] - Aligns with offer optimization and channel focus
+- **Implementation**: [[Career & Entrepreneurship MOC]] - Business growth and monetization strategies
+- **Automation Opportunities**: [[bridge-ai-automation-patterns-for-small-business-revenue]] - Deep work sprints + AI efficiency
+- **Content Strategy**: [[AI and Prompting MOC]] - GPT workshop materials and positioning
+
+**Key Insight**: This pivot point thinking directly supports the $10K/month goal through focused offer selection and channel optimization.

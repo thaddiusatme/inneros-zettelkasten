@@ -1,13 +1,10 @@
 ---
-type: permanent
+type: MOC
 created: 2025-07-23 12:00
-modified: '2025-07-25'
+modified: 2025-07-25
 status: published
 visibility: private
-tags:
-- ai
-- prompting
-- moc
+tags: [moc, ai, prompting, automation]
 ---
 # AI and Prompting MOC
 
@@ -39,3 +36,18 @@ This is the central hub for notes related to AI, Large Language Models (LLMs), a
 
 ## Cost & Tooling
 - [[Cost–Benefit of Using Claude via BYOK in WinDsurf for Large File Syntax Fixes]]
+
+---
+
+## 🌉 Strategic Bridge Notes
+- [[bridge-ai-automation-patterns-for-small-business-revenue]] - Apply AI knowledge to revenue-generating business solutions
+- [[bridge-content-to-revenue-pipeline-strategy]] - Use AI content creation for business growth
+
+## 🔗 Cross-References
+- See [[AHS MOC]] for business implementation of AI strategies
+- See [[Projects MOC]] for technical project implementations
+- See [[Concepts MOC]] for underlying methodologies
+- See [[Career & Entrepreneurship MOC]] for monetization strategies
+- See [[Zettelkasten MOC]] for knowledge management workflows
+
+*Last updated: 2025-08-13 20:30*
