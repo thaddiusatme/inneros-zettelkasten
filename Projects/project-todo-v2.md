@@ -1,6 +1,6 @@
 # InnerOS Zettelkasten - Project Todo v2.0
 
-**Last Updated**: 2025-08-10 11:54 PDT  
+**Last Updated**: 2025-08-13 23:28 PDT  
 **Status**: Phase 5 Complete → Knowledge Graph Enhancement & Phase 6 Prep  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
 
@@ -120,7 +120,7 @@
 ### **🔴 Critical - Network Connectivity (Next 1-2 Weeks)**
 
 #### **High-Priority Bridge Reinforcement**
-- [ ] **AI ↔ Pharmacy Bridge** 🔴 **CRITICAL FOR PROJECT INTEGRATION**
+- [ ] **AI ↔ Pharmacy Bridge** 🟡 **DEPRIORITIZED (parking lot)**
   - [ ] Add explicit link from "Perplexity AI Pharmacy Research" to embeddings strategy note
   - [ ] Connect "Pharmacy Scraper Classification Module" to evaluation methodology
   - [ ] Link scraping pipeline design notes to AI processing workflow
@@ -155,10 +155,50 @@
   - [ ] Link to AI tools and practical examples
   - [ ] Connect to productivity workflow notes
 
+### **🟡 Orphaned Note Remediation Feature (Phase 5.5.6)**
+
+- **Objective**: Make orphan detection and remediation a repeatable, CLI-driven workflow that excludes Content Pipeline/Idea Backlog notes and validates impact via metrics.
+
+- **Success Criteria**:
+  - [ ] ≥50% reduction in orphaned notes (workflow scope) on first pass
+  - [ ] <5s detection on 100+ notes
+  - [ ] 0 content/idea notes included when exclusions are set
+
+- **Deliverables**:
+  - [ ] CLI: `--list-orphans`, `--remediate-orphans`, `--scope {workflow,comprehensive}`, `--exclude "<patterns>"`, `--format json`
+  - [ ] WorkflowManager: `list_orphans(...)`, `remediate_orphans(...)`
+  - [ ] Link editor utility: safe "See also" insertion + MOC backlinks
+  - [ ] Remediation plan export (markdown)
+  - [ ] Documentation updates: CLI-REFERENCE and SOP in `Workflows/sops-and-workflows.md`
+
+- **Milestones (5–7 days)**:
+  - [ ] Day 1: Requirements + test scaffolding
+  - [ ] Day 2: Detection packaging (`--list-orphans`, `--scope`, `--exclude`) + unit tests
+  - [ ] Day 3: Plan formatter + JSON/text export + docs draft
+  - [ ] Day 4–5: Interactive remediation flow + AI suggestions + link editor utility
+  - [ ] Day 6: Validation metrics (pre/post graph) + integration tests
+  - [ ] Day 7: Final documentation + demo run on repo
+
+- **Developer UX**:
+
+```bash
+# List orphans (text)
+inneros workflow . --list-orphans
+
+# JSON with exclusions
+inneros workflow . --list-orphans --format json --exclude "Content Pipeline|Idea Backlog"
+
+# Export remediation plan (markdown)
+inneros workflow . --list-orphans --exclude "Content Pipeline|Idea Backlog" --export orphan-remediation.md
+
+# Interactive remediation
+inneros workflow . --remediate-orphans --interactive --exclude "Content Pipeline|Idea Backlog"
+```
+
 ### **🟡 High Impact - Singleton Remediation**
 
 #### **Peripheral Note Integration**
-- [ ] **Convert "Pasted image…" References** 
+ - [ ] **Convert "Pasted image…" References** 
   - [ ] Identify all pasted image references in knowledge graph
   - [ ] Convert to annotated notes with contextual descriptions
   - [ ] Add upward links to relevant MOCs and lateral links to concepts
@@ -229,7 +269,7 @@
 - [ ] **Connection Discovery**: `python3 src/cli/connections_demo.py .` 
 - [ ] **Weekly Review**: `python3 src/cli/workflow_demo.py . --weekly-review --export-checklist weekly-review.md`
 - [ ] **Progress Assessment**: Track connectivity improvements using analytics dashboard
-
+0
 ### **Validation Commands**
 ```bash
 # Network health assessment
@@ -311,8 +351,7 @@ python3 src/cli/analytics_demo.py . --interactive
 
 ### **🔴 Immediate (Today)**
 1. **Create Bridge Note**: "How AI Prompting Supports TDD and Weekly Review Automation"
-2. **Reinforce AI↔Pharmacy**: Add 2 explicit links between research and implementation
-3. **Run Baseline Metrics**: `python3 src/cli/workflow_demo.py . --enhanced-metrics` for progress tracking
+2. **Run Baseline Metrics**: `python3 src/cli/workflow_demo.py . --enhanced-metrics` for progress tracking
 
 ### **🟡 This Week**
 1. **Entrepreneurship↔Artifacts Bridge**: Link strategy notes to portfolio items
