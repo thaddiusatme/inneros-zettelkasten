@@ -1,0 +1,1 @@
+Have we already set up ''the - [ ] **Config schema update** – Add `business_type`, `search_terms` fields; migrate loaders; update docs.''

@@ -1,4 +1,19 @@
 
+## 2025-08-10 – Modular Rules Migration (BREAKING)
+
+- Migrated from unified windsurfrules.md to modular rules under `.windsurf/rules`
+- Added workflows: bug-triage, integration-project, reading-intake-pipeline
+- Added migrate-rules.sh (with rollback): [.windsurf/archive/migration-20250810-151939/rollback.sh](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/archive/migration-20250810-151939/rollback.sh:0:0-0:0)
+- Archived previous rules (v3 and v4 variants) with timestamped backup
+
+Impact:
+- BREAKING: Replace references to unified rules with modular files
+- Safer, clearer maintenance; smaller LLM context per domain
+
+Commit: 025cc5d4
+
+---
+
 ### 2025-08-10 - Batch Promotion of High-Quality Notes
 
 #### 🎯 **Fleeting → Permanent Promotion COMPLETED**
