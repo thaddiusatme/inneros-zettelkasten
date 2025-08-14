@@ -5,6 +5,8 @@ CLI demo for the workflow manager system.
 import argparse
 import json
 import sys
+import csv
+import re
 from pathlib import Path
 from datetime import datetime
 
@@ -149,6 +151,52 @@ def display_note_processing_result(result):
             action = rec.get("action", "unknown")
             reason = rec.get("reason", "")
             print(f"           • {action.replace('_', ' ').title()}: {reason}")
+
+
+# ===== Reading Intake Pipeline (PR1 Skeleton) Helpers =====
+def _safe_parse_iso_date(value: str) -> datetime:
+    """Parse an ISO-like date string; fall back to now on failure."""
+    if not value:
+        return datetime.now()
+    try:
+        # Try strict ISO 8601 first
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        # Common fallback patterns (YYYY-MM-DD)
+        m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", value)
+        if m:
+            try:
+                return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            except Exception:
+                pass
+    return datetime.now()
+
+
+def _plan_filename_for_row(row: dict) -> str:
+    """Plan filename according to policy: literature--<saved_at-date>.md"""
+    saved_at_raw = row.get("saved_at") or row.get("date") or ""
+    dt = _safe_parse_iso_date(saved_at_raw)
+    date_part = dt.strftime("%Y-%m-%d")
+    return f"literature--{date_part}.md"
+
+
+def _load_csv_rows(path: Path) -> list[dict]:
+    rows: list[dict] = []
+    with open(path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append({k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in r.items()})
+    return rows
+
+
+def _load_json_rows(path: Path) -> list[dict]:
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+    if isinstance(data, list):
+        return [dict(item) for item in data]
+    if isinstance(data, dict) and "items" in data and isinstance(data["items"], list):
+        return [dict(item) for item in data["items"]]
+    raise ValueError("Unsupported JSON structure: expected a list or an object with 'items'.")
 
 
 def interactive_mode(workflow):
@@ -349,6 +397,29 @@ Examples:
         help="Preview recommendations without processing notes"
     )
     
+    # Reading Intake Pipeline (PR1 Skeleton) options
+    action_group.add_argument(
+        "--import-csv",
+        metavar="PATH",
+        help="Import CSV reading list into Inbox (skeleton: validate/dry-run only)"
+    )
+    action_group.add_argument(
+        "--import-json",
+        metavar="PATH",
+        help="Import JSON reading list into Inbox (skeleton: validate/dry-run only)"
+    )
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Validate inputs only (no file writes)"
+    )
+    parser.add_argument(
+        "--dest-dir",
+        metavar="PATH",
+        default=None,
+        help="Destination directory for notes (default: knowledge/Inbox)"
+    )
+    
     args = parser.parse_args()
     
     # Validate directory
@@ -399,6 +470,82 @@ Examples:
                 for i, result in enumerate(results["results"][:3], 1):
                     print(f"\n   Note {i}:")
                     display_note_processing_result(result)
+    
+    elif args.import_csv:
+        source_path = Path(args.import_csv)
+        if not source_path.exists():
+            print(f"❌ Error: CSV file not found: {source_path}")
+            sys.exit(1)
+        print("📥 Reading Intake (CSV) — PR1 Skeleton")
+        print(f"   Source: {source_path}")
+        try:
+            rows = _load_csv_rows(source_path)
+        except Exception as e:
+            print(f"❌ Error loading CSV: {e}")
+            sys.exit(1)
+
+        print(f"   Loaded {len(rows)} rows")
+        # Validation-only: basic field presence check (non-fatal in skeleton)
+        missing_required = 0
+        for r in rows:
+            if not r.get("title") or not r.get("url"):
+                missing_required += 1
+        if args.validate_only:
+            print("   🔎 VALIDATE-ONLY: Basic checks complete")
+            if missing_required:
+                print(f"   ⚠️  Rows missing required fields (title/url): {missing_required}")
+            print("   ✅ No files written (validate-only)")
+            return
+
+        # Plan filenames (dry-run only in PR1)
+        planned = [_plan_filename_for_row(r) for r in rows]
+        dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
+        if args.dry_run or True:
+            print("   🔍 DRY RUN MODE (PR1 Skeleton) - No files will be written")
+            preview = planned[:5]
+            for name in preview:
+                print(f"      → {dest_dir / name}")
+            if len(planned) > 5:
+                print(f"      … and {len(planned) - 5} more")
+            return
+    
+    elif args.import_json:
+        source_path = Path(args.import_json)
+        if not source_path.exists():
+            print(f"❌ Error: JSON file not found: {source_path}")
+            sys.exit(1)
+        print("📥 Reading Intake (JSON) — PR1 Skeleton")
+        print(f"   Source: {source_path}")
+        try:
+            rows = _load_json_rows(source_path)
+        except Exception as e:
+            print(f"❌ Error loading JSON: {e}")
+            sys.exit(1)
+
+        print(f"   Loaded {len(rows)} items")
+        # Validation-only: basic field presence check (non-fatal in skeleton)
+        missing_required = 0
+        for r in rows:
+            if not r.get("title") or not r.get("url"):
+                missing_required += 1
+        if args.validate_only:
+            print("   🔎 VALIDATE-ONLY: Basic checks complete")
+            if missing_required:
+                print(f"   ⚠️  Items missing required fields (title/url): {missing_required}")
+            print("   ✅ No files written (validate-only)")
+            return
+
+        # Plan filenames (dry-run only in PR1)
+        planned = [_plan_filename_for_row(r) for r in rows]
+        dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
+        if args.dry_run or True:
+            print("   🔍 DRY RUN MODE (PR1 Skeleton) - No files will be written")
+            preview = planned[:5]
+            for name in preview:
+                print(f"      → {dest_dir / name}")
+            if len(planned) > 5:
+                print(f"      … and {len(planned) - 5} more")
+            return
     
     elif args.promote:
         filename, note_type = args.promote
