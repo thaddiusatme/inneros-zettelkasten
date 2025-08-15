@@ -1,44 +1,55 @@
 # InnerOS Zettelkasten - Project Todo v2.0
-
-**Last Updated**: 2025-08-13 23:28 PDT  
+ 
+**Last Updated**: 2025-08-14 21:47 PDT  
 **Status**: Phase 5 Complete → Knowledge Graph Enhancement & Phase 6 Prep  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
-
+ 
 > **Latest Progress**: Phase 5 AI features **PRODUCTION READY** ✅. Knowledge graph analysis complete with specific connectivity improvement plan. Focus shifts to network enhancement and Phase 6 multi-user foundations.
-
+ 
 ---
-
+ 
 ## 🎯 Current Sprint: Knowledge Graph Enhancement + Bug Fixes
-
-### **🔴 Critical - Bug Fixes & System Issues (Immediate)**
-
-#### **Bug 1: YAML `created` Property Not Processing** 🔴 **BLOCKING TEMPLATE FUNCTIONALITY**
+ 
+### 🔴 Critical - Bug Fixes & System Issues (Immediate)
+ 
+#### Bug 1: YAML `created` Property Not Processing 🔴 **BLOCKING TEMPLATE FUNCTIONALITY**
 - [ ] **Investigate Templater `{{date}}` Processing Failure**
   - **File**: `knowledge/Inbox/fleeting-20250806-1520-bug-images-dissapear.md.md`
   - **Issue**: Line 3 shows `created: {{date:YYYY-MM-DD HH:mm}}` instead of actual timestamp
   - **Expected**: `created: 2025-08-06 15:20` format
   - **Impact**: Template automation broken, metadata inconsistent
-
+ 
 - [ ] **Fix Template Processing Chain**
   - [ ] Verify Templater plugin is active and configured correctly
   - [ ] Test template processing with simple date generation
   - [ ] Update template syntax if Templater version changed
   - [ ] Add fallback date generation for template failures
-
-#### **Bug 2: Image Reference/Linking System Design Issue** 🔴 **SYSTEM INTEGRITY**
+ 
+#### Bug 2: Image Reference/Linking System Design Issue 🔴 **SYSTEM INTEGRITY**
 - [ ] **Investigate Image Handling in AI Automation**
   - **Issue**: "Images are referenced and link to each other seems to break on AI automation"
   - **Scope**: System design issue affecting image persistence and linking
   - **Impact**: Knowledge graph integrity, media asset management
-
+ 
 - [ ] **Diagnostic and Resolution Plan**
   - [ ] Audit current image storage pattern (`Media/` directory vs inline references)
   - [ ] Test image link preservation during AI processing workflows
   - [ ] Identify if issue is in AI enhancement, note promotion, or template processing
   - [ ] Design robust image reference system that survives automation
   - [ ] Create unit tests for image link integrity during AI workflows
-
-#### **Template System Enhancement** 🟡 **HIGH IMPACT**
+ 
+#### Bug 3: Malformed Tag Parsing and Metadata Anomalies 🔴 **DATA QUALITY**
+- [ ] **Quantify Scope**: Run validator/scan on `knowledge/Inbox/` and `knowledge/Fleeting Notes/` to find malformed tags
+  - [x] Centralize sanitization: Implement `sanitize_tags()` (used by weekly review flow)
+  - [ ] Integrate sanitization into `WorkflowManager.process_inbox_note()`
+  - [ ] **Harden Repair Script**: Update `.automation/scripts/repair_metadata.py` to normalize tags and scrub malformed YAML keys
+  - [ ] **Add Tests**: Sanitizer edge cases, repair transforms, CLI weekly-review output validation
+  - [ ] **Dry-Run Repair**: Execute repair in dry-run mode with report; review findings
+  - [ ] **Apply Repair Safely**: Run with backups enabled; verify changes
+  - [x] **Verify Weekly Review**: Re-run weekly review `--dry-run` to confirm clean tags and fast-mode behavior
+  - Note: Numeric-only tags policy pending decision
+ 
+#### Template System Enhancement 🟡 **HIGH IMPACT**
 - [ ] **Expand Template Library**
   - [ ] Audit current templates for reliability and coverage gaps
   - [ ] Design templates for new Reading Intake Pipeline project
@@ -46,9 +57,9 @@
   - [ ] Create import adapter templates for CSV/JSON processing
   - [ ] Ensure all templates use reliable date/time generation
 
-### **📚 Reading Intake Pipeline - Phase 5 Extension**
+### 📚 Reading Intake Pipeline - Phase 5 Extension
 
-> **⚠️ INTEGRATION APPROACH UPDATED**  
+> ⚠️ INTEGRATION APPROACH UPDATED  
 > **Reference**: `Projects/reading-intake-integration-analysis.md`  
 > **Status**: Critical gaps identified in original proposal → Integrated approach adopted
 
@@ -269,7 +280,7 @@ inneros workflow . --remediate-orphans --interactive --exclude "Content Pipeline
 - [ ] **Connection Discovery**: `python3 src/cli/connections_demo.py .` 
 - [ ] **Weekly Review**: `python3 src/cli/workflow_demo.py . --weekly-review --export-checklist weekly-review.md`
 - [ ] **Progress Assessment**: Track connectivity improvements using analytics dashboard
-0
+
 ### **Validation Commands**
 ```bash
 # Network health assessment
@@ -350,8 +361,9 @@ python3 src/cli/analytics_demo.py . --interactive
 ## 🎯 Quick Actions (Next Session Priorities)
 
 ### **🔴 Immediate (Today)**
-1. **Create Bridge Note**: "How AI Prompting Supports TDD and Weekly Review Automation"
-2. **Run Baseline Metrics**: `python3 src/cli/workflow_demo.py . --enhanced-metrics` for progress tracking
+1. Run `/bug-triage-workflow` for Template Processing Failure (Bug 1) and begin fix
+2. Run Baseline Metrics: `python3 src/cli/workflow_demo.py . --enhanced-metrics` for progress tracking
+3. Create Bridge Note: "How AI Prompting Supports TDD and Weekly Review Automation"
 
 ### **🟡 This Week**
 1. **Entrepreneurship↔Artifacts Bridge**: Link strategy notes to portfolio items
