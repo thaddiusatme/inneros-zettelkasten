@@ -2,10 +2,10 @@
 type: fleeting
 created: {{date:YYYY-MM-DD HH:mm}}
 status: inbox
-tags: [fleeting, inbox]
+tags: ["creative-thinking", "fleeting", "idea-generation", "inbox", "knowledge-graphing", "mental-mapping", "note-taking", "personal-knowledge-management"]
+ai_processed: 2025-08-14T17:40:35.178129
 visibility: private
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-08-06 15:20

@@ -35,6 +35,16 @@ from validate_metadata import (
     VALID_TYPES, VALID_STATUSES, VALID_VISIBILITIES
 )
 
+# Ensure the development package (src) is importable for centralized utilities
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.dirname(os.path.dirname(_script_dir))
+_dev_path = os.path.join(_repo_root, 'development')
+if _dev_path not in sys.path:
+    sys.path.insert(0, _dev_path)
+
+# Centralized tag sanitizer
+from src.utils.tags import sanitize_tags
+
 class MetadataRepairer:
     """Handles automatic repair of metadata issues in markdown files."""
     
@@ -139,22 +149,17 @@ class MetadataRepairer:
         return datetime.now().strftime('%Y-%m-%d')
     
     def normalize_tags(self, tags_input: Any) -> List[str]:
-        """Normalize tags to a list of strings without hashtags."""
-        if isinstance(tags_input, list):
-            # Already a list, just clean up items
-            return [self.clean_tag(tag) for tag in tags_input if tag]
-        elif isinstance(tags_input, str):
-            # Split string into tags
-            # Handle various separators
-            tags_str = tags_input.replace(',', ' ').replace(';', ' ')
-            tags = [self.clean_tag(tag) for tag in tags_str.split() if tag]
-            return tags
-        else:
-            return []
+        """Normalize tags using the centralized sanitizer.
+
+        Accepts strings or iterables and returns a deduplicated, lowercase
+        list of tags without leading '#'.
+        """
+        return sanitize_tags(tags_input)
     
     def clean_tag(self, tag: str) -> str:
-        """Clean a single tag by removing hashtags and extra spaces."""
-        return tag.strip().lstrip('#').strip()
+        """Deprecated: kept for backward compatibility; uses sanitize_tags."""
+        cleaned = sanitize_tags([tag])
+        return cleaned[0] if cleaned else ""
     
     def generate_default_metadata(self, file_path: str, existing_metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Generate default metadata for a note."""

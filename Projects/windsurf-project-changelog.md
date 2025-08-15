@@ -1,3 +1,10 @@
+## 2025-08-14 – Weekly Review Dry-Run Fast-Mode + Tag Parsing Bug
+
+- Fixed weekly review CLI to pass `--dry-run` through to `generate_weekly_recommendations()`, enabling fast-mode and preventing external AI calls during dry runs
+- Verified JSON output performance (13 candidates processed) without stalls
+- Added bug report: `Projects/bug-weird-tags-parsing-2025-08-14.md` documenting malformed tag parsing and metadata anomalies; proposed centralized sanitizer and repair plan
+
+---
 
 ## 2025-08-10 – Modular Rules Migration (BREAKING)
 

@@ -1,14 +1,12 @@
 ---
 type: literature
-created:
-  "{ date:YYYY-MM-DD HH:mm }": 
+created: 
 status: inbox
-tags:
-  - fleeting
-  - inbox
+tags: ["", " ", "-", "/", "0", "2", "8", "contact-information"]
+ai_processed: 2025-08-14T17:39:12.478777
+"{ date: YYYY-MM-DD HH:mm }":
 visibility: private
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-08-06 15:19

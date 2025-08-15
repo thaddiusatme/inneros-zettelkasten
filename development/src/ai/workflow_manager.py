@@ -16,6 +16,7 @@ from .summarizer import AISummarizer
 from .connections import AIConnections
 from .enhancer import AIEnhancer
 from .analytics import NoteAnalytics
+from src.utils.tags import sanitize_tags
 
 
 class WorkflowManager:
@@ -119,7 +120,10 @@ class WorkflowManager:
         if fast_mode:
             # Heuristic-only path to avoid network/AI latency for dry runs
             results["processing"] = {}
-            existing_tags = frontmatter.get("tags", []) if isinstance(frontmatter.get("tags", []), list) else []
+            # Sanitize existing tags for consistent downstream output
+            existing_tags = sanitize_tags(frontmatter.get("tags", []))
+            # Ensure ai_tags present for weekly review consumers
+            results["processing"]["ai_tags"] = list(existing_tags)
 
             # Simple word count heuristic
             body_text = body if isinstance(body, str) else ""
@@ -186,10 +190,14 @@ class WorkflowManager:
         if self.config["auto_tag_inbox"]:
             try:
                 suggested_tags = self.tagger.generate_tags(content)
-                existing_tags = frontmatter.get("tags", [])
+                # Sanitize both existing and suggested tags before merging
+                existing_tags = sanitize_tags(frontmatter.get("tags", []))
+                suggested_tags = sanitize_tags(suggested_tags)
                 
                 # Merge tags intelligently
                 merged_tags = self._merge_tags(existing_tags, suggested_tags)
+                # Ensure merged tags remain sanitized and deduplicated
+                merged_tags = sanitize_tags(merged_tags)
                 
                 if merged_tags != existing_tags:
                     frontmatter["tags"] = merged_tags
@@ -197,8 +205,14 @@ class WorkflowManager:
                         "added": list(set(merged_tags) - set(existing_tags)),
                         "total": len(merged_tags)
                     }
+                # Expose AI tags in processing result for downstream formatters
+                results["processing"]["ai_tags"] = merged_tags
             except Exception as e:
                 results["processing"]["tags"] = {"error": str(e)}
+        # Ensure ai_tags key is always present based on current frontmatter state
+        current_tags = sanitize_tags(frontmatter.get("tags", []))
+        if "ai_tags" not in results["processing"]:
+            results["processing"]["ai_tags"] = current_tags
         
         # Analyze note quality and suggest improvements
         try:
@@ -757,7 +771,11 @@ class WorkflowManager:
         try:
             # Use existing AI processing for quality assessment
             # In dry-run, force fast-mode to avoid external AI calls that may stall
-            processing_result = self.process_inbox_note(str(candidate["path"]), dry_run=dry_run, fast=dry_run)
+            if dry_run:
+                processing_result = self.process_inbox_note(str(candidate["path"]), dry_run=True, fast=True)
+            else:
+                # Call without kwargs to remain compatible with simple mocks in tests
+                processing_result = self.process_inbox_note(str(candidate["path"]))
             
             if "error" in processing_result:
                 return self._create_error_recommendation(
@@ -833,6 +851,16 @@ class WorkflowManager:
             "confidence": 0.5
         }
         
+        # Sanitize metadata tags for clean display in weekly outputs (non-destructive)
+        metadata = candidate["metadata"] if isinstance(candidate.get("metadata"), dict) else {}
+        if metadata:
+            try:
+                if "tags" in metadata:
+                    metadata = {**metadata, "tags": sanitize_tags(metadata.get("tags", []))}
+            except Exception:
+                # If anything goes wrong, fall back to original metadata
+                metadata = candidate.get("metadata", {})
+
         return {
             "file_name": candidate["path"].name,
             "source": candidate["source"],
@@ -841,7 +869,7 @@ class WorkflowManager:
             "quality_score": processing_result.get("quality_score"),
             "confidence": primary_rec.get("confidence", 0.5),
             "ai_tags": processing_result.get("processing", {}).get("ai_tags", []),
-            "metadata": candidate["metadata"]
+            "metadata": metadata
         }
 
     # Phase 5.5.4: Enhanced Review Features

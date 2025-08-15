@@ -479,9 +479,31 @@ Examples:
         print(f"❌ Error: '{args.directory}' is not a directory")
         sys.exit(1)
     
-    # Initialize workflow manager
-    print(f"🔄 Initializing workflow for: {args.directory}")
-    workflow = WorkflowManager(args.directory)
+    # Initialize workflow manager (with auto-detected vault root when needed)
+    def _has_vault_markers(p: Path) -> bool:
+        return any((p / d).exists() for d in ["Inbox", "Fleeting Notes", "Permanent Notes"])  # type: ignore
+
+    base_dir = zettel_dir
+    auto_note = None
+
+    if not _has_vault_markers(base_dir):
+        # Case 1: repo root that contains knowledge/Inbox
+        if (zettel_dir / "knowledge" / "Inbox").exists():
+            base_dir = zettel_dir / "knowledge"
+            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+        # Case 2: user passed a subdirectory like Inbox/Fleeting Notes/Permanent Notes
+        elif zettel_dir.name in ("Inbox", "Fleeting Notes", "Permanent Notes") and _has_vault_markers(zettel_dir.parent):
+            base_dir = zettel_dir.parent
+            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+        # Case 3: user passed '.' and cwd has knowledge/Inbox
+        elif args.directory in (".", "./") and (Path.cwd() / "knowledge" / "Inbox").exists():
+            base_dir = Path.cwd() / "knowledge"
+            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+
+    print(f"🔄 Initializing workflow for: {base_dir}")
+    if auto_note:
+        print(f"   ℹ️ {auto_note}")
+    workflow = WorkflowManager(str(base_dir))
     
     # Interactive mode
     if args.interactive:
@@ -656,7 +678,7 @@ Examples:
         if args.dry_run:
             print("   🔍 DRY RUN MODE - No files will be modified")
         
-        recommendations = workflow.generate_weekly_recommendations(candidates)
+        recommendations = workflow.generate_weekly_recommendations(candidates, dry_run=args.dry_run)
         
         # Format and display checklist
         formatter = WeeklyReviewFormatter()

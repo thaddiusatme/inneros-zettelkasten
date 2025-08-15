@@ -1,12 +1,10 @@
 ---
-type: permanent
-created: 2025-08-14
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
 status: inbox
-tags: ["ai-automation", "here are the extracted tags:
-
-image-processing", "knowledge-management", "note-taking"]
-ai_processed: 2025-08-14T17:39:29.619952
-modified: 2025-08-14
+tags: [" ", """, ",", "-", ":", "[", "a", "ai-automation"]
+ai_processed: 2025-08-14T14:48:32.687047
+visibility: private
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
