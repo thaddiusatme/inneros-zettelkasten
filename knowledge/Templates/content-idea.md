@@ -1,8 +1,8 @@
 ---
-created: {{date:YYYY-MM-DD HH:mm}}
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: idea
-pillar: 
-channel: 
+pillar: "<%* /* set later via suggester */ _ = null; %>"
+channel: "<%* /* set later via suggester */ _ = null; %>"
 tags: [content, idea]
 ---
 <%*
@@ -55,13 +55,10 @@ try {
   return;
 }
 %>
----
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: idea
-pillar: "<% pillar %>"
-channel: "<% channel %>"
-tags: [content, idea]
----
+<!-- Dynamic fields pillar/channel will be populated in body for clarity -->
+
+> Pillar: <% pillar %>
+> Channel: <% channel %>
 
 ## Hook  
 <% rawTitle %>

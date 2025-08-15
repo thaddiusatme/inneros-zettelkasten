@@ -1,6 +1,6 @@
 ---
 type: fleeting
-created: {{date:YYYY-MM-DD HH:mm}}
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
 tags: [fleeting, inbox]
 visibility: private

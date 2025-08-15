@@ -1,6 +1,6 @@
 ---
 type: literature
-created: {{date:YYYY-MM-DD HH:mm}}
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
 tags: [literature]
 visibility: private
