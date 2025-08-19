@@ -11,6 +11,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch, MagicMock
 
 from src.ai.workflow_manager import WorkflowManager
+from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 
 
 class TestWorkflowManager:
@@ -99,7 +100,7 @@ status: published
 
 This is the body content."""
         
-        frontmatter, body = self.workflow._extract_frontmatter(content)
+        frontmatter, body = parse_frontmatter(content)
         
         assert frontmatter["type"] == "permanent"
         assert frontmatter["created"] == "2024-01-01 10:00"
@@ -131,12 +132,15 @@ This is the body content."""
         }
         body = "This is the body content."
         
-        rebuilt = self.workflow._rebuild_content(frontmatter, body)
+        rebuilt = build_frontmatter(frontmatter, body)
         
         assert rebuilt.startswith("---")
         assert "type: permanent" in rebuilt
         assert "created: 2024-01-01 10:00" in rebuilt
-        assert 'tags: ["ai", "testing"]' in rebuilt
+        # Centralized utility uses proper YAML list format
+        assert "tags:" in rebuilt
+        assert "- ai" in rebuilt
+        assert "- testing" in rebuilt
         assert "status: published" in rebuilt
         assert rebuilt.endswith(body)
     
@@ -893,8 +897,14 @@ Content 3""")
 
     # ========================= TEMPLATE PLACEHOLDER FIX TESTS =========================
     
-    def test_fix_template_placeholders_in_created_field(self):
+    @patch('src.ai.tagger.AITagger.generate_tags')
+    @patch('src.ai.enhancer.AIEnhancer.enhance_note')  
+    def test_fix_template_placeholders_in_created_field(self, mock_enhance, mock_generate_tags):
         """Test fixing template placeholders in 'created' field during note processing."""
+        # Mock AI components to focus purely on template placeholder functionality
+        mock_generate_tags.return_value = ["template", "test"]
+        mock_enhance.return_value = {"quality_score": 0.5, "suggestions": []}
+        
         # Create note with template placeholder - the exact format from the bug report
         content = """---
 type: fleeting
@@ -927,7 +937,7 @@ This note has an unprocessed template placeholder that should be fixed."""
         assert re.search(timestamp_pattern, updated_content)
         
         # Extract and validate the timestamp format
-        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        frontmatter, _ = parse_frontmatter(updated_content)
         created_value = frontmatter.get("created")
         assert created_value is not None
         assert isinstance(created_value, str)
@@ -956,7 +966,7 @@ This note is missing the created field entirely."""
         with open(note_path, 'r', encoding='utf-8') as f:
             updated_content = f.read()
         
-        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        frontmatter, _ = parse_frontmatter(updated_content)
         created_value = frontmatter.get("created")
         assert created_value is not None
         assert isinstance(created_value, str)
@@ -995,7 +1005,7 @@ Test content for timestamp detection."""
         with open(note_path, 'r', encoding='utf-8') as f:
             updated_content = f.read()
         
-        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        frontmatter, _ = parse_frontmatter(updated_content)
         created_value = frontmatter.get("created")
         
         # Parse the created timestamp
@@ -1062,7 +1072,7 @@ Content should remain the same."""
         with open(note_path, 'r', encoding='utf-8') as f:
             updated_content = f.read()
         
-        frontmatter, body = self.workflow._extract_frontmatter(updated_content)
+        frontmatter, body = parse_frontmatter(updated_content)
         
         # Template placeholder should be fixed
         assert "{{date:" not in str(frontmatter.get("created"))
@@ -1101,7 +1111,7 @@ Test malformed template handling."""
         with open(note_path, 'r', encoding='utf-8') as f:
             updated_content = f.read()
         
-        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        frontmatter, _ = parse_frontmatter(updated_content)
         created_value = frontmatter.get("created")
         
         # Should still get a valid timestamp

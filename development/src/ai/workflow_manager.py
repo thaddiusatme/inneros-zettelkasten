@@ -5,6 +5,7 @@ Follows the established patterns from the project manifest.
 
 import json
 import re
+import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -15,6 +16,7 @@ from .connections import AIConnections
 from .enhancer import AIEnhancer
 from .analytics import NoteAnalytics
 from src.utils.tags import sanitize_tags
+from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 
 
 class WorkflowManager:
@@ -109,8 +111,8 @@ class WorkflowManager:
             "recommendations": []
         }
         
-        # Extract frontmatter and body
-        frontmatter, body = self._extract_frontmatter(content)
+        # Extract frontmatter and body using centralized utility
+        frontmatter, body = parse_frontmatter(content)
 
         # Fix template placeholders in frontmatter BEFORE any processing
         template_fixed = self._fix_template_placeholders(frontmatter, note_file)
@@ -187,10 +189,11 @@ class WorkflowManager:
             results["file_updated"] = False
             return results
         
-        # Auto-tag if enabled
+        # Auto-tag if enabled (use body content only, frontmatter is processed separately)
         if self.config["auto_tag_inbox"]:
             try:
-                suggested_tags = self.tagger.generate_tags(content)
+                # Use body content for AI analysis - AI should focus on content, not metadata
+                suggested_tags = self.tagger.generate_tags(body)
                 # Sanitize both existing and suggested tags before merging
                 existing_tags = sanitize_tags(frontmatter.get("tags", []))
                 suggested_tags = sanitize_tags(suggested_tags)
@@ -215,9 +218,10 @@ class WorkflowManager:
         if "ai_tags" not in results["processing"]:
             results["processing"]["ai_tags"] = current_tags
         
-        # Analyze note quality and suggest improvements
+        # Analyze note quality and suggest improvements (use body content only)
         try:
-            enhancement = self.enhancer.enhance_note(content)
+            # Use body content for AI analysis - AI should focus on content, not metadata
+            enhancement = self.enhancer.enhance_note(body)
             quality_score = enhancement.get("quality_score", 0)
             
             results["processing"]["quality"] = {
@@ -247,13 +251,14 @@ class WorkflowManager:
         except Exception as e:
             results["processing"]["quality"] = {"error": str(e)}
         
-        # Find potential connections
+        # Find potential connections (use body content only)
         try:
             # Load existing permanent notes for connection analysis
             permanent_notes = self._load_notes_corpus(self.permanent_dir)
             
             if permanent_notes:
-                similar_notes = self.connections.find_similar_notes(content, permanent_notes)
+                # Use body content for AI analysis - focus on actual content, not metadata
+                similar_notes = self.connections.find_similar_notes(body, permanent_notes)
                 
                 if similar_notes:
                     results["processing"]["connections"] = {
@@ -287,8 +292,8 @@ class WorkflowManager:
                     if needs_ai_update:
                         frontmatter["ai_processed"] = datetime.now().isoformat()
                     
-                    # Rebuild content (includes template fixes)
-                    updated_content = self._rebuild_content(frontmatter, body)
+                    # Rebuild content using centralized utility (includes template fixes)
+                    updated_content = build_frontmatter(frontmatter, body)
                     
                     with open(note_file, 'w', encoding='utf-8') as f:
                         f.write(updated_content)
@@ -372,7 +377,7 @@ class WorkflowManager:
             with open(source_file, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            frontmatter, body = self._extract_frontmatter(content)
+            frontmatter, body = parse_frontmatter(content)
             
             # Update metadata for promotion
             frontmatter["type"] = target_type
@@ -391,8 +396,8 @@ class WorkflowManager:
                 except Exception:
                     pass  # Don't fail promotion if summary fails
             
-            # Rebuild and save to target location
-            updated_content = self._rebuild_content(frontmatter, body)
+            # Rebuild and save to target location using centralized utility
+            updated_content = build_frontmatter(frontmatter, body)
             
             with open(target_file, 'w', encoding='utf-8') as f:
                 f.write(updated_content)
@@ -517,7 +522,7 @@ class WorkflowManager:
                 with open(md_file, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
-                frontmatter, _ = self._extract_frontmatter(content)
+                frontmatter, _ = parse_frontmatter(content)
                 usage_stats["total_analyzed"] += 1
                 
                 if "ai_summary" in frontmatter:
@@ -593,31 +598,6 @@ class WorkflowManager:
         
         return corpus
     
-    def _extract_frontmatter(self, content: str) -> Tuple[Dict, str]:
-        """Extract YAML frontmatter and body content."""
-        yaml_pattern = r'^---\s*\n(.*?)\n---\s*\n(.*)$'
-        match = re.match(yaml_pattern, content, re.DOTALL)
-        
-        if match:
-            yaml_content = match.group(1)
-            body = match.group(2)
-            
-            frontmatter = {}
-            for line in yaml_content.split('\n'):
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    
-                    if value.startswith('[') and value.endswith(']'):
-                        items = value[1:-1].split(',')
-                        frontmatter[key] = [item.strip().strip('"\'') for item in items if item.strip()]
-                    else:
-                        frontmatter[key] = value.strip('"\'')
-            
-            return frontmatter, body
-        
-        return {}, content
     
     def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
         """Merge existing and new tags intelligently."""
@@ -627,38 +607,6 @@ class WorkflowManager:
         merged = sorted(list(existing_set | new_set))
         return merged[:self.config["max_tags_per_note"]]
     
-    def _rebuild_content(self, frontmatter: Dict, body: str) -> str:
-        """Rebuild content with updated frontmatter."""
-        if not frontmatter:
-            return body
-        
-        yaml_lines = ["---"]
-        
-        # Preserve field order
-        field_order = ["type", "created", "status", "tags", "ai_summary", "ai_processed"]
-        
-        for field in field_order:
-            if field in frontmatter:
-                value = frontmatter[field]
-                if isinstance(value, list):
-                    if value:
-                        formatted_list = "[" + ", ".join(f'"{item}"' for item in value) + "]"
-                        yaml_lines.append(f"{field}: {formatted_list}")
-                else:
-                    yaml_lines.append(f"{field}: {value}")
-        
-        # Add remaining fields
-        for key, value in frontmatter.items():
-            if key not in field_order:
-                if isinstance(value, list):
-                    if value:
-                        formatted_list = "[" + ", ".join(f'"{item}"' for item in value) + "]"
-                        yaml_lines.append(f"{key}: {formatted_list}")
-                else:
-                    yaml_lines.append(f"{key}: {value}")
-        
-        yaml_lines.extend(["---", ""])
-        return "\n".join(yaml_lines) + body
     
     def scan_review_candidates(self) -> List[Dict]:
         """Scan for notes that need weekly review attention.
@@ -748,7 +696,7 @@ class WorkflowManager:
         with open(note_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        metadata, _ = self._extract_frontmatter(content)
+        metadata, _ = parse_frontmatter(content)
         
         return {
             "path": note_path,
