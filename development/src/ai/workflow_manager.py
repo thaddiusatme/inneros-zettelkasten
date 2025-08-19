@@ -17,6 +17,7 @@ from .enhancer import AIEnhancer
 from .analytics import NoteAnalytics
 from src.utils.tags import sanitize_tags
 from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+from src.utils.io import safe_write
 
 
 class WorkflowManager:
@@ -295,8 +296,8 @@ class WorkflowManager:
                     # Rebuild content using centralized utility (includes template fixes)
                     updated_content = build_frontmatter(frontmatter, body)
                     
-                    with open(note_file, 'w', encoding='utf-8') as f:
-                        f.write(updated_content)
+                    # Use atomic write to prevent partial writes on interruption
+                    safe_write(note_file, updated_content)
                     
                     results["file_updated"] = True
                 except Exception as e:
@@ -399,8 +400,8 @@ class WorkflowManager:
             # Rebuild and save to target location using centralized utility
             updated_content = build_frontmatter(frontmatter, body)
             
-            with open(target_file, 'w', encoding='utf-8') as f:
-                f.write(updated_content)
+            # Use atomic write to prevent partial writes on interruption
+            safe_write(target_file, updated_content)
             
             # Remove from source location
             source_file.unlink()
@@ -1486,8 +1487,9 @@ def main():
         report = workflow.generate_workflow_report()
         
         if args.output:
-            with open(args.output, 'w') as f:
-                json.dump(report, f, indent=2, default=str)
+            # Use atomic write to prevent partial JSON writes on interruption
+            report_json = json.dumps(report, indent=2, default=str)
+            safe_write(args.output, report_json)
             print(f"📄 Report saved to: {args.output}")
         else:
             # Display summary
