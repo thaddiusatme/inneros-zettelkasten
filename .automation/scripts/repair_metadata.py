@@ -303,9 +303,52 @@ class MetadataRepairer:
             self.report['errors'].append(error_msg)
             return False, [error_msg]
     
+    def fix_template_placeholders(self, metadata: Dict[str, Any], file_path: str) -> Tuple[Dict[str, Any], List[str]]:
+        """Fix template placeholders in metadata, particularly {{date:...}} patterns.
+        
+        Args:
+            metadata: The metadata dictionary to fix
+            file_path: Path to the file for timestamp inference
+            
+        Returns:
+            Tuple of (fixed_metadata, list_of_repairs_made)
+        """
+        fixed = metadata.copy()
+        repairs = []
+        
+        # Check if 'created' field needs fixing
+        created_value = metadata.get("created")
+        
+        # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
+        if (created_value is None or 
+            (isinstance(created_value, str) and "{{date:" in created_value)):
+            
+            # Try to get file creation/modification time
+            try:
+                file_stat = os.stat(file_path)
+                # Use modification time as the best proxy for when note was created
+                timestamp = datetime.fromtimestamp(file_stat.st_mtime)
+            except (OSError, ValueError):
+                # Fallback to current time if file operations fail
+                timestamp = datetime.now()
+            
+            # Format in the required YYYY-MM-DD HH:MM format
+            formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
+            fixed["created"] = formatted_timestamp
+            
+            if created_value is None:
+                repairs.append("Added missing 'created' field with file timestamp")
+            else:
+                repairs.append(f"Fixed template placeholder in 'created': {created_value} → {formatted_timestamp}")
+        
+        return fixed, repairs
+
     def fix_metadata(self, metadata: Dict[str, Any], errors: List[str], file_path: str, content: str) -> Dict[str, Any]:
         """Fix specific metadata issues based on validation errors."""
         fixed = metadata.copy()
+        
+        # First, check for and fix template placeholders
+        fixed, template_repairs = self.fix_template_placeholders(fixed, file_path)
         
         for error in errors:
             if "Missing required field: " in error:
@@ -313,7 +356,9 @@ class MetadataRepairer:
                 if field == 'type':
                     fixed['type'] = 'permanent'  # Default
                 elif field == 'created':
-                    fixed['created'] = datetime.now().strftime('%Y-%m-%d')
+                    # Only add if not already fixed by template placeholder repair
+                    if 'created' not in fixed:
+                        fixed['created'] = datetime.now().strftime('%Y-%m-%d')
                 elif field == 'status':
                     fixed['status'] = 'inbox'
                 elif field == 'tags':

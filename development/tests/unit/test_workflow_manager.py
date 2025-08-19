@@ -890,3 +890,220 @@ Content 3""")
         age_dist = metrics["note_age_distribution"]
         assert age_dist["new"] == 3
         assert age_dist["recent"] == 0
+
+    # ========================= TEMPLATE PLACEHOLDER FIX TESTS =========================
+    
+    def test_fix_template_placeholders_in_created_field(self):
+        """Test fixing template placeholders in 'created' field during note processing."""
+        # Create note with template placeholder - the exact format from the bug report
+        content = """---
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
+status: inbox
+---
+
+This note has an unprocessed template placeholder that should be fixed."""
+        
+        note_path = self.create_test_note("Inbox", "template-bug-test.md", content)
+        
+        # Process the note (should fix the template placeholder)
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        # Verify no error occurred
+        assert "error" not in result
+        assert result["file_updated"] is True
+        
+        # Read the updated file and verify template placeholder was replaced
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        # Should not contain template placeholder anymore
+        assert "{{date:" not in updated_content
+        assert "created: {{date:YYYY-MM-DD HH:mm}}" not in updated_content
+        
+        # Should contain a valid timestamp in the correct format
+        import re
+        timestamp_pattern = r'created: \d{4}-\d{2}-\d{2} \d{2}:\d{2}'
+        assert re.search(timestamp_pattern, updated_content)
+        
+        # Extract and validate the timestamp format
+        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        assert created_value is not None
+        assert isinstance(created_value, str)
+        # Should match YYYY-MM-DD HH:MM format
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+    
+    def test_fix_template_placeholders_missing_created_field(self):
+        """Test adding missing 'created' field when not present in frontmatter."""
+        content = """---
+type: fleeting
+status: inbox
+---
+
+This note is missing the created field entirely."""
+        
+        note_path = self.create_test_note("Inbox", "missing-created-test.md", content)
+        
+        # Process the note (should add missing created field)
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        # Verify no error occurred
+        assert "error" not in result
+        assert result["file_updated"] is True
+        
+        # Read the updated file and verify created field was added
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        assert created_value is not None
+        assert isinstance(created_value, str)
+        
+        # Should be in correct format
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+    
+    def test_fix_template_placeholders_uses_file_timestamps(self):
+        """Test that template fix uses file birth/modified time when available."""
+        import os
+        import time
+        from datetime import datetime, timedelta
+        
+        content = """---
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
+status: inbox
+---
+
+Test content for timestamp detection."""
+        
+        note_path = self.create_test_note("Inbox", "timestamp-test.md", content)
+        
+        # Get current file modification time before processing
+        file_stat = os.stat(note_path)
+        file_mtime = datetime.fromtimestamp(file_stat.st_mtime)
+        
+        # Process the note
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        assert "error" not in result
+        assert result["file_updated"] is True
+        
+        # Read updated content and extract timestamp
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        
+        # Parse the created timestamp
+        created_time = datetime.strptime(created_value, "%Y-%m-%d %H:%M")
+        
+        # Should be based on file time (within 1 minute tolerance)
+        time_diff = abs((created_time - file_mtime).total_seconds())
+        assert time_diff < 60, f"Created time {created_time} should be close to file time {file_mtime}"
+    
+    def test_fix_template_placeholders_dry_run_mode(self):
+        """Test that dry-run mode does not fix template placeholders on disk."""
+        content = """---
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
+status: inbox
+---
+
+This should not be modified in dry-run mode."""
+        
+        note_path = self.create_test_note("Inbox", "dry-run-test.md", content)
+        
+        # Process in dry-run mode
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=True)
+        
+        # Should process successfully but not update file
+        assert "error" not in result
+        assert result["file_updated"] is False
+        
+        # File content should remain unchanged
+        with open(note_path, 'r', encoding='utf-8') as f:
+            unchanged_content = f.read()
+        
+        assert "{{date:YYYY-MM-DD HH:mm}}" in unchanged_content
+        assert unchanged_content == content
+    
+    @patch('src.ai.tagger.AITagger.generate_tags')
+    @patch('src.ai.enhancer.AIEnhancer.enhance_note')
+    def test_fix_template_placeholders_preserves_other_frontmatter(self, mock_enhance, mock_generate_tags):
+        """Test that template fixing preserves all other frontmatter fields."""
+        # Mock AI components to focus purely on template placeholder functionality
+        mock_generate_tags.return_value = []  # No new tags added
+        mock_enhance.return_value = {"quality_score": 0.5, "suggestions": []}
+        
+        content = """---
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
+status: inbox
+tags: ["test", "important"]
+visibility: private
+custom_field: "preserved"
+---
+
+Content should remain the same."""
+        
+        note_path = self.create_test_note("Inbox", "preserve-test.md", content)
+        
+        # Process the note
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        assert "error" not in result
+        assert result["file_updated"] is True
+        
+        # Verify all other fields preserved
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, body = self.workflow._extract_frontmatter(updated_content)
+        
+        # Template placeholder should be fixed
+        assert "{{date:" not in str(frontmatter.get("created"))
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', frontmatter["created"])
+        
+        # Other fields should be preserved exactly
+        assert frontmatter["type"] == "fleeting"
+        assert frontmatter["status"] == "inbox"
+        assert set(frontmatter["tags"]) == {"test", "important"}  # Order doesn't matter for tags
+        assert frontmatter["visibility"] == "private"
+        assert frontmatter["custom_field"] == "preserved"
+        
+        # Body should be unchanged
+        assert "Content should remain the same." in body
+    
+    def test_fix_template_placeholders_handles_malformed_templates(self):
+        """Test handling of malformed template placeholders."""
+        content = """---
+type: fleeting
+created: {{date:invalid-format}}
+status: inbox
+---
+
+Test malformed template handling."""
+        
+        note_path = self.create_test_note("Inbox", "malformed-test.md", content)
+        
+        # Should process successfully and fix malformed placeholder
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        assert "error" not in result
+        assert result["file_updated"] is True
+        
+        # Should replace with proper timestamp regardless of malformed format
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = self.workflow._extract_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        
+        # Should still get a valid timestamp
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)

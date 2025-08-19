@@ -3,13 +3,11 @@ Smart workflow manager that integrates AI features into the Zettelkasten workflo
 Follows the established patterns from the project manifest.
 """
 
-import os
 import json
-import shutil
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime
 import re
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
 
 from .tagger import AITagger
 from .summarizer import AISummarizer
@@ -113,6 +111,9 @@ class WorkflowManager:
         
         # Extract frontmatter and body
         frontmatter, body = self._extract_frontmatter(content)
+
+        # Fix template placeholders in frontmatter BEFORE any processing
+        template_fixed = self._fix_template_placeholders(frontmatter, note_file)
 
         # Determine fast-mode (heuristic, no external AI calls)
         fast_mode = fast if fast is not None else dry_run
@@ -271,17 +272,22 @@ class WorkflowManager:
             results["processing"]["connections"] = {"error": str(e)}
         
         # Update note with AI enhancements (skip when dry_run)
-        if any(key in results["processing"] for key in ["tags", "quality"]):
+        # Check if we need to update the file (AI processing OR template fixes)
+        needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
+        
+        if needs_ai_update or template_fixed:
             if dry_run:
                 # Indicate what would have happened without modifying files
-                frontmatter["ai_processed"] = datetime.now().isoformat()
+                if needs_ai_update:
+                    frontmatter["ai_processed"] = datetime.now().isoformat()
                 results["file_updated"] = False
             else:
                 try:
-                    # Update status to indicate AI processing
-                    frontmatter["ai_processed"] = datetime.now().isoformat()
+                    # Update status to indicate AI processing (only if AI processing happened)
+                    if needs_ai_update:
+                        frontmatter["ai_processed"] = datetime.now().isoformat()
                     
-                    # Rebuild content
+                    # Rebuild content (includes template fixes)
                     updated_content = self._rebuild_content(frontmatter, body)
                     
                     with open(note_file, 'w', encoding='utf-8') as f:
@@ -290,8 +296,49 @@ class WorkflowManager:
                     results["file_updated"] = True
                 except Exception as e:
                     results["file_update_error"] = str(e)
+        else:
+            results["file_updated"] = False
         
         return results
+    
+    def _fix_template_placeholders(self, frontmatter: Dict, note_file: Path) -> bool:
+        """
+        Fix template placeholders in frontmatter, particularly {{date:...}} patterns.
+        
+        Args:
+            frontmatter: The frontmatter dictionary to modify
+            note_file: Path to the note file for timestamp inference
+            
+        Returns:
+            True if any changes were made, False otherwise
+        """
+        import os
+        from datetime import datetime
+        
+        changes_made = False
+        
+        # Check if 'created' field needs fixing
+        created_value = frontmatter.get("created")
+        
+        # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
+        if (created_value is None or 
+            isinstance(created_value, str) and "{{date:" in created_value):
+            
+            # Try to get file creation/modification time
+            try:
+                file_stat = os.stat(note_file)
+                # Use modification time as the best proxy for when note was created
+                timestamp = datetime.fromtimestamp(file_stat.st_mtime)
+            except (OSError, ValueError):
+                # Fallback to current time if file operations fail
+                timestamp = datetime.now()
+            
+            # Format in the required YYYY-MM-DD HH:MM format
+            formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
+            frontmatter["created"] = formatted_timestamp
+            changes_made = True
+        
+        return changes_made
     
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """

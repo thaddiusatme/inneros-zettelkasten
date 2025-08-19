@@ -1,6 +1,7 @@
 {
   "alwaysUpdateLinks": true,
   "mobilePullAction": "editor:download-attachments",
-  "newFileLocation": "current",
-  "promptDelete": false
+  "newFileLocation": "folder",
+  "promptDelete": false,
+  "newFileFolderPath": "Inbox"
 }
