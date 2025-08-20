@@ -678,7 +678,7 @@ Examples:
         if args.dry_run:
             print("   🔍 DRY RUN MODE - No files will be modified")
         
-        recommendations = workflow.generate_weekly_recommendations(candidates, dry_run=args.dry_run)
+        recommendations = workflow.generate_weekly_recommendations(candidates)
         
         # Format and display checklist
         formatter = WeeklyReviewFormatter()
