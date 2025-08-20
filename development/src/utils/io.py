@@ -39,8 +39,8 @@ def safe_write(path: Union[str, Path], content: str) -> None:
             f.flush()  # Flush Python buffers
             os.fsync(f.fileno())  # Force OS to write to disk
         
-        # Atomically rename temp file to target
-        os.rename(temp_path_str, str(target_path))
+        # Atomically replace/rename temp file to target (overwrites if exists)
+        os.replace(temp_path_str, str(target_path))
         
     except Exception as e:
         # Clean up temp file if it exists
