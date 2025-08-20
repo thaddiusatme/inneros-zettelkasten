@@ -34,6 +34,11 @@ def load_config():
 # Load configuration
 config = load_config()
 
+# Tags configuration (align with Obsidian properties by default)
+TAGS_CFG = config.get('tags', {}) if isinstance(config, dict) else {}
+TAGS_REQUIRE_PREFIX = bool(TAGS_CFG.get('require_prefix', False))
+TAGS_ALLOWED_PREFIXES = set(TAGS_CFG.get('allow_prefixes', ['#', '@']))
+
 # Define schema based on the configuration or use defaults
 VALID_TYPES = set(config.get('valid_types', ["permanent", "fleeting", "literature", "MOC"]))
 VALID_STATUSES = set(config.get('valid_statuses', ["inbox", "promoted", "draft", "published"]))
@@ -126,10 +131,11 @@ def validate_tags(tags) -> Tuple[bool, str]:
         for tag in tags:
             if not isinstance(tag, str):
                 return False, f"Tag {tag} is not a string"
-            
-            # If tag doesn't start with # or @, suggest adding it but don't fail validation
-            if not tag.startswith('#') and not tag.startswith('@'):
-                print(f"Warning: Tag '{tag}' should ideally start with # or @")
+            # Respect configuration: only warn when prefixes are required
+            if TAGS_REQUIRE_PREFIX:
+                if not any(tag.startswith(p) for p in TAGS_ALLOWED_PREFIXES):
+                    allowed = ", ".join(sorted(TAGS_ALLOWED_PREFIXES))
+                    print(f"Warning: Tag '{tag}' should start with one of: {allowed}")
         return True, ""
     elif isinstance(tags, str):
         # For string format, check if it's a comma-separated list or space-separated list
@@ -139,8 +145,10 @@ def validate_tags(tags) -> Tuple[bool, str]:
             tag_list = tags.split()
             
         for tag in tag_list:
-            if not tag.startswith('#') and not tag.startswith('@'):
-                print(f"Warning: Tag '{tag}' should ideally start with # or @")
+            if TAGS_REQUIRE_PREFIX:
+                if not any(tag.startswith(p) for p in TAGS_ALLOWED_PREFIXES):
+                    allowed = ", ".join(sorted(TAGS_ALLOWED_PREFIXES))
+                    print(f"Warning: Tag '{tag}' should start with one of: {allowed}")
         return True, ""
     else:
         return False, "Tags should be a list or a string"

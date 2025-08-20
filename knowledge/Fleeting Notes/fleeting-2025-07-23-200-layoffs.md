@@ -2,7 +2,14 @@
 type: fleeting
 created: 2025-07-23 20:13
 status: inbox
-tags: ["", " ", "#", "-", ":", "[", "a", "addiction-management"]
+tags:
+  - ""
+  - " "
+  - "#"
+  - "-"
+  - "["
+  - a
+  - addiction-management
 ai_processed: 2025-08-05T22:22:10.852591
 visibility: private
 ---

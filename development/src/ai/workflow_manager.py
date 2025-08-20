@@ -187,7 +187,19 @@ class WorkflowManager:
 
             results["recommendations"].append(primary)
             results["quality_score"] = quality_score
-            results["file_updated"] = False
+
+            # Persist template fixes even in fast-mode (no AI calls), using atomic write
+            if template_fixed and not dry_run:
+                try:
+                    updated_content = build_frontmatter(frontmatter, body)
+                    safe_write(note_file, updated_content)
+                    results["file_updated"] = True
+                except Exception as e:
+                    results["file_update_error"] = str(e)
+                    results["file_updated"] = False
+            else:
+                results["file_updated"] = False
+
             return results
         
         # Auto-tag if enabled (use body content only, frontmatter is processed separately)
@@ -920,7 +932,7 @@ class WorkflowManager:
         Returns:
             List of stale note dictionaries with path, title, last_modified, days_since_modified
         """
-        from datetime import datetime, timedelta
+        # using module-level datetime, timedelta
         
         stale_notes = []
         cutoff_date = datetime.now() - timedelta(days=days_threshold)
@@ -953,7 +965,7 @@ class WorkflowManager:
             - note_age_distribution: Distribution of note ages
             - productivity_metrics: Creation and modification patterns
         """
-        from datetime import datetime, timedelta
+        # using module-level datetime, timedelta
         
         metrics = {
             "generated_at": datetime.now().isoformat(),
@@ -1170,8 +1182,8 @@ class WorkflowManager:
             return ""
 
     def _write_text(self, path: Path, text: str) -> None:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(text)
+        # Use atomic write to prevent partial writes on interruption
+        safe_write(path, text)
 
     def _backup_file(self, path: Path) -> Optional[Path]:
         try:
@@ -1354,7 +1366,7 @@ class WorkflowManager:
     
     def _calculate_note_age_distribution(self) -> Dict:
         """Calculate distribution of note ages."""
-        from datetime import datetime, timedelta
+        # using module-level datetime, timedelta
         
         all_notes = self._get_all_notes()
         age_buckets = {
@@ -1387,7 +1399,7 @@ class WorkflowManager:
     
     def _calculate_productivity_metrics(self) -> Dict:
         """Calculate productivity metrics like notes per week."""
-        from datetime import datetime, timedelta
+        # using module-level datetime, timedelta
         from collections import defaultdict
         
         all_notes = self._get_all_notes()

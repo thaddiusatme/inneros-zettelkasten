@@ -1,11 +1,9 @@
 ---
-type: literature
-created: 
+type: permanent
+created: 2025-08-20 10:53
+modified: '2025-08-20'
+tags: []
 status: inbox
-tags: ["", " ", "-", "/", "0", "2", "8", "contact-information"]
-ai_processed: 2025-08-14T17:39:12.478777
-"{ date: YYYY-MM-DD HH:mm }":
-visibility: private
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

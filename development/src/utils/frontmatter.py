@@ -84,10 +84,18 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
     # Define field ordering for consistency
     field_order = [
         'created',
-        'type', 
+        'type',
+        'scope',
         'status',
         'visibility',
         'tags',
+        # Review note fields
+        'week_id',
+        'period_start',
+        'period_end',
+        'sprint_id',
+        'tz',
+        # Reading intake fields
         'source',
         'url',
         'saved_at',
@@ -159,7 +167,7 @@ def validate_frontmatter(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]
             return False, f"Field '{field}' must be of type {expected_type.__name__}"
     
     # Validate enum values
-    valid_types = {'permanent', 'fleeting', 'literature', 'MOC'}
+    valid_types = {'permanent', 'fleeting', 'literature', 'MOC', 'review', 'daily', 'weekly'}
     if 'type' in metadata and metadata['type'] not in valid_types:
         return False, f"Field 'type' must be one of: {valid_types}"
     

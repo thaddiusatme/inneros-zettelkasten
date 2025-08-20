@@ -1,3 +1,10 @@
+---
+type: permanent
+created: '2025-08-14'
+status: inbox
+tags: []
+---
+
 # Document 1: Project Charter and Success Metrics
 
 ## Problem Statement

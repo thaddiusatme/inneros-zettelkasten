@@ -38,6 +38,40 @@ def run_analytics(args):
     finally:
         sys.argv = original_argv
 
+def run_notes(args):
+    """Create review notes via notes_cli wrapper."""
+    from src.cli.notes_cli import main as notes_main
+
+    # Build arguments for notes_cli
+    notes_args = [args.path or ".", "new"]
+    if getattr(args, "daily", False):
+        notes_args.append("--daily")
+    if getattr(args, "weekly", False):
+        notes_args.append("--weekly")
+    if getattr(args, "sprint_review", False):
+        notes_args.append("--sprint-review")
+    if getattr(args, "sprint_retro", False):
+        notes_args.append("--sprint-retro")
+    if getattr(args, "sprint_id", None):
+        notes_args.extend(["--sprint-id", args.sprint_id])
+    if getattr(args, "reviews_dir", None):
+        notes_args.extend(["--dir", args.reviews_dir])
+    if getattr(args, "open_in_editor", False):
+        notes_args.append("--open")
+    if getattr(args, "editor", None):
+        notes_args.extend(["--editor", args.editor])
+    if getattr(args, "git_commit", False):
+        notes_args.append("--git")
+
+    # Override sys.argv for the notes script
+    original_argv = sys.argv
+    sys.argv = ["notes_cli.py"] + notes_args
+
+    try:
+        notes_main()
+    finally:
+        sys.argv = original_argv
+
 def run_workflow(args):
     """Run workflow management on knowledge directory."""
     from src.cli.workflow_demo import main as workflow_main
@@ -151,6 +185,24 @@ Examples:
     enhance_parser.add_argument('--links', action='store_true', help='Show link suggestions')
     enhance_parser.add_argument('--structure', action='store_true', help='Show structure suggestions')
     enhance_parser.add_argument('--full', action='store_true', help='Show full enhancement report')
+
+    # Notes command
+    notes_parser = subparsers.add_parser('notes', help='Create review notes from templates')
+    notes_parser.add_argument('path', nargs='?', default='.', help='Repo root or knowledge dir (default: .)')
+    notes_subparsers = notes_parser.add_subparsers(dest='notes_cmd', help='Notes subcommands')
+
+    notes_new = notes_subparsers.add_parser('new', help='Create a new review note')
+    kind = notes_new.add_mutually_exclusive_group(required=True)
+    kind.add_argument('--daily', action='store_true', help='Create daily review note')
+    kind.add_argument('--weekly', action='store_true', help='Create weekly review note')
+    kind.add_argument('--sprint-review', dest='sprint_review', action='store_true', help='Create sprint review note')
+    kind.add_argument('--sprint-retro', dest='sprint_retro', action='store_true', help='Create sprint retrospective note')
+
+    notes_new.add_argument('--sprint-id', dest='sprint_id', help='Sprint ID (e.g., 001)')
+    notes_new.add_argument('--dir', dest='reviews_dir', help='Override Reviews directory path')
+    notes_new.add_argument('--open', dest='open_in_editor', action='store_true', help='Open the created note in your editor')
+    notes_new.add_argument('--editor', dest='editor', help='Editor command to use (overrides $VISUAL/$EDITOR)')
+    notes_new.add_argument('--git', dest='git_commit', action='store_true', help='git add + commit after creation')
     
     args = parser.parse_args()
     
@@ -165,6 +217,12 @@ Examples:
             return run_workflow(args)
         elif args.command == 'enhance':
             return run_enhance(args)
+        elif args.command == 'notes':
+            if args.notes_cmd == 'new':
+                return run_notes(args)
+            else:
+                print('Error: missing subcommand. Use: inneros notes new [options]')
+                return 1
         else:
             print(f"Unknown command: {args.command}")
             return 1

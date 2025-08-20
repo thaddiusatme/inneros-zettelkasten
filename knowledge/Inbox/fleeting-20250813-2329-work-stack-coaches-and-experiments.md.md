@@ -1,11 +1,12 @@
 ---
 type: fleeting
-created: 
+created: 2025-08-14 17:38
+modified: '2025-08-20'
 status: inbox
-tags: ["business-strategy", "coaching", "entrepreneurship", "goal-setting", "marketing-strategy", "note-taking", "personal-development", "personal-finance"]
-ai_processed: 2025-08-14T17:38:34.104437
-"{ date: YYYY-MM-DD HH:mm }":
-visibility: 
+visibility: private
+ai_processed: 2025-08-14 17:38:34.104437
+'{ date: YYYY-MM-DD HH:mm }': null
+tags: [business-strategy, coaching, entrepreneurship, goal-setting, marketing-strategy, note-taking, personal-development, personal-finance]
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

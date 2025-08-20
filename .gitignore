@@ -98,6 +98,11 @@ fix_*.py
 # *.mp3
 # *.wav
 .obsidian/
+knowledge/.obsidian/
+
+# Automation artifacts
+.automation/backups/
+.automation/reports/
 
 # Ignore dev temp artifacts
 development/tmp/

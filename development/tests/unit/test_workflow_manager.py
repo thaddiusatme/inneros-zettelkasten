@@ -6,6 +6,7 @@ import pytest
 import tempfile
 import shutil
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from unittest.mock import Mock, patch, MagicMock
@@ -203,6 +204,54 @@ The content is substantial enough for quality assessment."""
         assert "error" in result
         assert result["error"] == "Note file not found"
     
+    def test_process_inbox_note_fixes_created_placeholder_fast_path(self):
+        """Replaces templater placeholder with concrete created timestamp (fast path)."""
+        placeholder = "{{date:YYYY-MM-DD HH:mm}}"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "placeholder-created.md", content)
+
+        # Fast path avoids AI calls; should still write because template_fixed=True
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        # Verify file content updated with concrete created timestamp
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        assert fm.get("created") is not None
+        assert fm["created"] != placeholder
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+
+    def test_process_inbox_note_adds_missing_created_fast_path(self):
+        """Adds missing created timestamp (fast path)."""
+        content = """---
+type: fleeting
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "missing-created.md", content)
+
+        # Ensure file has an mtime to source from; processing should write
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        assert "created" in fm
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+
     def test_promote_note_to_permanent(self):
         """Test promoting note to permanent status."""
         # Create test note in inbox

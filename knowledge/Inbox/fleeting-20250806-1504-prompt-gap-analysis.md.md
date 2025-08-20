@@ -1,11 +1,12 @@
 ---
 type: fleeting
-created: {{date:YYYY-MM-DD HH:mm}}
+created: 2025-08-20 09:22
 status: inbox
-tags: [fleeting, inbox]
 visibility: private
+tags:
+- fleeting
+- inbox
 ---
-
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
 created: 2025-08-06 15:04

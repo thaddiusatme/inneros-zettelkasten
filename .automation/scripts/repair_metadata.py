@@ -124,9 +124,14 @@ class MetadataRepairer:
         return metadata
     
     def normalize_date(self, date_str: str) -> str:
-        """Normalize date string to YYYY-MM-DD format."""
+        """Normalize date string, preserving time when present.
+
+        Preferred outputs:
+        - If input includes time: 'YYYY-MM-DD HH:%M'
+        - Otherwise: 'YYYY-MM-DD'
+        """
         if not date_str:
-            return datetime.now().strftime('%Y-%m-%d')
+            return datetime.now().strftime('%Y-%m-%d %H:%M')
         
         # Try various date formats
         date_formats = [
@@ -141,12 +146,16 @@ class MetadataRepairer:
         for fmt in date_formats:
             try:
                 date_obj = datetime.strptime(date_str.strip(), fmt)
-                return date_obj.strftime('%Y-%m-%d')
+                # Preserve time precision when provided
+                if fmt == '%Y-%m-%d %H:%M':
+                    return date_obj.strftime('%Y-%m-%d %H:%M')
+                else:
+                    return date_obj.strftime('%Y-%m-%d')
             except ValueError:
                 continue
         
-        # If no format matches, return current date
-        return datetime.now().strftime('%Y-%m-%d')
+        # If no format matches, return current timestamp
+        return datetime.now().strftime('%Y-%m-%d %H:%M')
     
     def normalize_tags(self, tags_input: Any) -> List[str]:
         """Normalize tags using the centralized sanitizer.
@@ -203,24 +212,72 @@ class MetadataRepairer:
         return metadata
     
     def create_frontmatter(self, metadata: Dict[str, Any]) -> str:
-        """Create properly formatted YAML frontmatter."""
-        # Ensure proper ordering of fields
-        ordered_metadata = {}
-        
-        # Add fields in a logical order
+        """Create properly formatted YAML frontmatter.
+
+        Renders `tags` as an inline list (flow style) to align with Obsidian UI: `tags: [a, b]`.
+        Other fields use standard block style for readability.
+        """
+        # Ensure proper ordering of fields (tags last)
         field_order = ['type', 'created', 'modified', 'status', 'visibility', 'tags']
+
+        # Separate tags to control formatting
+        tags_value = None
+        if 'tags' in metadata:
+            tags_value = metadata['tags']
+
+        ordered_no_tags: Dict[str, Any] = {}
         for field in field_order:
+            if field == 'tags':
+                continue
             if field in metadata:
-                ordered_metadata[field] = metadata[field]
-        
-        # Add any remaining fields
+                ordered_no_tags[field] = metadata[field]
+        # Add any remaining (non-tags) fields
         for key, value in metadata.items():
-            if key not in ordered_metadata:
-                ordered_metadata[key] = value
-        
-        # Convert to YAML
-        yaml_str = yaml.dump(ordered_metadata, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        return f"---\n{yaml_str}---\n"
+            if key not in ordered_no_tags and key != 'tags':
+                ordered_no_tags[key] = value
+
+        # Dump non-tags fields with normal YAML style
+        yaml_str = yaml.dump(ordered_no_tags, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+        # Build inline tags line if present and is a list; otherwise fall back to YAML dump for that field
+        tags_line = ""
+        if tags_value is not None:
+            if isinstance(tags_value, list) and all(isinstance(t, str) for t in tags_value):
+                # Sanitize tags to drop empties/punctuation-only tokens
+                try:
+                    from src.utils.tags import sanitize_tags as _sanitize
+                    sanitized = _sanitize(tags_value)
+                except Exception:
+                    sanitized = [t for t in tags_value if isinstance(t, str) and t.strip()]
+
+                # If no tags remain after sanitization, emit empty list
+                if not sanitized:
+                    tags_line = "tags: []\n"
+                else:
+                    def needs_quotes(s: str) -> bool:
+                        # Quote if contains spaces or special YAML-significant chars
+                        return bool(re.search(r"[^a-z0-9_\-:\./]", s))
+
+                    def quote_tag(s: str) -> str:
+                        if needs_quotes(s):
+                            s_escaped = s.replace('"', '\\"')
+                            return f'"{s_escaped}"'
+                        return s
+
+                    inline = ", ".join(quote_tag(t) for t in sanitized)
+                    tags_line = f"tags: [{inline}]\n"
+            else:
+                # Fallback: dump via YAML if not a simple list of strings
+                tags_yaml = yaml.dump({'tags': tags_value}, default_flow_style=False, allow_unicode=True, sort_keys=False)
+                # Remove leading document markers if any and keep only the line(s) for tags
+                tags_line = tags_yaml
+
+        # Assemble frontmatter with tags last
+        fm = "---\n" + yaml_str
+        if tags_line:
+            fm += tags_line
+        fm += "---\n"
+        return fm
     
     def repair_file(self, file_path: str) -> Tuple[bool, List[str]]:
         """Repair metadata issues in a single file."""
@@ -238,8 +295,59 @@ class MetadataRepairer:
             frontmatter = extract_frontmatter(file_path)
             
             if frontmatter:
-                # Parse existing frontmatter
-                metadata = parse_frontmatter(frontmatter)
+                # Pre-sanitize templater placeholders in the raw frontmatter to avoid YAML parse failures
+                placeholder_repairs_local: List[str] = []
+                frontmatter_to_parse = frontmatter
+                if "{{date:" in frontmatter:
+                    try:
+                        file_stat = os.stat(file_path)
+                        ts = datetime.fromtimestamp(file_stat.st_mtime)
+                    except (OSError, ValueError):
+                        ts = datetime.now()
+                    formatted_ts = ts.strftime("%Y-%m-%d %H:%M")
+                    # Replace only the created line containing a templater placeholder
+                    new_frontmatter = re.sub(
+                        r"(?m)^(\s*created:\s*)\{\{date:[^}]+\}\s*$",
+                        r"\1" + formatted_ts,
+                        frontmatter,
+                    )
+                    if new_frontmatter != frontmatter:
+                        frontmatter_to_parse = new_frontmatter
+                        placeholder_repairs_local.append(
+                            f"Fixed template placeholder in 'created' → {formatted_ts}"
+                        )
+
+                    # As a fallback, replace any remaining templater date tokens anywhere in YAML
+                    # Example patterns: {{date:YYYY-MM-DD}} or {{date:YYYY-MM-DD HH:mm}}
+                    if "{{date:" in frontmatter_to_parse:
+                        new_frontmatter2 = re.sub(
+                            r"\{\{date:[^}]+\}}",
+                            formatted_ts,
+                            frontmatter_to_parse,
+                        )
+                        if new_frontmatter2 != frontmatter_to_parse:
+                            frontmatter_to_parse = new_frontmatter2
+                            placeholder_repairs_local.append(
+                                f"Replaced remaining templater date tokens in frontmatter → {formatted_ts}"
+                            )
+
+                # Parse existing (sanitized) frontmatter
+                metadata = parse_frontmatter(frontmatter_to_parse)
+                
+                # Run a pre-template fix to capture any repairs (no-op if already sanitized)
+                metadata, pre_template_repairs = self.fix_template_placeholders(metadata, file_path)
+                if pre_template_repairs:
+                    repairs_made.extend(pre_template_repairs)
+                if placeholder_repairs_local:
+                    repairs_made.extend(placeholder_repairs_local)
+                
+                # If any template-related changes were detected, persist them immediately
+                if pre_template_repairs or placeholder_repairs_local:
+                    new_frontmatter_after_template = self.create_frontmatter(metadata)
+                    fm_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+                    if fm_match:
+                        content = content[:fm_match.start()] + new_frontmatter_after_template + content[fm_match.end():]
+                        repairs_made.append("Applied template placeholder fixes to frontmatter")
                 
                 # Validate and collect errors
                 errors = validate_metadata(metadata, file_path)
@@ -354,7 +462,15 @@ class MetadataRepairer:
             if "Missing required field: " in error:
                 field = error.split("Missing required field: ")[1]
                 if field == 'type':
-                    fixed['type'] = 'permanent'  # Default
+                    # Prefer 'fleeting' for Inbox or filenames starting with 'fleeting-'
+                    try:
+                        base = os.path.basename(file_path).lower()
+                        if ('/inbox/' in file_path.lower()) or base.startswith('fleeting-'):
+                            fixed['type'] = 'fleeting'
+                        else:
+                            fixed['type'] = 'permanent'  # Fallback default
+                    except Exception:
+                        fixed['type'] = 'permanent'
                 elif field == 'created':
                     # Only add if not already fixed by template placeholder repair
                     if 'created' not in fixed:
@@ -363,6 +479,18 @@ class MetadataRepairer:
                     fixed['status'] = 'inbox'
                 elif field == 'tags':
                     fixed['tags'] = []
+            elif error.startswith("Missing required field for ") and ":" in error:
+                # Handle type-specific missing field messages, e.g., "Missing required field for permanent: tags"
+                try:
+                    _, rest = error.split(" for ", 1)
+                    type_and_field = rest.strip()
+                    if ':' in type_and_field:
+                        _, field = type_and_field.split(':', 1)
+                        field = field.strip()
+                        if field == 'tags':
+                            fixed['tags'] = []
+                except Exception:
+                    pass
             
             elif "Invalid type:" in error:
                 # Try to extract valid type from existing value
@@ -375,16 +503,18 @@ class MetadataRepairer:
                     fixed['type'] = 'permanent'  # Default
             
             elif "Invalid created date format:" in error:
-                # Fix date format
-                if 'created' in metadata:
+                # Fix date format - respect any previous template fix in 'fixed'
+                if 'created' in fixed:
+                    fixed['created'] = self.normalize_date(str(fixed['created']))
+                elif 'created' in metadata:
                     fixed['created'] = self.normalize_date(str(metadata['created']))
             
             elif "Created date must be a string" in error:
-                # Convert datetime object to string
+                # Convert datetime object to string (preserve time)
                 if 'created' in metadata and hasattr(metadata['created'], 'strftime'):
-                    fixed['created'] = metadata['created'].strftime('%Y-%m-%d')
+                    fixed['created'] = metadata['created'].strftime('%Y-%m-%d %H:%M')
                 else:
-                    fixed['created'] = datetime.now().strftime('%Y-%m-%d')
+                    fixed['created'] = datetime.now().strftime('%Y-%m-%d %H:%M')
             
             elif "Invalid tags:" in error:
                 # Fix tags format
@@ -396,6 +526,9 @@ class MetadataRepairer:
             
             elif "Invalid visibility:" in error:
                 fixed['visibility'] = 'private'  # Default
+            elif "Visibility must be a string" in error:
+                # Coerce None/non-string to default visibility
+                fixed['visibility'] = 'private'
         
         # Add modified date
         fixed['modified'] = datetime.now().strftime('%Y-%m-%d')
