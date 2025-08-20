@@ -5,14 +5,18 @@ Tests safe_write() function with atomic file operations using temp + fsync + ren
 """
 
 import os
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
 import shutil
 from pathlib import Path
 
+# Ensure src on path to import project modules (matches existing test convention)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+
 # Import the module we're testing (will fail initially - RED phase)
-from src.utils.io import safe_write
+from utils.io import safe_write
 
 
 class TestAtomicIO(unittest.TestCase):
@@ -53,7 +57,7 @@ class TestAtomicIO(unittest.TestCase):
         
         with patch('builtins.open', mock_open()) as mock_file:
             with patch('os.fsync') as mock_fsync:
-                with patch('os.rename') as mock_rename:
+                with patch('os.replace') as mock_replace:
                     safe_write(self.test_file, self.test_content)
                     
                     # Verify temp file was opened for writing
@@ -63,7 +67,7 @@ class TestAtomicIO(unittest.TestCase):
                     mock_fsync.assert_called_once()
                     
                     # Verify atomic rename from temp to final
-                    mock_rename.assert_called_once_with(temp_file_path, str(self.test_file))
+                    mock_replace.assert_called_once_with(temp_file_path, str(self.test_file))
     
     def test_safe_write_cleans_up_temp_on_write_failure(self):
         """Test safe_write removes temp file if write operation fails."""
@@ -100,7 +104,7 @@ class TestAtomicIO(unittest.TestCase):
         
         with patch('builtins.open', mock_open()) as mock_file:
             with patch('os.fsync'):
-                with patch('os.rename', side_effect=OSError("Rename failed")):
+                with patch('os.replace', side_effect=OSError("Rename failed")):
                     with patch('os.path.exists', return_value=True):
                         with patch('os.unlink') as mock_unlink:
                             
@@ -139,7 +143,7 @@ class TestAtomicIO(unittest.TestCase):
         # Simulate failure during rename (after write + fsync succeed)
         with patch('builtins.open', mock_open()) as mock_file:
             with patch('os.fsync'):
-                with patch('os.rename', side_effect=OSError("Rename failed")):
+                with patch('os.replace', side_effect=OSError("Rename failed")):
                     with patch('os.path.exists', return_value=True):
                         with patch('os.unlink'):
                             
