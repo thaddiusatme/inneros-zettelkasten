@@ -1,6 +1,6 @@
 # InnerOS Zettelkasten - Project Todo v2.0
  
-**Last Updated**: 2025-08-14 21:47 PDT  
+**Last Updated**: 2025-08-20 16:32 PDT  
 **Status**: Phase 5 Complete → Knowledge Graph Enhancement & Phase 6 Prep  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
  
@@ -9,7 +9,13 @@
 ---
  
 ## 🎯 Current Sprint: Knowledge Graph Enhancement + Bug Fixes
- 
+
+#### ✅ Completed (2025-08-20)
+- Engine-level mitigation for template 'created' placeholder in `WorkflowManager.process_inbox_note()` (raw-frontmatter preprocessing)
+- Unit tests added for placeholder patterns (`{{date}}`, EJS) and strict dry-run no-write behavior (fast + AI paths)
+- Branch pushed: `fix/template-placeholders-content-pipeline`
+- Docs updated: `Projects/inneros-manifest-v2.md` decision log, `Projects/project-todo-v2.md` Bug 1 status
+
 ### 🔴 Critical - Bug Fixes & System Issues (Immediate)
  
 #### Bug 1: YAML `created` Property Not Processing 🔴 **BLOCKING TEMPLATE FUNCTIONALITY**
@@ -22,6 +28,8 @@
 - [x] **Mitigation Implemented (Engine-Level)**: Preprocess 'created' placeholders in raw frontmatter within `WorkflowManager.process_inbox_note()` to ensure parseable YAML and ISO timestamp normalization (non-destructive; respects dry-run)
 
 - [x] **Unit Tests Added**: Comprehensive tests for placeholder patterns (`{{date}}`, EJS forms) and dry-run no-write behavior across fast/AI paths
+
+- **Status Note**: Engine-level mitigation unblocks parsing reliability, but the Templater plugin fix remains required before template-based workflows are considered fully reliable.
 
 - [ ] **Fix Template Processing Chain**
   - [ ] Verify Templater plugin is active and configured correctly
