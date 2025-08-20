@@ -1,11 +1,12 @@
 ---
-created: {{date:YYYY-MM-DD HH:mm}}
+type: permanent
+created: 2025-08-20 09:22
+modified: '2025-08-20'
 status: idea
-pillar: 
-channel: 
+pillar: null
+channel: null
 tags: [content, idea]
 ---
-
 ---
 created: 2025-05-20 19:27
 status: idea

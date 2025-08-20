@@ -106,17 +106,23 @@ class WorkflowManager:
         except Exception as e:
             return {"error": f"Failed to read note: {e}"}
         
+        # Preprocess raw content to fix 'created' placeholders that break YAML parsing
+        # e.g., "created: {{date:YYYY-MM-DD HH:mm}}", "created: {{date}}",
+        # or Templater EJS patterns like "<% tp.date.now(...) %>" which make YAML invalid
+        content, raw_template_fixed = self._preprocess_created_placeholder_in_raw(content, note_file)
+        
         results = {
             "original_file": str(note_file),
             "processing": {},
             "recommendations": []
         }
         
-        # Extract frontmatter and body using centralized utility
+        # Extract frontmatter and body using centralized utility (after preprocessing)
         frontmatter, body = parse_frontmatter(content)
 
         # Fix template placeholders in frontmatter BEFORE any processing
         template_fixed = self._fix_template_placeholders(frontmatter, note_file)
+        any_template_fixed = raw_template_fixed or template_fixed
 
         # Determine fast-mode (heuristic, no external AI calls)
         fast_mode = fast if fast is not None else dry_run
@@ -189,7 +195,7 @@ class WorkflowManager:
             results["quality_score"] = quality_score
 
             # Persist template fixes even in fast-mode (no AI calls), using atomic write
-            if template_fixed and not dry_run:
+            if any_template_fixed and not dry_run:
                 try:
                     updated_content = build_frontmatter(frontmatter, body)
                     safe_write(note_file, updated_content)
@@ -293,7 +299,7 @@ class WorkflowManager:
         # Check if we need to update the file (AI processing OR template fixes)
         needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
         
-        if needs_ai_update or template_fixed:
+        if needs_ai_update or any_template_fixed:
             if dry_run:
                 # Indicate what would have happened without modifying files
                 if needs_ai_update:
@@ -340,7 +346,11 @@ class WorkflowManager:
         
         # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
         if (created_value is None or 
-            isinstance(created_value, str) and "{{date:" in created_value):
+            (isinstance(created_value, str) and (
+                "{{date" in created_value or
+                "<% tp.date.now(" in created_value or
+                "<% tp.file.creation_date(" in created_value
+            ))):
             
             # Try to get file creation/modification time
             try:
@@ -357,6 +367,68 @@ class WorkflowManager:
             changes_made = True
         
         return changes_made
+
+    def _preprocess_created_placeholder_in_raw(self, content: str, note_file: Path) -> tuple[str, bool]:
+        """Replace invalid 'created' placeholders directly in the raw frontmatter block.
+
+        This is necessary when placeholders make YAML unparseable (e.g., {{date:...}}, {{date}},
+        or Templater EJS patterns), causing parse_frontmatter() to return empty metadata and
+        leaving the original frontmatter in the body. Preprocessing ensures YAML becomes valid so
+        other frontmatter fields are preserved.
+
+        Returns a tuple of (possibly updated content, changes_made).
+        """
+        try:
+            text = content if isinstance(content, str) else ""
+            if not text or not text.lstrip().startswith('---'):
+                return content, False
+            lines = text.split('\n')
+            # locate closing delimiter
+            closing_idx = None
+            for i in range(1, len(lines)):
+                if lines[i].strip() == '---':
+                    closing_idx = i
+                    break
+            if closing_idx is None:
+                return content, False
+
+            placeholder_markers = (
+                "{{date",
+                "<% tp.date.now(",
+                "<% tp.file.creation_date(",
+            )
+
+            changed = False
+            # Scan only within frontmatter region
+            for j in range(1, closing_idx):
+                line = lines[j]
+                if not line.strip().startswith("created:"):
+                    continue
+                # Preserve original spacing after ':'
+                prefix, sep, value = line.partition(":")
+                value_str = value.strip()
+                if any(marker in value_str for marker in placeholder_markers):
+                    try:
+                        import os
+                        from datetime import datetime
+                        ts = datetime.fromtimestamp(os.stat(note_file).st_mtime)
+                    except Exception:
+                        from datetime import datetime
+                        ts = datetime.now()
+                    formatted = ts.strftime("%Y-%m-%d %H:%M")
+                    # preserve spaces after colon
+                    import re as _re
+                    m = _re.match(r"^(\s*)", value)
+                    spaces = m.group(1) if m else " "
+                    lines[j] = f"{prefix}:{spaces}{formatted}"
+                    changed = True
+                break  # only handle the first created occurrence
+
+            if changed:
+                return "\n".join(lines), True
+            return content, False
+        except Exception:
+            return content, False
     
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """

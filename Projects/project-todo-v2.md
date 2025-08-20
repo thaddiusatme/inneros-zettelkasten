@@ -1,6 +1,6 @@
 # InnerOS Zettelkasten - Project Todo v2.0
  
-**Last Updated**: 2025-08-14 21:47 PDT  
+**Last Updated**: 2025-08-20 16:32 PDT  
 **Status**: Phase 5 Complete → Knowledge Graph Enhancement & Phase 6 Prep  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
  
@@ -9,7 +9,13 @@
 ---
  
 ## 🎯 Current Sprint: Knowledge Graph Enhancement + Bug Fixes
- 
+
+#### ✅ Completed (2025-08-20)
+- Engine-level mitigation for template 'created' placeholder in `WorkflowManager.process_inbox_note()` (raw-frontmatter preprocessing)
+- Unit tests added for placeholder patterns (`{{date}}`, EJS) and strict dry-run no-write behavior (fast + AI paths)
+- Branch pushed: `fix/template-placeholders-content-pipeline`
+- Docs updated: `Projects/inneros-manifest-v2.md` decision log, `Projects/project-todo-v2.md` Bug 1 status
+
 ### 🔴 Critical - Bug Fixes & System Issues (Immediate)
  
 #### Bug 1: YAML `created` Property Not Processing 🔴 **BLOCKING TEMPLATE FUNCTIONALITY**
@@ -18,13 +24,22 @@
   - **Issue**: Line 3 shows `created: {{date:YYYY-MM-DD HH:mm}}` instead of actual timestamp
   - **Expected**: `created: 2025-08-06 15:20` format
   - **Impact**: Template automation broken, metadata inconsistent
- 
+
+- [x] **Mitigation Implemented (Engine-Level)**: Preprocess 'created' placeholders in raw frontmatter within `WorkflowManager.process_inbox_note()` to ensure parseable YAML and ISO timestamp normalization (non-destructive; respects dry-run)
+
+- [x] **Unit Tests Added**: Comprehensive tests for placeholder patterns (`{{date}}`, EJS forms) and dry-run no-write behavior across fast/AI paths
+
+- **Status Note**: Engine-level mitigation unblocks parsing reliability, but the Templater plugin fix remains required before template-based workflows are considered fully reliable.
+
 - [ ] **Fix Template Processing Chain**
   - [ ] Verify Templater plugin is active and configured correctly
   - [ ] Test template processing with simple date generation
   - [ ] Update template syntax if Templater version changed
   - [ ] Add fallback date generation for template failures
- 
+
+- [ ] **Follow-up (Automation & CI)**: Enhance `.automation/scripts/repair_metadata.py` with placeholder repair, ISO normalization, `--dry-run`, backups, and changelog update
+- [ ] **Follow-up (Validation)**: Add CI validator to fail on templater tokens in YAML across `knowledge/`
+
 #### Bug 2: Image Reference/Linking System Design Issue 🔴 **SYSTEM INTEGRITY**
 - [ ] **Investigate Image Handling in AI Automation**
   - **Issue**: "Images are referenced and link to each other seems to break on AI automation"

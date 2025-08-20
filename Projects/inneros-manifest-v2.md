@@ -290,6 +290,7 @@ ai_tags: []                      # Existing AI feature
 
 ## 📝 Decision Log (Newest First)
 
+- **2025-08-20**: Implemented engine-level mitigation for template 'created' placeholder via raw-frontmatter preprocessing in `WorkflowManager.process_inbox_note()`; added comprehensive unit tests for placeholder patterns and dry-run no-write behavior; hardened `AIEnhancer.suggest_improved_structure()` to validate LLM responses and fall back deterministically.
 - **2025-08-10**: Created v2.0 Manifest with knowledge graph analysis integration; set immediate connectivity improvement targets and Phase 6 scaffolding priorities
 - **2025-08-04**: Established v1.0 Manifest aligned with unified rules; completed Phase 5 technical foundation
 

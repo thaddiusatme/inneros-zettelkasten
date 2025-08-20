@@ -230,6 +230,90 @@ Body """
         assert fm["created"] != placeholder
         assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
 
+    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_fast_path(self):
+        """Dry-run must not persist changes even if template fixes are detected (fast path)."""
+        placeholder = "{{date:YYYY-MM-DD HH:mm}}"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "dry-run-fast.md", content)
+
+        # Dry-run with fast mode: should detect fix but not write to disk
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=True, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is False
+
+        # File on disk should remain unchanged (still contains placeholder)
+        on_disk = Path(note_path).read_text(encoding="utf-8")
+        assert placeholder in on_disk
+
+    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_ai_path(self):
+        """Dry-run must not persist changes when running full AI path (fast=False)."""
+        placeholder = "{{date}}"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "dry-run-ai.md", content)
+
+        # Patch AI components to avoid external calls and ensure deterministic processing
+        with patch.object(self.workflow.tagger, 'generate_tags', return_value=["a", "b"]) as _mt, \
+             patch.object(self.workflow.enhancer, 'enhance_note', return_value={"quality_score": 0.6, "suggestions": ["s1", "s2"]}):
+            # Explicitly set fast=False to take the non-fast (AI) branch while dry_run=True
+            result = self.workflow.process_inbox_note(str(note_path), dry_run=True, fast=False)
+
+        assert "error" not in result
+        assert result.get("file_updated") is False
+        assert "processing" in result
+        assert "quality" in result["processing"]
+        assert "ai_tags" in result["processing"]
+
+        # File on disk should remain unchanged (still contains placeholder)
+        on_disk = Path(note_path).read_text(encoding="utf-8")
+        assert placeholder in on_disk
+
+    def test_preprocess_created_placeholder_preserves_other_frontmatter_fields(self):
+        """Repairing 'created' should preserve other frontmatter keys/values."""
+        placeholder = "<% tp.date.now(\"YYYY-MM-DD HH:mm\") %>"
+        content = f"""---
+type: fleeting
+title: Example Title
+status: inbox
+tags: ["alpha", "beta"]
+created: {placeholder}
+---
+
+Body with content"""
+
+        note_path = self.create_test_note("Inbox", "preserve-fields.md", content)
+
+        # Fast mode write path: should fix created and persist using centralized builder
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        # Created should be concrete timestamp
+        assert fm.get("created") is not None and fm["created"] != placeholder
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+        # Other fields preserved
+        assert fm.get("type") == "fleeting"
+        assert fm.get("title") == "Example Title"
+        assert fm.get("status") == "inbox"
+        assert fm.get("tags") == ["alpha", "beta"]
+
     def test_process_inbox_note_adds_missing_created_fast_path(self):
         """Adds missing created timestamp (fast path)."""
         content = """---
@@ -250,6 +334,78 @@ Body """
         updated = Path(note_path).read_text(encoding="utf-8")
         fm, _ = parse_frontmatter(updated)
         assert "created" in fm
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+
+    def test_process_inbox_note_fixes_created_curly_braces_no_format_fast_path(self):
+        """Replaces '{{date}}' placeholder with concrete timestamp (fast path)."""
+        placeholder = "{{date}}"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "placeholder-created-curly.md", content)
+
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        assert fm.get("created") is not None
+        assert fm["created"] != placeholder
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+
+    def test_process_inbox_note_fixes_created_ejs_tp_date_fast_path(self):
+        """Replaces '<% tp.date.now(...) %>' placeholder with concrete timestamp (fast path)."""
+        placeholder = "<% tp.date.now(\"YYYY-MM-DD HH:mm\") %>"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "placeholder-created-ejs-date.md", content)
+
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        assert fm.get("created") is not None
+        assert fm["created"] != placeholder
+        assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
+
+    def test_process_inbox_note_fixes_created_ejs_tp_file_creation_date_fast_path(self):
+        """Replaces '<% tp.file.creation_date(...) %>' placeholder with concrete timestamp (fast path)."""
+        placeholder = "<% tp.file.creation_date(\"YYYY-MM-DD HH:mm\") %>"
+        content = f"""---
+type: fleeting
+created: {placeholder}
+status: inbox
+---
+
+Body """
+
+        note_path = self.create_test_note("Inbox", "placeholder-created-ejs-file-date.md", content)
+
+        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+
+        assert "error" not in result
+        assert result.get("file_updated") is True
+
+        updated = Path(note_path).read_text(encoding="utf-8")
+        fm, _ = parse_frontmatter(updated)
+        assert fm.get("created") is not None
+        assert fm["created"] != placeholder
         assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
 
     def test_promote_note_to_permanent(self):
