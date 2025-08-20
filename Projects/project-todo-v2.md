@@ -18,13 +18,20 @@
   - **Issue**: Line 3 shows `created: {{date:YYYY-MM-DD HH:mm}}` instead of actual timestamp
   - **Expected**: `created: 2025-08-06 15:20` format
   - **Impact**: Template automation broken, metadata inconsistent
- 
+
+- [x] **Mitigation Implemented (Engine-Level)**: Preprocess 'created' placeholders in raw frontmatter within `WorkflowManager.process_inbox_note()` to ensure parseable YAML and ISO timestamp normalization (non-destructive; respects dry-run)
+
+- [x] **Unit Tests Added**: Comprehensive tests for placeholder patterns (`{{date}}`, EJS forms) and dry-run no-write behavior across fast/AI paths
+
 - [ ] **Fix Template Processing Chain**
   - [ ] Verify Templater plugin is active and configured correctly
   - [ ] Test template processing with simple date generation
   - [ ] Update template syntax if Templater version changed
   - [ ] Add fallback date generation for template failures
- 
+
+- [ ] **Follow-up (Automation & CI)**: Enhance `.automation/scripts/repair_metadata.py` with placeholder repair, ISO normalization, `--dry-run`, backups, and changelog update
+- [ ] **Follow-up (Validation)**: Add CI validator to fail on templater tokens in YAML across `knowledge/`
+
 #### Bug 2: Image Reference/Linking System Design Issue 🔴 **SYSTEM INTEGRITY**
 - [ ] **Investigate Image Handling in AI Automation**
   - **Issue**: "Images are referenced and link to each other seems to break on AI automation"

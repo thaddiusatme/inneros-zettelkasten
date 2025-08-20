@@ -107,7 +107,16 @@ class AIEnhancer:
         content_to_analyze = self._strip_yaml_frontmatter(content)
         
         try:
-            return self._generate_structure_suggestions(content_to_analyze)
+            result = self._generate_structure_suggestions(content_to_analyze)
+            # Validate structure to avoid flaky outputs from LLMs
+            if not isinstance(result, dict):
+                return self._basic_structure_suggestion(content_to_analyze)
+            if 'recommended_structure' not in result or not isinstance(result.get('recommended_structure'), list):
+                return self._basic_structure_suggestion(content_to_analyze)
+            if 'reasoning' not in result:
+                # Provide default reasoning if missing
+                result['reasoning'] = 'Suggested based on standard technical note organization'
+            return result
         except Exception:
             # Fallback to basic structure suggestion
             return self._basic_structure_suggestion(content_to_analyze)
