@@ -58,7 +58,18 @@ visibility: private | shared | team
     - Permanent notes → `Permanent Notes/`
     - Reference/actionable notes → appropriate folder
 - Only notes with `status: inbox` in YAML are considered active for triage, regardless of folder.
-- The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
+  - The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
+
+## Templates: ChatGPT Prompt (Templater)
+- File: `knowledge/Templates/chatgpt-prompt.md`
+- Purpose: Quickly scaffold a high-quality ChatGPT prompt for a fresh session.
+- How it works:
+  - Uses Obsidian Templater (EJS) tokens like `<% tp.date.now("YYYY-MM-DD HH:mm") %>`
+  - Prompts once for a feature/branch name (single prompt)
+  - Renames and moves the file to `Inbox/prompt-YYYYMMDD-HHmm.md`
+  - YAML includes `type: fleeting`, `status: inbox` and tags `[prompt, chatgpt, inbox]`
+- When to use:
+  - Before starting a new coding/chat iteration to set scope and acceptance criteria
 
 ## 🤖 AI & Automation
 

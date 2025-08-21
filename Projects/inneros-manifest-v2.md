@@ -99,6 +99,18 @@ python3 src/cli/workflow_demo.py . --weekly-review --export-checklist weekly-rev
 | **Permanent** | `Permanent Notes/` | `draft → published` | Summarization, link prediction |
 | **Archive** | `Archive/` | `archived` | Compression, historical analysis |
 
+#### Templates (Obsidian Templater)
+- `knowledge/Templates/fleeting.md` — quick capture with automated rename/move.
+- `knowledge/Templates/permanent.md` — structured permanent notes.
+- `knowledge/Templates/literature.md` — literature/reference notes.
+- `knowledge/Templates/daily.md`, `weekly-review.md`, `sprint-review.md`, `sprint-retro.md` — rituals.
+- `knowledge/Templates/chatgpt-prompt.md` — Single-prompt ChatGPT prompt note generator.
+
+Usage:
+- Requires Obsidian Templater. EJS syntax is used (e.g., `<% tp.date.now("YYYY-MM-DD HH:mm") %>`).
+- Prompts once for a feature/branch name, then renames file to `Inbox/prompt-YYYYMMDD-HHmm.md`.
+- Starts with `type: fleeting`, `status: inbox`; tags include `prompt, chatgpt, inbox`.
+
 ### **YAML Schema (Required)**
 ```yaml
 type: permanent | fleeting | literature | MOC
