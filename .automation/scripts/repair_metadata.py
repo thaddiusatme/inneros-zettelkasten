@@ -45,6 +45,9 @@ if _dev_path not in sys.path:
 # Centralized tag sanitizer
 from src.utils.tags import sanitize_tags
 
+# Import templater validator
+from validate_metadata import has_templater_placeholders, find_templater_violations
+
 class MetadataRepairer:
     """Handles automatic repair of metadata issues in markdown files."""
     
@@ -580,8 +583,14 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Show what would be fixed without making changes')
     parser.add_argument('--no-backup', action='store_true', help='Skip creating backups (not recommended)')
     parser.add_argument('--report', action='store_true', help='Generate detailed report')
+    parser.add_argument('--validate-placeholders', action='store_true', help='Validate that no templater placeholders exist in YAML frontmatter')
     
     args = parser.parse_args()
+    
+    # Handle --validate-placeholders flag
+    if args.validate_placeholders:
+        exit_code = validate_templater_placeholders(args.path or 'knowledge')
+        sys.exit(exit_code)
     
     # Initialize repairer
     repairer = MetadataRepairer(
@@ -695,6 +704,80 @@ def main():
         
         if args.dry_run:
             print("\n⚠️  This was a dry run - no files were actually modified")
+
+
+def validate_templater_placeholders(directory_path: str) -> int:
+    """
+    Scan directory for templater placeholders in YAML frontmatter.
+    
+    Args:
+        directory_path: Path to directory to scan
+        
+    Returns:
+        0 if no placeholders found, 1 if placeholders found
+    """
+    print(f"🔍 Scanning {directory_path} for templater placeholders in YAML...")
+    
+    if not os.path.exists(directory_path):
+        print(f"❌ Error: Directory {directory_path} does not exist")
+        return 1
+    
+    if not os.path.isdir(directory_path):
+        print(f"❌ Error: {directory_path} is not a directory")
+        return 1
+    
+    violations = []
+    total_files = 0
+    
+    for root, dirs, files in os.walk(directory_path):
+        # Skip hidden directories
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        
+        for file in files:
+            if file.endswith('.md') and not file.startswith('.'):
+                total_files += 1
+                file_path = os.path.join(root, file)
+                
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        
+                    # Extract frontmatter
+                    if content.startswith('---'):
+                        end_idx = content.find('\n---', 4)
+                        if end_idx != -1:
+                            frontmatter = content[:end_idx + 4]
+                            
+                            if has_templater_placeholders(frontmatter):
+                                # Find specific lines with placeholders for detailed reporting
+                                file_violations = find_templater_violations(frontmatter)
+                                for line_num, line_content in file_violations:
+                                    violations.append({
+                                        'file': os.path.relpath(file_path),
+                                        'line': line_num,
+                                        'content': line_content
+                                    })
+                                        
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not read {file_path}: {e}")
+    
+    # Report results
+    print(f"📊 Scanned {total_files} markdown files")
+    
+    if violations:
+        print(f"\n❌ Found {len(violations)} templater placeholders in YAML:")
+        for violation in violations:
+            print(f"  {violation['file']}:{violation['line']} → {violation['content']}")
+        
+        print(f"\n💡 To fix these issues:")
+        print(f"   1. Update Obsidian Templater settings (Settings → Templates)")  
+        print(f"   2. Use tp.date.now(\"YYYY-MM-DD HH:mm\") syntax in templates")
+        print(f"   3. Re-create notes from fixed templates")
+        
+        return 1
+    else:
+        print("✅ No templater placeholders found in YAML frontmatter")
+        return 0
 
 
 if __name__ == "__main__":

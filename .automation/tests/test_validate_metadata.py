@@ -5,7 +5,7 @@ import pytest
 # Add the scripts directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scripts')))
 
-from validate_metadata import validate_created_date, extract_frontmatter, parse_frontmatter, validate_metadata
+from validate_metadata import validate_created_date, extract_frontmatter, parse_frontmatter, validate_metadata, has_templater_placeholders
 
 
 def test_validate_created_date_valid_datetime():
@@ -71,3 +71,54 @@ def test_validate_metadata_invalid(test_data_path):
     assert len(errors) > 0
     assert any("Invalid type" in e for e in errors)
     assert any("Invalid created date format" in e for e in errors)
+
+
+# Tests for templater placeholder detection
+def test_has_templater_placeholders_with_date_token():
+    """Test that {{date:...}} tokens are detected as templater placeholders."""
+    frontmatter = """---
+type: fleeting
+created: {{date:YYYY-MM-DD HH:mm}}
+status: inbox
+---"""
+    assert has_templater_placeholders(frontmatter) is True
+
+
+def test_has_templater_placeholders_with_ejs_token():
+    """Test that <%...%> tokens are detected as templater placeholders."""
+    frontmatter = """---
+type: fleeting
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+status: inbox
+---"""
+    assert has_templater_placeholders(frontmatter) is True
+
+
+def test_has_templater_placeholders_with_ejs_equals():
+    """Test that <%=...%> tokens are detected as templater placeholders."""
+    frontmatter = """---
+type: fleeting
+created: <%= tp.date.now("YYYY-MM-DD HH:mm") %>
+status: inbox
+---"""
+    assert has_templater_placeholders(frontmatter) is True
+
+
+def test_has_templater_placeholders_clean_yaml():
+    """Test that clean YAML without placeholders returns False."""
+    frontmatter = """---
+type: fleeting
+created: 2025-08-20 16:30
+status: inbox
+---"""
+    assert has_templater_placeholders(frontmatter) is False
+
+
+def test_has_templater_placeholders_empty_string():
+    """Test that empty string returns False."""
+    assert has_templater_placeholders("") is False
+
+
+def test_has_templater_placeholders_none():
+    """Test that None input returns False."""
+    assert has_templater_placeholders(None) is False
