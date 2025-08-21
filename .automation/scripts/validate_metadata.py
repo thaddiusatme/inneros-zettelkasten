@@ -259,5 +259,64 @@ def main():
         print(f"Validation passed for {file_path}")
         sys.exit(0)
 
+
+# Centralized templater placeholder patterns
+TEMPLATER_PATTERNS = [
+    r'\{\{date:[^}]+\}\}',  # {{date:YYYY-MM-DD HH:mm}}
+    r'\{\{[^}]+\}\}',       # {{anything}}
+    r'<%[^%]+%>',           # <% anything %>
+    r'<%=[^%]+%>',          # <%= anything %>
+    r'<%\*[^%]*%>',         # <%* multi-line comments %>
+]
+
+# Compiled regex for performance
+TEMPLATER_REGEX = re.compile('|'.join(TEMPLATER_PATTERNS))
+
+
+def has_templater_placeholders(frontmatter: Optional[str]) -> bool:
+    """
+    Check if frontmatter contains templater placeholder tokens.
+    
+    Detects:
+    - {{date:...}} tokens
+    - {{...}} tokens (generic)
+    - <%...%> EJS-style tokens
+    - <%=...%> EJS-style output tokens
+    - <%*...%> EJS-style comment tokens
+    
+    Args:
+        frontmatter: Raw frontmatter text or None
+        
+    Returns:
+        True if templater placeholders are found, False otherwise
+    """
+    if not frontmatter:
+        return False
+    
+    return bool(TEMPLATER_REGEX.search(frontmatter))
+
+
+def find_templater_violations(frontmatter: str) -> List[Tuple[int, str]]:
+    """
+    Find all templater violations in frontmatter with line numbers.
+    
+    Args:
+        frontmatter: Raw frontmatter text
+        
+    Returns:
+        List of tuples (line_number, line_content) with violations
+    """
+    violations = []
+    if not frontmatter:
+        return violations
+    
+    lines = frontmatter.split('\n')
+    for i, line in enumerate(lines, 1):
+        if TEMPLATER_REGEX.search(line):
+            violations.append((i, line.strip()))
+    
+    return violations
+
+
 if __name__ == "__main__":
     main()
