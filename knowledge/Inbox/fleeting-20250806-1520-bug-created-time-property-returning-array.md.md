@@ -1,18 +1,11 @@
 ---
-type: fleeting
 created: 2025-08-20 09:22
+type: fleeting
 status: inbox
 visibility: private
-tags:
-- creative-thinking
-- fleeting
-- idea-generation
-- inbox
-- knowledge-graphing
-- mental-mapping
-- note-taking
-- personal-knowledge-management
-ai_processed: 2025-08-14 17:40:35.178129
+tags: [creative-thinking, fleeting, idea-generation, inbox, knowledge-graphing, mental-mapping,
+  mind-mapping, note-taking]
+ai_processed: '2025-08-23T14:10:37.005330'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

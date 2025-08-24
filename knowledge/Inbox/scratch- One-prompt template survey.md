@@ -1,3 +1,13 @@
+---
+created: 2025-08-21 13:21
+type: fleeting
+status: inbox
+tags: [acceptance-criteria, andthemeschatgpt-prompt, chatgpt, frontmatter-management,
+  hereare3-8highlyrelevanttagsthatcapturethekeyconcepts, hereare7highlyrelevanttagsthatcapturethekeyconcepts,
+  hidden-sections, inbox-management]
+modified: '2025-08-22'
+ai_processed: '2025-08-23T14:18:39.589286'
+---
 # One-prompt template survey
 
 Reply with your choices like:

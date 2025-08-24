@@ -1,11 +1,11 @@
 ---
-type: fleeting
 created: 2025-08-20 09:22
+type: fleeting
 status: inbox
 visibility: private
-tags:
-- fleeting
-- inbox
+tags: [80-20-rule, 8020-rule, fleeting, gap-analysis, inbox, note-taking, note-taking-systems,
+  personal-knowledge-management]
+ai_processed: '2025-08-23T14:23:55.503075'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

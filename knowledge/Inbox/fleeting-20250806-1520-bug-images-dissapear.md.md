@@ -1,10 +1,11 @@
 ---
-type: permanent
 created: 2025-08-14 00:00
-modified: '2025-08-20'
+type: permanent
 status: inbox
-ai_processed: 2025-08-14 17:39:29.619952
-tags: [ai-automation, image-processing, knowledge-management, note-taking]
+tags: [ai-automation, herearetheextractedtagsimage-processing, image-linking, image-processing,
+  knowledge-management, note-taking, note-taking-systems, static-dates]
+modified: '2025-08-20'
+ai_processed: '2025-08-23T14:18:15.760513'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
