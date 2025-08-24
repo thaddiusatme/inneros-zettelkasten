@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from .tagger import AITagger
 from .summarizer import AISummarizer
 from .connections import AIConnections
+from src.utils.frontmatter import parse_frontmatter as fm_parse_frontmatter
 
 
 @dataclass
@@ -123,31 +124,10 @@ class NoteAnalytics:
         )
     
     def _extract_frontmatter(self, content: str) -> Tuple[Dict, str]:
-        """Extract YAML frontmatter and body."""
-        yaml_pattern = r'^---\s*\n(.*?)\n---\s*\n(.*)$'
-        match = re.match(yaml_pattern, content, re.DOTALL)
-        
-        if match:
-            yaml_content = match.group(1)
-            body = match.group(2)
-            
-            # Simple YAML parsing
-            frontmatter = {}
-            for line in yaml_content.split('\n'):
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    
-                    if value.startswith('[') and value.endswith(']'):
-                        items = value[1:-1].split(',')
-                        frontmatter[key] = [item.strip().strip('"\'') for item in items if item.strip()]
-                    else:
-                        frontmatter[key] = value.strip('"\'')
-            
-            return frontmatter, body
-        
-        return {}, content
+        """Extract YAML frontmatter and body using centralized parser."""
+        metadata, body = fm_parse_frontmatter(content)
+        # Ensure tags is a list if present, otherwise default to [] downstream
+        return metadata, body
     
     def _parse_date(self, date_str: str) -> Optional[datetime]:
         """Parse date string to datetime object."""

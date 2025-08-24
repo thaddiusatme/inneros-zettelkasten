@@ -540,6 +540,52 @@ Examples:
                     print(f"\n   Note {i}:")
                     display_note_processing_result(result)
     
+    elif args.promote:
+        # Non-interactive promotion handler
+        file_arg, note_type = args.promote
+        print("🚀 Promoting note...")
+        print(f"   File arg: {file_arg}")
+        print(f"   Target type: {note_type}")
+        
+        # Resolve file path robustly: absolute, CWD-relative, base_dir-relative, or by filename in Inbox/Fleeting
+        candidate = Path(file_arg)
+        resolved_path = None
+        try:
+            if not candidate.is_absolute():
+                # Try CWD-relative
+                cwd_path = (Path.cwd() / candidate)
+                if cwd_path.exists():
+                    resolved_path = cwd_path
+            if resolved_path is None:
+                # Try base_dir-relative
+                base_path = (Path(workflow.base_dir) / candidate)
+                if base_path.exists():
+                    resolved_path = base_path
+            if resolved_path is None:
+                # Fall back to searching by filename in Inbox and Fleeting
+                name_only = candidate.name
+                inbox_candidate = workflow.inbox_dir / name_only
+                fleeting_candidate = workflow.fleeting_dir / name_only
+                if inbox_candidate.exists():
+                    resolved_path = inbox_candidate
+                elif fleeting_candidate.exists():
+                    resolved_path = fleeting_candidate
+        except Exception:
+            resolved_path = None
+        
+        if resolved_path is None or not resolved_path.exists():
+            print(f"❌ Error: File not found in inbox/fleeting or at provided path: {file_arg}")
+            sys.exit(1)
+        
+        result = workflow.promote_note(str(resolved_path), note_type.lower())
+        if result.get("success"):
+            print(f"✅ Successfully promoted to {result.get('type')}:\n   {result.get('source')} → {result.get('target')}")
+            if result.get("has_summary"):
+                print("   Added AI summary")
+        else:
+            print(f"❌ Error: {result.get('error', 'Unknown error')}")
+            sys.exit(1)
+    
     elif args.import_csv:
         source_path = Path(args.import_csv)
         if not source_path.exists():

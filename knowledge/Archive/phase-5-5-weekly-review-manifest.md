@@ -1,11 +1,11 @@
 ---
 type: permanent
 created: 2025-07-30 22:49
-status: active
-tags: [manifest, phase-5-5, weekly-review, automation, ai-workflow]
+modified: '2025-08-23'
+status: inbox
 visibility: private
+tags: [manifest, phase-5-5, weekly-review, automation, ai-workflow]
 ---
-
 # Phase 5.5: Weekly Review Automation Manifest
 
 ## 🎯 Sprint Objective

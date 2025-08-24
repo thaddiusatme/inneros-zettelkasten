@@ -6,6 +6,10 @@ Shows the AI tagger in action with real content.
 
 import sys
 import time
+import os
+
+# Ensure the 'src' package is importable when running under pytest
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from src.ai.tagger import AITagger
 from src.ai.ollama_client import OllamaClient
 
@@ -13,7 +17,7 @@ from src.ai.ollama_client import OllamaClient
 def print_header(title):
     """Print a formatted header."""
     print(f"\n{'='*60}")
-    print(f"🧪 {title}")
+    print(f" {title}")
     print('='*60)
 
 

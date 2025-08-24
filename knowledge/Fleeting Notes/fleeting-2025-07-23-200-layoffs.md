@@ -1,17 +1,11 @@
 ---
-type: fleeting
 created: 2025-07-23 20:13
+type: fleeting
 status: inbox
-tags:
-  - ""
-  - " "
-  - "#"
-  - "-"
-  - "["
-  - a
-  - addiction-management
-ai_processed: 2025-08-05T22:22:10.852591
 visibility: private
+tags: [a, addiction-management, ai-slop, candy-crush, game-design, game-development,
+  game-industry-trends, herearetheextractedtagsai-driven-games]
+ai_processed: '2025-08-23T14:25:45.242333'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

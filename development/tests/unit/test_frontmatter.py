@@ -4,9 +4,9 @@ import os
 from datetime import datetime
 
 # Add src to path for testing
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 
-from utils.frontmatter import parse_frontmatter, build_frontmatter
+from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 
 
 class TestParseFrontmatter:
@@ -198,9 +198,24 @@ class TestBuildFrontmatter:
         result = build_frontmatter(metadata, body)
         
         # Check proper YAML formatting
-        assert 'tags: [tag1, tag2, tag3]' in result or 'tags:\n- tag1\n- tag2\n- tag3' in result
+        # Tags must be inline array style
+        assert 'tags: [tag1, tag2, tag3]' in result
         assert 'boolean_field: true' in result
         assert 'numeric_field: 42' in result
+
+    def test_build_enforces_inline_tags(self):
+        """Tags must be rendered as inline arrays, never hyphen lists."""
+        metadata = {
+            'created': '2025-08-18 20:30',
+            'type': 'permanent',
+            'tags': ['alpha', 'beta'],
+        }
+        body = "Body"
+        out = build_frontmatter(metadata, body)
+        # Enforce inline formatting
+        assert 'tags: [alpha, beta]' in out
+        # Ensure hyphen list form is not used for tags
+        assert 'tags:\n- alpha' not in out
 
 
 class TestFrontmatterRoundtrip:

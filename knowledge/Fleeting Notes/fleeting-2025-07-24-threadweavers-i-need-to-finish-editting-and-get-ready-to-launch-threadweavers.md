@@ -1,10 +1,11 @@
 ---
-type: fleeting
 created: 2025-07-24 21:02
+type: fleeting
 status: inbox
-tags: ["", " ", "#", "-", ":", "[", "a", "demographic-targeting"]
-ai_processed: 2025-08-05T22:20:11.985860
 visibility: private
+tags: [a, ai-personalities, demographic-targeting, free-version, marketing-strategy,
+  personality-types, rim-world, thoughts]
+ai_processed: '2025-08-23T14:25:19.973676'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

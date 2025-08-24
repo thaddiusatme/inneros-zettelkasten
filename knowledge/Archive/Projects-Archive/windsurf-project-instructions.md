@@ -1,10 +1,11 @@
 ---
+type: permanent
+created: 2025-07-19 19:28
+modified: '2025-08-23'
+status: active
 title: Windsurf Project Instructions
 author: myung (and Cascade)
-created: 2025-07-19 19:28
-status: active
 ---
-
 # Windsurf Project Instructions
 
 ## Always-Read Project Context for Windsurf

@@ -1,3 +1,10 @@
+---
+type: permanent
+created: '2025-08-14'
+status: inbox
+tags: []
+---
+
 ## Project Overview
 InnerOS is a Zettelkasten + AI workflow system designed for personal knowledge management. The automation project aims to reduce manual overhead, standardize metadata, integrate Git version control, and prepare for AI-assisted workflows.
 

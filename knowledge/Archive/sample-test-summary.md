@@ -1,10 +1,16 @@
+---
+type: literature
+created: '2025-08-14'
+status: inbox
+tags: []
+---
+
 # 🎯 Sample Test: Market Research AI Enhancement
 
 ## Test Scenario: Market Research Digest Analysis
 
 ### 📋 Test Content
 **File**: `market_research_test.md`
-**Type**: Literature note with comprehensive market research
 **Length**: ~1,200 words
 **Topics**: Seattle market research, AI starter kit validation, competitor analysis
 

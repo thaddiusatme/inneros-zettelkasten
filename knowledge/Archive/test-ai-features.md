@@ -1,9 +1,10 @@
 ---
 type: permanent
-created: 2025-01-20
+created: 2025-01-20 00:00
+modified: '2025-08-23'
+status: inbox
 tags: [test, ai, demo]
 ---
-
 # AI-Powered Knowledge Management
 
 Artificial intelligence is revolutionizing how we manage and interact with knowledge. Modern AI systems can automatically categorize information, generate summaries, and discover hidden connections between disparate pieces of content.

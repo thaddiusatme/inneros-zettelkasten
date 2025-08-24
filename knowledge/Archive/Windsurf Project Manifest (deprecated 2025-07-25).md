@@ -1,10 +1,11 @@
 ---
+type: permanent
+created: 2025-07-19 19:26
+modified: '2025-08-23'
+status: active
 title: Windsurf Project Manifest
 author: myung (and Cascade)
-created: 2025-07-19 19:26
-status: active
 ---
-
 # Windsurf Project Manifest
 
 ## Project Overview & Goals

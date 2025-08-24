@@ -120,10 +120,31 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
             ordered_metadata[key] = value
     
     # Convert to YAML with consistent formatting
+    # We need 'tags' specifically to be rendered as an inline array
+    class _InlineTagsDumper(yaml.SafeDumper):
+        pass
+
+    def _represent_mapping_with_inline_tags(dumper, data):
+        # Build a mapping node, forcing 'tags' sequence to flow style
+        value = []
+        for item_key, item_value in data.items():
+            node_key = dumper.represent_data(item_key)
+            if item_key == 'tags' and isinstance(item_value, list):
+                node_value = dumper.represent_list(item_value)
+                node_value.flow_style = True
+            else:
+                node_value = dumper.represent_data(item_value)
+            value.append((node_key, node_value))
+        return yaml.MappingNode('tag:yaml.org,2002:map', value, flow_style=False)
+
+    # Register our custom representer for dicts to preserve ordering and inline tags
+    _InlineTagsDumper.add_representer(dict, _represent_mapping_with_inline_tags)
+
     yaml_stream = StringIO()
     yaml.dump(
         ordered_metadata,
         yaml_stream,
+        Dumper=_InlineTagsDumper,
         default_flow_style=False,
         allow_unicode=True,
         sort_keys=False,  # Preserve our custom ordering

@@ -1,11 +1,11 @@
 ---
 type: permanent
 created: 2025-07-25 20:10
-status: active
-tags: [project, manifest]
+modified: '2025-08-23'
+status: inbox
 visibility: private
+tags: [project, manifest]
 ---
-
 # InnerOS Project Manifest (v2)
 
 ## Purpose

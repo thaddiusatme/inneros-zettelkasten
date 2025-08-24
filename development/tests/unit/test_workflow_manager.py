@@ -138,10 +138,7 @@ This is the body content."""
         assert rebuilt.startswith("---")
         assert "type: permanent" in rebuilt
         assert "created: 2024-01-01 10:00" in rebuilt
-        # Centralized utility uses proper YAML list format
-        assert "tags:" in rebuilt
-        assert "- ai" in rebuilt
-        assert "- testing" in rebuilt
+        assert "tags: [ai, testing]" in rebuilt
         assert "status: published" in rebuilt
         assert rebuilt.endswith(body)
     
