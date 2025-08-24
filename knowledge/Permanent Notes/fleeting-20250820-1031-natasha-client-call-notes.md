@@ -76,3 +76,7 @@ Please provide feedback about using Gemini to take notes in a [short survey.](ht
 https://docs.google.com/document/d/1bxZQ0Pe8KvSpCJzodjKWwdvaITJt5mHfa_E2A96VX2g/edit?tab=t.une7y6aswyf
 ## Next Step  
 - [ ] Convert to permanent note?
+
+## Linked Notes
+
+- [[Home Note]]

@@ -47,3 +47,7 @@ Efficiently organizing fleeting notes into actionable, permanent knowledge asset
 
 ## Tag recommendations  
 #project #active #knowledge_management #automation #template #triage #evergreen #10k_mrr_goal
+
+## Linked Notes
+
+- [[Home Note]]

@@ -166,3 +166,7 @@ https://docs.google.com/document/d/1ervuvxyh0YUEmpNHb93hNsA541CYkPPMmiwarm6ggEI/
 
 # Next Step  
 - [ ] Convert to permanent note?
+
+## Linked Notes
+
+- [[Home Note]]

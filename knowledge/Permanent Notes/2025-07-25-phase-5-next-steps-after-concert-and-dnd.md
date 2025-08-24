@@ -73,3 +73,7 @@ visibility: private
 **Remember**: You've already accomplished the hard part (Git discipline and project organization). Phase 5 is about adding intelligent features to an already solid foundation. Take it one step at a time.
 
 **Have fun at the concert and D&D! 🎸🎲**
+
+## Linked Notes
+
+- [[Home Note]]

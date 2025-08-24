@@ -315,3 +315,6 @@ shttps://claude.ai/chat/d037ed6c-e415-41bb-ac50-ed8fc3cf0cdd
 ## Tag recommendations
 
 
+## Linked Notes
+
+- [[Home Note]]

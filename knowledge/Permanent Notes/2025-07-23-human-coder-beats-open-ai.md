@@ -31,3 +31,7 @@ https://www.perplexity.ai/discover/tech/human-coder-beats-openai-in-ma-rVrjgYrER
 
 ## Next Step  
 - [ ] Convert to permanent note?
+
+## Linked Notes
+
+- [[Home Note]]

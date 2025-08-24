@@ -229,3 +229,7 @@ Where did this come from? (Article, conversation, reflection, etc.)
 
 ## Next Step  
 - [ ] Convert to permanent note?
+
+## Linked Notes
+
+- [[Home Note]]
