@@ -2,12 +2,12 @@
 created: 2025-08-21 09:09
 type: permanent
 status: inbox
-tags: [andthemesai-automation, content, digital-discipline, digital-grounding, hereare7highlyrelevanttagsthatcapturethekeyconcepts,
-  idea, meditation, personal-knowledge-management]
+tags: [andthemesai-automation, content, digital-discipline, digital-grounding, discipline,
+  hereare7highlyrelevanttagsthatcapturethekeyconcepts, idea, meditation]
 modified: '2025-08-22'
 pillar: null
 channel: null
-ai_processed: '2025-08-23T14:22:17.604822'
+ai_processed: '2025-08-31T13:23:10.577119'
 ---
 # The fastest-growing people in the world don’t just master AI or meditation
 

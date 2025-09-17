@@ -1,3 +1,8 @@
+---
+created: 2025-08-23 16:43
+tags: [beans, chicken, cooking, cooking-techniques, eggs, food-tips, salmon, steak]
+ai_processed: '2025-08-31T13:00:23.742623'
+---
 **Thread 1**
 
 - **Opening Hook:** You’re cooking chicken wrong. One tiny tweak will make it taste like a chef made it.

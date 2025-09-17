@@ -1,3 +1,9 @@
+---
+created: 2025-08-23 16:39
+tags: [beans, chickpeas, citrus, preserved-lemon, saffron, seafood-stocks, spice-blends,
+  umami]
+ai_processed: '2025-08-31T12:57:34.917340'
+---
 **Thread 1**
 
 - **Opening Hook:** Michelin chefs won’t admit it, but Moroccan kitchens have one secret ingredient they put in almost everything.

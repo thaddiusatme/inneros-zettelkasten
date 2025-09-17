@@ -3,11 +3,11 @@ created: 2025-08-21 19:52
 type: literature
 status: inbox
 visibility: private
-tags: [automation, consistency, crm, customer-avatars, entrepreneurship, integration,
-  lead-generation, life-coaches]
+tags: [automation, branding, confidence, consistency, craftsmanship, crm, customer-avatars,
+  entrepreneurship]
 source: null
 author: null
-ai_processed: '2025-08-23T14:22:50.303521'
+ai_processed: '2025-08-31T13:23:44.297544'
 ---
 
 

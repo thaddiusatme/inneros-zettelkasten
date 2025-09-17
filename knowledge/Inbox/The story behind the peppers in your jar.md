@@ -1,3 +1,9 @@
+---
+created: 2025-08-23 16:45
+tags: [agriculture, cultural-significance, food-industry, food-processing, labor-practices,
+  pepper-production, supply-chain, trade-routes]
+ai_processed: '2025-08-31T13:14:37.442160'
+---
 **Thread 1**
 
 - **Opening Hook:** That jar of peppers in your fridge has traveled farther than you think. Here’s the journey no one tells you about.

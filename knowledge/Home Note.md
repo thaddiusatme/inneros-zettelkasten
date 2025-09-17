@@ -87,7 +87,7 @@ _Prototype generated on 2025-07-19. Expand sections or add features as needed._
 - [[fleeting-20250806-1519-improvements-for-threadweavers]]
 - [[fleeting note whisper ai]]
 - [[context-engineering-ai-driven-code-development]]
-- [[Untitled]]
+- [[daily-2025-08-23]]
 - [[fleeting-20250820-1033-natasha-client-services-and-offers]]
 - [[2025-07-23-human-coder-beats-open-ai]]
 - [[2025-07-25-phase-5-next-steps-after-concert-and-dnd]]

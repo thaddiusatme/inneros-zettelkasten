@@ -1,9 +1,11 @@
 ---
-type: fleeting
 created: 2025-08-23 17:19
+type: fleeting
 status: inbox
-tags: [fleeting, inbox]
 visibility: private
+tags: [channel-roles, fleeting, herearetheextractedtagscontent-calendar, inbox, light-production-checklist,
+  one-week-calendar-template, pillar-content, platform-cheat-sheet]
+ai_processed: '2025-08-31T13:21:19.351720'
 ---
 
 <!--

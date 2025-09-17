@@ -6,7 +6,7 @@ visibility: private
 tags: [audience-engagement, business-strategy, coaching, demonstration, entrepreneurship,
   goal-setting, marketing-strategy, note-taking]
 modified: '2025-08-20'
-ai_processed: '2025-08-23T14:11:59.048977'
+ai_processed: '2025-08-31T13:03:51.590381'
 '{ date: YYYY-MM-DD HH:mm }': null
 ---
 <!--

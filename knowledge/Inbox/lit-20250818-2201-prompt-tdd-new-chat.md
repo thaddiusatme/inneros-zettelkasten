@@ -4,10 +4,10 @@ type: literature
 status: inbox
 visibility: private
 tags: [acceptance-criteria, agile, blocker-priority, continuous-integration, critical-path,
-  git-commit, herearetheextractedtagstest-driven-development, iteration-planning]
+  development-cycle, git-commit, herearetheextractedtagstest-driven-development]
 source: null
 author: null
-ai_processed: '2025-08-23T14:17:55.972667'
+ai_processed: '2025-08-31T12:58:24.543500'
 ---
 
 help me craft the next prompt for the next/new chat with fresh context. Keep a similar structure as the below ## The prompt

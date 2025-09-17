@@ -1,3 +1,9 @@
+---
+created: 2025-08-24 15:51
+tags: [canned-chickpeas, canned-tomatoes, couscous, harissa-paste, moroccan-cuisine,
+  orange-blossom-water, pantry-staples, ras-el-hanout]
+ai_processed: '2025-08-31T13:08:38.649687'
+---
 **Thread 1**
 
 - **Opening Hook:** Cooking Moroccan food doesn’t need hours. These pantry staples slash your kitchen time in half without losing flavor.
@@ -18,7 +24,7 @@
 6. Canned tomatoes: Instant base for tagines and sauces.
     
 7. Orange blossom water: One drop turns simple desserts into Moroccan classics.
-    
+    https://claude.ai/chat/bdf80f48-d8b5-43bf-a5d4-24031fd236d5
 
 ---
 

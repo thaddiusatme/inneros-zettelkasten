@@ -3,8 +3,9 @@ created: 2025-08-21 08:06
 type: fleeting
 status: inbox
 visibility: private
-tags: [agile, chatgpt, documentation, git, git-commit, inbox, iteration, lessons-learned]
-ai_processed: '2025-08-23T14:12:25.660132'
+tags: [agile, chatgpt, development-process, documentation, git, git-commit, inbox,
+  iteration]
+ai_processed: '2025-08-31T13:01:38.512570'
 ---
 
 ## The prompt

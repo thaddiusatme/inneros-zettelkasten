@@ -3,9 +3,9 @@ created: 2025-07-23 20:13
 type: fleeting
 status: inbox
 visibility: private
-tags: [a, addiction-management, ai-slop, candy-crush, game-design, game-development,
-  game-industry-trends, herearetheextractedtagsai-driven-games]
-ai_processed: '2025-08-23T14:25:45.242333'
+tags: [a, addiction-management, ai-assisted-addiction-management, ai-slop, candy-crush,
+  game-design, game-development, game-industry-trends]
+ai_processed: '2025-08-31T13:27:05.117221'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

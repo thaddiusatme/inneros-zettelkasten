@@ -1,11 +1,11 @@
 ---
 created: 2025-08-22 14:41
-type: fleeting
-status: inbox
+type: permanent
+status: published
 visibility: private
-tags: [audience-analysis, audience-avatar, content-pillar, content-strategy, deep-research,
-  everyday-table, fleeting, herearetheextractedtagsinkebab-caseformatai-persona]
-ai_processed: '2025-08-23T14:16:31.782280'
+tags: [audience-analysis, audience-avatar, content-calendar, content-pillar, content-strategy,
+  deep-research, everyday-table, fleeting]
+ai_processed: '2025-08-31T13:02:26.592218'
 ---
 
 <!--
@@ -39,9 +39,10 @@ Audience Avatar
 [[content pillar 5  mustapha]]
 
 ---
-[[Content Calendar -Mustapha v1]]
+[[Content Calendar -Mustapwha v1]]
+[[Inbox/Content Calendar -Mustapha v1 copy|Content Calendar -Mustapha v1 copy]]
 ## Context  
-Where did this come from? (Article, conversation, reflection, etc.)
+[[Projects MOC]]
 
 ## Next Step  
 - [ ] Convert to permanent note?

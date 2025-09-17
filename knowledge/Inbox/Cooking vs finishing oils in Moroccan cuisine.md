@@ -1,3 +1,9 @@
+---
+created: 2025-08-23 16:40
+tags: [argan-oil, cooking-oils, couscous, moroccan-cooking-techniques, moroccan-cuisine,
+  olive-oil, smen, tagine]
+ai_processed: '2025-08-31T13:12:41.821184'
+---
 **Thread 1**
 
 - **Opening Hook:** Most people ruin Moroccan dishes without realizing it. The secret? Knowing when to cook with oil and when to finish with it.*

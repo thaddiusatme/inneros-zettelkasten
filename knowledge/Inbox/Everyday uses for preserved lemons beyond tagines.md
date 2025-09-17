@@ -1,3 +1,8 @@
+---
+created: 2025-08-23 16:45
+tags: [pesto, pizza, quinoa, rice-pilaf, sauces, seasonings, spreads, vinaigrettes]
+ai_processed: '2025-08-31T13:02:05.442313'
+---
 **Thread 1**
 
 - **Opening Hook:** Preserved lemons aren’t just for Moroccan tagines. Once you try these everyday hacks, you’ll wonder how you ever cooked without them.

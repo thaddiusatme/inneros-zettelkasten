@@ -1,3 +1,8 @@
+---
+created: 2025-08-23 16:44
+tags: [caraway, chili, coriander, cumin, garlic, salt, sesameseeds, vinegar]
+ai_processed: '2025-08-31T13:19:07.672938'
+---
 **Thread 1**
 
 - **Opening Hook:** Your harissa tastes flat because you’re making these rookie mistakes. Fix them, and it’ll taste like fire and silk at the same time.

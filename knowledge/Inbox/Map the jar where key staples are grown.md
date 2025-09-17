@@ -1,5 +1,8 @@
-Got it! You're asking for viral-style Facebook threads around the idea **“Map the Jar: where key staples are grown”** — basically helping people see where the food in their pantry truly comes from. Here are five thread drafts designed to spark curiosity and engagement:
-
+---
+created: 2025-08-28 21:20
+tags: [agriculture, culinary-travel, cultural-exchange, food-security, global-supply-chain,
+  herearetheextractedtagsfood-origins, international-trade, sustainability]
+ai_processed: '2025-08-31T12:59:22.102456'
 ---
 
 **Thread 1**
