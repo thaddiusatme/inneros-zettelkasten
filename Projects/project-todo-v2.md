@@ -1,23 +1,70 @@
 # InnerOS Zettelkasten - Project Todo v2.0
  
-**Last Updated**: 2025-08-20 16:32 PDT  
-**Status**: Phase 5 Complete → Knowledge Graph Enhancement & Phase 6 Prep  
+**Last Updated**: 2025-09-16 21:48 PDT  
+**Status**: Phase 5 Complete → Directory Organization Project Active  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
- 
-> **Latest Progress**: Phase 5 AI features **PRODUCTION READY** ✅. Knowledge graph analysis complete with specific connectivity improvement plan. Focus shifts to network enhancement and Phase 6 multi-user foundations.
- 
+
+> **Latest Progress**: Phase 5 AI features **PRODUCTION READY** ✅. **NEW PROJECT**: Safety-First Directory Organization - complete specification ready for TDD implementation.
+
 ---
- 
-## 🎯 Current Sprint: Knowledge Graph Enhancement + Bug Fixes
 
-#### ✅ Completed (2025-08-20)
-- Engine-level mitigation for template 'created' placeholder in `WorkflowManager.process_inbox_note()` (raw-frontmatter preprocessing)
-- Unit tests added for placeholder patterns (`{{date}}`, EJS) and strict dry-run no-write behavior (fast + AI paths)
-- Branch pushed: `fix/template-placeholders-content-pipeline`
-- Docs updated: `Projects/inneros-manifest-v2.md` decision log, `Projects/project-todo-v2.md` Bug 1 status
+## 🎯 Current Sprint: Safety-First Directory Organization
 
-### 🔴 Critical - Bug Fixes & System Issues (Immediate)
- 
+### 📋 **Project Status: READY FOR IMPLEMENTATION**
+
+**Epic**: Organize Inbox Files into Correct Directories Without Breaking Links
+As a PKM maintainer, I want misplaced notes in the Inbox/ to be automatically routed to their correct directories (Permanent Notes/, Literature Notes/, Fleeting Notes/) based on their type field, so that my Zettelkasten stays consistent and my wiki-links remain intact.
+
+#### ✅ Completed Planning (2025-09-16)
+- ✅ **Problem Analysis**: Identified notes with mismatched type fields in Inbox/
+  - Examples: `type: permanent` in Inbox/ instead of `Permanent Notes/`
+  - Root cause: AI workflow updating types but not moving files
+- ✅ **Complete User Story Backlog**: 7 user stories with detailed acceptance criteria
+- ✅ **Architecture Design**: Core modules and CLI interface defined
+- ✅ **MVP Strategy**: 3-phase approach (backup+report → semi-auto → full automation)
+
+#### 🚀 **Ready for Implementation: P0 Safety Infrastructure**
+
+| ID | User Story | Priority | Status |
+|----|------------|----------|--------|
+| P0-1 | **Backup System**: Timestamped backup with rollback capability | High | Ready |
+| P0-2 | **Dry Run**: Preview moves without mutations, JSON/Markdown output | High | Ready |
+| P0-3 | **Link Preservation**: Scan and update all [[wiki-links]] variants | High | Ready |
+| P1-1 | **Directory Organizer**: Move files based on type field | Medium | Ready |
+| P1-2 | **Validation System**: Post-move integrity validation | Medium | Ready |
+| P2-1 | **Weekly Review Integration**: Add misplacement detection | Low | Ready |
+| P2-2 | **Maintenance Automation**: --auto-clean CLI flag | Low | Ready |
+
+#### 🛠️ **Technical Architecture**
+```
+Core Script: development/src/utils/directory_organizer.py
+├─ backup.create_backup(vault_root) -> backup_path
+├─ organizer.plan_moves(vault_root) -> MovePlan  
+├─ links.scan_links(vault_root) -> LinkIndex
+├─ links.rewrite_plan(moves, index) -> Edits
+└─ CLI flags: --dry-run, --apply, --weekly-review, --auto-clean
+```
+
+#### 🎯 **Next Action (TDD Iteration 1)**
+**User Story P0-1: Backup System**
+- Start with failing test for timestamped backup creation
+- Implement backup to `/backups/knowledge-YYYYMMDD-HHMMSS/`
+- Add rollback capability
+- Commit: `feat(directory): backup system with rollback`
+- Log lessons learned
+
+#### 🔒 **Safety Requirements (Critical)**
+- **NO file destruction** - only moves with full data preservation
+- **ALL [[wiki-links]] updated** when files change location
+- **Comprehensive backup** before any operations
+- **Dry-run mode** to preview all changes
+- **Link validation** after moves to ensure knowledge graph integrity
+- **Rollback capability** if issues detected
+
+---
+
+## 🔴 Critical - Bug Fixes & System Issues (Ongoing)
+
 #### Bug 1: YAML `created` Property Not Processing 🔴 **BLOCKING TEMPLATE FUNCTIONALITY**
 - [ ] **Investigate Templater `{{date}}` Processing Failure**
   - **File**: `knowledge/Inbox/fleeting-20250806-1520-bug-images-dissapear.md.md`

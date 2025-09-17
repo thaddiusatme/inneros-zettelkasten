@@ -1319,3 +1319,164 @@ Test malformed template handling."""
         # Should still get a valid timestamp
         import re
         assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+    # TDD RED PHASE: Templater Created Placeholder Bug Fix Tests
+    def test_templater_created_placeholder_detection(self):
+        """Test detection of unprocessed templater {{date:YYYY-MM-DD HH:mm}} placeholders - SHOULD FAIL INITIALLY."""
+        content = """---
+created: {{date:YYYY-MM-DD HH:mm}}
+type: fleeting
+status: inbox
+---
+
+Test note with unprocessed templater placeholder."""
+        
+        note_path = self.create_test_note("Inbox", "templater-test.md", content)
+        
+        # This should detect and fix the templater placeholder
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        # Verify the templater placeholder was detected and fixed
+        assert "error" not in result
+        assert result.get("template_fixed", False) is True
+        
+        # Verify the created field now has a real timestamp
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = parse_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        
+        # Should NOT contain the templater placeholder anymore
+        assert "{{date:" not in created_value
+        assert "{{date:YYYY-MM-DD HH:mm}}" not in created_value
+        
+        # Should be a valid timestamp format
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+    def test_templater_ejs_pattern_detection(self):
+        """Test detection of Templater EJS patterns like <% tp.date.now() %> - SHOULD FAIL INITIALLY."""
+        content = """---
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+type: fleeting
+status: inbox
+---
+
+Test note with EJS templater pattern."""
+        
+        note_path = self.create_test_note("Inbox", "ejs-test.md", content)
+        
+        # This should detect and fix the EJS placeholder
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        # Verify the EJS placeholder was detected and fixed
+        assert "error" not in result
+        assert result.get("template_fixed", False) is True
+        
+        # Verify the created field now has a real timestamp
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = parse_frontmatter(updated_content)
+        created_value = frontmatter.get("created")
+        
+        # Should NOT contain the EJS pattern anymore
+        assert "<%" not in created_value
+        assert "tp.date.now" not in created_value
+        
+        # Should be a valid timestamp format
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+    def test_bulk_templater_placeholder_repair(self):
+        """Test bulk repair of multiple files with templater placeholders - SHOULD FAIL INITIALLY."""
+        # Create multiple files with different templater patterns
+        test_files = [
+            ("file1.md", "created: {{date:YYYY-MM-DD HH:mm}}"),
+            ("file2.md", "created: {{date}}"),
+            ("file3.md", "created: <% tp.date.now() %>"),
+        ]
+        
+        note_paths = []
+        for filename, created_line in test_files:
+            content = f"""---
+{created_line}
+type: fleeting
+status: inbox
+---
+
+Test note {filename}."""
+            note_path = self.create_test_note("Inbox", filename, content)
+            note_paths.append(note_path)
+        
+        # Process all files
+        repaired_count = 0
+        for note_path in note_paths:
+            result = self.workflow.process_inbox_note(str(note_path))
+            if result.get("template_fixed", False):
+                repaired_count += 1
+        
+        # All files should have been repaired
+        assert repaired_count == 3
+        
+        # Verify all files now have valid timestamps
+        for note_path in note_paths:
+            with open(note_path, 'r', encoding='utf-8') as f:
+                updated_content = f.read()
+            
+            frontmatter, _ = parse_frontmatter(updated_content)
+            created_value = frontmatter.get("created")
+            
+            # Should be valid timestamp format
+            import re
+            assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+            
+            # Should not contain any templater patterns
+            assert "{{" not in created_value
+            assert "<%" not in created_value
+
+    def test_templater_placeholder_preserves_other_metadata(self):
+        """Test that templater placeholder fix preserves all other metadata - SHOULD FAIL INITIALLY."""
+        content = """---
+created: {{date:YYYY-MM-DD HH:mm}}
+type: permanent
+status: inbox
+tags: [ai-automation, template-fix, preservation-test]
+modified: '2025-08-20'
+ai_processed: '2025-08-31T13:13:20.962492'
+custom_field: important_value
+---
+
+This note should preserve all metadata except the created field."""
+        
+        note_path = self.create_test_note("Inbox", "preservation-test.md", content)
+        
+        # Process the note
+        result = self.workflow.process_inbox_note(str(note_path))
+        
+        # Verify template was fixed
+        assert result.get("template_fixed", False) is True
+        
+        # Verify all metadata is preserved
+        with open(note_path, 'r', encoding='utf-8') as f:
+            updated_content = f.read()
+        
+        frontmatter, _ = parse_frontmatter(updated_content)
+        
+        # Check that only created field was modified, others preserved
+        assert frontmatter.get("type") == "permanent"
+        assert frontmatter.get("status") == "inbox"
+        
+        # AI tagger may add tags, so verify original tags are preserved (subset check)
+        original_tags = {"ai-automation", "template-fix", "preservation-test"}
+        current_tags = set(frontmatter.get("tags", []))
+        assert original_tags.issubset(current_tags), f"Original tags {original_tags} not preserved in {current_tags}"
+        
+        assert frontmatter.get("modified") == "2025-08-20"
+        assert frontmatter.get("custom_field") == "important_value"
+        
+        # Only created field should be different (valid timestamp)
+        created_value = frontmatter.get("created")
+        import re
+        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)

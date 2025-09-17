@@ -1,3 +1,9 @@
+---
+created: 2025-08-23 16:41
+tags: [branding, chili-peppers, complexity, cumin, fake-harissa, olive-oil, starch,
+  tradition]
+ai_processed: '2025-08-31T12:54:18.307318'
+---
 **Thread 1**
 
 - **Opening Hook:** If your harissa has fillers, you’re not eating harissa. You’re eating marketing.

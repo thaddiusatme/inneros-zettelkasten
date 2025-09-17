@@ -1,3 +1,9 @@
+---
+created: 2025-08-23 16:43
+tags: [10-minute-meals, coriander, cumin, garlic, harissa-paste, olive-oil, pita-bread,
+  quick-cooking]
+ai_processed: '2025-08-31T13:03:33.600612'
+---
 Perfect. Here are five viral-style Facebook threads crafted around **“The 10-minute Moroccan meal hack no one talks about.”**
 
 ---

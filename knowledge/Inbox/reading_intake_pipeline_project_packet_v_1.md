@@ -2,9 +2,9 @@
 created: '2025-08-14'
 type: permanent
 status: inbox
-tags: [analytics, automation, cli-integration, import-adapters, intake-pipeline, intake-processing,
-  migration-rollout, normalization]
-ai_processed: '2025-08-23T14:20:44.757658'
+tags: [analytics, automation, cli-integration, herearetheextractedtagsobsidian, import-adapters,
+  intake-pipeline, intake-processing, metrics]
+ai_processed: '2025-08-31T13:17:09.095076'
 ---
 
 # Document 1: Project Charter and Success Metrics

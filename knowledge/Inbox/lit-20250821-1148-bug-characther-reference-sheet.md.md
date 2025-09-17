@@ -3,11 +3,11 @@ created: 2025-08-21 11:48
 type: literature
 status: inbox
 visibility: private
-tags: [audience-avatar, avatar, avatar-scenario, character-reference-sheet, chatbot-assistant,
-  chatgpt, chatgpt-image-augmentation, illustration]
+tags: [audience-avatar, avatar, avatar-scenario, character-development, character-reference-sheet,
+  chatbot-assistant, chatgpt, chatgpt-image-augmentation]
 source: null
 author: null
-ai_processed: '2025-08-23T14:24:18.265253'
+ai_processed: '2025-08-31T13:25:19.547560'
 ---
 
 ![[03cdf9fa-6c84-4794-816d-5bdbfccc09ba.png]]

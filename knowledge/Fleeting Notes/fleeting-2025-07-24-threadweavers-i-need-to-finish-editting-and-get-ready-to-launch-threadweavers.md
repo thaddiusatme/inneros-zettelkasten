@@ -4,8 +4,8 @@ type: fleeting
 status: inbox
 visibility: private
 tags: [a, ai-personalities, demographic-targeting, free-version, marketing-strategy,
-  personality-types, rim-world, thoughts]
-ai_processed: '2025-08-23T14:25:19.973676'
+  personality-types, rim-world, soulful-ai]
+ai_processed: '2025-08-31T13:26:43.524244'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:
