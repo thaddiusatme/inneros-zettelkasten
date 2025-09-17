@@ -22,7 +22,7 @@ tags:
 
 ## "Prompts for Brainstorming & Idea Generation"
 
-▪
+[[prompt-newsletter-20250917-1000.md]]
 
 ## "Advanced Prompting Techniques (e.g., Chain-of-Thought)"
 

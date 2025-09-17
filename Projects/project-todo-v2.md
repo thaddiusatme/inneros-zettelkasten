@@ -1,14 +1,38 @@
 # InnerOS Zettelkasten - Project Todo v2.0
  
-**Last Updated**: 2025-09-16 21:48 PDT  
-**Status**: Phase 5 Complete → Directory Organization Project Active  
+**Last Updated**: 2025-09-17 14:37 PDT  
+**Status**: Phase 5 Complete → Multiple Active Projects  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context
 
-> **Latest Progress**: Phase 5 AI features **PRODUCTION READY** ✅. **NEW PROJECT**: Safety-First Directory Organization - complete specification ready for TDD implementation.
+> **Latest Progress**: Phase 5 AI features **PRODUCTION READY** ✅. **NEW PROJECT APPROVED**: Fleeting Note Lifecycle Management MVP - Phase 5.6 extension ready for implementation. Directory Organization remains available for implementation.
 
 ---
 
-## 🎯 Current Sprint: Safety-First Directory Organization
+## 🎯 Active Projects (Multiple Implementations Ready)
+
+### **🔥 NEW: Fleeting Note Lifecycle Management MVP** (Phase 5.6 Extension)
+
+**Epic**: Systematic Fleeting Note Lifecycle Management  
+As a knowledge worker, I want systematic fleeting note progression workflows so that valuable ideas get promoted and clutter gets cleared efficiently.
+
+**Status**: ✅ **PLANNING COMPLETE** → Ready for TDD Implementation  
+**Reference**: `Projects/fleeting-note-lifecycle-mvp-manifest.md`  
+**Workflow**: `.windsurf/workflows/fleeting-note-lifecycle-workflow.md`
+
+#### **Implementation Phases Ready**:
+- **Phase 1**: US-1 Fleeting Note Age Detection (`--fleeting-health` command)
+- **Phase 2**: US-2 Quality-Based AI Triage (`--fleeting-triage` command)  
+- **Phase 3**: US-3 Simple Promotion Workflow (`--promote-note` command)
+
+#### **Integration Approach**: 
+✅ Extends existing WorkflowManager and CLI infrastructure  
+✅ Leverages Phase 5 AI pipeline (quality scoring, tagging, connections)  
+✅ Uses production-ready DirectoryOrganizer for safe file operations  
+✅ Follows established TDD and integration project methodologies
+
+---
+
+## 🎯 Alternative Sprint: Safety-First Directory Organization
 
 ### 📋 **Project Status: READY FOR IMPLEMENTATION**
 
