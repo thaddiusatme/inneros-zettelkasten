@@ -229,5 +229,210 @@ class TestDirectoryOrganizerRollback(unittest.TestCase):
             self.organizer.rollback("/nonexistent/backup/path")
 
 
+class TestDirectoryOrganizerDryRun(unittest.TestCase):
+    """Test dry run move planning functionality."""
+    
+    def assertHasAttr(self, obj, attr):
+        """Helper method to assert object has attribute."""
+        self.assertTrue(hasattr(obj, attr), f"Object should have attribute '{attr}'")
+    
+    def setUp(self):
+        """Set up test fixtures for dry run tests."""
+        self.test_dir = tempfile.mkdtemp()
+        self.vault_root = Path(self.test_dir) / "test_vault"
+        self.backup_root = Path(self.test_dir) / "backups"
+        
+        self.vault_root.mkdir(parents=True)
+        self.backup_root.mkdir(parents=True)
+        
+        # Create realistic directory structure with misplaced files
+        self._create_misplaced_files_structure()
+        
+        self.organizer = DirectoryOrganizer(
+            vault_root=str(self.vault_root),
+            backup_root=str(self.backup_root)
+        )
+    
+    def tearDown(self):
+        """Clean up test fixtures."""
+        shutil.rmtree(self.test_dir)
+    
+    def _create_misplaced_files_structure(self):
+        """Create realistic test structure with misplaced files."""
+        # Create proper directories
+        dirs = ["Inbox", "Permanent Notes", "Fleeting Notes", "Literature Notes", "Media"]
+        for dir_name in dirs:
+            (self.vault_root / dir_name).mkdir()
+        
+        # Create files that need moving (misplaced based on type field)
+        misplaced_files = {
+            # Files in Inbox that should be moved based on type
+            "Inbox/permanent-note-in-inbox.md": "---\ntype: permanent\ntitle: Test Permanent Note\n---\n\nContent here.",
+            "Inbox/literature-note-in-inbox.md": "---\ntype: literature\ntitle: Test Literature Note\n---\n\nContent here.",
+            "Inbox/fleeting-note-in-inbox.md": "---\ntype: fleeting\ntitle: Test Fleeting Note\n---\n\nContent here.",
+            
+            # Files with no type field (should remain in Inbox)
+            "Inbox/no-type-field.md": "---\ntitle: No Type Field\n---\n\nContent without type.",
+            
+            # Files with unknown type
+            "Inbox/unknown-type.md": "---\ntype: unknown\ntitle: Unknown Type\n---\n\nContent here.",
+            
+            # Files already in correct location (should not move)
+            "Permanent Notes/already-permanent.md": "---\ntype: permanent\ntitle: Already Permanent\n---\n\nContent.",
+            "Literature Notes/already-literature.md": "---\ntype: literature\ntitle: Already Literature\n---\n\nContent.",
+            
+            # Files with malformed YAML
+            "Inbox/malformed-yaml.md": "---\ntype permanent\ntitle: Malformed YAML\n---\n\nContent.",
+            
+            # Non-markdown files (should not be processed)
+            "Inbox/image.png": "fake image content",
+            "Media/document.pdf": "fake pdf content"
+        }
+        
+        for file_path, content in misplaced_files.items():
+            full_path = self.vault_root / file_path
+            full_path.parent.mkdir(parents=True, exist_ok=True)
+            full_path.write_text(content)
+    
+    def test_plan_moves_returns_move_plan_object(self):
+        """RED: Test that plan_moves returns structured move plan."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should return MovePlan object with required attributes
+        self.assertHasAttr(move_plan, 'moves')
+        self.assertHasAttr(move_plan, 'conflicts')
+        self.assertHasAttr(move_plan, 'unknown_types')
+        self.assertHasAttr(move_plan, 'malformed_files')
+        self.assertHasAttr(move_plan, 'summary')
+    
+    def test_plan_moves_identifies_type_based_moves(self):
+        """RED: Test that planning identifies files needing moves based on type."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should identify permanent note move
+        permanent_move = next((m for m in move_plan.moves if 'permanent-note-in-inbox.md' in str(m.source)), None)
+        self.assertIsNotNone(permanent_move, "Should identify permanent note needing move")
+        self.assertEqual(str(permanent_move.source), str(self.vault_root / "Inbox/permanent-note-in-inbox.md"))
+        self.assertEqual(str(permanent_move.target), str(self.vault_root / "Permanent Notes/permanent-note-in-inbox.md"))
+        
+        # Should identify literature note move
+        literature_move = next((m for m in move_plan.moves if 'literature-note-in-inbox.md' in str(m.source)), None)
+        self.assertIsNotNone(literature_move, "Should identify literature note needing move")
+        self.assertEqual(str(literature_move.target), str(self.vault_root / "Literature Notes/literature-note-in-inbox.md"))
+        
+        # Should identify fleeting note move
+        fleeting_move = next((m for m in move_plan.moves if 'fleeting-note-in-inbox.md' in str(m.source)), None)
+        self.assertIsNotNone(fleeting_move, "Should identify fleeting note needing move")
+        self.assertEqual(str(fleeting_move.target), str(self.vault_root / "Fleeting Notes/fleeting-note-in-inbox.md"))
+    
+    def test_plan_moves_ignores_correctly_placed_files(self):
+        """RED: Test that planning ignores files already in correct directories."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should not include files already in correct locations
+        source_paths = [str(m.source) for m in move_plan.moves]
+        self.assertNotIn(str(self.vault_root / "Permanent Notes/already-permanent.md"), source_paths)
+        self.assertNotIn(str(self.vault_root / "Literature Notes/already-literature.md"), source_paths)
+    
+    def test_plan_moves_flags_unknown_types(self):
+        """RED: Test that planning flags unknown file types."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should flag unknown type
+        unknown_files = [str(f) for f in move_plan.unknown_types]
+        self.assertIn(str(self.vault_root / "Inbox/unknown-type.md"), unknown_files)
+    
+    def test_plan_moves_flags_malformed_yaml(self):
+        """RED: Test that planning flags malformed YAML files."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should flag malformed YAML
+        malformed_files = [str(f) for f in move_plan.malformed_files]
+        self.assertIn(str(self.vault_root / "Inbox/malformed-yaml.md"), malformed_files)
+    
+    def test_plan_moves_ignores_non_markdown_files(self):
+        """RED: Test that planning ignores non-markdown files."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Should not include non-markdown files in any category
+        all_files = ([str(m.source) for m in move_plan.moves] + 
+                    [str(f) for f in move_plan.unknown_types] + 
+                    [str(f) for f in move_plan.malformed_files])
+        
+        self.assertNotIn(str(self.vault_root / "Inbox/image.png"), all_files)
+        self.assertNotIn(str(self.vault_root / "Media/document.pdf"), all_files)
+    
+    def test_plan_moves_no_file_mutations(self):
+        """RED: Test that planning makes zero file system changes."""
+        # Record original state
+        original_files = {}
+        for file_path in self.vault_root.rglob("*.md"):
+            original_files[str(file_path)] = file_path.read_text()
+        
+        # Run planning - should not mutate files
+        self.organizer.plan_moves()
+        
+        # Verify no files were changed
+        for file_path in self.vault_root.rglob("*.md"):
+            original_content = original_files.get(str(file_path))
+            if original_content is not None:
+                current_content = file_path.read_text()
+                self.assertEqual(original_content, current_content, f"File was modified: {file_path}")
+        
+        # Verify no files were created or deleted
+        current_files = set(str(p) for p in self.vault_root.rglob("*.md"))
+        original_file_set = set(original_files.keys())
+        self.assertEqual(current_files, original_file_set, "File system was modified during planning")
+    
+    def test_generate_move_report_json_format(self):
+        """RED: Test JSON report generation."""
+        move_plan = self.organizer.plan_moves()
+        json_report = self.organizer.generate_move_report(move_plan, format='json')
+        
+        # Should be valid JSON
+        import json
+        parsed = json.loads(json_report)
+        
+        # Should contain required sections
+        self.assertIn('summary', parsed)
+        self.assertIn('moves', parsed)
+        self.assertIn('issues', parsed)
+        
+        # Summary should have counts
+        self.assertIn('total_moves', parsed['summary'])
+        self.assertIn('unknown_types', parsed['summary'])
+        self.assertIn('malformed_files', parsed['summary'])
+    
+    def test_generate_move_report_markdown_format(self):
+        """RED: Test Markdown report generation."""
+        move_plan = self.organizer.plan_moves()
+        markdown_report = self.organizer.generate_move_report(move_plan, format='markdown')
+        
+        # Should contain markdown formatting
+        self.assertIn('# Directory Organization Plan', markdown_report)
+        self.assertIn('## Summary', markdown_report)
+        self.assertIn('## Planned Moves', markdown_report)
+        
+        # Should contain table formatting
+        self.assertIn('| Current Path | Target Path | Reason |', markdown_report)
+        
+        # Should contain move information
+        self.assertIn('permanent-note-in-inbox.md', markdown_report)
+    
+    def test_move_plan_summary_statistics(self):
+        """RED: Test that move plan includes accurate summary statistics."""
+        move_plan = self.organizer.plan_moves()
+        
+        # Summary should reflect actual counts
+        self.assertEqual(move_plan.summary['total_moves'], len(move_plan.moves))
+        self.assertEqual(move_plan.summary['unknown_types'], len(move_plan.unknown_types))
+        self.assertEqual(move_plan.summary['malformed_files'], len(move_plan.malformed_files))
+        
+        # Should have expected counts based on test data
+        self.assertGreaterEqual(move_plan.summary['total_moves'], 3)  # At least permanent, literature, fleeting
+        self.assertGreaterEqual(move_plan.summary['unknown_types'], 1)  # At least unknown-type.md
+        self.assertGreaterEqual(move_plan.summary['malformed_files'], 1)  # At least malformed-yaml.md
+
+
 if __name__ == "__main__":
     unittest.main()

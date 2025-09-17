@@ -45,13 +45,35 @@ Version: 1.0.0 (P0-1 TDD Implementation)
 
 import shutil
 import logging
+import json
+import yaml
 from pathlib import Path
 from datetime import datetime
+from dataclasses import dataclass
+from typing import List, Dict, Any
 
 
 class BackupError(Exception):
     """Raised when backup operations fail."""
     pass
+
+
+@dataclass
+class MoveOperation:
+    """Represents a planned file move operation."""
+    source: Path
+    target: Path
+    reason: str
+
+
+@dataclass 
+class MovePlan:
+    """Represents a complete dry run plan for directory organization."""
+    moves: List[MoveOperation]
+    conflicts: List[str]
+    unknown_types: List[Path]
+    malformed_files: List[Path]
+    summary: Dict[str, Any]
 
 
 class DirectoryOrganizer:
@@ -279,3 +301,292 @@ class DirectoryOrganizer:
                 self.logger.error(f"Emergency backup available at: {emergency_backup}")
             
             raise BackupError(error_msg)
+    
+    def plan_moves(self) -> MovePlan:
+        """
+        Plan directory organization moves without executing them.
+        
+        Analyzes vault structure and identifies files that need to be moved
+        based on their type field in YAML frontmatter. Returns a complete
+        plan without making any file system changes.
+        
+        This method provides the critical dry-run functionality that ensures
+        safe directory organization by allowing preview of all planned changes
+        before execution.
+        
+        Returns:
+            MovePlan: Complete plan with moves, issues, and summary
+            
+        Raises:
+            BackupError: If vault analysis fails
+        """
+        self.logger.info("Starting dry run analysis of vault structure")
+        
+        moves = []
+        unknown_types = []
+        malformed_files = []
+        conflicts = []
+        
+        # Type to directory mapping
+        type_to_dir = {
+            'permanent': 'Permanent Notes',
+            'literature': 'Literature Notes',
+            'fleeting': 'Fleeting Notes'
+        }
+        
+        # Scan all markdown files with comprehensive error handling
+        total_files = 0
+        processed_files = 0
+        
+        try:
+            # Get list of all markdown files first for progress tracking
+            md_files = list(self.vault_root.rglob("*.md"))
+            total_files = len(md_files)
+            self.logger.info(f"Analyzing {total_files} markdown files in vault")
+            
+            for md_file in md_files:
+                processed_files += 1
+                current_dir = md_file.parent.name
+                
+                try:
+                    # Parse YAML frontmatter with enhanced error handling
+                    try:
+                        content = md_file.read_text(encoding='utf-8')
+                    except UnicodeDecodeError:
+                        self.logger.warning(f"Unable to decode file as UTF-8: {md_file}")
+                        malformed_files.append(md_file)
+                        continue
+                    
+                    if not content.strip():
+                        self.logger.debug(f"Skipping empty file: {md_file}")
+                        continue
+                        
+                    if not content.startswith('---'):
+                        self.logger.debug(f"No YAML frontmatter: {md_file}")
+                        continue  # No frontmatter
+                    
+                    # Extract YAML section with better error handling
+                    try:
+                        yaml_end = content.index('\n---\n', 4)
+                        yaml_content = content[4:yaml_end]
+                        
+                        if not yaml_content.strip():
+                            self.logger.debug(f"Empty YAML frontmatter: {md_file}")
+                            continue
+                            
+                        metadata = yaml.safe_load(yaml_content)
+                        
+                    except ValueError as e:
+                        self.logger.debug(f"YAML format error in {md_file}: {e}")
+                        malformed_files.append(md_file)
+                        continue
+                    except yaml.YAMLError as e:
+                        self.logger.debug(f"YAML parsing error in {md_file}: {e}")
+                        malformed_files.append(md_file)
+                        continue
+                    
+                    # Validate metadata structure
+                    if not isinstance(metadata, dict):
+                        self.logger.debug(f"YAML not a dictionary in {md_file}")
+                        malformed_files.append(md_file)
+                        continue
+                        
+                    if 'type' not in metadata:
+                        self.logger.debug(f"No 'type' field in {md_file}")
+                        continue  # No type field
+                        
+                    file_type = metadata['type']
+                    
+                    # Validate type field value
+                    if not isinstance(file_type, str) or not file_type.strip():
+                        self.logger.debug(f"Invalid type value in {md_file}: {file_type}")
+                        malformed_files.append(md_file)
+                        continue
+                    
+                    file_type = file_type.strip().lower()
+                    
+                    # Check if type is known
+                    if file_type not in type_to_dir:
+                        self.logger.debug(f"Unknown type '{file_type}' in {md_file}")
+                        unknown_types.append(md_file)
+                        continue
+                    
+                    # Check if file is already in correct directory
+                    target_dir = type_to_dir[file_type]
+                    if current_dir == target_dir:
+                        self.logger.debug(f"File already in correct location: {md_file}")
+                        continue  # Already in correct location
+                    
+                    # Check for potential target conflicts
+                    target_path = self.vault_root / target_dir / md_file.name
+                    if target_path.exists():
+                        conflict_msg = f"Target already exists: {target_path}"
+                        self.logger.warning(conflict_msg)
+                        conflicts.append(conflict_msg)
+                        continue
+                    
+                    # Plan the move
+                    move_op = MoveOperation(
+                        source=md_file,
+                        target=target_path,
+                        reason=f"type: {file_type}"
+                    )
+                    moves.append(move_op)
+                    self.logger.debug(f"Planned move: {md_file.name} → {target_dir}")
+                    
+                except PermissionError as e:
+                    self.logger.warning(f"Permission denied accessing {md_file}: {e}")
+                    malformed_files.append(md_file)
+                except Exception as e:
+                    self.logger.warning(f"Unexpected error processing {md_file}: {e}")
+                    malformed_files.append(md_file)
+                    
+        except Exception as e:
+            error_msg = f"Critical error during vault analysis: {e}"
+            self.logger.error(error_msg)
+            raise BackupError(error_msg)
+        
+        # Generate comprehensive summary with enhanced metadata
+        files_processed = processed_files
+        files_with_frontmatter = len(moves) + len(unknown_types) + len(malformed_files)
+        files_correctly_placed = total_files - files_with_frontmatter
+        
+        summary = {
+            'total_moves': len(moves),
+            'unknown_types': len(unknown_types),
+            'malformed_files': len(malformed_files),
+            'conflicts': len(conflicts),
+            'total_files_analyzed': total_files,
+            'files_processed': files_processed,
+            'files_with_frontmatter': files_with_frontmatter,
+            'files_correctly_placed': files_correctly_placed,
+            'analysis_complete': True
+        }
+        
+        plan = MovePlan(
+            moves=moves,
+            conflicts=conflicts,
+            unknown_types=unknown_types,
+            malformed_files=malformed_files,
+            summary=summary
+        )
+        
+        # Enhanced completion logging
+        self.logger.info("Dry run analysis complete:")
+        self.logger.info(f"  - {total_files} total files analyzed")
+        self.logger.info(f"  - {len(moves)} moves planned")
+        self.logger.info(f"  - {len(unknown_types)} files with unknown types")
+        self.logger.info(f"  - {len(malformed_files)} files with malformed YAML")
+        self.logger.info(f"  - {len(conflicts)} potential conflicts detected")
+        self.logger.info(f"  - {files_correctly_placed} files already correctly placed")
+        
+        if len(conflicts) > 0:
+            self.logger.warning("Conflicts detected! Manual review required before execution.")
+        
+        return plan
+    
+    def generate_move_report(self, move_plan: MovePlan, format: str = 'markdown') -> str:
+        """
+        Generate a report of the planned moves.
+        
+        Args:
+            move_plan: The move plan to generate report for
+            format: Output format ('json' or 'markdown')
+            
+        Returns:
+            str: Formatted report
+        """
+        if format == 'json':
+            return self._generate_json_report(move_plan)
+        elif format == 'markdown':
+            return self._generate_markdown_report(move_plan)
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+    
+    def _generate_json_report(self, move_plan: MovePlan) -> str:
+        """Generate JSON format report."""
+        report_data = {
+            'summary': move_plan.summary,
+            'moves': [
+                {
+                    'source': str(move.source),
+                    'target': str(move.target),
+                    'reason': move.reason
+                }
+                for move in move_plan.moves
+            ],
+            'issues': {
+                'unknown_types': [str(f) for f in move_plan.unknown_types],
+                'malformed_files': [str(f) for f in move_plan.malformed_files],
+                'conflicts': move_plan.conflicts
+            }
+        }
+        return json.dumps(report_data, indent=2)
+    
+    def _generate_markdown_report(self, move_plan: MovePlan) -> str:
+        """Generate comprehensive Markdown format report."""
+        from datetime import datetime
+        
+        lines = [
+            '# Directory Organization Plan',
+            '',
+            f'**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+            f'**Vault**: {self.vault_root}',
+            '',
+            '## Summary',
+            f'- **Total files analyzed**: {move_plan.summary.get("total_files_analyzed", "N/A")}',
+            f'- **Files with frontmatter**: {move_plan.summary.get("files_with_frontmatter", "N/A")}',
+            f'- **Files correctly placed**: {move_plan.summary.get("files_correctly_placed", "N/A")}',
+            f'- **Total moves planned**: {move_plan.summary["total_moves"]}',
+            f'- **Unknown types**: {move_plan.summary["unknown_types"]}',
+            f'- **Malformed files**: {move_plan.summary["malformed_files"]}',
+            f'- **Conflicts detected**: {move_plan.summary["conflicts"]}',
+            '',
+            '## Planned Moves',
+            ''
+        ]
+        
+        if move_plan.moves:
+            lines.extend([
+                '| Current Path | Target Path | Reason |',
+                '|--------------|-------------|--------|'
+            ])
+            
+            for move in move_plan.moves:
+                source_rel = move.source.relative_to(self.vault_root)
+                target_rel = move.target.relative_to(self.vault_root)
+                lines.append(f'| {source_rel} | {target_rel} | {move.reason} |')
+        else:
+            lines.append('*No moves needed - all files are properly organized!*')
+        
+        if move_plan.unknown_types:
+            lines.extend(['', '## Unknown Types', ''])
+            for file_path in move_plan.unknown_types:
+                rel_path = file_path.relative_to(self.vault_root)
+                lines.append(f'- {rel_path}')
+        
+        if move_plan.malformed_files:
+            lines.extend(['', '## Malformed Files', ''])
+            for file_path in move_plan.malformed_files:
+                rel_path = file_path.relative_to(self.vault_root)
+                lines.append(f'- {rel_path}')
+        
+        if move_plan.conflicts:
+            lines.extend(['', '## Conflicts ⚠️', ''])
+            lines.append('**These conflicts must be resolved before executing moves:**')
+            lines.append('')
+            for conflict in move_plan.conflicts:
+                lines.append(f'- {conflict}')
+        
+        # Add safety notice
+        if move_plan.moves or move_plan.conflicts:
+            lines.extend([
+                '',
+                '---',
+                '',
+                '**⚠️ SAFETY NOTICE**: This is a dry run report. No files have been moved.',
+                'Always create a backup before executing any file moves!',
+                ''
+            ])
+        
+        return '\n'.join(lines)
