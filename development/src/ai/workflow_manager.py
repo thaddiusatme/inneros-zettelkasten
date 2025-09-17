@@ -323,6 +323,10 @@ class WorkflowManager:
         else:
             results["file_updated"] = False
         
+        # Report template processing status
+        if any_template_fixed:
+            results["template_fixed"] = True
+        
         return results
     
     def _fix_template_placeholders(self, frontmatter: Dict, note_file: Path) -> bool:
