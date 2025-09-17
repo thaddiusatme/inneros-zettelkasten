@@ -1,0 +1,1 @@
+I need to install whisper and bring nitro to brits attention 

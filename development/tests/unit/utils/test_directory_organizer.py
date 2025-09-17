@@ -15,9 +15,11 @@ from datetime import datetime
 import sys
 
 # Add src to Python path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+development_dir = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(development_dir / "src"))
+sys.path.insert(0, str(development_dir))
 
-from utils.directory_organizer import DirectoryOrganizer, BackupError
+from src.utils.directory_organizer import DirectoryOrganizer, BackupError
 
 
 class TestDirectoryOrganizerBackup(unittest.TestCase):

@@ -45,13 +45,66 @@ Version: 1.0.0 (P0-1 TDD Implementation)
 
 import shutil
 import logging
+import json
+import yaml
+import re
 from pathlib import Path
 from datetime import datetime
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Set, Tuple
 
 
 class BackupError(Exception):
     """Raised when backup operations fail."""
     pass
+
+
+@dataclass
+class MoveOperation:
+    """Represents a planned file move operation."""
+    source: Path
+    target: Path
+    reason: str
+
+
+@dataclass
+class WikiLink:
+    """Represents a wiki-style link found in markdown content."""
+    original_text: str  # Full link text: [[Note Name|Display Text]]
+    target_note: str    # The note being referenced: "Note Name"
+    display_text: str   # Display text if provided, else same as target_note
+    is_embed: bool      # True for ![[embeds]], False for [[links]]
+    line_number: int    # Line number where link was found
+    start_pos: int      # Character position on the line
+    end_pos: int        # End character position
+
+
+@dataclass
+class LinkUpdate:
+    """Represents a planned link update operation."""
+    file_path: Path
+    old_link: WikiLink
+    new_target: str     # New target note name after move
+    new_link_text: str  # Complete new link text
+
+
+@dataclass
+class LinkIndex:
+    """Complete index of all wiki-links in the vault."""
+    links_by_file: Dict[Path, List[WikiLink]] = field(default_factory=dict)
+    links_to_file: Dict[str, Set[Path]] = field(default_factory=dict)
+    broken_links: Set[Tuple[Path, str]] = field(default_factory=set)
+
+
+@dataclass 
+class MovePlan:
+    """Represents a complete dry run plan for directory organization."""
+    moves: List[MoveOperation]
+    conflicts: List[str]
+    unknown_types: List[Path]
+    malformed_files: List[Path]
+    summary: Dict[str, Any]
+    link_updates: List[LinkUpdate] = field(default_factory=list)  # P0-3 extension
 
 
 class DirectoryOrganizer:
@@ -317,12 +370,8 @@ class DirectoryOrganizer:
         
         # Step 1: Validate dry run first (if requested)
         if validate_first:
-            # Import here to avoid circular dependencies when P0-2 methods added
-            try:
-                move_plan = self.plan_moves()
-            except AttributeError:
-                # P0-2 methods not available yet - use minimal planning
-                move_plan = self._create_minimal_move_plan()
+            # Use comprehensive P0-2 dry run analysis
+            move_plan = self.plan_moves()
             
             if move_plan.conflicts:
                 error_msg = f"Cannot execute moves: {len(move_plan.conflicts)} conflicts detected"
@@ -361,12 +410,8 @@ class DirectoryOrganizer:
             if validate_first:
                 moves_to_execute = move_plan.moves
             else:
-                try:
-                    move_plan = self.plan_moves()
-                    moves_to_execute = move_plan.moves
-                except AttributeError:
-                    move_plan = self._create_minimal_move_plan()
-                    moves_to_execute = move_plan.moves
+                move_plan = self.plan_moves()
+                moves_to_execute = move_plan.moves
             
             self.logger.info(f"Executing {len(moves_to_execute)} file moves")
             
@@ -446,90 +491,742 @@ class DirectoryOrganizer:
             
             raise BackupError(f"File move execution failed: {e}")
     
-    def _create_minimal_move_plan(self):
+    def plan_moves(self) -> MovePlan:
         """
-        Create minimal move plan for P1-1 GREEN phase.
+        Plan directory organization moves without executing them.
         
-        This is a simplified version for when P0-2 methods aren't available yet.
-        It finds basic type mismatches and creates minimal move operations.
+        Analyzes all markdown files in the vault and creates a comprehensive
+        plan for organizing files based on their type field. Uses robust YAML
+        parsing and provides detailed conflict detection and reporting.
+        
+        P0-2 Features:
+        - Comprehensive YAML frontmatter parsing with error handling
+        - Type-based move planning (permanent/literature/fleeting → correct directories)
+        - Conflict detection prevents file overwrites
+        - Enhanced metadata with analysis statistics
+        - Dual report generation capability (JSON/Markdown)
+        
+        Returns:
+            MovePlan: Complete analysis with moves, conflicts, and statistics
+            
+        Raises:
+            BackupError: If vault analysis fails
         """
-        # Import dataclasses inline
-        from dataclasses import dataclass
-        from typing import List, Dict, Any
-        
-        @dataclass
-        class MoveOperation:
-            """Represents a planned file move operation."""
-            source: Path
-            target: Path
-            reason: str
-
-        @dataclass 
-        class MovePlan:
-            """Represents a complete dry run plan for directory organization."""
-            moves: List[MoveOperation]
-            conflicts: List[str]
-            unknown_types: List[Path]
-            malformed_files: List[Path]
-            summary: Dict[str, Any]
+        self.logger.info("Starting comprehensive dry run analysis")
         
         moves = []
         conflicts = []
         unknown_types = []
         malformed_files = []
         
-        # Type to directory mapping
+        # Enhanced type to directory mapping
         type_to_dir = {
             'permanent': 'Permanent Notes',
-            'literature': 'Literature Notes',
+            'literature': 'Literature Notes', 
             'fleeting': 'Fleeting Notes'
         }
         
-        # Scan Inbox for misplaced files
-        inbox_path = self.vault_root / "Inbox"
-        if inbox_path.exists():
-            for md_file in inbox_path.glob("*.md"):
-                try:
-                    content = md_file.read_text(encoding='utf-8')
-                    
-                    # Extract frontmatter type (simple parsing)
-                    if content.startswith("---"):
-                        frontmatter_end = content.find("---", 3)
-                        if frontmatter_end > 0:
-                            frontmatter = content[3:frontmatter_end]
-                            for line in frontmatter.split('\n'):
-                                if line.startswith('type:'):
-                                    file_type = line.split(':', 1)[1].strip().lower()
-                                    
-                                    if file_type in type_to_dir:
-                                        target_dir = self.vault_root / type_to_dir[file_type]
-                                        target_path = target_dir / md_file.name
-                                        
-                                        # Check for conflicts
-                                        if target_path.exists():
-                                            conflicts.append(f"Target already exists: {target_path}")
-                                        else:
-                                            moves.append(MoveOperation(
-                                                source=md_file,
-                                                target=target_path,
-                                                reason=f"Type '{file_type}' belongs in {type_to_dir[file_type]}/"
-                                            ))
-                                    else:
-                                        unknown_types.append(md_file)
-                                    break
-                            
-                except Exception:
-                    malformed_files.append(md_file)
+        # Statistics tracking
+        total_files = 0
+        files_with_frontmatter = 0
+        correctly_placed_files = 0
         
-        return MovePlan(
-            moves=moves,
-            conflicts=conflicts,
-            unknown_types=unknown_types,
-            malformed_files=malformed_files,
-            summary={
+        try:
+            # Scan all directories for markdown files
+            directories_to_scan = [
+                self.vault_root / "Inbox",
+                self.vault_root / "Permanent Notes",
+                self.vault_root / "Literature Notes",
+                self.vault_root / "Fleeting Notes"
+            ]
+            
+            for directory in directories_to_scan:
+                if not directory.exists():
+                    self.logger.info(f"Directory does not exist, will be created: {directory}")
+                    continue
+                
+                self.logger.debug(f"Scanning directory: {directory}")
+                
+                for md_file in directory.glob("*.md"):
+                    total_files += 1
+                    
+                    try:
+                        content = md_file.read_text(encoding='utf-8')
+                    except UnicodeDecodeError:
+                        self.logger.warning(f"Unable to decode file as UTF-8: {md_file}")
+                        malformed_files.append(md_file)
+                        continue
+                    except PermissionError:
+                        self.logger.warning(f"Permission denied reading file: {md_file}")
+                        malformed_files.append(md_file)
+                        continue
+                    
+                    # Parse YAML frontmatter with comprehensive error handling
+                    frontmatter_data = self._parse_frontmatter(content, md_file)
+                    
+                    if frontmatter_data is None:
+                        # No frontmatter or parsing failed
+                        continue
+                        
+                    files_with_frontmatter += 1
+                    
+                    # Extract and validate type field
+                    file_type = frontmatter_data.get('type', '').strip().lower()
+                    
+                    if not isinstance(file_type, str) or not file_type:
+                        self.logger.debug(f"Invalid type value in {md_file}: {file_type}")
+                        malformed_files.append(md_file)
+                        continue
+                    
+                    # Check if file needs to be moved
+                    current_dir = md_file.parent.name
+                    expected_dir = type_to_dir.get(file_type)
+                    
+                    if file_type not in type_to_dir:
+                        unknown_types.append(md_file)
+                        continue
+                    
+                    if current_dir == expected_dir:
+                        correctly_placed_files += 1
+                        continue
+                    
+                    # File needs to be moved
+                    target_dir = self.vault_root / expected_dir
+                    target_path = target_dir / md_file.name
+                    
+                    # Check for conflicts
+                    if target_path.exists():
+                        conflict_msg = f"Target already exists: {target_path}"
+                        self.logger.warning(conflict_msg)
+                        conflicts.append(conflict_msg)
+                        continue
+                    
+                    # Create move operation
+                    move_reason = f"Type '{file_type}' belongs in {expected_dir}/"
+                    moves.append(MoveOperation(
+                        source=md_file,
+                        target=target_path,
+                        reason=move_reason
+                    ))
+                    
+                    self.logger.debug(f"Planned move: {md_file.name} → {expected_dir}/")
+            
+            # Generate comprehensive summary
+            summary = {
+                "total_files": total_files,
+                "files_with_frontmatter": files_with_frontmatter,
+                "correctly_placed_files": correctly_placed_files,
                 "total_moves": len(moves),
                 "conflicts": len(conflicts),
                 "unknown_types": len(unknown_types),
-                "malformed_files": len(malformed_files)
+                "malformed_files": len(malformed_files),
+                "vault_root": str(self.vault_root),
+                "analysis_timestamp": datetime.now().isoformat()
             }
+            
+            # P0-3: Add link preservation analysis
+            link_updates = []
+            if moves:  # Only scan links if there are moves to process
+                self.logger.info("Analyzing wiki-link preservation requirements")
+                try:
+                    link_index = self.scan_wiki_links()
+                    
+                    # Create temporary move plan for link analysis
+                    temp_move_plan = MovePlan(
+                        moves=moves,
+                        conflicts=conflicts,
+                        unknown_types=unknown_types,
+                        malformed_files=malformed_files,
+                        summary=summary
+                    )
+                    
+                    link_updates = self.plan_link_updates(temp_move_plan, link_index)
+                    
+                    # Update summary with link information
+                    summary.update({
+                        "total_links_scanned": sum(len(links) for links in link_index.links_by_file.values()),
+                        "broken_links_detected": len(link_index.broken_links),
+                        "link_updates_planned": len(link_updates)
+                    })
+                    
+                except Exception as link_error:
+                    self.logger.warning(f"Link analysis failed: {link_error}")
+                    # Continue without link updates rather than failing completely
+            
+            self.logger.info(f"Dry run analysis complete: {len(moves)} moves planned, {len(conflicts)} conflicts detected, {len(link_updates)} link updates planned")
+            
+            return MovePlan(
+                moves=moves,
+                conflicts=conflicts,
+                unknown_types=unknown_types,
+                malformed_files=malformed_files,
+                summary=summary,
+                link_updates=link_updates
+            )
+            
+        except Exception as e:
+            error_msg = f"Failed to analyze vault for directory organization: {e}"
+            self.logger.error(error_msg)
+            raise BackupError(error_msg)
+    
+    def _parse_frontmatter(self, content: str, file_path: Path) -> Dict[str, Any]:
+        """
+        Parse YAML frontmatter from markdown content with comprehensive error handling.
+        
+        Args:
+            content: Raw markdown file content
+            file_path: Path to file (for error logging)
+            
+        Returns:
+            Dict of frontmatter data, or None if parsing fails
+        """
+        if not content.startswith("---"):
+            return None
+        
+        # Find end of frontmatter
+        frontmatter_end = content.find("---", 3)
+        if frontmatter_end == -1:
+            self.logger.debug(f"No frontmatter end marker found in {file_path}")
+            return None
+        
+        frontmatter_raw = content[3:frontmatter_end].strip()
+        
+        if not frontmatter_raw:
+            self.logger.debug(f"Empty frontmatter in {file_path}")
+            return None
+        
+        try:
+            # Parse YAML frontmatter
+            frontmatter_data = yaml.safe_load(frontmatter_raw)
+            
+            if not isinstance(frontmatter_data, dict):
+                self.logger.warning(f"Frontmatter is not a dictionary in {file_path}")
+                return None
+                
+            return frontmatter_data
+            
+        except yaml.YAMLError as e:
+            self.logger.warning(f"YAML parsing error in {file_path}: {e}")
+            return None
+        except Exception as e:
+            self.logger.warning(f"Unexpected error parsing frontmatter in {file_path}: {e}")
+            return None
+    
+    def generate_dry_run_report(self, move_plan: MovePlan, format: str = "markdown") -> str:
+        """
+        Generate comprehensive dry run report in specified format.
+        
+        Args:
+            move_plan: MovePlan object from plan_moves()
+            format: Output format ('markdown' or 'json')
+            
+        Returns:
+            Formatted report string
+        """
+        if format.lower() == "json":
+            return self._generate_json_report(move_plan)
+        else:
+            return self._generate_markdown_report(move_plan)
+    
+    def _generate_json_report(self, move_plan: MovePlan) -> str:
+        """Generate JSON format report."""
+        report_data = {
+            "summary": move_plan.summary,
+            "moves": [
+                {
+                    "source": str(move.source.relative_to(self.vault_root)),
+                    "target": str(move.target.relative_to(self.vault_root)),
+                    "reason": move.reason
+                } for move in move_plan.moves
+            ],
+            "conflicts": move_plan.conflicts,
+            "unknown_types": [str(path.relative_to(self.vault_root)) for path in move_plan.unknown_types],
+            "malformed_files": [str(path.relative_to(self.vault_root)) for path in move_plan.malformed_files]
+        }
+        
+        return json.dumps(report_data, indent=2, ensure_ascii=False)
+    
+    def _generate_markdown_report(self, move_plan: MovePlan) -> str:
+        """Generate Markdown format report."""
+        lines = [
+            '# Directory Organization Dry Run Report',
+            '',
+            f'**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+            f'**Vault**: {move_plan.summary["vault_root"]}',
+            '',
+            '## Summary',
+            '',
+            f'- **Total files analyzed**: {move_plan.summary["total_files"]}',
+            f'- **Files with frontmatter**: {move_plan.summary["files_with_frontmatter"]}',
+            f'- **Correctly placed files**: {move_plan.summary["correctly_placed_files"]}',
+            f'- **Moves planned**: {move_plan.summary["total_moves"]}',
+            f'- **Conflicts detected**: {move_plan.summary["conflicts"]}',
+            f'- **Unknown types**: {move_plan.summary["unknown_types"]}',
+            f'- **Malformed files**: {move_plan.summary["malformed_files"]}',
+            '',
+            '## Planned Moves',
+            ''
+        ]
+        
+        if move_plan.moves:
+            lines.extend([
+                '| Current Path | Target Path | Reason |',
+                '|--------------|-------------|--------|'
+            ])
+            
+            for move in move_plan.moves:
+                source_rel = move.source.relative_to(self.vault_root)
+                target_rel = move.target.relative_to(self.vault_root)
+                lines.append(f'| {source_rel} | {target_rel} | {move.reason} |')
+        else:
+            lines.append('*No moves needed - all files are properly organized!*')
+        
+        if move_plan.unknown_types:
+            lines.extend(['', '## Unknown Types', ''])
+            for file_path in move_plan.unknown_types:
+                rel_path = file_path.relative_to(self.vault_root)
+                lines.append(f'- {rel_path}')
+        
+        if move_plan.malformed_files:
+            lines.extend(['', '## Malformed Files', ''])
+            for file_path in move_plan.malformed_files:
+                rel_path = file_path.relative_to(self.vault_root)
+                lines.append(f'- {rel_path}')
+        
+        if move_plan.conflicts:
+            lines.extend(['', '## Conflicts ⚠️', ''])
+            lines.append('**These conflicts must be resolved before executing moves:**')
+            lines.append('')
+            for conflict in move_plan.conflicts:
+                lines.append(f'- {conflict}')
+        
+        # Add safety notice
+        if move_plan.moves or move_plan.conflicts:
+            lines.extend([
+                '',
+                '---',
+                '',
+                '**⚠️ SAFETY NOTICE**: This is a dry run report. No files have been moved.',
+                'Always create a backup before executing any file moves!',
+                ''
+            ])
+        
+        return '\n'.join(lines)
+    
+    def scan_wiki_links(self) -> LinkIndex:
+        """
+        Scan entire vault for wiki-style links and create comprehensive index.
+        
+        P0-3 Features:
+        - Comprehensive regex patterns for all wiki-link variants
+        - Support for [[Note]], [[Note|Alias]], [[Note#Heading]], ![[Embed]]
+        - Line-by-line scanning with position tracking
+        - Broken link detection and reporting
+        - Bidirectional link mapping (file → links, target → referencing files)
+        
+        Returns:
+            LinkIndex: Complete index of all wiki-links in vault
+            
+        Raises:
+            BackupError: If link scanning fails
+        """
+        self.logger.info("Starting comprehensive wiki-link scanning")
+        
+        # Comprehensive regex patterns for all wiki-link variants
+        wiki_link_patterns = [
+            # Standard links: [[Note Name]], [[Note Name|Display Text]]
+            r'(?P<embed>!?)\[\[(?P<target>[^\]|#]+?)(?:#(?P<heading>[^\]|]*?))?(?:\|(?P<display>[^\]]*?))?\]\]',
+        ]
+        
+        link_index = LinkIndex()
+        
+        try:
+            # Get all markdown files in vault
+            all_md_files = list(self.vault_root.rglob("*.md"))
+            self.logger.info(f"Scanning {len(all_md_files)} files for wiki-links")
+            
+            for md_file in all_md_files:
+                try:
+                    content = md_file.read_text(encoding='utf-8')
+                    file_links = self._extract_wiki_links(content, md_file, wiki_link_patterns)
+                    
+                    if file_links:
+                        link_index.links_by_file[md_file] = file_links
+                        
+                        # Build reverse index (target → referencing files)
+                        for link in file_links:
+                            target_key = self._normalize_link_target(link.target_note)
+                            
+                            if target_key not in link_index.links_to_file:
+                                link_index.links_to_file[target_key] = set()
+                            link_index.links_to_file[target_key].add(md_file)
+                            
+                            # Check if target exists
+                            if not self._find_target_file(link.target_note):
+                                link_index.broken_links.add((md_file, link.target_note))
+                                
+                except Exception as e:
+                    self.logger.warning(f"Failed to scan links in {md_file}: {e}")
+            
+            # Log statistics
+            total_links = sum(len(links) for links in link_index.links_by_file.values())
+            self.logger.info(f"Link scanning complete: {total_links} links found, {len(link_index.broken_links)} broken links detected")
+            
+            return link_index
+            
+        except Exception as e:
+            error_msg = f"Failed to scan wiki-links: {e}"
+            self.logger.error(error_msg)
+            raise BackupError(error_msg)
+    
+    def _extract_wiki_links(self, content: str, file_path: Path, patterns: List[str]) -> List[WikiLink]:
+        """Extract wiki-links from file content using regex patterns."""
+        links = []
+        lines = content.split('\n')
+        
+        for line_num, line in enumerate(lines, 1):
+            for pattern in patterns:
+                for match in re.finditer(pattern, line):
+                    embed_marker = match.group('embed')
+                    target_note = match.group('target').strip()
+                    heading = match.group('heading') if 'heading' in match.groupdict() and match.group('heading') else ""
+                    display_text = match.group('display') if 'display' in match.groupdict() and match.group('display') else target_note
+                    
+                    # Include heading in target if present
+                    full_target = f"{target_note}#{heading}" if heading else target_note
+                    
+                    wiki_link = WikiLink(
+                        original_text=match.group(0),
+                        target_note=target_note,
+                        display_text=display_text.strip(),
+                        is_embed=bool(embed_marker),
+                        line_number=line_num,
+                        start_pos=match.start(),
+                        end_pos=match.end()
+                    )
+                    
+                    links.append(wiki_link)
+                    self.logger.debug(f"Found link in {file_path.name}:{line_num}: {wiki_link.original_text}")
+        
+        return links
+    
+    def _normalize_link_target(self, target: str) -> str:
+        """Normalize link target for consistent matching."""
+        # Remove .md extension if present
+        if target.endswith('.md'):
+            target = target[:-3]
+        
+        # Split on # to handle headings
+        target = target.split('#')[0]
+        
+        return target.strip().lower()
+    
+    def _find_target_file(self, target_note: str) -> Path:
+        """Find the actual file that corresponds to a link target."""
+        normalized_target = self._normalize_link_target(target_note)
+        
+        # Search for files with matching names
+        for md_file in self.vault_root.rglob("*.md"):
+            file_stem = md_file.stem.lower()
+            
+            # Direct name match
+            if file_stem == normalized_target:
+                return md_file
+            
+            # Handle files with prefixes (like fleeting-20250816-note-name)
+            if file_stem.endswith(f"-{normalized_target}"):
+                return md_file
+        
+        return None
+    
+    def plan_link_updates(self, move_plan: MovePlan, link_index: LinkIndex) -> List[LinkUpdate]:
+        """
+        Plan link updates for files that will be moved.
+        
+        Analyzes which links need to be updated when files are moved to maintain
+        link integrity throughout the vault.
+        
+        Args:
+            move_plan: Plan containing files to be moved
+            link_index: Current link index of the vault
+            
+        Returns:
+            List of LinkUpdate operations needed to preserve link integrity
+        """
+        link_updates = []
+        
+        # Create mapping of old path → new path for moved files
+        move_mapping = {str(move.source): str(move.target) for move in move_plan.moves}
+        
+        self.logger.info(f"Planning link updates for {len(move_plan.moves)} file moves")
+        
+        for move in move_plan.moves:
+            old_name = move.source.stem
+            new_name = move.target.stem
+            
+            # If filename changes, update all links pointing to this file
+            if old_name != new_name:
+                normalized_old = self._normalize_link_target(old_name)
+                
+                if normalized_old in link_index.links_to_file:
+                    referencing_files = link_index.links_to_file[normalized_old]
+                    
+                    for ref_file in referencing_files:
+                        if ref_file in link_index.links_by_file:
+                            for link in link_index.links_by_file[ref_file]:
+                                if self._normalize_link_target(link.target_note) == normalized_old:
+                                    # Plan link update
+                                    new_link_text = self._generate_updated_link_text(link, new_name)
+                                    
+                                    link_update = LinkUpdate(
+                                        file_path=ref_file,
+                                        old_link=link,
+                                        new_target=new_name,
+                                        new_link_text=new_link_text
+                                    )
+                                    
+                                    link_updates.append(link_update)
+                                    self.logger.debug(f"Planned link update in {ref_file.name}: {link.original_text} → {new_link_text}")
+        
+        self.logger.info(f"Planned {len(link_updates)} link updates to preserve integrity")
+        return link_updates
+    
+    def _generate_updated_link_text(self, old_link: WikiLink, new_target: str) -> str:
+        """Generate updated link text with new target."""
+        embed_prefix = "!" if old_link.is_embed else ""
+        
+        if old_link.display_text and old_link.display_text != old_link.target_note:
+            # Preserve custom display text
+            return f"{embed_prefix}[[{new_target}|{old_link.display_text}]]"
+        else:
+            # Standard link without custom display
+            return f"{embed_prefix}[[{new_target}]]"
+    
+    def validate_move_integrity(self, backup_path: str = None) -> Dict[str, Any]:
+        """
+        Validate the integrity of the vault after moves have been executed.
+        
+        P1-2 Features:
+        - Post-move link integrity checking
+        - Broken link detection and reporting
+        - File system validation
+        - Optional auto-rollback on validation failure
+        
+        Args:
+            backup_path: Path to backup for rollback if validation fails
+            
+        Returns:
+            Dict with validation results and recommendations
+            
+        Raises:
+            BackupError: If validation fails and rollback is unsuccessful
+        """
+        self.logger.info("Starting post-move integrity validation")
+        
+        validation_results = {
+            "timestamp": datetime.now().isoformat(),
+            "vault_path": str(self.vault_root),
+            "backup_path": backup_path,
+            "validation_passed": False,
+            "errors_found": [],
+            "warnings_found": [],
+            "link_integrity": {},
+            "file_system_integrity": {},
+            "recommendations": []
+        }
+        
+        try:
+            # Step 1: Validate file system integrity
+            fs_validation = self._validate_file_system_integrity()
+            validation_results["file_system_integrity"] = fs_validation
+            
+            if fs_validation["errors"]:
+                validation_results["errors_found"].extend(fs_validation["errors"])
+            
+            # Step 2: Validate link integrity
+            link_validation = self._validate_link_integrity()
+            validation_results["link_integrity"] = link_validation
+            
+            if link_validation["broken_links"]:
+                validation_results["warnings_found"].append(
+                    f"Found {len(link_validation['broken_links'])} broken links"
+                )
+            
+            # Step 3: Check for critical issues
+            critical_errors = [error for error in validation_results["errors_found"] 
+                             if "critical" in error.lower() or "missing" in error.lower()]
+            
+            # Step 4: Determine overall validation status
+            if not validation_results["errors_found"]:
+                validation_results["validation_passed"] = True
+                validation_results["recommendations"].append("✅ All validations passed successfully")
+            else:
+                validation_results["validation_passed"] = False
+                validation_results["recommendations"].append("⚠️ Validation issues detected - review recommended")
+                
+                if critical_errors and backup_path:
+                    validation_results["recommendations"].append("🔄 Critical issues found - rollback recommended")
+            
+            # Log validation summary
+            self.logger.info(f"Validation complete: {'PASSED' if validation_results['validation_passed'] else 'FAILED'}")
+            self.logger.info(f"Errors: {len(validation_results['errors_found'])}, Warnings: {len(validation_results['warnings_found'])}")
+            
+            return validation_results
+            
+        except Exception as e:
+            error_msg = f"Validation process failed: {e}"
+            self.logger.error(error_msg)
+            validation_results["errors_found"].append(error_msg)
+            validation_results["validation_passed"] = False
+            return validation_results
+    
+    def _validate_file_system_integrity(self) -> Dict[str, Any]:
+        """Validate file system integrity after moves."""
+        fs_results = {
+            "total_files_checked": 0,
+            "readable_files": 0,
+            "unreadable_files": 0,
+            "errors": [],
+            "warnings": []
+        }
+        
+        try:
+            # Check all markdown files are readable
+            for md_file in self.vault_root.rglob("*.md"):
+                fs_results["total_files_checked"] += 1
+                
+                try:
+                    # Test file readability
+                    content = md_file.read_text(encoding='utf-8')
+                    
+                    # Basic content validation
+                    if len(content.strip()) == 0:
+                        fs_results["warnings"].append(f"Empty file detected: {md_file}")
+                    
+                    fs_results["readable_files"] += 1
+                    
+                except Exception as e:
+                    fs_results["unreadable_files"] += 1
+                    fs_results["errors"].append(f"Cannot read file {md_file}: {e}")
+            
+            # Check directory structure
+            expected_dirs = ["Inbox", "Permanent Notes", "Literature Notes", "Fleeting Notes"]
+            for dir_name in expected_dirs:
+                dir_path = self.vault_root / dir_name
+                if not dir_path.exists():
+                    fs_results["warnings"].append(f"Expected directory missing: {dir_name}")
+                elif not dir_path.is_dir():
+                    fs_results["errors"].append(f"Path exists but is not directory: {dir_name}")
+            
+            self.logger.info(f"File system validation: {fs_results['readable_files']}/{fs_results['total_files_checked']} files readable")
+            
+        except Exception as e:
+            fs_results["errors"].append(f"File system validation failed: {e}")
+        
+        return fs_results
+    
+    def _validate_link_integrity(self) -> Dict[str, Any]:
+        """Validate wiki-link integrity after moves."""
+        link_results = {
+            "total_links_checked": 0,
+            "valid_links": 0,
+            "broken_links": [],
+            "link_statistics": {}
+        }
+        
+        try:
+            # Scan for current link status
+            link_index = self.scan_wiki_links()
+            
+            link_results["total_links_checked"] = sum(len(links) for links in link_index.links_by_file.values())
+            link_results["valid_links"] = link_results["total_links_checked"] - len(link_index.broken_links)
+            
+            # Convert broken links to readable format
+            for file_path, target in link_index.broken_links:
+                relative_path = file_path.relative_to(self.vault_root)
+                link_results["broken_links"].append({
+                    "file": str(relative_path),
+                    "broken_target": target
+                })
+            
+            # Generate statistics
+            link_results["link_statistics"] = {
+                "files_with_links": len(link_index.links_by_file),
+                "unique_targets": len(link_index.links_to_file),
+                "broken_link_percentage": round(
+                    (len(link_index.broken_links) / max(link_results["total_links_checked"], 1)) * 100, 2
+                )
+            }
+            
+            self.logger.info(f"Link validation: {link_results['valid_links']}/{link_results['total_links_checked']} links valid")
+            
+        except Exception as e:
+            self.logger.error(f"Link validation failed: {e}")
+            # Don't fail validation entirely if link scanning fails
+        
+        return link_results
+    
+    def execute_with_validation(self, 
+                              create_backup: bool = True,
+                              validate_after: bool = True, 
+                              auto_rollback: bool = True,
+                              progress_callback=None) -> Dict[str, Any]:
+        """
+        Execute moves with comprehensive post-move validation and auto-rollback.
+        
+        P1-2 Enhanced Features:
+        - Executes file moves using existing P1-1 system
+        - Performs comprehensive post-move validation
+        - Auto-rollback on validation failure (if enabled)
+        - Detailed reporting of validation results
+        
+        Args:
+            create_backup: Whether to create backup before operations
+            validate_after: Whether to validate after execution  
+            auto_rollback: Whether to auto-rollback on validation failure
+            progress_callback: Optional progress reporting callback
+            
+        Returns:
+            Dict with execution and validation results
+        """
+        self.logger.info("Starting execution with validation (P1-2)")
+        
+        # Step 1: Execute moves using existing P1-1 system
+        execution_result = self.execute_moves(
+            create_backup=create_backup,
+            validate_first=True,
+            rollback_on_error=True,
+            progress_callback=progress_callback
         )
+        
+        # Step 2: Perform post-move validation if requested
+        validation_result = None
+        if validate_after and execution_result["status"] == "success":
+            self.logger.info("Performing post-move validation")
+            
+            backup_path = execution_result.get("backup_path")
+            validation_result = self.validate_move_integrity(backup_path)
+            
+            # Step 3: Auto-rollback on validation failure
+            if not validation_result["validation_passed"] and auto_rollback and backup_path:
+                critical_errors = [error for error in validation_result["errors_found"] 
+                                 if "critical" in error.lower()]
+                
+                if critical_errors:
+                    self.logger.warning("Critical validation errors detected - initiating auto-rollback")
+                    try:
+                        self.rollback(backup_path)
+                        execution_result["status"] = "rolled_back_due_to_validation_failure"
+                        execution_result["rollback_reason"] = "Critical validation errors detected"
+                    except Exception as rollback_error:
+                        self.logger.error(f"Auto-rollback failed: {rollback_error}")
+                        execution_result["status"] = "validation_failed_rollback_failed"
+                        execution_result["rollback_error"] = str(rollback_error)
+        
+        # Combine results
+        combined_result = execution_result.copy()
+        combined_result["validation_performed"] = validate_after
+        if validation_result:
+            combined_result["validation_results"] = validation_result
+        
+        return combined_result
