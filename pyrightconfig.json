@@ -1,0 +1,19 @@
+{
+  "exclude": [
+    "backups/**",
+    "knowledge/.obsidian*/**",
+    ".embedding_cache/**",
+    "**/__pycache__/**",
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.pytest_cache/**",
+    "**/.vscode/**",
+    "**/temp/**",
+    "**/tmp/**",
+    "**/*.log"
+  ],
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}

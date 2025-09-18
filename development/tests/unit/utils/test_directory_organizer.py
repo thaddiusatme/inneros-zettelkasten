@@ -139,8 +139,8 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         # Capture time after backup  
         after = datetime.now().strftime("%Y%m%d-%H%M%S")
         
-        # Verify path format and location
-        expected_parent = str(self.backup_root)
+        # Verify path format and location (should use the organizer's backup_root)
+        expected_parent = str(self.organizer.backup_root)  # Use organizer's actual backup root
         self.assertTrue(backup_path.startswith(expected_parent))
         
         backup_name = Path(backup_path).name
@@ -178,6 +178,95 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         self.assertNotEqual(backup1, backup2)
         self.assertTrue(Path(backup1).exists())
         self.assertTrue(Path(backup2).exists())
+
+
+class TestDirectoryOrganizerGuardrails(unittest.TestCase):
+    """Test P0 backup nesting guardrails."""
+    
+    def setUp(self):
+        """Set up test fixtures for guardrail tests."""
+        self.test_dir = tempfile.mkdtemp()
+        self.vault_root = Path(self.test_dir) / "test_vault"
+        self.vault_root.mkdir(parents=True)
+        
+        # Create a test file in vault
+        test_file = self.vault_root / "test.md"
+        test_file.write_text("test content")
+    
+    def tearDown(self):
+        """Clean up test fixtures."""
+        shutil.rmtree(self.test_dir)
+    
+    def test_backup_refuses_nested_target_inside_vault(self):
+        """RED: Test backup refuses when backup_root is inside vault_root."""
+        # Create backup root INSIDE the vault (this should be prevented)
+        nested_backup_root = self.vault_root / "backups"
+        
+        with self.assertRaises(BackupError) as context:
+            DirectoryOrganizer(
+                vault_root=str(self.vault_root),
+                backup_root=str(nested_backup_root)
+            )
+        
+        self.assertIn("backup target is inside source", str(context.exception).lower())
+        self.assertIn("recursive", str(context.exception).lower())
+    
+    def test_backup_refuses_nested_target_in_subdirectory(self):
+        """RED: Test backup refuses when backup_root is in any vault subdirectory."""
+        # Create backup root inside a vault subdirectory
+        inbox_dir = self.vault_root / "Inbox"
+        inbox_dir.mkdir()
+        nested_backup_root = inbox_dir / "my_backups"
+        
+        with self.assertRaises(BackupError) as context:
+            DirectoryOrganizer(
+                vault_root=str(self.vault_root),
+                backup_root=str(nested_backup_root)
+            )
+        
+        self.assertIn("backup target is inside source", str(context.exception).lower())
+    
+    def test_backup_allows_external_backup_root(self):
+        """RED: Test backup allows backup_root outside vault (should pass)."""
+        # Create backup root OUTSIDE the vault (this should work)
+        external_backup_root = Path(self.test_dir) / "external_backups"
+        
+        # This should NOT raise an exception
+        organizer = DirectoryOrganizer(
+            vault_root=str(self.vault_root),
+            backup_root=str(external_backup_root)
+        )
+        
+        # Should be able to create backup successfully
+        backup_path = organizer.create_backup()
+        self.assertTrue(Path(backup_path).exists())
+    
+    def test_backup_allows_sibling_backup_root(self):
+        """RED: Test backup allows backup_root as sibling to vault."""
+        # Create backup root as sibling to vault (this should work)
+        sibling_backup_root = Path(self.test_dir) / "backups"
+        
+        # This should NOT raise an exception
+        organizer = DirectoryOrganizer(
+            vault_root=str(self.vault_root),
+            backup_root=str(sibling_backup_root)
+        )
+        
+        # Should be able to create backup successfully  
+        backup_path = organizer.create_backup()
+        self.assertTrue(Path(backup_path).exists())
+    
+    def test_default_backup_root_is_external(self):
+        """RED: Test default backup root is external to vault."""
+        # Create organizer with default backup root (should use external default)
+        organizer = DirectoryOrganizer(vault_root=str(self.vault_root))
+        
+        # Default should be ~/backups/{vault_name}/ or similar external path
+        self.assertFalse(str(organizer.backup_root).startswith(str(self.vault_root)))
+        
+        # Should be able to create backup successfully
+        backup_path = organizer.create_backup()
+        self.assertTrue(Path(backup_path).exists())
 
 
 class TestDirectoryOrganizerRollback(unittest.TestCase):

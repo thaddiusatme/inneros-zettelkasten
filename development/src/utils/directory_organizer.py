@@ -124,20 +124,31 @@ class DirectoryOrganizer:
     
     def __init__(self, vault_root: str, backup_root: str = None):
         """
-        Initialize directory organizer.
+        Initialize directory organizer with path containment guardrails.
         
         Args:
             vault_root: Path to the Zettelkasten vault root
-            backup_root: Path to backup directory (defaults to vault_root/backups)
+            backup_root: Path to backup directory (defaults to ~/backups/{vault_name})
             
         Raises:
-            BackupError: If vault root doesn't exist or isn't accessible
+            BackupError: If vault root doesn't exist, isn't accessible, or backup_root
+                        is inside vault_root (prevents recursive backup nesting)
         """
-        self.vault_root = Path(vault_root)
-        self.backup_root = Path(backup_root) if backup_root else self.vault_root.parent / "backups"
+        self.vault_root = Path(vault_root).resolve()  # Resolve for accurate path comparison
+        
+        # Set default backup root to external location (~/backups/{vault_name})
+        if backup_root:
+            self.backup_root = Path(backup_root).resolve()
+        else:
+            # Default: ~/backups/{vault_name}/ - external to any vault
+            vault_name = self.vault_root.name or "vault"
+            self.backup_root = Path.home() / "backups" / vault_name
         
         # Setup logging
         self.logger = logging.getLogger(f"{__name__}.DirectoryOrganizer")
+        
+        # P0 Guardrail: Prevent recursive backup nesting
+        self._validate_backup_path_not_nested()
         
         # Validate vault exists
         if not self.vault_root.exists():
@@ -152,6 +163,54 @@ class DirectoryOrganizer:
             
         self.logger.info(f"DirectoryOrganizer initialized for vault: {self.vault_root}")
         self.logger.debug(f"Backup directory: {self.backup_root}")
+    
+    def _validate_backup_path_not_nested(self) -> None:
+        """
+        Validate that backup_root is not inside vault_root.
+        
+        This critical guardrail prevents recursive backup nesting which causes
+        exponential storage growth and system instability.
+        
+        Raises:
+            BackupError: If backup_root is inside vault_root (nested paths)
+        """
+        try:
+            # Check if backup_root is inside vault_root using path resolution
+            vault_resolved = self.vault_root.resolve()
+            backup_resolved = self.backup_root.resolve()
+            
+            # Try to create relative path from vault to backup
+            # If successful and doesn't start with '..', backup is inside vault
+            try:
+                relative_path = backup_resolved.relative_to(vault_resolved)
+                # If we get here without exception, backup is inside vault
+                error_msg = (
+                    f"CRITICAL: Backup target is inside source vault, which would cause "
+                    f"recursive backup nesting and exponential storage growth.\n"
+                    f"Vault: {vault_resolved}\n"
+                    f"Backup: {backup_resolved}\n"
+                    f"Relative path: {relative_path}\n\n"
+                    f"SOLUTION: Use external backup location such as:\n"
+                    f"  ~/backups/{vault_resolved.name}/\n"
+                    f"  {vault_resolved.parent}/backups/\n"
+                    f"  /external/storage/backups/"
+                )
+                self.logger.error(error_msg)
+                raise BackupError(error_msg)
+                
+            except ValueError:
+                # relative_to() raises ValueError when paths don't have common base
+                # This means backup is external to vault (good!)
+                pass
+                
+        except Exception as e:
+            if isinstance(e, BackupError):
+                raise  # Re-raise our specific backup errors
+            
+            # For other errors, log and raise as backup error
+            error_msg = f"Failed to validate backup path safety: {e}"
+            self.logger.error(error_msg)
+            raise BackupError(error_msg)
     
     def create_backup(self) -> str:
         """
