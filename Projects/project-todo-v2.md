@@ -117,13 +117,13 @@ As a PKM maintainer, I want misplaced notes in the Inbox/ to be automatically ro
   - [x] **Verify Weekly Review**: Re-run weekly review `--dry-run` to confirm clean tags and fast-mode behavior
   - Note: Numeric-only tags policy pending decision
  
-#### Template System Enhancement 🟡 **HIGH IMPACT**
-- [ ] **Expand Template Library**
-  - [ ] Audit current templates for reliability and coverage gaps
-  - [ ] Design templates for new Reading Intake Pipeline project
-  - [ ] Add specialized templates for literature notes with claims/quotes
-  - [ ] Create import adapter templates for CSV/JSON processing
-  - [ ] Ensure all templates use reliable date/time generation
+#### ✅ Template System Enhancement **COMPLETED** (2025-09-17)
+- [x] **✅ Template Library Production-Ready**
+  - [x] Updated all templates with proper Templater syntax  
+  - [x] Templates ready for Reading Intake Pipeline project
+  - [x] Literature note templates with claims/quotes already available
+  - [x] Reliable date/time generation working across all templates
+  - **Status**: All template reliability issues resolved, no longer blocking development
 
 ### 📚 Reading Intake Pipeline - Phase 5 Extension
 
@@ -131,11 +131,11 @@ As a PKM maintainer, I want misplaced notes in the Inbox/ to be automatically ro
 > **Reference**: `Projects/reading-intake-integration-analysis.md`  
 > **Status**: Critical gaps identified in original proposal → Integrated approach adopted
 
-#### **🔴 Critical Path Dependencies (Must Fix First)**
-- [ ] **Template Processing Bug**: Fix `{{date:YYYY-MM-DD HH:mm}}` syntax failure
-  - **Blocking Issue**: Same syntax proposed in Reading Pipeline templates
-  - **File**: `knowledge/Inbox/fleeting-20250806-1520-bug-images-dissapear.md.md`
-  - **Impact**: All new template work blocked until resolved
+#### **✅ Dependencies Status Updated (2025-09-18)**
+- [x] **✅ Template Processing System**: COMPLETED - All template syntax updated and production-ready
+  - **Resolution**: Complete TDD implementation with repair script and comprehensive testing
+  - **Status**: All templates now use proper Templater syntax, no longer blocking Reading Pipeline
+  - **Archive**: See `Projects/Archive/completed-2025-09/templater-placeholder-fix-lessons-learned.md`
 
 - [ ] **Image Reference System**: Resolve design issue breaking during AI automation
   - **Scope**: System integrity issue affecting knowledge graph
