@@ -86,6 +86,90 @@ def display_recommendations(recommendations):
         print(f"   {i}. {rec}")
 
 
+def display_fleeting_health_report(health_report):
+    """Display fleeting notes health report."""
+    # Health status with emoji
+    status_emoji = {
+        "HEALTHY": "✅",
+        "ATTENTION": "⚠️", 
+        "CRITICAL": "🚨"
+    }
+    
+    status = health_report["health_status"]
+    print(f"   Health Status: {status_emoji.get(status, '❓')} {status}")
+    print(f"   Total Notes: {health_report['total_count']}")
+    
+    # Age distribution
+    print_section("AGE DISTRIBUTION")
+    distribution = health_report["age_distribution"]
+    print(f"   New (0-7 days):     {distribution['new']:>3}")
+    print(f"   Recent (8-30 days): {distribution['recent']:>3}")
+    print(f"   Stale (31-90 days): {distribution['stale']:>3}")
+    print(f"   Old (90+ days):     {distribution['old']:>3}")
+    
+    # Summary
+    print_section("SUMMARY")
+    print(f"   {health_report['summary']}")
+    
+    # Recommendations
+    print_section("RECOMMENDATIONS")
+    for i, rec in enumerate(health_report["recommendations"], 1):
+        print(f"   {i}. {rec}")
+    
+    # Show oldest notes if any
+    if health_report.get("oldest_notes"):
+        print_section("OLDEST NOTES (Priority Processing)")
+        for note in health_report["oldest_notes"][:3]:  # Show top 3
+            created = note["created"]
+            if isinstance(created, str):
+                created = datetime.fromisoformat(created)
+            age_days = (datetime.now() - created).days
+            print(f"   📄 {note['name']} ({age_days} days old)")
+
+
+def format_fleeting_health_report_markdown(health_report):
+    """Format fleeting health report as markdown."""
+    lines = []
+    
+    # Status
+    status = health_report["health_status"]
+    lines.append(f"**Health Status:** {status}")
+    lines.append(f"**Total Notes:** {health_report['total_count']}")
+    lines.append("")
+    
+    # Age Distribution
+    lines.append("## Age Distribution")
+    distribution = health_report["age_distribution"]
+    lines.append(f"- New (0-7 days): {distribution['new']}")
+    lines.append(f"- Recent (8-30 days): {distribution['recent']}")
+    lines.append(f"- Stale (31-90 days): {distribution['stale']}")
+    lines.append(f"- Old (90+ days): {distribution['old']}")
+    lines.append("")
+    
+    # Summary
+    lines.append("## Summary")
+    lines.append(health_report['summary'])
+    lines.append("")
+    
+    # Recommendations
+    lines.append("## Recommendations")
+    for i, rec in enumerate(health_report["recommendations"], 1):
+        lines.append(f"{i}. {rec}")
+    lines.append("")
+    
+    # Oldest notes
+    if health_report.get("oldest_notes"):
+        lines.append("## Oldest Notes (Priority Processing)")
+        for note in health_report["oldest_notes"][:5]:
+            created = note["created"]
+            if isinstance(created, str):
+                created = datetime.fromisoformat(created)
+            age_days = (datetime.now() - created).days
+            lines.append(f"- {note['name']} ({age_days} days old)")
+    
+    return "\n".join(lines)
+
+
 def display_processing_results(results):
     """Display batch processing results."""
     print_section("PROCESSING RESULTS")
@@ -371,6 +455,12 @@ Examples:
     )
     
     action_group.add_argument(
+        "--fleeting-health",
+        action="store_true",
+        help="Generate fleeting notes health report with age analysis and recommendations"
+    )
+    
+    action_group.add_argument(
         "--comprehensive-orphaned",
         action="store_true", 
         help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
@@ -500,9 +590,11 @@ Examples:
             base_dir = Path.cwd() / "knowledge"
             auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
 
-    print(f"🔄 Initializing workflow for: {base_dir}")
-    if auto_note:
-        print(f"   ℹ️ {auto_note}")
+    # Suppress initialization messages for JSON output
+    if args.format != "json":
+        print(f"🔄 Initializing workflow for: {base_dir}")
+        if auto_note:
+            print(f"   ℹ️ {auto_note}")
     workflow = WorkflowManager(str(base_dir))
     
     # Interactive mode
@@ -844,6 +936,28 @@ Examples:
         
         print(f"\n💡 Comparison: Standard detection found 17 orphaned notes in workflow directories")
         print(f"💡 Comprehensive detection found {len(orphaned_notes)} orphaned notes across entire repository")
+    
+    elif args.fleeting_health:
+        if args.format != "json":
+            print("📊 Generating fleeting notes health report...")
+        health_report = workflow.generate_fleeting_health_report()
+        
+        if args.format == "json":
+            print(json.dumps(health_report, indent=2, default=str))
+        else:
+            print_header("FLEETING NOTES HEALTH REPORT")
+            display_fleeting_health_report(health_report)
+        
+        # Export if requested
+        if args.export:
+            export_path = Path(args.export)
+            with open(export_path, 'w', encoding='utf-8') as f:
+                if args.format == "json":
+                    json.dump(health_report, f, indent=2, default=str)
+                else:
+                    f.write("# FLEETING NOTES HEALTH REPORT\n\n")
+                    f.write(format_fleeting_health_report_markdown(health_report))
+            print(f"\n📄 Health report exported to: {export_path}")
     
     else:
         # No action specified, show basic status
