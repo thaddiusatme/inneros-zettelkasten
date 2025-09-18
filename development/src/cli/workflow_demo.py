@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
+from src.utils.directory_organizer import DirectoryOrganizer
 from src.ai.import_manager import (
     CSVImportAdapter,
     JSONImportAdapter,
@@ -315,52 +316,124 @@ def display_promotion_results(promotion_result):
 
 
 def format_promotion_report_markdown(promotion_result):
-    """Format promotion results for markdown export."""
+    """Format promotion report as markdown."""
     lines = []
-    lines.append("# Fleeting Notes Promotion Report")
+    lines.append("# Fleeting Note Promotion Report")
     lines.append("")
-    lines.append(f"**Generated on**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    lines.append("")
-    
-    if promotion_result.get("preview_mode"):
-        lines.append("**Mode**: Preview (No changes made)")
-    else:
-        lines.append("**Mode**: Live promotion")
+    lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("")
     
-    # Summary
+    promoted_notes = promotion_result.get('promoted_notes', [])
+    stats = promotion_result.get('statistics', {})
+    
     lines.append("## Summary")
     lines.append("")
-    promoted_notes = promotion_result.get("promoted_notes", [])
-    lines.append(f"**Total notes processed**: {len(promoted_notes)}")
-    
-    if promotion_result.get("batch_mode"):
-        lines.append(f"**Quality threshold**: {promotion_result.get('quality_threshold', 0.7)}")
+    lines.append(f"- **Notes processed**: {stats.get('notes_processed', 0)}")
+    lines.append(f"- **Successfully promoted**: {stats.get('successful_promotions', 0)}")
+    lines.append(f"- **Errors encountered**: {stats.get('promotion_errors', 0)}")
+    lines.append(f"- **Processing time**: {promotion_result.get('processing_time', 0):.2f} seconds")
     lines.append("")
     
-    # Individual notes
     if promoted_notes:
         lines.append("## Promoted Notes")
         lines.append("")
-        
         for note in promoted_notes:
-            note_name = Path(note["note_path"]).stem
-            target_type = note.get("target_type", "permanent")
-            quality_score = note.get("quality_score", 0)
-            
-            lines.append(f"### {note_name}")
-            lines.append(f"- **Target Type**: {target_type.title()}")
-            lines.append(f"- **Quality Score**: {quality_score:.2f}")
-            if note.get("target_path"):
-                lines.append(f"- **New Location**: {note['target_path']}")
-            
-            if note.get("error"):
-                lines.append(f"- **Error**: {note['error']}")
-            elif note.get("warning"):
-                lines.append(f"- **Warning**: {note['warning']}")
+            status = "✅" if not note.get('error') else "❌"
+            lines.append(f"### {status} {note['original_path']}")
+            lines.append("")
+            if note.get('error'):
+                lines.append(f"**Error**: {note['error']}")
+            else:
+                lines.append(f"**New location**: {note['new_path']}")
+                lines.append(f"**Target type**: {note['target_type'].title()} Note")
             lines.append("")
     
     return "\n".join(lines)
+
+
+def display_backup_list(backups):
+    """Display list of backups with details."""
+    print_section("BACKUP LIST")
+    
+    if not backups:
+        print("   📁 No backups found")
+        return
+        
+    print(f"   📁 Found {len(backups)} backup(s):")
+    print("")
+    
+    for i, backup in enumerate(backups, 1):
+        # Extract timestamp from backup name
+        backup_name = backup.name
+        timestamp_match = re.search(r'(\d{8})-(\d{6})', backup_name)
+        if timestamp_match:
+            date_str = timestamp_match.group(1)
+            time_str = timestamp_match.group(2)
+            formatted_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+            formatted_time = f"{time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
+            print(f"   {i:2d}. {backup_name}")
+            print(f"       📅 Created: {formatted_date} {formatted_time}")
+            print(f"       📂 Path: {backup}")
+        else:
+            print(f"   {i:2d}. {backup_name}")
+            print(f"       📂 Path: {backup}")
+        print("")
+
+
+def display_prune_plan(prune_result):
+    """Display backup pruning plan and results."""
+    if prune_result.get("plan"):
+        print_section("BACKUP PRUNING PLAN")
+    else:
+        print_section("BACKUP PRUNING RESULTS")
+    
+    found = prune_result["found"]
+    keep = prune_result["keep"]
+    to_prune = prune_result["to_prune"]
+    to_keep = prune_result["to_keep"]
+    
+    print(f"   📊 Backups found: {found}")
+    print(f"   🔒 Backups to keep: {len(to_keep)} (newest {keep})")
+    print(f"   🗑️  Backups to prune: {len(to_prune)}")
+    print("")
+    
+    if to_keep:
+        print("   📁 Backups to KEEP:")
+        for backup in to_keep:
+            print(f"      ✅ {backup.name}")
+        print("")
+    
+    if to_prune:
+        print("   🗑️  Backups to DELETE:")
+        for backup in to_prune:
+            print(f"      ❌ {backup.name}")
+        print("")
+    
+    # Show results if this was an actual run
+    if not prune_result.get("plan"):
+        deleted = prune_result.get("deleted", [])
+        errors = prune_result.get("errors", [])
+        deleted_count = prune_result.get("deleted_count", 0)
+        
+        if deleted:
+            print("   ✅ Successfully deleted:")
+            total_size = 0
+            for item in deleted:
+                size_mb = item.get("size_mb", 0)
+                total_size += size_mb
+                print(f"      📦 {item['name']} ({size_mb:.2f} MB)")
+            print(f"      💾 Total space freed: {total_size:.2f} MB")
+            print("")
+        
+        if errors:
+            print("   ❌ Errors encountered:")
+            for error in errors:
+                print(f"      ⚠️  {error}")
+            print("")
+        
+        success = prune_result.get("success", False)
+        status_emoji = "✅" if success else "⚠️"
+        print(f"   {status_emoji} Operation completed: {deleted_count} backup(s) deleted")
 
 
 def display_note_processing_result(result):
@@ -758,6 +831,25 @@ Examples:
         metavar="PATH",
         help="Import JSON reading list into Inbox (skeleton: validate/dry-run only)"
     )
+    
+    # Backup management commands
+    action_group.add_argument(
+        "--backup",
+        action="store_true",
+        help="Create a timestamped backup of the vault"
+    )
+    
+    action_group.add_argument(
+        "--list-backups",
+        action="store_true", 
+        help="List all existing backups (newest first)"
+    )
+    
+    action_group.add_argument(
+        "--prune-backups",
+        action="store_true",
+        help="Remove old backup directories (use with --keep)"
+    )
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -773,6 +865,14 @@ Examples:
         "--force",
         action="store_true",
         help="Force write even if (url, saved_at) duplicate detected"
+    )
+    
+    # Backup management options
+    parser.add_argument(
+        "--keep",
+        type=int,
+        metavar="N",
+        help="Number of recent backups to keep when pruning (use with --prune-backups)"
     )
     
     args = parser.parse_args()
@@ -1261,6 +1361,61 @@ Examples:
                 
         except Exception as e:
             print(f"❌ Error during promotion: {e}")
+            return 1
+    
+    elif args.backup:
+        # Create a timestamped backup
+        print("📦 Creating backup...")
+        try:
+            organizer = DirectoryOrganizer(vault_root=str(base_dir))
+            backup_path = organizer.create_backup()
+            
+            print_header("BACKUP CREATED")
+            print(f"   ✅ Backup successful")
+            print(f"   📂 Location: {backup_path}")
+            print(f"   📅 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            
+        except Exception as e:
+            print(f"❌ Error creating backup: {e}")
+            return 1
+    
+    elif args.list_backups:
+        # List all existing backups
+        print("📋 Listing backups...")
+        try:
+            organizer = DirectoryOrganizer(vault_root=str(base_dir))
+            backups = organizer.list_backups()
+            
+            print_header("BACKUP INVENTORY")
+            display_backup_list(backups)
+            
+        except Exception as e:
+            print(f"❌ Error listing backups: {e}")
+            return 1
+    
+    elif args.prune_backups:
+        # Prune old backups
+        if args.keep is None:
+            print("❌ Error: --prune-backups requires --keep N parameter")
+            print("💡 Example: python3 src/cli/workflow_demo.py . --prune-backups --keep 5")
+            return 1
+        
+        print(f"🗑️  Pruning backups (keeping {args.keep} most recent)...")
+        if args.dry_run:
+            print("🔍 Dry run mode - no files will be deleted")
+        
+        try:
+            organizer = DirectoryOrganizer(vault_root=str(base_dir))
+            prune_result = organizer.prune_backups(keep=args.keep, dry_run=args.dry_run)
+            
+            print_header("BACKUP PRUNING")
+            display_prune_plan(prune_result)
+            
+            if args.dry_run and prune_result["to_prune"]:
+                print("\n💡 Run without --dry-run to actually delete these backups")
+            
+        except Exception as e:
+            print(f"❌ Error pruning backups: {e}")
             return 1
     
     else:
