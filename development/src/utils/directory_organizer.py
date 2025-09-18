@@ -1353,3 +1353,121 @@ class DirectoryOrganizer:
             combined_result["validation_results"] = validation_result
         
         return combined_result
+
+    def list_backups(self) -> List[Path]:
+        """
+        List all backup directories, sorted from newest to oldest.
+        
+        Returns:
+            List[Path]: Backup directories sorted by timestamp (newest first)
+        """
+        backup_root = Path(self.backup_root)
+        if not backup_root.exists():
+            return []
+        
+        # Find all directories that match the backup naming pattern
+        backup_pattern = re.compile(r"^knowledge-\d{8}-\d{6}$")
+        backup_dirs = []
+        
+        for item in backup_root.iterdir():
+            if item.is_dir() and backup_pattern.match(item.name):
+                backup_dirs.append(item)
+        
+        # Sort by name (which sorts by timestamp since format is YYYYMMDD-HHMMSS)
+        # Reverse to get newest first
+        backup_dirs.sort(key=lambda x: x.name, reverse=True)
+        
+        return backup_dirs
+
+    def prune_backups(self, keep: int, dry_run: bool = False) -> Dict[str, Any]:
+        """
+        Remove old backup directories, keeping only the most recent N backups.
+        
+        Args:
+            keep: Number of most recent backups to keep
+            dry_run: If True, return plan without deleting anything
+            
+        Returns:
+            Dict with pruning plan and results
+            
+        Raises:
+            BackupError: If backup operations fail
+        """
+        if keep < 0:
+            raise BackupError(f"Keep count must be non-negative, got: {keep}")
+        
+        self.logger.info(f"Pruning backups: keeping {keep} most recent")
+        
+        backups = self.list_backups()
+        
+        # Determine which backups to keep and which to prune
+        to_keep = backups[:keep] if keep <= len(backups) else backups
+        to_prune = backups[keep:] if keep < len(backups) else []
+        
+        plan = {
+            "plan": True,
+            "keep": keep,
+            "found": len(backups),
+            "to_keep": to_keep,
+            "to_prune": to_prune,
+            "deleted": [],
+            "errors": []
+        }
+        
+        if dry_run:
+            self.logger.info(f"Dry run: would delete {len(to_prune)} backup(s)")
+            return plan
+        
+        # Actual deletion logic
+        deleted_count = 0
+        for backup_path in to_prune:
+            try:
+                backup_size = self._get_directory_size(backup_path)
+                self.logger.info(f"Deleting backup: {backup_path.name} ({backup_size:.2f} MB)")
+                
+                shutil.rmtree(backup_path)
+                plan["deleted"].append({
+                    "path": str(backup_path),
+                    "name": backup_path.name,
+                    "size_mb": backup_size
+                })
+                deleted_count += 1
+                
+            except Exception as e:
+                error_msg = f"Failed to delete {backup_path}: {e}"
+                self.logger.error(error_msg)
+                plan["errors"].append(error_msg)
+        
+        plan["deleted_count"] = deleted_count
+        plan["success"] = len(plan["errors"]) == 0
+        
+        if plan["success"]:
+            self.logger.info(f"Successfully pruned {deleted_count} backup(s)")
+        else:
+            self.logger.warning(f"Pruning completed with {len(plan['errors'])} error(s)")
+            
+        return plan
+    
+    def _get_directory_size(self, directory: Path) -> float:
+        """
+        Calculate the total size of a directory in megabytes.
+        
+        Args:
+            directory: Directory path to measure
+            
+        Returns:
+            Size in megabytes
+        """
+        import os
+        total_size = 0
+        try:
+            for dirpath, dirnames, filenames in os.walk(directory):
+                for filename in filenames:
+                    file_path = Path(dirpath) / filename
+                    if file_path.exists():
+                        total_size += file_path.stat().st_size
+        except Exception:
+            # If we can't calculate size, return 0
+            pass
+        
+        return total_size / (1024 * 1024)  # Convert bytes to MB

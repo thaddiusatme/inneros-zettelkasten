@@ -12,12 +12,6 @@ import tempfile
 import shutil
 from pathlib import Path
 from datetime import datetime
-import sys
-
-# Add src to Python path for imports
-development_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(development_dir / "src"))
-sys.path.insert(0, str(development_dir))
 
 from src.utils.directory_organizer import DirectoryOrganizer, BackupError
 
@@ -599,6 +593,78 @@ This note is already in the correct directory.""")
         # Execute moves should fail due to conflict
         with self.assertRaises(BackupError):
             self.organizer.execute_moves(rollback_on_error=True, create_backup=True)
+
+
+class TestDirectoryOrganizerRetention(unittest.TestCase):
+    """Tests for P0: Backup retention and pruning."""
+
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.vault_root = Path(self.test_dir) / "vault"
+        self.backup_root = Path(self.test_dir) / "backups"
+        self.vault_root.mkdir()
+        self.backup_root.mkdir()
+
+        # Create some dummy backup directories with valid names
+        self.backups = [
+            self.backup_root / "knowledge-20250918-100000", # Oldest
+            self.backup_root / "knowledge-20250918-110000",
+            self.backup_root / "knowledge-20250918-120000",
+            self.backup_root / "knowledge-20250918-130000",
+            self.backup_root / "knowledge-20250918-140000"  # Newest
+        ]
+        for backup in self.backups:
+            backup.mkdir()
+
+        # Add a non-backup file/dir to ensure it's ignored
+        (self.backup_root / "not-a-backup.txt").touch()
+        (self.backup_root / "random-dir").mkdir()
+
+        self.organizer = DirectoryOrganizer(str(self.vault_root), backup_root=str(self.backup_root))
+
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
+
+    def test_list_backups_sorted_correctly(self):
+        """Should list existing backups, sorted from newest to oldest."""
+        sorted_backups = self.organizer.list_backups()
+        self.assertEqual(len(sorted_backups), 5)
+        self.assertEqual(sorted_backups[0].resolve(), self.backups[4].resolve()) # Newest first
+        self.assertEqual(sorted_backups[4].resolve(), self.backups[0].resolve()) # Oldest last
+
+    def test_prune_backups_dry_run_identifies_correct_backups_to_delete(self):
+        """Dry run should identify older backups for deletion without actually deleting."""
+        keep = 3
+        prune_plan = self.organizer.prune_backups(keep=keep, dry_run=True)
+
+        self.assertIn("plan", prune_plan)
+        self.assertEqual(prune_plan["keep"], keep)
+        self.assertEqual(prune_plan["found"], 5)
+        self.assertEqual(len(prune_plan["to_prune"]), 2)
+        self.assertEqual(len(prune_plan["to_keep"]), 3)
+        self.assertIn(str(self.backups[0].resolve()), [str(p.resolve()) for p in prune_plan["to_prune"]])
+        self.assertIn(str(self.backups[1].resolve()), [str(p.resolve()) for p in prune_plan["to_prune"]])
+
+        # Verify no directories were actually deleted
+        self.assertTrue(self.backups[0].exists())
+        self.assertTrue(self.backups[1].exists())
+
+    def test_prune_backups_handles_keeping_more_than_exist(self):
+        """If keep > found, no backups should be pruned."""
+        prune_plan = self.organizer.prune_backups(keep=10, dry_run=True)
+        self.assertEqual(len(prune_plan["to_prune"]), 0)
+        self.assertEqual(len(prune_plan["to_keep"]), 5)
+
+    def test_prune_backups_handles_no_backups_gracefully(self):
+        """If no backups exist, it should return an empty plan."""
+        # Create a new organizer with an empty backup dir
+        empty_backup_root = Path(self.test_dir) / "empty_backups"
+        empty_backup_root.mkdir()
+        organizer = DirectoryOrganizer(str(self.vault_root), backup_root=str(empty_backup_root))
+        
+        prune_plan = organizer.prune_backups(keep=3, dry_run=True)
+        self.assertEqual(prune_plan["found"], 0)
+        self.assertEqual(len(prune_plan["to_prune"]), 0)
 
 
 if __name__ == "__main__":
