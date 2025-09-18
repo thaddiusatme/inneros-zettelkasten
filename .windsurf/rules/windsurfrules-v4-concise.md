@@ -15,8 +15,8 @@ trigger: always_on
 
 ### Context-First Development
 Required Reads (Priority Order):
-1. Projects/inneros-manifest-v2.md - Comprehensive project overview and architecture
-2. Projects/project-todo-v2.md - Current priorities and next development steps  
+1. Projects/inneros-manifest-v3.md - Comprehensive project overview and architecture
+2. Projects/project-todo-v3.md - Current priorities and next development steps  
 3. Projects/reading-intake-integration-analysis.md - Integration analysis and solution architecture
 4. README.md - Quick start and AI features documentation
 5. Projects/windsurf-project-changelog.md - Detailed development history
