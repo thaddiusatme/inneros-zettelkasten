@@ -269,6 +269,122 @@ class TestDirectoryOrganizerGuardrails(unittest.TestCase):
         self.assertTrue(Path(backup_path).exists())
 
 
+class TestDirectoryOrganizerExcludes(unittest.TestCase):
+    """Test P0 backup exclude rules functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures for exclude rules tests."""
+        self.test_dir = tempfile.mkdtemp()
+        self.vault_root = Path(self.test_dir) / "test_vault"
+        self.backup_root = Path(self.test_dir) / "external_backups"
+        
+        self.vault_root.mkdir(parents=True)
+        self.backup_root.mkdir(parents=True)
+        
+        # Create test vault with directories that should be excluded
+        self._create_vault_with_excludable_content()
+        
+        self.organizer = DirectoryOrganizer(
+            vault_root=str(self.vault_root),
+            backup_root=str(self.backup_root)
+        )
+    
+    def tearDown(self):
+        """Clean up test fixtures."""
+        shutil.rmtree(self.test_dir)
+    
+    def _create_vault_with_excludable_content(self):
+        """Create vault with content that should/shouldn't be backed up."""
+        # Content that SHOULD be backed up
+        (self.vault_root / "important.md").write_text("Important content")
+        (self.vault_root / "Inbox").mkdir()
+        (self.vault_root / "Inbox" / "note.md").write_text("Inbox note")
+        
+        # Content that SHOULD NOT be backed up (heavy/derived directories)
+        (self.vault_root / "backups").mkdir()
+        (self.vault_root / "backups" / "old-backup.txt").write_text("Old backup content")
+        
+        (self.vault_root / ".git").mkdir()
+        (self.vault_root / ".git" / "config").write_text("Git config")
+        
+        (self.vault_root / "web_ui_env").mkdir()  # Python virtual environment
+        (self.vault_root / "web_ui_env" / "lib").mkdir()
+        (self.vault_root / "web_ui_env" / "lib" / "python3.13").mkdir()
+        (self.vault_root / "web_ui_env" / "lib" / "python3.13" / "site-packages").mkdir()
+        (self.vault_root / "web_ui_env" / "lib" / "python3.13" / "site-packages" / "large_package.py").write_text("Large package content")
+    
+    def test_backup_excludes_backups_directory(self):
+        """RED: Test that backup excludes existing backups/ directory."""
+        backup_path = self.organizer.create_backup()
+        
+        # Should NOT contain backups directory
+        backups_in_backup = Path(backup_path) / "backups"
+        self.assertFalse(backups_in_backup.exists(), "backups/ directory should be excluded from backup")
+        
+        # Should still contain important content
+        important_in_backup = Path(backup_path) / "important.md"
+        self.assertTrue(important_in_backup.exists(), "Important content should be included")
+    
+    def test_backup_excludes_git_directory(self):
+        """RED: Test that backup excludes .git/ directory.""" 
+        backup_path = self.organizer.create_backup()
+        
+        # Should NOT contain .git directory
+        git_in_backup = Path(backup_path) / ".git"
+        self.assertFalse(git_in_backup.exists(), ".git/ directory should be excluded from backup")
+        
+        # Should still contain important content
+        inbox_in_backup = Path(backup_path) / "Inbox" / "note.md"
+        self.assertTrue(inbox_in_backup.exists(), "Inbox content should be included")
+    
+    def test_backup_excludes_venv_directory(self):
+        """RED: Test that backup excludes Python virtual environment directories."""
+        backup_path = self.organizer.create_backup()
+        
+        # Should NOT contain venv directory
+        venv_in_backup = Path(backup_path) / "web_ui_env"
+        self.assertFalse(venv_in_backup.exists(), "Virtual environment should be excluded from backup")
+    
+    def test_backup_includes_only_essential_content(self):
+        """RED: Test that backup includes essential content but excludes derived/heavy directories."""
+        backup_path = self.organizer.create_backup()
+        backup_path_obj = Path(backup_path)
+        
+        # Should include essential content
+        essential_files = ["important.md", "Inbox/note.md"]
+        for file_path in essential_files:
+            backup_file = backup_path_obj / file_path
+            self.assertTrue(backup_file.exists(), f"Essential file {file_path} should be included")
+            
+        # Should exclude heavy/derived directories
+        excluded_dirs = ["backups", ".git", "web_ui_env"]
+        for dir_name in excluded_dirs:
+            excluded_dir = backup_path_obj / dir_name
+            self.assertFalse(excluded_dir.exists(), f"Directory {dir_name} should be excluded")
+    
+    def test_backup_exclude_patterns_configurable(self):
+        """RED: Test that exclude patterns can be configured."""
+        # Create organizer with custom exclude patterns
+        custom_excludes = ["backups", ".git", "custom_exclude"]
+        
+        # Create custom exclude directory
+        (self.vault_root / "custom_exclude").mkdir()
+        (self.vault_root / "custom_exclude" / "file.txt").write_text("Should be excluded")
+        
+        # This test will fail until we implement configurable excludes
+        organizer_with_custom = DirectoryOrganizer(
+            vault_root=str(self.vault_root),
+            backup_root=str(self.backup_root),
+            exclude_patterns=custom_excludes  # This parameter doesn't exist yet
+        )
+        
+        backup_path = organizer_with_custom.create_backup()
+        
+        # Custom exclude should not be in backup
+        custom_exclude_in_backup = Path(backup_path) / "custom_exclude"
+        self.assertFalse(custom_exclude_in_backup.exists(), "Custom exclude directory should not be in backup")
+
+
 class TestDirectoryOrganizerRollback(unittest.TestCase):
     """Test rollback functionality."""
     

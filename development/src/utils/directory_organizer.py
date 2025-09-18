@@ -122,13 +122,15 @@ class DirectoryOrganizer:
     - Preserves symlinks and hidden files
     """
     
-    def __init__(self, vault_root: str, backup_root: str = None):
+    def __init__(self, vault_root: str, backup_root: str = None, exclude_patterns: list = None):
         """
-        Initialize directory organizer with path containment guardrails.
+        Initialize directory organizer with path containment guardrails and exclude rules.
         
         Args:
             vault_root: Path to the Zettelkasten vault root
             backup_root: Path to backup directory (defaults to ~/backups/{vault_name})
+            exclude_patterns: List of directory/file patterns to exclude from backups
+                            (defaults to ['backups', '.git', '*_env', '*.venv'])
             
         Raises:
             BackupError: If vault root doesn't exist, isn't accessible, or backup_root
@@ -143,6 +145,21 @@ class DirectoryOrganizer:
             # Default: ~/backups/{vault_name}/ - external to any vault
             vault_name = self.vault_root.name or "vault"
             self.backup_root = Path.home() / "backups" / vault_name
+        
+        # Set default exclude patterns for heavy/derived directories
+        if exclude_patterns is not None:
+            self.exclude_patterns = exclude_patterns
+        else:
+            self.exclude_patterns = [
+                'backups',         # Recursive backup prevention
+                '.git',           # Version control data
+                '*_env',          # Python virtual environments (web_ui_env, venv, etc.)
+                '*.venv',         # Alternative venv naming
+                '__pycache__',    # Python cache
+                'node_modules',   # JavaScript dependencies
+                '.pytest_cache',  # Test cache
+                '.embedding_cache' # AI embedding cache
+            ]
         
         # Setup logging
         self.logger = logging.getLogger(f"{__name__}.DirectoryOrganizer")
@@ -212,6 +229,52 @@ class DirectoryOrganizer:
             self.logger.error(error_msg)
             raise BackupError(error_msg)
     
+    def _create_ignore_function(self):
+        """
+        Create ignore function for shutil.copytree based on exclude patterns.
+        
+        Returns:
+            Callable: Function that takes (dir, files) and returns files to ignore
+        """
+        import fnmatch
+        
+        def ignore_function(dir_path, filenames):
+            """Ignore function for shutil.copytree."""
+            ignored = []
+            
+            try:
+                base_relative_path = Path(dir_path).relative_to(self.vault_root)
+            except ValueError:
+                # dir_path is outside vault_root, shouldn't happen but handle gracefully
+                self.logger.warning(f"Directory outside vault during backup: {dir_path}")
+                return []
+            
+            for filename in filenames:
+                # Check each exclude pattern
+                for pattern in self.exclude_patterns:
+                    # Check against just the filename
+                    if fnmatch.fnmatch(filename, pattern):
+                        ignored.append(filename)
+                        break
+                    
+                    # Check against the relative path from vault root
+                    relative_path = base_relative_path / filename
+                    if fnmatch.fnmatch(str(relative_path), pattern):
+                        ignored.append(filename)
+                        break
+                    
+                    # Check against relative path with wildcard support
+                    if fnmatch.fnmatch(str(relative_path), f"*/{pattern}"):
+                        ignored.append(filename)
+                        break
+            
+            if ignored:
+                self.logger.debug(f"Excluding from backup in {base_relative_path}: {ignored}")
+                
+            return ignored
+        
+        return ignore_function
+    
     def create_backup(self) -> str:
         """
         Create timestamped backup of entire vault.
@@ -247,26 +310,27 @@ class DirectoryOrganizer:
             if not self.backup_root.is_dir():
                 raise BackupError(f"Cannot create backup directory: {self.backup_root}")
             
-            # Count files for progress logging
+            # Count files for progress logging (before exclusions)
             file_count = sum(1 for _ in self.vault_root.rglob("*") if _.is_file())
-            self.logger.info(f"Backing up {file_count} files from vault")
+            self.logger.info(f"Backing up {file_count} files from vault (before exclusions)")
+            self.logger.info(f"Exclude patterns: {self.exclude_patterns}")
             
-            # Create backup using shutil.copytree with comprehensive options
+            # Create backup using shutil.copytree with exclude patterns
+            ignore_func = self._create_ignore_function()
             shutil.copytree(
                 src=self.vault_root,
                 dst=backup_path,
                 symlinks=True,  # Preserve symlinks
                 ignore_dangling_symlinks=True,  # Skip broken symlinks
+                ignore=ignore_func,  # Apply exclude patterns
                 dirs_exist_ok=False  # Fail if backup already exists
             )
             
-            # Verify backup integrity
+            # Verify backup integrity (count files in backup)
             backup_file_count = sum(1 for _ in backup_path.rglob("*") if _.is_file())
+            excluded_count = file_count - backup_file_count
             
-            if backup_file_count != file_count:
-                self.logger.warning(f"File count mismatch: original={file_count}, backup={backup_file_count}")
-            else:
-                self.logger.info(f"Backup created successfully: {backup_file_count} files copied")
+            self.logger.info(f"Backup created successfully: {backup_file_count} files copied ({excluded_count} excluded)")
             
             return str(backup_path)
             
