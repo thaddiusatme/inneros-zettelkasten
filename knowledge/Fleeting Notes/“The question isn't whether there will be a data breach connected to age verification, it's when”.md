@@ -1,3 +1,6 @@
+---
+created: 2025-08-14 11:43
+---
 “The question isn't whether there will be a data breach connected to age verification, it's when,” says Alison Boden, executive director of Free Speech Coalition, a US-based adult entertainment industry trade association. “So, people circumvent the laws. In the best case, they use VPNs to protect their identities. And in the worst case, they turn to websites that flout the law, and then risk being exposed to illegal content like child sexual abuse material and nonconsensual intimate imagery. And this is all in service of policies that have clearly been shown to be ineffective.”![[Pasted image 20250729144014.png]]
 
 [[fleeting-2025-07-29-the-age-checked-internet-has-arrived]]

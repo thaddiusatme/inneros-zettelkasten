@@ -186,6 +186,91 @@ def display_processing_results(results):
         print(f"     Needs Improvement: {summary['needs_improvement']}")
 
 
+def display_fleeting_triage_report(triage_report):
+    """Display a formatted fleeting triage report."""
+    print_section("QUALITY ASSESSMENT")
+    print(f"   Total notes processed: {triage_report['total_notes_processed']}")
+    
+    # Quality distribution
+    quality_dist = triage_report["quality_distribution"]
+    print(f"   High Quality (>0.7): {quality_dist.get('high', 0)}")
+    print(f"   Medium Quality (0.4-0.7): {quality_dist.get('medium', 0)}")
+    print(f"   Low Quality (<0.4): {quality_dist.get('low', 0)}")
+    
+    if triage_report.get("quality_threshold"):
+        print(f"   Quality threshold: {triage_report['quality_threshold']}")
+        filtered_count = triage_report.get("filtered_count", 0)
+        print(f"   Notes filtered by quality threshold: {filtered_count}")
+    
+    print_section("TRIAGE RECOMMENDATIONS")
+    recommendations = triage_report["recommendations"]
+    
+    # Group recommendations by action
+    action_groups = {}
+    for rec in recommendations:
+        action = rec["action"]
+        if action not in action_groups:
+            action_groups[action] = []
+        action_groups[action].append(rec)
+    
+    for action, recs in action_groups.items():
+        action_emoji = "✅" if "Promote" in action else "⚠️" if "Enhancement" in action else "🚨"
+        print(f"   {action_emoji} {action}: {len(recs)} notes")
+        for rec in recs[:3]:  # Show top 3 per category
+            note_name = Path(rec["note_path"]).stem
+            quality = rec["quality_score"]
+            print(f"      📄 {note_name} (quality: {quality:.2f})")
+        if len(recs) > 3:
+            print(f"      ... and {len(recs) - 3} more")
+    
+    print_section("BATCH PROCESSING RESULTS")
+    processing_time = triage_report.get("processing_time", 0)
+    print(f"   Processing time: {processing_time:.2f} seconds")
+    print(f"   Notes per second: {triage_report['total_notes_processed'] / max(processing_time, 0.1):.1f}")
+
+
+def format_fleeting_triage_report_markdown(triage_report):
+    """Format fleeting triage report for markdown export."""
+    lines = []
+    lines.append("# Fleeting Notes Triage Report")
+    lines.append("")
+    lines.append(f"**Generated on**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    lines.append("")
+    
+    # Quality Assessment
+    lines.append("## Quality Assessment")
+    lines.append("")
+    lines.append(f"**Total notes processed**: {triage_report['total_notes_processed']}")
+    
+    quality_dist = triage_report["quality_distribution"]
+    lines.append(f"- High Quality (>0.7): {quality_dist.get('high', 0)}")
+    lines.append(f"- Medium Quality (0.4-0.7): {quality_dist.get('medium', 0)}")
+    lines.append(f"- Low Quality (<0.4): {quality_dist.get('low', 0)}")
+    lines.append("")
+    
+    if triage_report.get("quality_threshold"):
+        lines.append(f"**Quality threshold applied**: {triage_report['quality_threshold']}")
+        lines.append("")
+    
+    # Recommendations
+    lines.append("## Recommendations")
+    lines.append("")
+    
+    for rec in triage_report["recommendations"]:
+        note_name = Path(rec["note_path"]).stem
+        quality = rec["quality_score"]
+        action = rec["action"]
+        rationale = rec["rationale"]
+        
+        lines.append(f"### {note_name}")
+        lines.append(f"- **Quality Score**: {quality:.2f}")
+        lines.append(f"- **Recommended Action**: {action}")
+        lines.append(f"- **Rationale**: {rationale}")
+        lines.append("")
+    
+    return "\n".join(lines)
+
+
 def display_note_processing_result(result):
     """Display individual note processing result."""
     if "error" in result:
@@ -461,6 +546,12 @@ Examples:
     )
     
     action_group.add_argument(
+        "--fleeting-triage",
+        action="store_true",
+        help="Generate AI-powered triage report for fleeting notes with quality assessment and recommendations"
+    )
+    
+    action_group.add_argument(
         "--comprehensive-orphaned",
         action="store_true", 
         help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
@@ -496,6 +587,14 @@ Examples:
         "--dry-run",
         action="store_true",
         help="Preview recommendations without processing notes"
+    )
+    
+    # Fleeting triage specific options
+    parser.add_argument(
+        "--min-quality",
+        type=float,
+        metavar="THRESHOLD",
+        help="Minimum quality threshold for triage filtering (0.0-1.0)"
     )
     
     # Orphan remediation options
@@ -958,6 +1057,36 @@ Examples:
                     f.write("# FLEETING NOTES HEALTH REPORT\n\n")
                     f.write(format_fleeting_health_report_markdown(health_report))
             print(f"\n📄 Health report exported to: {export_path}")
+    
+    elif args.fleeting_triage:
+        # Validate quality threshold if provided
+        if args.min_quality is not None and (args.min_quality < 0.0 or args.min_quality > 1.0):
+            print("❌ Error: Quality threshold must be between 0.0 and 1.0")
+            return 1
+        
+        if args.format != "json":
+            print("📊 Generating AI-powered fleeting notes triage report...")
+        
+        triage_report = workflow.generate_fleeting_triage_report(
+            quality_threshold=args.min_quality,
+            fast=True  # Use fast mode for better performance
+        )
+        
+        if args.format == "json":
+            print(json.dumps(triage_report, indent=2, default=str))
+        else:
+            print_header("FLEETING NOTES TRIAGE REPORT")
+            display_fleeting_triage_report(triage_report)
+        
+        # Export if requested
+        if args.export:
+            export_path = Path(args.export)
+            with open(export_path, 'w', encoding='utf-8') as f:
+                if args.format == "json":
+                    json.dump(triage_report, f, indent=2, default=str)
+                else:
+                    f.write(format_fleeting_triage_report_markdown(triage_report))
+            print(f"\n📄 Triage report exported to: {export_path}")
     
     else:
         # No action specified, show basic status

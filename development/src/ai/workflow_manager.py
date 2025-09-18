@@ -1661,6 +1661,128 @@ class WorkflowManager:
             'oldest_note': analysis.oldest_note,
             'newest_note': analysis.newest_note
         }
+    
+    def generate_fleeting_triage_report(self, quality_threshold: Optional[float] = None, fast: bool = False) -> Dict:
+        """
+        Generate AI-powered triage report for fleeting notes with quality assessment.
+        
+        Args:
+            quality_threshold: Optional minimum quality threshold (0.0-1.0) for filtering
+            
+        Returns:
+            Dict: Triage report with quality assessment and recommendations
+        """
+        import time
+        start_time = time.time()
+        
+        # Get fleeting notes for processing
+        fleeting_notes = self._find_fleeting_notes()
+        
+        if not fleeting_notes:
+            return {
+                'total_notes_processed': 0,
+                'quality_distribution': {'high': 0, 'medium': 0, 'low': 0},
+                'recommendations': [],
+                'processing_time': time.time() - start_time,
+                'quality_threshold': quality_threshold
+            }
+        
+        # Process each note for quality assessment
+        recommendations = []
+        quality_scores = []
+        
+        for note_path in fleeting_notes:
+            try:
+                # Use existing AI infrastructure for processing
+                result = self.process_inbox_note(note_path, fast=fast)
+                
+                quality_score = result.get('quality_score', 0.5)
+                quality_scores.append(quality_score)
+                
+                # Generate recommendation based on quality
+                if quality_score >= 0.7:
+                    action = "Promote to Permanent"
+                    rationale = "High quality content with clear insights and good structure. Ready for promotion."
+                elif quality_score >= 0.4:
+                    action = "Needs Enhancement"
+                    rationale = "Medium quality with potential. Consider adding more detail or connections."
+                else:
+                    action = "Consider Archiving"
+                    rationale = "Low quality content. May need significant work or could be archived."
+                
+                # Apply quality threshold filter if specified
+                if quality_threshold is None or quality_score >= quality_threshold:
+                    recommendations.append({
+                        'note_path': str(note_path),
+                        'quality_score': quality_score,
+                        'action': action,
+                        'rationale': rationale,
+                        'ai_tags': result.get('ai_tags', []),
+                        'created': result.get('metadata', {}).get('created', 'Unknown')
+                    })
+                    
+            except Exception as e:
+                # Handle individual note processing errors gracefully
+                recommendations.append({
+                    'note_path': str(note_path),
+                    'quality_score': 0.0,
+                    'action': "Processing Error",
+                    'rationale': f"Error processing note: {str(e)}",
+                    'ai_tags': [],
+                    'created': 'Unknown'
+                })
+        
+        # Calculate quality distribution
+        quality_distribution = {'high': 0, 'medium': 0, 'low': 0}
+        for score in quality_scores:
+            if score >= 0.7:
+                quality_distribution['high'] += 1
+            elif score >= 0.4:
+                quality_distribution['medium'] += 1
+            else:
+                quality_distribution['low'] += 1
+        
+        # Sort recommendations by quality score (highest first)
+        recommendations.sort(key=lambda x: x['quality_score'], reverse=True)
+        
+        processing_time = time.time() - start_time
+        total_processed = len(fleeting_notes)
+        filtered_count = total_processed - len(recommendations) if quality_threshold else 0
+        
+        return {
+            'total_notes_processed': total_processed,
+            'quality_distribution': quality_distribution,
+            'recommendations': recommendations,
+            'processing_time': processing_time,
+            'quality_threshold': quality_threshold,
+            'filtered_count': filtered_count
+        }
+    
+    def _find_fleeting_notes(self) -> List[Path]:
+        """Find all fleeting notes for triage processing."""
+        fleeting_notes = []
+        
+        # Check both Fleeting Notes and Inbox directories
+        fleeting_dir = self.base_dir / "Fleeting Notes"
+        inbox_dir = self.base_dir / "Inbox"
+        
+        for directory in [fleeting_dir, inbox_dir]:
+            if directory.exists():
+                for note_file in directory.glob("*.md"):
+                    try:
+                        content = note_file.read_text(encoding='utf-8')
+                        metadata, _ = parse_frontmatter(content)
+                        
+                        # Include notes that are explicitly fleeting type or in fleeting directory
+                        if (metadata.get('type') == 'fleeting' or 
+                            directory.name == "Fleeting Notes"):
+                            fleeting_notes.append(note_file)
+                            
+                    except Exception:
+                        # Skip files that can't be read or parsed
+                        continue
+        
+        return fleeting_notes
 
 
 def main():
