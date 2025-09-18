@@ -271,6 +271,98 @@ def format_fleeting_triage_report_markdown(triage_report):
     return "\n".join(lines)
 
 
+def display_promotion_results(promotion_result):
+    """Display formatted promotion results."""
+    print_section("PROMOTION SUMMARY")
+    
+    if promotion_result.get("preview_mode"):
+        print("   🔍 PREVIEW MODE - No changes made")
+        
+    if promotion_result.get("batch_mode"):
+        print(f"   Batch promotion with quality threshold: {promotion_result.get('quality_threshold', 0.7)}")
+    
+    promoted_notes = promotion_result.get("promoted_notes", [])
+    print(f"   Total notes processed: {len(promoted_notes)}")
+    
+    if not promoted_notes:
+        print("   ⚠️  No notes were promoted")
+        return
+        
+    print_section("PROMOTED NOTES")
+    for note in promoted_notes:
+        note_name = Path(note["note_path"]).stem
+        target_type = note.get("target_type", "permanent")
+        quality_score = note.get("quality_score", 0)
+        
+        print(f"   ✅ {note_name}")
+        print(f"      📄 Promoted to: {target_type.title()} Notes")
+        print(f"      ⭐ Quality score: {quality_score:.2f}")
+        if note.get("target_path"):
+            print(f"      📁 New location: {note['target_path']}")
+        
+        # Show any errors or warnings
+        if note.get("error"):
+            print(f"      ❌ Error: {note['error']}")
+        elif note.get("warning"):
+            print(f"      ⚠️  Warning: {note['warning']}")
+    
+    print_section("OPERATION RESULTS")
+    processing_time = promotion_result.get("processing_time", 0)
+    print(f"   Processing time: {processing_time:.2f} seconds")
+    
+    if promotion_result.get("backup_created"):
+        print(f"   📦 Backup created: {promotion_result.get('backup_path', 'Unknown')}")
+
+
+def format_promotion_report_markdown(promotion_result):
+    """Format promotion results for markdown export."""
+    lines = []
+    lines.append("# Fleeting Notes Promotion Report")
+    lines.append("")
+    lines.append(f"**Generated on**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    lines.append("")
+    
+    if promotion_result.get("preview_mode"):
+        lines.append("**Mode**: Preview (No changes made)")
+    else:
+        lines.append("**Mode**: Live promotion")
+    lines.append("")
+    
+    # Summary
+    lines.append("## Summary")
+    lines.append("")
+    promoted_notes = promotion_result.get("promoted_notes", [])
+    lines.append(f"**Total notes processed**: {len(promoted_notes)}")
+    
+    if promotion_result.get("batch_mode"):
+        lines.append(f"**Quality threshold**: {promotion_result.get('quality_threshold', 0.7)}")
+    lines.append("")
+    
+    # Individual notes
+    if promoted_notes:
+        lines.append("## Promoted Notes")
+        lines.append("")
+        
+        for note in promoted_notes:
+            note_name = Path(note["note_path"]).stem
+            target_type = note.get("target_type", "permanent")
+            quality_score = note.get("quality_score", 0)
+            
+            lines.append(f"### {note_name}")
+            lines.append(f"- **Target Type**: {target_type.title()}")
+            lines.append(f"- **Quality Score**: {quality_score:.2f}")
+            if note.get("target_path"):
+                lines.append(f"- **New Location**: {note['target_path']}")
+            
+            if note.get("error"):
+                lines.append(f"- **Error**: {note['error']}")
+            elif note.get("warning"):
+                lines.append(f"- **Warning**: {note['warning']}")
+            lines.append("")
+    
+    return "\n".join(lines)
+
+
 def display_note_processing_result(result):
     """Display individual note processing result."""
     if "error" in result:
@@ -552,6 +644,14 @@ Examples:
     )
     
     action_group.add_argument(
+        "--promote-note",
+        metavar="NOTE_PATH",
+        nargs="?",
+        const="BATCH_MODE",
+        help="Promote fleeting note to permanent/literature note with safe file operations"
+    )
+    
+    action_group.add_argument(
         "--comprehensive-orphaned",
         action="store_true", 
         help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
@@ -595,6 +695,25 @@ Examples:
         type=float,
         metavar="THRESHOLD",
         help="Minimum quality threshold for triage filtering (0.0-1.0)"
+    )
+    
+    # Promotion specific options
+    parser.add_argument(
+        "--batch",
+        action="store_true",
+        help="Batch promotion mode (use with --promote-note and --min-quality)"
+    )
+    
+    parser.add_argument(
+        "--to",
+        choices=["permanent", "literature"],
+        help="Target directory for promotion (permanent|literature)"
+    )
+    
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="Preview promotion plan without executing (dry-run mode)"
     )
     
     # Orphan remediation options
@@ -1088,6 +1207,62 @@ Examples:
                     f.write(format_fleeting_triage_report_markdown(triage_report))
             print(f"\n📄 Triage report exported to: {export_path}")
     
+    elif args.promote_note:
+        # Promote fleeting note(s) to permanent/literature status
+        if args.format != "json":
+            if args.batch:
+                print("🚀 Initiating batch promotion workflow...")
+            else:
+                print(f"🚀 Promoting fleeting note: {args.promote_note}")
+        
+        try:
+            if args.batch or args.promote_note == "BATCH_MODE":
+                # Batch promotion based on triage results
+                promotion_result = workflow.promote_fleeting_notes_batch(
+                    quality_threshold=args.min_quality or 0.7,
+                    target_type=args.to,
+                    preview_mode=args.preview
+                )
+            else:
+                # Single note promotion
+                if not args.promote_note or args.promote_note == "BATCH_MODE":
+                    print("❌ Error: --promote-note requires a note path unless using --batch mode")
+                    return 1
+                    
+                promotion_result = workflow.promote_fleeting_note(
+                    note_path=args.promote_note,
+                    target_type=args.to,
+                    preview_mode=args.preview
+                )
+                
+            # Check if any promotions had errors and return appropriate exit code
+            promoted_notes = promotion_result.get('promoted_notes', [])
+            has_errors = any(note.get('error') for note in promoted_notes)
+                
+            if args.format == "json":
+                print(json.dumps(promotion_result, indent=2, default=str))
+            else:
+                print_header("FLEETING NOTE PROMOTION RESULTS")
+                display_promotion_results(promotion_result)
+                
+            # Export if requested
+            if args.export:
+                export_path = Path(args.export)
+                with open(export_path, 'w', encoding='utf-8') as f:
+                    if args.format == "json":
+                        json.dump(promotion_result, f, indent=2, default=str)
+                    else:
+                        f.write(format_promotion_report_markdown(promotion_result))
+                print(f"\n📄 Promotion report exported to: {export_path}")
+            
+            # Return error code if there were errors
+            if has_errors:
+                return 1
+                
+        except Exception as e:
+            print(f"❌ Error during promotion: {e}")
+            return 1
+    
     else:
         # No action specified, show basic status
         print("📊 Showing basic workflow status...")
@@ -1101,4 +1276,7 @@ Examples:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    exit_code = main()
+    if exit_code:
+        sys.exit(exit_code)
