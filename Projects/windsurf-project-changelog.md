@@ -1,9 +1,20 @@
+## 2025-09-18 – v3 Manifest/Todo Migration + Rules Refresh
+
+- Created v3 docs: `Projects/inneros-manifest-v3.md`, `Projects/project-todo-v3.md`
+- Updated rules to reference v3 and current status:
+  - `.windsurf/rules/session-context.md` → Required Reads now v3
+  - `.windsurf/rules/windsurfrules-v4-concise.md` → Template system marked RESOLVED; Reading Intake UNBLOCKED; September 2025 refresh
+  - `.windsurf/rules/development-workflow.md` / `file-organization.md` / `current-issues.md` updated accordingly
+- Archived and deprecated v2 docs with redirect banners; copied to `Projects/Archive/completed-2025-09/`
+- Updated project docs/workflows to point to v3 where referenced
+
+Commits: 54c6d05 (add v3 docs), b792bd6 (rules → v3 refs), 6aca482 (rules refresh), 26da004 (docs migrate/deprecate)
+
 ## 2025-08-14 – Weekly Review Dry-Run Fast-Mode + Tag Parsing Bug
 
 - Fixed weekly review CLI to pass `--dry-run` through to `generate_weekly_recommendations()`, enabling fast-mode and preventing external AI calls during dry runs
 - Verified JSON output performance (13 candidates processed) without stalls
 - Added bug report: `Projects/bug-weird-tags-parsing-2025-08-14.md` documenting malformed tag parsing and metadata anomalies; proposed centralized sanitizer and repair plan
-
 ---
 
 ## 2025-08-10 – Modular Rules Migration (BREAKING)
