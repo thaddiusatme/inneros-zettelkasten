@@ -1,7 +1,7 @@
 # File Organization & Structure Rules
 
 > **Purpose**: File patterns, metadata schemas, directory structure  
-> **Updated**: 2025-08-10  
+> **Updated**: 2025-09-18  
 
 ## 📁 File Organization Rules
 
@@ -46,7 +46,7 @@ quotes: ["important-quotes"]
 
 ### Templates (Enhanced)
 Current Templates:
-- `fleeting.md` - Quick capture (REQUIRES FIX for timestamp processing)
+- `fleeting.md` - Quick capture (WORKING - Updated Templater syntax)
 - `permanent.md` - Structured permanent notes
 - `literature-note.md` - NEW: For imported articles/books with claims/quotes
 - `saved-article.md` - NEW: For Reading Intake Pipeline processing
