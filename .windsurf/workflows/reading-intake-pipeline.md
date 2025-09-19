@@ -117,8 +117,8 @@ python3 -m pytest tests/ -v
 ## 📝 Documentation Updates
 
 ### **Required Updates**
-- Update `Projects/inneros-manifest-v2.md` with implementation details
-- Add Reading Intake section to `Projects/project-todo-v2.md`
+- Update `Projects/inneros-manifest-v3.md` with implementation details
+- Add Reading Intake section to `Projects/project-todo-v3.md`
 - Document new CLI commands in `README.md`
 - Update changelog with feature additions
 

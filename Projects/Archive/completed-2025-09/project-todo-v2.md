@@ -1,8 +1,5 @@
 # InnerOS Zettelkasten - Project Todo v2.0
  
-> DEPRECATED — superseded by `Projects/project-todo-v3.md` (2025-09-18).
-> Please use the v3 todo for current priorities.
-
 **Last Updated**: 2025-09-18 16:28 PDT  
 **Status**: ✅ **MAJOR SYSTEMS COMPLETE** → Phase 6 Preparation  
 **Reference**: `Projects/inneros-manifest-v2.md` for comprehensive context

@@ -1,8 +1,6 @@
 # InnerOS Zettelkasten – Project Manifest v2.0
 
-> DEPRECATED — superseded by `Projects/inneros-manifest-v3.md` (2025-09-18).  
-> Please use the v3 manifest for current state and priorities.
-
+**Updated**: 2025-08-10 11:54 PDT  
 **Owner**: Thaddius • Assistant: Cascade  
 **Source of Truth**: `.windsurf/windsurfrules.md` (v3.0)
 

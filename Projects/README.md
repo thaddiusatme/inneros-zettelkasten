@@ -5,8 +5,8 @@
 ## 🎯 Current Active Projects
 
 ### Priority 1: Core System Maintenance
-- **`inneros-manifest-v2.md`** - Complete project overview and architecture documentation
-- **`project-todo-v2.md`** - Current development priorities and next steps
+- **`inneros-manifest-v3.md`** - Complete project overview and architecture documentation
+- **`project-todo-v3.md`** - Current development priorities and next steps
 - **`windsurf-project-changelog.md`** - Complete development history and decisions
 
 ### Priority 2: Next Phase Development  
@@ -42,7 +42,7 @@
 
 ## 📋 Next Development Priorities
 
-Based on `project-todo-v2.md`:
+Based on `project-todo-v3.md`:
 
 1. **Template Processing Bug** - Critical blocker (PRIORITY)
 2. **Reading Intake Pipeline** - Phase 5 extension leveraging existing AI workflows  
@@ -58,5 +58,5 @@ Based on `project-todo-v2.md`:
 ---
 
 **For detailed development history see**: `windsurf-project-changelog.md`  
-**For current priorities see**: `project-todo-v2.md`  
-**For architecture overview see**: `inneros-manifest-v2.md`
+**For current priorities see**: `project-todo-v3.md`  
+**For architecture overview see**: `inneros-manifest-v3.md`

@@ -30,16 +30,16 @@ Contains all lessons learned documents for major completed features:
 **Status**: 📚 SUPERSEDED - Historical versions replaced by current documents
 
 Contains older versions of project manifests and todos:
-- `inneros-manifest.md` → superseded by `../inneros-manifest-v2.md`
-- `project-todo.md` → superseded by `../project-todo-v2.md`
+- `inneros-manifest.md` → superseded by `../inneros-manifest-v3.md`
+- `project-todo.md` → superseded by `../project-todo-v3.md`
 - `fleeting-note-lifecycle-mvp-manifest.md` → completed and superseded
 - `todo_phase3` → completed
 
 ## Current Active Projects
 
 See parent directory (`../`) for:
-- `inneros-manifest-v2.md` - Current project overview and architecture
-- `project-todo-v2.md` - Current priorities and development roadmap
+- `inneros-manifest-v3.md` - Current project overview and architecture
+- `project-todo-v3.md` - Current priorities and development roadmap
 - `reading-intake-integration-analysis.md` - Next phase development analysis
 - `windsurf-project-changelog.md` - Complete development history
 
