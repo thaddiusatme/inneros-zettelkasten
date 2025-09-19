@@ -7,7 +7,7 @@ trigger: always_on
 # InnerOS Windsurf Rules: AI-Enhanced Knowledge Management (v4.0)
 
 > **Version**: 4.0 (Current Project State)  
-> **Updated**: 2025-09-18  
+> **Updated**: 2025-09-18
 > **Purpose**: Complete guide for AI interactions in InnerOS Zettelkasten development  
 > **Context**: Includes Reading Intake Pipeline integration and critical bug management  
 

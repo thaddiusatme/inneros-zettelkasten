@@ -1,7 +1,7 @@
 # Session Context & Core Principles
 
 > **Purpose**: Session management, required reads, and critical path guidance  
-> **Updated**: 2025-09-18  
+> **Updated**: 2025-09-18
 
 ## 🎯 Core Session Principles
 

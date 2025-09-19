@@ -1,7 +1,7 @@
 # Development Workflow & Guidelines
 
 > **Purpose**: TDD methodology, integration guidelines, Git standards  
-> **Updated**: 2025-09-18  
+> **Updated**: 2025-09-18
 
 ## 🏗️ Development Guidelines
 

@@ -1,7 +1,7 @@
 # File Organization & Structure Rules
 
 > **Purpose**: File patterns, metadata schemas, directory structure  
-> **Updated**: 2025-09-18  
+> **Updated**: 2025-09-18
 
 ## 📁 File Organization Rules
 
