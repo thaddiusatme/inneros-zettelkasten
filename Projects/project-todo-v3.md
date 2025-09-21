@@ -1,6 +1,6 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-09-18 16:36 PDT  
+**Last Updated**: 2025-09-21 12:24 PDT  
 **Status**: ✅ MAJOR SYSTEMS COMPLETE → Phase 6 Preparation  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
@@ -30,41 +30,60 @@
 
 ## 🎯 Active Projects
 
+### 🟡 Automated Background Daemon (NEW - Core Infrastructure)
+
+- **Goal**: Transform InnerOS into always-running, autonomous knowledge processing system
+- **Approach**: Extract existing AutoProcessor into standalone daemon service  
+- **Dependencies**: Current AI workflow system ✅, system service configuration ⏳
+- **Deliverables**:
+  - Background daemon with file watching and scheduling
+  - System service configuration (macOS LaunchD/Linux systemd)
+  - Automated maintenance tasks (weekly review, orphan detection)
+  - **Manifest**: `Projects/automated-background-daemon-manifest.md` ✅
+
 ### 🔴 Image Linking System (System Integrity)
 
-- Problem: Images disappear during AI automation processes
-- Goal: Preserve media assets and references through all workflows
-- Deliverables:
+- **Problem**: Images disappear during AI automation processes
+- **Goal**: Preserve media assets and references through all workflows
+- **Deliverables**:
   - Media reference audit + test coverage
   - Link rewriting/preservation strategy
   - Integration into WorkflowManager operations
 
 ### 📚 Reading Intake Pipeline (Phase 5 Extension)
 
-- Approach: Integration-first; reuse Phase 5 AI workflows
-- Dependencies: Template system ✅, schema integration ⏳, image linking ⏳
-- Deliverables:
+- **Approach**: Integration-first; reuse Phase 5 AI workflows
+- **Dependencies**: Template system ✅, schema integration ⏳, image linking ⏳
+- **Deliverables**:
   - Schema extension for `source:` and `saved_at`
   - Literature templates with claims/quotes
   - CLI import adapters + triage
+  - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
 
 ---
 
 ## 🛣️ Next 2 Weeks Roadmap
 
-1. Image Linking System
+1. **Automated Background Daemon** (NEW - Priority 1)
+   - [ ] Extract AutoProcessor into daemon controller
+   - [ ] Add APScheduler for automated maintenance tasks
+   - [ ] Create daemon control CLI (`inneros daemon --start/stop/status`)
+   - [ ] Design macOS LaunchD service configuration
+   - [ ] Test background processing and scheduling
+
+2. **Image Linking System** (Priority 2)
    - [ ] Formalize link model (paths, IDs, fallback)
    - [ ] Add tests: copy/move/update scenarios
    - [ ] Implement preservation + rewriting
    - [ ] Integrate with directory organizer and AI workflows
 
-2. Reading Intake Pipeline
+3. **Reading Intake Pipeline** (Priority 3)
    - [ ] Extend YAML validator for `source:` and `saved_at`
    - [ ] Add literature templates + import adapters (CSV/JSON, bookmarks)
    - [ ] CLI: `--import-bookmarks`, `--process-literature`
    - [ ] Performance: <30s per item triage
 
-3. Phase 6 Preparation
+4. **Phase 6 Preparation** (Background)
    - [ ] Define multi-user data model and permissions
    - [ ] API surface (read-only) and events design
    - [ ] UI scaffolding plan (analytics dashboard)
