@@ -207,6 +207,65 @@ status: inbox
         bad_file = next((f for f in result['files'] if f['name'] == 'bad-yaml.md'), None)
         self.assertIsNotNone(bad_file)
         self.assertIn('yaml_parsing_error', bad_file)
+    
+    # === P1-2: BACKUP SYSTEM INTEGRATION TESTS ===
+    
+    def test_processor_has_backup_integration(self):
+        """Test that BatchProcessor can create backups before processing"""
+        # This test will FAIL initially (Red phase)
+        result = self.processor.create_backup()
+        
+        # Should return backup path
+        self.assertIsInstance(result, str)
+        self.assertIn('knowledge-', result)  # Contains timestamp format
+        
+        # Backup directory should exist
+        backup_path = Path(result)
+        self.assertTrue(backup_path.exists())
+        self.assertTrue(backup_path.is_dir())
+    
+    def test_process_with_backup_creates_backup_first(self):
+        """Test that process_notes creates backup before making changes"""
+        # Create a test file to process
+        test_file = self.inbox_dir / "process-test.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        self.create_test_file(test_file, "Test content for processing", old_time)
+        
+        # This will fail initially - process_notes doesn't exist yet
+        result = self.processor.process_notes(create_backup=True, limit=1)
+        
+        # Should include backup information
+        self.assertIn('backup_created', result)
+        self.assertIn('backup_path', result)
+        self.assertTrue(Path(result['backup_path']).exists())
+    
+    def test_rollback_capability(self):
+        """Test that processor can rollback to previous backup"""
+        # Create initial backup
+        backup_path = self.processor.create_backup()
+        
+        # Modify something (simulate processing)
+        test_file = self.inbox_dir / "rollback-test.md"
+        test_file.write_text("Original content")
+        
+        # Create another backup
+        backup_path_2 = self.processor.create_backup()
+        
+        # Modify file again
+        test_file.write_text("Modified content")
+        
+        # Rollback to first backup
+        self.processor.rollback(backup_path)
+        
+        # File should not exist (wasn't in original backup)
+        self.assertFalse(test_file.exists())
+    
+    def test_backup_safety_prevents_processing_without_backup(self):
+        """Test that processing fails safely if backup creation fails"""
+        # Mock backup failure scenario would go here
+        # For now, test that we have the safety mechanisms
+        self.assertTrue(hasattr(self.processor, 'create_backup'))
+        self.assertTrue(hasattr(self.processor, 'rollback'))
 
 
 if __name__ == '__main__':

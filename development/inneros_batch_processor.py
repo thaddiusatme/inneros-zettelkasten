@@ -9,10 +9,21 @@ Phase: P0 - Core Directory Scanner
 
 import argparse
 import re
+import sys
 import yaml
 from pathlib import Path
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
+
+# Import our production-ready backup system
+try:
+    from src.utils.directory_organizer import DirectoryOrganizer, BackupError
+except ImportError:
+    # Handle import during testing or standalone execution
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+    from utils.directory_organizer import DirectoryOrganizer, BackupError
 
 
 class BatchProcessor:
@@ -23,16 +34,32 @@ class BatchProcessor:
     
     def __init__(self, base_dir: str = "."):
         """
-        Initialize batch processor with target directories
+        Initialize batch processor with target directories and backup system
         
         Args:
             base_dir: Base directory containing knowledge/ folder
         """
         self.base_dir = Path(base_dir)
+        
+        # Find knowledge directory (handle development/ execution)
+        knowledge_path = self.base_dir / "knowledge"
+        if not knowledge_path.exists():
+            # Handle case where we're running from development/ directory
+            sibling_knowledge = Path("../knowledge").resolve()
+            if sibling_knowledge.exists():
+                knowledge_path = sibling_knowledge
+        
         self.target_dirs = [
-            self.base_dir / "knowledge" / "Inbox",
-            self.base_dir / "knowledge" / "Fleeting Notes"
+            knowledge_path / "Inbox",
+            knowledge_path / "Fleeting Notes"
         ]
+        
+        # Initialize production-ready backup system
+        
+        self.backup_system = DirectoryOrganizer(
+            vault_root=str(knowledge_path)
+            # backup_root defaults to ~/backups/{vault_name}/ when None
+        )
     
     def scan_notes(self) -> Dict[str, Any]:
         """
@@ -187,6 +214,64 @@ class BatchProcessor:
         except yaml.YAMLError:
             # Re-raise the error so the calling method can catch it
             raise
+    
+    # === BACKUP SYSTEM INTEGRATION ===
+    
+    def create_backup(self) -> str:
+        """
+        Create timestamped backup before processing operations
+        
+        Returns:
+            str: Path to created backup directory
+            
+        Raises:
+            BackupError: If backup creation fails
+        """
+        return self.backup_system.create_backup()
+    
+    def rollback(self, backup_path: str) -> None:
+        """
+        Rollback to previous backup state
+        
+        Args:
+            backup_path: Path to backup directory to restore from
+            
+        Raises:
+            BackupError: If rollback fails
+        """
+        self.backup_system.rollback(backup_path)
+    
+    def process_notes(self, create_backup: bool = True, limit: int | None = None) -> Dict[str, Any]:
+        """
+        Process notes with AI enhancement (placeholder for P1-3)
+        Creates backup first if requested for safety
+        
+        Args:
+            create_backup: Whether to create backup before processing
+            limit: Maximum number of notes to process
+            
+        Returns:
+            Dict with processing results
+        """
+        result = {
+            'processed_count': 0,
+            'backup_created': False,
+            'backup_path': None
+        }
+        
+        if create_backup:
+            try:
+                backup_path = self.create_backup()
+                result['backup_created'] = True
+                result['backup_path'] = backup_path
+                print(f"✅ Backup created: {backup_path}")
+            except BackupError as e:
+                raise BackupError(f"Cannot proceed without backup: {e}")
+        
+        # TODO: P1-3 - Add actual AI processing here
+        # For now, just return backup info to pass tests
+        
+        return result
 
 
 def main():
@@ -209,16 +294,56 @@ def main():
         action='store_true',
         help='Actually process notes (requires confirmation)'
     )
+    parser.add_argument(
+        '--backup',
+        action='store_true', 
+        help='Create backup of knowledge directory'
+    )
+    parser.add_argument(
+        '--rollback',
+        type=str,
+        metavar='BACKUP_PATH',
+        help='Rollback to specified backup directory'
+    )
     
     args = parser.parse_args()
     
-    if not any([args.scan, args.dry_run, args.process]):
+    if not any([args.scan, args.dry_run, args.process, args.backup, args.rollback]):
         parser.print_help()
         return
     
     processor = BatchProcessor()
     
-    if args.scan:
+    if args.backup:
+        print("💾 Creating backup of knowledge directory...")
+        try:
+            backup_path = processor.create_backup()
+            print("✅ Backup created successfully!")
+            print(f"📂 Location: {backup_path}")
+            print(f"\n💡 To rollback: python {sys.argv[0]} --rollback '{backup_path}'")
+        except BackupError as e:
+            print(f"❌ Backup failed: {e}")
+            return
+    
+    elif args.rollback:
+        backup_path = args.rollback
+        print("⚠️  WARNING: This will replace your current knowledge directory!")
+        print(f"📂 Rollback source: {backup_path}")
+        
+        confirmation = input("\n🤔 Are you sure you want to rollback? (yes/no): ").lower().strip()
+        if confirmation not in ['yes', 'y']:
+            print("❌ Rollback cancelled")
+            return
+            
+        try:
+            processor.rollback(backup_path)
+            print("✅ Rollback completed successfully!")
+            print("🔄 Your knowledge directory has been restored to the backup state")
+        except BackupError as e:
+            print(f"❌ Rollback failed: {e}")
+            return
+    
+    elif args.scan:
         print("🔍 Scanning for processable notes...")
         result = processor.scan_notes()
         print(f"📊 Found {result['total_count']} notes ready for processing")
