@@ -2,7 +2,7 @@
 type: fleeting
 created: 2025-09-17 10:00
 status: inbox
-tags: [prompt, chatgpt, inbox]
+tags: ["ai-humble-servant", "ai-tool-review", "arxiv-papers", "chatgpt", "forbes", "hyperlinking-requirements", "in-case-you-missed-it", "inbox", "newsletter-structure", "prompt"]
 visibility: private
 ---
 You are an AI assistant tasked with drafting the weekly AI Humble Servant newsletter. Create a newsletter that tells a story, provokes thought, and delivers practical value. Follow this structure:

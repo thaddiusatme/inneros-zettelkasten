@@ -1,3 +1,19 @@
+---
+tags: ["after analyzing the provided text", "and the text highlights their importance in shaping purchasing decisions.
+5. **loss aversion**: the study discusses loss aversion", "are applied to understand consumer decision-making.
+10. **psychology**: psychological concepts", "are used to explain consumer behavior.
+11. **behavioral economics**: the study incorporates insights from behavioral economics to better understand how consumers make decisions.
+12. **cultural factors**: cultural factors are discussed as influencing consumer behavior and purchasing decisions.
+
+these tags provide a summary of the key concepts and themes present in the provided text.", "including the impact of price perception on consumer behavior.
+2. **consumer behavior**: the study explores how consumers make purchasing decisions and how prices influence these decisions.
+3. **neuromarketing**: the text mentions neuromarketing as a field that studies the neural basis of consumer decision-making.
+4. **emotions**: emotions play a crucial role in consumer behavior", "like emotions and loss aversion", "such as prospect theory", "which refers to the tendency for people to prefer avoiding losses over acquiring gains.
+6. **prospect theory**: prospect theory is mentioned as a framework that helps understand how consumers make decisions under uncertainty.
+7. **conjoint analysis**: conjoint analysis is discussed as a method used in marketing research to estimate consumer preferences and behavior.
+8. **marketing research**: the text highlights the importance of marketing research in understanding consumer behavior and informing pricing strategies.
+9. **economics**: economic theories"]
+---
 ## Executive Summary
 
 This comprehensive systematic review examined empirical studies testing how price levels interact with perceived risk and emotions to influence purchase decisions and willingness to pay. Based on analysis of over 50 sources spanning neuroscience, behavioral economics, and consumer psychology from 2000 to present, several key findings emerge that fundamentally challenge traditional economic models of rational decision-making.

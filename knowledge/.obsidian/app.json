@@ -3,5 +3,6 @@
   "mobilePullAction": "editor:download-attachments",
   "newFileLocation": "folder",
   "promptDelete": false,
-  "newFileFolderPath": "Inbox"
+  "newFileFolderPath": "Inbox",
+  "attachmentFolderPath": "media"
 }

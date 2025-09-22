@@ -1,3 +1,6 @@
+---
+tags: ["ai-humble-servant", "ai-tool-review", "arxiv-papers", "bottom-line", "forbes", "newsletter-structure", "practical-value", "research-selection"]
+---
 You are an AI assistant tasked with drafting the weekly AI Humble Servant newsletter. Create a newsletter that tells a story, provokes thought, and delivers practical value. Follow this structure:
 
 ## 1. RESEARCH & SELECTION

@@ -326,6 +326,10 @@ class WorkflowManager:
                     # Update status to indicate AI processing (only if AI processing happened)
                     if needs_ai_update:
                         frontmatter["ai_processed"] = datetime.now().isoformat()
+                        
+                        # Add quality score to frontmatter if it was processed
+                        if "quality" in results["processing"] and "score" in results["processing"]["quality"]:
+                            frontmatter["quality_score"] = results["processing"]["quality"]["score"]
                     
                     # Rebuild content using centralized utility (includes template fixes)
                     updated_content = build_frontmatter(frontmatter, body)

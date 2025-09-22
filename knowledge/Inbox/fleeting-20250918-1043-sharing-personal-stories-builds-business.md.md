@@ -2,9 +2,7 @@
 type: permanent
 created: 2025-09-18 10:43
 status: promoted
-tags:
-  - fleeting
-  - inbox
+tags: ["emotional-intelligence", "hero's-journey", "intimacy-at-scale", "narrative-intimacy", "personal-branding", "sales-psychology", "trust-building", "vulnerability-leadership"]
 visibility: private
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:

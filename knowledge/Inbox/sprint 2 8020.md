@@ -1,12 +1,8 @@
 ---
 created: 2025-08-23 22:34
-tags: [80-20-analysis, audience-builder-gpt-sales-push, kanban-board, mustapha-social-campaign,
-  sprint-planning, tripwire-marketing-campaign, upwork-start-plus-portfolio-anchors,
-  wip-limits-and-board-cleanup]
-ai_processed: '2025-08-31T13:22:38.226219'
+tags: [" ", ",", "-", "0", "2", "8", "[", "a", "audience-builder-gpt", "b"]
+ai_processed: 2025-08-31T13:22:38.226219
 ---
-
-
 # 80/20 analysis of your Kanban board
 
 ## The vital 20 percent to ship next

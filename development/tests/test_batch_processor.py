@@ -149,7 +149,8 @@ status: inbox
         # Should identify opportunity for more tags
         minimal_file = next((f for f in result['files'] if f['name'] == 'minimal-tags.md'), None)
         self.assertIsNotNone(minimal_file)
-        self.assertIn('needs_more_tags', minimal_file['ai_opportunities'])
+        if minimal_file:  # Type guard for None check
+            self.assertIn('needs_more_tags', minimal_file['ai_opportunities'])
     
     def test_dry_run_detects_missing_quality_score(self):
         """Test that dry_run identifies files without quality scores"""
@@ -206,7 +207,8 @@ status: inbox
         # Should identify the file as having YAML issues
         bad_file = next((f for f in result['files'] if f['name'] == 'bad-yaml.md'), None)
         self.assertIsNotNone(bad_file)
-        self.assertIn('yaml_parsing_error', bad_file)
+        if bad_file:  # Type guard for None check
+            self.assertIn('yaml_parsing_error', bad_file)
     
     # === P1-2: BACKUP SYSTEM INTEGRATION TESTS ===
     
@@ -248,8 +250,8 @@ status: inbox
         test_file = self.inbox_dir / "rollback-test.md"
         test_file.write_text("Original content")
         
-        # Create another backup
-        backup_path_2 = self.processor.create_backup()
+        # Create another backup (for test completeness)
+        self.processor.create_backup()
         
         # Modify file again
         test_file.write_text("Modified content")
@@ -266,6 +268,154 @@ status: inbox
         # For now, test that we have the safety mechanisms
         self.assertTrue(hasattr(self.processor, 'create_backup'))
         self.assertTrue(hasattr(self.processor, 'rollback'))
+    
+    # === P1-3: AI PROCESSING INTEGRATION TESTS (RED PHASE) ===
+    
+    def test_process_notes_integrates_with_ai_workflow(self):
+        """Test that process_notes applies AI enhancement to identified files"""
+        # RED PHASE: This test should FAIL initially
+        
+        # Create a file that needs AI processing
+        test_file = self.inbox_dir / "ai-test.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        content_needing_ai = """---
+type: fleeting
+created: 2025-09-21 10:00
+status: inbox
+---
+
+# Test Note for AI Processing
+
+This note has minimal tags and no quality score.
+It should be enhanced with AI processing.
+"""
+        test_file.write_text(content_needing_ai)
+        os.utime(test_file, (old_time.timestamp(), old_time.timestamp()))
+        
+        # Process with AI integration
+        result = self.processor.process_notes(create_backup=True, limit=1)
+        
+        # Should have processed files with AI enhancement
+        self.assertIn('processed_count', result)
+        self.assertGreater(result['processed_count'], 0)
+        self.assertIn('ai_enhanced_files', result)
+        
+        # File should now have AI enhancements
+        updated_content = test_file.read_text()
+        self.assertIn('ai_processed:', updated_content)
+    
+    def test_ai_processing_adds_tags_and_quality_scores(self):
+        """Test that AI processing adds missing tags and quality scores"""
+        # RED PHASE: This test should FAIL initially
+        
+        # Create file without AI enhancements
+        test_file = self.inbox_dir / "enhancement-test.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        original_content = """---
+type: fleeting
+created: 2025-09-21 10:00
+status: inbox
+---
+
+# Enhancement Test Note
+
+This note needs AI tags and quality assessment.
+It has substantial content that should receive good scores.
+"""
+        test_file.write_text(original_content)
+        os.utime(test_file, (old_time.timestamp(), old_time.timestamp()))
+        
+        # Process with AI
+        result = self.processor.process_notes(create_backup=True, limit=1)
+        
+        # Verify AI enhancements were applied
+        updated_content = test_file.read_text()
+        self.assertIn('tags:', updated_content)
+        self.assertIn('quality_score:', updated_content) 
+        
+        # Should report what was enhanced
+        self.assertIn('ai_enhanced_files', result)
+        enhanced_files = result['ai_enhanced_files']
+        self.assertGreater(len(enhanced_files), 0)
+        
+        enhanced_file = enhanced_files[0]
+        self.assertIn('tags_added', enhanced_file)
+        self.assertIn('quality_score', enhanced_file)
+    
+    def test_ai_processing_respects_file_limits(self):
+        """Test that AI processing respects the limit parameter"""
+        # RED PHASE: This test should FAIL initially
+        
+        # Create multiple files needing processing
+        for i in range(5):
+            test_file = self.inbox_dir / f"limit-test-{i}.md"
+            old_time = datetime.now() - timedelta(hours=3)
+            self.create_test_file(test_file, f"Test content {i}", old_time)
+        
+        # Process with limit=2
+        result = self.processor.process_notes(create_backup=True, limit=2)
+        
+        # Should only process 2 files
+        self.assertEqual(result['processed_count'], 2)
+        
+        if 'ai_enhanced_files' in result:
+            self.assertLessEqual(len(result['ai_enhanced_files']), 2)
+    
+    def test_ai_processing_includes_progress_reporting(self):
+        """Test that AI processing includes detailed progress information"""
+        # RED PHASE: This test should FAIL initially
+        
+        # Create a file for processing
+        test_file = self.inbox_dir / "progress-test.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        self.create_test_file(test_file, "Progress test content", old_time)
+        
+        # Process and check progress reporting
+        result = self.processor.process_notes(create_backup=True, limit=1)
+        
+        # Should include detailed progress information
+        self.assertIn('processing_time', result)
+        self.assertIn('backup_created', result)
+        self.assertIn('errors', result)
+        self.assertIn('ai_enhanced_files', result)
+        
+        # Progress should be non-negative
+        self.assertGreaterEqual(result['processing_time'], 0)
+        self.assertIsInstance(result['errors'], list)
+    
+    def test_ai_processing_error_handling(self):
+        """Test that AI processing handles errors gracefully"""
+        # RED PHASE: This test should FAIL initially
+        
+        # Create file with potential parsing issues
+        problem_file = self.inbox_dir / "error-test.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        problematic_content = """---
+type: fleeting
+created: 2025-09-21 10:00
+status: inbox
+tags: [malformed, content]
+---
+
+# Error Test Note
+
+This note might cause processing issues.
+"""
+        problem_file.write_text(problematic_content)
+        os.utime(problem_file, (old_time.timestamp(), old_time.timestamp()))
+        
+        # Processing should handle errors gracefully
+        result = self.processor.process_notes(create_backup=True, limit=1)
+        
+        # Should complete without crashing
+        self.assertIsInstance(result, dict)
+        self.assertIn('errors', result)
+        
+        # Errors should be reported but not crash processing
+        if result['errors']:
+            for error in result['errors']:
+                self.assertIn('file', error)
+                self.assertIn('error', error)
 
 
 if __name__ == '__main__':

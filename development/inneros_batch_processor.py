@@ -18,12 +18,14 @@ from datetime import datetime, timedelta
 # Import our production-ready backup system
 try:
     from src.utils.directory_organizer import DirectoryOrganizer, BackupError
+    from src.ai.workflow_manager import WorkflowManager
 except ImportError:
     # Handle import during testing or standalone execution
     import sys
     import os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
     from utils.directory_organizer import DirectoryOrganizer, BackupError
+    from ai.workflow_manager import WorkflowManager
 
 
 class BatchProcessor:
@@ -55,11 +57,13 @@ class BatchProcessor:
         ]
         
         # Initialize production-ready backup system
-        
         self.backup_system = DirectoryOrganizer(
             vault_root=str(knowledge_path)
             # backup_root defaults to ~/backups/{vault_name}/ when None
         )
+        
+        # Initialize AI workflow manager for processing
+        self.workflow_manager = WorkflowManager(str(knowledge_path))
     
     def scan_notes(self) -> Dict[str, Any]:
         """
@@ -243,7 +247,7 @@ class BatchProcessor:
     
     def process_notes(self, create_backup: bool = True, limit: int | None = None) -> Dict[str, Any]:
         """
-        Process notes with AI enhancement (placeholder for P1-3)
+        Process notes with AI enhancement
         Creates backup first if requested for safety
         
         Args:
@@ -253,10 +257,15 @@ class BatchProcessor:
         Returns:
             Dict with processing results
         """
+        start_time = datetime.now()
+        
         result = {
             'processed_count': 0,
             'backup_created': False,
-            'backup_path': None
+            'backup_path': None,
+            'ai_enhanced_files': [],
+            'errors': [],
+            'processing_time': 0.0
         }
         
         if create_backup:
@@ -268,8 +277,55 @@ class BatchProcessor:
             except BackupError as e:
                 raise BackupError(f"Cannot proceed without backup: {e}")
         
-        # TODO: P1-3 - Add actual AI processing here
-        # For now, just return backup info to pass tests
+        # Get files that need processing
+        scan_result = self.scan_notes()
+        files_to_process = scan_result['files']
+        
+        # Apply limit if specified
+        if limit is not None:
+            files_to_process = files_to_process[:limit]
+        
+        # Process each file with AI enhancement
+        for file_info in files_to_process:
+            try:
+                file_path = file_info['path']
+                
+                # Use WorkflowManager to process the note
+                ai_result = self.workflow_manager.process_inbox_note(file_path)
+                
+                if "error" not in ai_result:
+                    result['processed_count'] += 1
+                    
+                    # Extract enhancement details
+                    enhanced_info = {
+                        'name': file_info['name'],
+                        'path': file_path,
+                        'tags_added': [],
+                        'quality_score': ai_result.get('quality_score', 0.0)
+                    }
+                    
+                    # Check if tags were added
+                    if 'processing' in ai_result and 'tags' in ai_result['processing']:
+                        tags_info = ai_result['processing']['tags']
+                        if isinstance(tags_info, dict) and 'added' in tags_info:
+                            enhanced_info['tags_added'] = tags_info['added']
+                    
+                    result['ai_enhanced_files'].append(enhanced_info)
+                else:
+                    result['errors'].append({
+                        'file': file_info['name'],
+                        'error': ai_result['error']
+                    })
+                    
+            except Exception as e:
+                result['errors'].append({
+                    'file': file_info['name'],
+                    'error': str(e)
+                })
+        
+        # Calculate processing time
+        end_time = datetime.now()
+        result['processing_time'] = (end_time - start_time).total_seconds()
         
         return result
 
@@ -305,10 +361,21 @@ def main():
         metavar='BACKUP_PATH',
         help='Rollback to specified backup directory'
     )
+    parser.add_argument(
+        '--ai-process',
+        action='store_true',
+        help='Process notes with AI enhancement (includes backup)'
+    )
+    parser.add_argument(
+        '--limit',
+        type=int,
+        metavar='N',
+        help='Limit processing to N files (useful for testing)'
+    )
     
     args = parser.parse_args()
     
-    if not any([args.scan, args.dry_run, args.process, args.backup, args.rollback]):
+    if not any([args.scan, args.dry_run, args.process, args.backup, args.rollback, args.ai_process]):
         parser.print_help()
         return
     
@@ -396,13 +463,47 @@ def main():
             if len(result['files']) > 5:
                 print(f"\n  ... and {len(result['files']) - 5} more files")
             
-            print("\n💡 Next steps:")
-            print("  → Use --process to apply AI enhancements")
+            print("💡 Next steps:")
+            print("  → Use --ai-process to apply AI enhancements")
             print("  → All changes will be backed up automatically")
         else:
             print("✅ All notes are already well-processed!")
             print("💡 No AI enhancements needed")
-
-
-if __name__ == "__main__":
-    main()
+    
+    elif args.ai_process:
+        print("🤖 Processing notes with AI enhancement...")
+        limit = args.limit if hasattr(args, 'limit') and args.limit else None
+        
+        try:
+            result = processor.process_notes(create_backup=True, limit=limit)
+            
+            # Display results
+            print(f"✅ AI processing completed!")
+            print(f"📊 Processed {result['processed_count']} notes")
+            print(f"⏱️  Processing time: {result['processing_time']:.1f} seconds")
+            
+            if result['backup_created']:
+                print(f"💾 Backup: {result['backup_path']}")
+            
+            # Show enhanced files
+            if result['ai_enhanced_files']:
+                print(f"\n🔍 Enhanced Files:")
+                for enhanced in result['ai_enhanced_files']:
+                    tags_count = len(enhanced['tags_added']) if enhanced['tags_added'] else 0
+                    quality = enhanced['quality_score']
+                    print(f"  • {enhanced['name']}")
+                    print(f"    Quality: {quality:.2f} | Tags added: {tags_count}")
+            
+            # Show errors if any
+            if result['errors']:
+                print(f"\n⚠️  Errors ({len(result['errors'])}):")
+                for error in result['errors'][:3]:  # Show first 3 errors
+                    print(f"  • {error['file']}: {error['error']}")
+                if len(result['errors']) > 3:
+                    print(f"  ... and {len(result['errors']) - 3} more errors")
+                    
+            print(f"\n💡 Rollback command: python {sys.argv[0]} --rollback '{result['backup_path']}'")
+            
+        except Exception as e:
+            print(f"❌ AI processing failed: {e}")
+            return
