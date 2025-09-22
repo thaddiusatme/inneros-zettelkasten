@@ -118,6 +118,95 @@ status: inbox
             self.assertIn('path', file_info)
             self.assertIn('size', file_info)
             self.assertIn('modified', file_info)
+    
+    # === P0-2: DRY-RUN MODE TESTS ===
+    
+    def test_dry_run_analyzes_yaml_frontmatter(self):
+        """Test that dry_run parses YAML frontmatter from files"""
+        # This test will FAIL initially (Red phase)
+        result = self.processor.dry_run()
+        
+        # Should find files and analyze their YAML
+        self.assertGreater(result['total_analyzed'], 0)
+        self.assertIn('files', result)
+        
+        # Each analyzed file should have frontmatter analysis
+        for file_analysis in result['files']:
+            self.assertIn('name', file_analysis)
+            self.assertIn('current_tags', file_analysis)
+            self.assertIn('missing_metadata', file_analysis)
+            self.assertIn('ai_opportunities', file_analysis)
+    
+    def test_dry_run_detects_missing_tags(self):
+        """Test that dry_run identifies files with no or few tags"""
+        # Create file with minimal tags
+        minimal_tags_file = self.inbox_dir / "minimal-tags.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        self.create_test_file(minimal_tags_file, "Minimal content", old_time)
+        
+        result = self.processor.dry_run()
+        
+        # Should identify opportunity for more tags
+        minimal_file = next((f for f in result['files'] if f['name'] == 'minimal-tags.md'), None)
+        self.assertIsNotNone(minimal_file)
+        self.assertIn('needs_more_tags', minimal_file['ai_opportunities'])
+    
+    def test_dry_run_detects_missing_quality_score(self):
+        """Test that dry_run identifies files without quality scores"""
+        result = self.processor.dry_run()
+        
+        # Should identify files missing quality_score metadata
+        files_needing_quality = [f for f in result['files'] 
+                               if 'needs_quality_score' in f['ai_opportunities']]
+        self.assertGreater(len(files_needing_quality), 0)
+    
+    def test_dry_run_provides_processing_preview(self):
+        """Test that dry_run shows what would be processed"""
+        result = self.processor.dry_run()
+        
+        # Should provide summary statistics
+        self.assertIn('summary', result)
+        self.assertIn('total_files_needing_tags', result['summary'])
+        self.assertIn('total_files_needing_quality', result['summary'])
+        self.assertIn('estimated_processing_time', result['summary'])
+    
+    def test_dry_run_respects_same_filters_as_scan(self):
+        """Test that dry_run applies same safety filters as scan_notes"""
+        scan_result = self.processor.scan_notes()
+        dry_run_result = self.processor.dry_run()
+        
+        # Should find same number of files
+        self.assertEqual(len(scan_result['files']), len(dry_run_result['files']))
+        
+        # Should have same file names
+        scan_names = {f['name'] for f in scan_result['files']}
+        dry_run_names = {f['name'] for f in dry_run_result['files']}
+        self.assertEqual(scan_names, dry_run_names)
+    
+    def test_dry_run_safe_yaml_parsing(self):
+        """Test that dry_run handles malformed YAML gracefully"""
+        # Create file with malformed YAML
+        bad_yaml_file = self.inbox_dir / "bad-yaml.md"
+        old_time = datetime.now() - timedelta(hours=3)
+        bad_yaml_content = """---
+type: fleeting
+tags: [unclosed array
+status: inbox
+---
+
+# Content with bad YAML
+"""
+        bad_yaml_file.write_text(bad_yaml_content)
+        os.utime(bad_yaml_file, (old_time.timestamp(), old_time.timestamp()))
+        
+        # Should not crash on bad YAML
+        result = self.processor.dry_run()
+        self.assertIsInstance(result, dict)
+        
+        # Should identify the file as having YAML issues
+        bad_file = next((f for f in result['files'] if f['name'] == 'bad-yaml.md'), None)
+        self.assertIsNotNone(bad_file)
+        self.assertIn('yaml_parsing_error', bad_file)
 
 
 if __name__ == '__main__':
