@@ -551,3 +551,200 @@ class TestCaptureNoteGeneration:
         if isinstance(results, list):
             filenames = [result['filename'] for result in results]
             assert len(set(filenames)) == len(filenames), "Should generate unique filenames"
+
+
+class TestCaptureMatcherAIIntegration:
+    """Test suite for AI workflow integration - TDD Iteration 5"""
+    
+    def test_process_capture_notes_with_ai_method_exists(self):
+        """RED: Test that process_capture_notes_with_ai method exists and is callable"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # This should fail initially - method doesn't exist yet
+        assert hasattr(matcher, 'process_capture_notes_with_ai'), "Method process_capture_notes_with_ai should exist"
+        assert callable(getattr(matcher, 'process_capture_notes_with_ai')), "Method should be callable"
+    
+    def test_process_capture_notes_with_ai_returns_dict(self):
+        """RED: Test that AI processing method returns expected result structure"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Mock capture notes data
+        capture_notes = [
+            {
+                "markdown_content": "---\ntype: fleeting\n---\n# Test capture",
+                "filename": "capture-20250122-1435-test.md",
+                "file_path": "/fake/inbox/capture-20250122-1435-test.md"
+            }
+        ]
+        
+        # This should fail initially - method doesn't exist yet
+        result = matcher.process_capture_notes_with_ai(capture_notes)
+        
+        # Expected result structure
+        assert isinstance(result, dict), "Should return dictionary result"
+        assert "processing_stats" in result, "Should include processing statistics"
+        assert "ai_results" in result, "Should include AI processing results"
+        assert "errors" in result, "Should include error tracking"
+    
+    def test_process_capture_notes_with_ai_integrates_with_workflow_manager(self):
+        """RED: Test integration with existing WorkflowManager for AI processing"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Mock capture notes
+        capture_notes = [
+            {
+                "markdown_content": "---\ntype: fleeting\ncreated: 2025-01-22 14:35\n---\n# Knowledge capture test",
+                "filename": "capture-20250122-1435-knowledge-test.md", 
+                "file_path": "/fake/inbox/capture-20250122-1435-knowledge-test.md"
+            }
+        ]
+        
+        # Process with AI integration
+        result = matcher.process_capture_notes_with_ai(capture_notes)
+        
+        # Should leverage WorkflowManager processing
+        assert "ai_results" in result, "Should process with AI"
+        assert len(result["ai_results"]) == 1, "Should process one note"
+        
+        ai_result = result["ai_results"][0]
+        assert "quality_score" in ai_result, "Should include quality scoring"
+        assert "ai_tags" in ai_result, "Should include AI-generated tags"
+        assert "recommendations" in ai_result, "Should include AI recommendations"
+    
+    def test_process_capture_notes_with_ai_quality_scoring(self):
+        """RED: Test AI quality scoring integration for capture notes"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # High-quality capture note
+        high_quality_note = [{
+            "markdown_content": """---
+type: fleeting
+created: 2025-01-22 14:35
+status: inbox
+tags:
+  - capture
+  - samsung-s23
+---
+
+# Advanced AI Research Discussion
+
+This capture represents a detailed discussion about machine learning approaches
+to knowledge management systems. Key insights include the importance of 
+semantic similarity analysis and the potential for automated content tagging.
+
+## Key Points
+- AI-powered content analysis shows promise
+- Semantic embeddings improve connection discovery
+- Quality scoring helps prioritize review workflow
+
+## Next Steps
+- Research implementation approaches
+- Consider integration with existing systems
+- Evaluate performance implications
+""",
+            "filename": "capture-20250122-1435-ai-research.md",
+            "file_path": "/fake/inbox/capture-20250122-1435-ai-research.md"
+        }]
+        
+        result = matcher.process_capture_notes_with_ai(high_quality_note)
+        
+        # Should achieve high quality score (>0.7 target for promotion)
+        ai_result = result["ai_results"][0]
+        assert ai_result["quality_score"] > 0.7, f"High-quality note should score >0.7, got {ai_result['quality_score']}"
+        assert len(ai_result["ai_tags"]) >= 3, f"Should generate 3+ tags, got {len(ai_result['ai_tags'])}"
+    
+    def test_process_capture_notes_with_ai_batch_processing(self):
+        """RED: Test batch processing of multiple capture notes with AI"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Multiple capture notes
+        capture_notes = [
+            {
+                "markdown_content": "---\ntype: fleeting\n---\n# Quick screenshot note",
+                "filename": "capture-20250122-1435-quick.md",
+                "file_path": "/fake/inbox/capture-20250122-1435-quick.md"
+            },
+            {
+                "markdown_content": "---\ntype: fleeting\n---\n# Voice memo transcription",
+                "filename": "capture-20250122-1436-voice.md", 
+                "file_path": "/fake/inbox/capture-20250122-1436-voice.md"
+            },
+            {
+                "markdown_content": "---\ntype: fleeting\n---\n# Screenshot analysis with detailed notes",
+                "filename": "capture-20250122-1437-analysis.md",
+                "file_path": "/fake/inbox/capture-20250122-1437-analysis.md"
+            }
+        ]
+        
+        result = matcher.process_capture_notes_with_ai(capture_notes)
+        
+        # Should process all notes
+        assert len(result["ai_results"]) == 3, f"Should process 3 notes, got {len(result['ai_results'])}"
+        assert result["processing_stats"]["total_notes"] == 3, "Stats should reflect 3 notes"
+        assert result["processing_stats"]["successful"] == 3, "All should process successfully"
+        assert result["processing_stats"]["errors"] == 0, "Should have no errors"
+        
+        # Performance target: <30 seconds for 5+ captures (testing with 3)
+        assert result["processing_stats"]["processing_time"] < 30, "Should complete in <30 seconds"
+    
+    def test_process_capture_notes_with_ai_error_handling(self):
+        """RED: Test error handling for AI processing failures"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Invalid capture note (missing required fields)
+        invalid_notes = [
+            {
+                "markdown_content": "Invalid content without proper YAML",
+                # Missing filename and file_path
+            },
+            None,  # Completely invalid entry
+            {
+                "markdown_content": "---\ntype: fleeting\n---\n# Valid note",
+                "filename": "capture-20250122-1435-valid.md",
+                "file_path": "/fake/inbox/capture-20250122-1435-valid.md"
+            }
+        ]
+        
+        result = matcher.process_capture_notes_with_ai(invalid_notes)
+        
+        # Should handle errors gracefully
+        assert "errors" in result, "Should track errors"
+        assert len(result["errors"]) >= 2, "Should capture errors for invalid entries"
+        assert result["processing_stats"]["successful"] >= 1, "Should process valid entry"
+        assert result["processing_stats"]["errors"] >= 2, "Should count errors correctly"
+    
+    def test_process_capture_notes_with_ai_preserves_existing_functionality(self):
+        """RED: Test that AI integration doesn't break existing capture note generation"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Generate capture note using existing functionality
+        mock_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png",
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12),
+                "path": "/fake/screenshot.png",
+                "size": 1024000
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28),
+                "path": "/fake/voice.m4a",
+                "size": 512000
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # Generate note using existing method
+        note_result = matcher.generate_capture_note(mock_pair, "test-integration")
+        
+        # Process with AI integration
+        ai_result = matcher.process_capture_notes_with_ai([note_result])
+        
+        # Should maintain all existing functionality
+        assert "markdown_content" in note_result, "Should preserve existing generation"
+        assert "filename" in note_result, "Should preserve existing naming"
+        assert "ai_results" in ai_result, "Should add AI processing layer"
+        
+        # AI processing should enhance, not replace
+        ai_note = ai_result["ai_results"][0]
+        assert ai_note["original_filename"] == note_result["filename"], "Should track original filename"
