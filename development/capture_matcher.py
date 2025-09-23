@@ -93,6 +93,57 @@ class TimestampParser:
 class CaptureMatcherPOC:
     """POC for matching screenshots and voice notes by filename timestamps"""
     
+    # Template constants for markdown generation
+    YAML_TEMPLATE = """---
+type: fleeting
+created: {timestamp}
+status: inbox
+tags:
+  - capture
+  - samsung-s23
+  - screenshot-voice-pair
+source: capture
+device: Samsung S23
+time_gap_seconds: {time_gap}
+---"""
+    
+    MARKDOWN_TEMPLATE = """
+# Capture Summary
+
+Knowledge capture from Samsung S23 screenshot and voice note pair.
+
+## Screenshot Reference
+
+- **File**: {screenshot_filename}
+- **Size**: {screenshot_size}
+- **Timestamp**: {screenshot_timestamp}
+- **Path**: {screenshot_path}
+
+## Voice Note Reference
+
+- **File**: {voice_filename}
+- **Size**: {voice_size}  
+- **Timestamp**: {voice_timestamp}
+- **Path**: {voice_path}
+
+## Capture Metadata
+
+- **Time Gap**: {time_gap} seconds between screenshot and voice note
+- **Device**: Samsung S23 (detected from filename patterns)
+- **Capture Session**: {capture_session}
+
+## Processing Notes
+
+*Add your analysis, insights, and connections here*
+
+- [ ] Review screenshot content
+- [ ] Listen to voice note
+- [ ] Extract key insights
+- [ ] Link to related notes
+- [ ] Consider promotion to permanent note
+
+"""
+    
     def __init__(self, screenshots_dir: str, voice_dir: str):
         """Initialize matcher with source directories
         
@@ -103,6 +154,7 @@ class CaptureMatcherPOC:
         self.screenshots_dir = screenshots_dir
         self.voice_dir = voice_dir
         self.match_threshold = 60  # seconds
+        self.inbox_dir = None  # Will be set via configure_inbox_directory()
     
     @classmethod
     def create_with_onedrive_defaults(cls, base_onedrive_path: Optional[str] = None) -> 'CaptureMatcherPOC':
@@ -543,3 +595,200 @@ class CaptureMatcherPOC:
         except Exception as e:
             print(f"❌ Unexpected error: {e}")
             print(f"   Screenshot path: {screenshot_path}")
+    
+    def configure_inbox_directory(self, inbox_dir: str) -> None:
+        """Configure the inbox directory for note generation
+        
+        Args:
+            inbox_dir: Path to the InnerOS inbox directory (e.g., knowledge/Inbox/)
+        """
+        self.inbox_dir = inbox_dir
+    
+    def generate_capture_note(self, capture_pair: Dict, description: str) -> Dict:
+        """Generate markdown note from capture pair
+        
+        Args:
+            capture_pair: Matched screenshot/voice pair from interactive review
+            description: User-provided description for the capture
+            
+        Returns:
+            Dict with markdown_content, filename, and file_path
+            
+        Raises:
+            ValueError: If capture_pair is missing required fields
+            TypeError: If description is not a string
+        """
+        # Validate inputs
+        if not isinstance(description, str):
+            raise TypeError("Description must be a string")
+        
+        if not capture_pair or not isinstance(capture_pair, dict):
+            raise ValueError("Capture pair must be a non-empty dictionary")
+            
+        required_fields = ["screenshot", "voice", "time_gap_seconds"]
+        for field in required_fields:
+            if field not in capture_pair:
+                raise ValueError(f"Capture pair missing required field: {field}")
+        
+        # Extract and validate data
+        screenshot = capture_pair["screenshot"]
+        voice = capture_pair["voice"]
+        time_gap = capture_pair["time_gap_seconds"]
+        
+        if not screenshot.get("timestamp"):
+            raise ValueError("Screenshot missing timestamp field")
+        if not voice.get("timestamp"):
+            raise ValueError("Voice note missing timestamp field")
+        
+        # Use screenshot timestamp as primary timestamp
+        capture_timestamp = screenshot["timestamp"]
+        
+        # Generate kebab-case filename
+        filename = self._generate_capture_filename(capture_timestamp, description)
+        
+        # Generate file path
+        inbox_dir = self.inbox_dir if self.inbox_dir else '/path/to/knowledge/Inbox'
+        file_path = f"{inbox_dir}/{filename}"
+        
+        # Generate markdown content
+        markdown_content = self._generate_markdown_template(capture_pair, description, capture_timestamp)
+        
+        return {
+            "markdown_content": markdown_content,
+            "filename": filename,
+            "file_path": file_path
+        }
+    
+    def generate_capture_notes_batch(self, kept_pairs: List[Dict], descriptions: List[str]) -> List[Dict]:
+        """Generate markdown notes for multiple capture pairs
+        
+        Args:
+            kept_pairs: List of kept capture pairs from interactive review
+            descriptions: List of descriptions matching kept pairs
+            
+        Returns:
+            List of generation results with processing stats
+            
+        Raises:
+            ValueError: If kept_pairs is empty or invalid
+            TypeError: If inputs are not the expected types
+        """
+        # Validate inputs
+        if not isinstance(kept_pairs, list):
+            raise TypeError("kept_pairs must be a list")
+        if not isinstance(descriptions, list):
+            raise TypeError("descriptions must be a list") 
+        if not kept_pairs:
+            raise ValueError("kept_pairs cannot be empty")
+            
+        results = []
+        errors = []
+        
+        for i, pair in enumerate(kept_pairs):
+            try:
+                description = descriptions[i] if i < len(descriptions) else f"capture-{i+1}"
+                result = self.generate_capture_note(pair, description)
+                results.append(result)
+            except Exception as e:
+                error_info = {
+                    "pair_index": i,
+                    "error": str(e),
+                    "pair_data": pair
+                }
+                errors.append(error_info)
+        
+        # Add processing statistics
+        if results:
+            results[0]["processing_stats"] = {
+                "total_pairs": len(kept_pairs),
+                "successful": len(results),
+                "errors": len(errors),
+                "error_details": errors
+            }
+        
+        return results
+    
+    def _generate_capture_filename(self, timestamp: datetime, description: str) -> str:
+        """Generate kebab-case filename following InnerOS conventions
+        
+        Args:
+            timestamp: Capture timestamp
+            description: User description
+            
+        Returns:
+            Kebab-case filename like capture-20250122-1435-description.md
+        """
+        # Format timestamp as YYYYMMDD-HHMM
+        date_str = timestamp.strftime("%Y%m%d-%H%M")
+        
+        # Convert description to kebab-case
+        # Remove special chars, convert to lowercase, replace spaces/underscores with hyphens
+        clean_desc = re.sub(r'[^a-zA-Z0-9\s_-]', '', description)
+        clean_desc = re.sub(r'[\s_]+', '-', clean_desc.strip())
+        kebab_desc = clean_desc.lower()
+        
+        return f"capture-{date_str}-{kebab_desc}.md"
+    
+    def _generate_markdown_template(self, capture_pair: Dict, description: str, timestamp: datetime) -> str:
+        """Generate markdown content with YAML frontmatter using class templates
+        
+        Args:
+            capture_pair: Screenshot and voice pair data
+            description: User description
+            timestamp: Capture timestamp
+            
+        Returns:
+            Complete markdown content with YAML frontmatter
+        """
+        screenshot = capture_pair["screenshot"]
+        voice = capture_pair["voice"]
+        time_gap = capture_pair["time_gap_seconds"]
+        
+        # Format timestamp for YAML (ISO format without seconds for brevity)
+        yaml_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
+        
+        # Calculate file sizes in readable format
+        screenshot_size = self._format_file_size(screenshot.get("size", 0))
+        voice_size = self._format_file_size(voice.get("size", 0))
+        
+        # Generate YAML frontmatter using template
+        yaml_frontmatter = self.YAML_TEMPLATE.format(
+            timestamp=yaml_timestamp,
+            time_gap=time_gap
+        )
+        
+        # Generate markdown content using template
+        content = self.MARKDOWN_TEMPLATE.format(
+            screenshot_filename=screenshot['filename'],
+            screenshot_size=screenshot_size,
+            screenshot_timestamp=timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            screenshot_path=screenshot.get('path', 'N/A'),
+            voice_filename=voice['filename'],
+            voice_size=voice_size,
+            voice_timestamp=voice['timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
+            voice_path=voice.get('path', 'N/A'),
+            time_gap=time_gap,
+            capture_session=timestamp.strftime('%Y-%m-%d %H:%M')
+        )
+        
+        return yaml_frontmatter + content
+    
+    def _format_file_size(self, size_bytes: int) -> str:
+        """Format file size in human-readable format
+        
+        Args:
+            size_bytes: File size in bytes
+            
+        Returns:
+            Formatted size string (e.g., "1.0 MB", "512 KB")
+        """
+        if size_bytes == 0:
+            return "Unknown"
+        
+        # Convert to MB/KB
+        if size_bytes >= 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        elif size_bytes >= 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        else:
+            return f"{size_bytes} bytes"

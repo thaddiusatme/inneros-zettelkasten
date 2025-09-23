@@ -337,3 +337,217 @@ class TestInteractiveCLI:
         # Verify user can continue after viewing
         assert result['kept'], "Should allow keeping after viewing"
         assert len(result['kept']) == 1, "Should have kept the viewed pair"
+
+
+class TestCaptureNoteGeneration:
+    """Test suite for Capture Note Generation - TDD RED PHASE"""
+    
+    def test_generate_capture_note_method_exists(self):
+        """Test that generate_capture_note method exists"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # This should fail - method doesn't exist yet
+        assert hasattr(matcher, 'generate_capture_note'), "generate_capture_note method should exist"
+    
+    def test_generate_capture_note_basic_structure(self):
+        """Test basic markdown note generation from capture pair"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Sample capture pair (from kept pairs after interactive review)
+        capture_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png", 
+                "path": "/fake/screenshots/Screenshot_20250122_143512.png",
+                "size": 1024000,
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12)
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "path": "/fake/voice/Recording_20250122_143528.m4a",
+                "size": 512000,
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28)
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.generate_capture_note(capture_pair, description="test-capture")
+        
+        # Verify result structure
+        assert 'markdown_content' in result, "Should return markdown content"
+        assert 'filename' in result, "Should return generated filename"
+        assert 'file_path' in result, "Should return full file path"
+    
+    def test_markdown_yaml_frontmatter_format(self):
+        """Test YAML frontmatter follows InnerOS standards"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        capture_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png", 
+                "path": "/fake/screenshot.png",
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12)
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "path": "/fake/voice.m4a",
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28)
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.generate_capture_note(capture_pair, description="test-capture")
+        
+        markdown = result['markdown_content']
+        
+        # Verify YAML frontmatter structure
+        assert markdown.startswith("---"), "Should start with YAML frontmatter delimiter"
+        assert "type: fleeting" in markdown, "Should have type: fleeting"
+        assert "created: 2025-01-22 14:35" in markdown, "Should have created timestamp"
+        assert "status: inbox" in markdown, "Should have status: inbox"
+        assert "tags:" in markdown, "Should have tags section"
+        assert "source: capture" in markdown, "Should indicate capture source"
+        assert "---" in markdown[3:], "Should end YAML frontmatter with second delimiter"
+    
+    def test_file_naming_convention(self):
+        """Test file naming follows InnerOS kebab-case standards"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        capture_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png", 
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12)
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28)
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # Test various description formats
+        test_cases = [
+            ("test capture", "capture-20250122-1435-test-capture.md"),
+            ("Multiple Words Here", "capture-20250122-1435-multiple-words-here.md"), 
+            ("special_chars & symbols!", "capture-20250122-1435-special-chars-symbols.md")
+        ]
+        
+        for description, expected_filename in test_cases:
+            # This should fail - method doesn't exist yet
+            result = matcher.generate_capture_note(capture_pair, description=description)
+            
+            assert result['filename'] == expected_filename, f"Expected {expected_filename}, got {result['filename']}"
+    
+    def test_markdown_content_structure(self):
+        """Test markdown content includes all required sections"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        capture_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png", 
+                "path": "/fake/screenshot.png",
+                "size": 1024000,
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12)
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "path": "/fake/voice.m4a", 
+                "size": 512000,
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28)
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.generate_capture_note(capture_pair, description="test-capture")
+        
+        markdown = result['markdown_content']
+        
+        # Verify content sections
+        assert "# Capture Summary" in markdown, "Should have capture summary section"
+        assert "## Screenshot Reference" in markdown, "Should have screenshot reference section"
+        assert "## Voice Note Reference" in markdown, "Should have voice note reference section"
+        assert "## Processing Notes" in markdown, "Should have processing notes section"
+        assert "Screenshot_20250122_143512.png" in markdown, "Should reference screenshot filename"
+        assert "Recording_20250122_143528.m4a" in markdown, "Should reference voice filename"
+        assert "16 seconds" in markdown, "Should mention time gap"
+    
+    def test_zettelkasten_directory_integration(self):
+        """Test integration with knowledge/Inbox/ directory structure"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Configure inbox directory (should be configurable)
+        matcher.configure_inbox_directory("/path/to/knowledge/Inbox")
+        
+        capture_pair = {
+            "screenshot": {"filename": "Screenshot_20250122_143512.png", "timestamp": datetime(2025, 1, 22, 14, 35, 12)},
+            "voice": {"filename": "Recording_20250122_143528.m4a", "timestamp": datetime(2025, 1, 22, 14, 35, 28)},
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.generate_capture_note(capture_pair, description="test-capture")
+        
+        expected_path = "/path/to/knowledge/Inbox/capture-20250122-1435-test-capture.md"
+        assert result['file_path'] == expected_path, f"Expected {expected_path}, got {result['file_path']}"
+    
+    def test_metadata_extraction_device_info(self):
+        """Test extraction of device and file metadata"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        capture_pair = {
+            "screenshot": {
+                "filename": "Screenshot_20250122_143512.png", 
+                "path": "/fake/screenshot.png",
+                "size": 1024000,
+                "timestamp": datetime(2025, 1, 22, 14, 35, 12)
+            },
+            "voice": {
+                "filename": "Recording_20250122_143528.m4a", 
+                "path": "/fake/voice.m4a",
+                "size": 512000, 
+                "timestamp": datetime(2025, 1, 22, 14, 35, 28)
+            },
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.generate_capture_note(capture_pair, description="test-capture")
+        
+        markdown = result['markdown_content']
+        
+        # Verify metadata inclusion
+        assert "Samsung" in markdown or "S23" in markdown, "Should identify Samsung device"
+        assert "1024000" in markdown or "1.0 MB" in markdown or "1000.0 KB" in markdown, "Should include screenshot file size"
+        assert "512000" in markdown or "0.5 MB" in markdown or "500.0 KB" in markdown, "Should include voice file size"
+        assert "Device" in markdown, "Should have device information section"
+    
+    def test_batch_note_generation(self):
+        """Test generating multiple notes from kept pairs efficiently"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        kept_pairs = [
+            {
+                "screenshot": {"filename": "Screenshot_20250122_143512.png", "timestamp": datetime(2025, 1, 22, 14, 35, 12)},
+                "voice": {"filename": "Recording_20250122_143528.m4a", "timestamp": datetime(2025, 1, 22, 14, 35, 28)},
+                "time_gap_seconds": 16
+            },
+            {
+                "screenshot": {"filename": "Screenshot_20250122_144000.png", "timestamp": datetime(2025, 1, 22, 14, 40, 0)},
+                "voice": {"filename": "Recording_20250122_144015.m4a", "timestamp": datetime(2025, 1, 22, 14, 40, 15)},
+                "time_gap_seconds": 15
+            }
+        ]
+        
+        # This should fail - method doesn't exist yet
+        results = matcher.generate_capture_notes_batch(kept_pairs, descriptions=["first-capture", "second-capture"])
+        
+        # Verify batch processing
+        assert len(results) == 2, "Should process all kept pairs"
+        assert 'processing_stats' in results[0] if isinstance(results, dict) else True, "Should include processing statistics"
+        
+        # Verify unique filenames
+        if isinstance(results, list):
+            filenames = [result['filename'] for result in results]
+            assert len(set(filenames)) == len(filenames), "Should generate unique filenames"
