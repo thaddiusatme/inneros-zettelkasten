@@ -1,15 +1,22 @@
 """
-Tests for CaptureMatcherPOC - Core filename timestamp parsing
+Tests for CaptureMatcherPOC - Core filename timestamp parsing + Interactive CLI
 
-Test-Driven Development (TDD) - RED Phase
+Test-Driven Development (TDD) - RED Phase for Interactive CLI
 Testing Samsung S23 filename patterns:
 - Screenshot_YYYYMMDD_HHMMSS.png
 - Recording_YYYYMMDD_HHMMSS.m4a
+
+NEW: Interactive CLI Features
+- interactive_review_captures() method
+- User input handling (k/s/d + Enter)
+- Progress tracking and session state
 """
 
 from datetime import datetime
 import sys
 import os
+from unittest.mock import patch
+from io import StringIO
 
 # Add development directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
@@ -157,3 +164,146 @@ class TestCaptureMatcherPOC:
         timestamp = matcher.parse_filename_timestamp("Recording_20250101_000001.m4a")
         expected = datetime(2025, 1, 1, 0, 0, 1)
         assert timestamp == expected, f"Expected {expected}, got {timestamp}"
+
+
+class TestInteractiveCLI:
+    """Test suite for Interactive CLI features - TDD RED PHASE"""
+    
+    def test_interactive_review_captures_method_exists(self):
+        """Test that interactive_review_captures method exists"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # This should fail - method doesn't exist yet
+        assert hasattr(matcher, 'interactive_review_captures'), "interactive_review_captures method should exist"
+    
+    @patch('builtins.input', side_effect=['k', 's', 'd', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_interactive_review_basic_user_input(self, mock_stdout, mock_input):
+        """Test basic user input handling (k/s/d/q commands)"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        # Sample matched pairs data
+        matched_pairs = [
+            {
+                "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/1.png"},
+                "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/1.m4a"},
+                "time_gap_seconds": 16
+            },
+            {
+                "screenshot": {"filename": "Screenshot_20250122_144000.png", "path": "/fake/2.png"},
+                "voice": {"filename": "Recording_20250122_144015.m4a", "path": "/fake/2.m4a"},
+                "time_gap_seconds": 15
+            }
+        ]
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.interactive_review_captures(matched_pairs)
+        
+        # Verify result structure
+        assert 'kept' in result, "Result should contain 'kept' key"
+        assert 'skipped' in result, "Result should contain 'skipped' key"
+        assert 'deleted' in result, "Result should contain 'deleted' key"
+        assert 'session_stats' in result, "Result should contain 'session_stats' key"
+    
+    @patch('builtins.input', side_effect=['k'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_capture_pair_display_formatting(self, mock_stdout, mock_input):
+        """Test that capture pairs are displayed with proper formatting"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        matched_pair = {
+            "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/1.png"},
+            "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/1.m4a"},
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        matcher.interactive_review_captures([matched_pair])
+        
+        output = mock_stdout.getvalue()
+        
+        # Verify display formatting
+        assert "📸" in output or "Screenshot" in output, "Should display screenshot info with emoji"
+        assert "🎤" in output or "Recording" in output, "Should display voice info with emoji"
+        assert "16" in output, "Should display time gap"
+        assert "[k]eep" in output or "keep" in output.lower(), "Should show keep option"
+        assert "[s]kip" in output or "skip" in output.lower(), "Should show skip option"
+        assert "[d]elete" in output or "delete" in output.lower(), "Should show delete option"
+    
+    @patch('builtins.input', side_effect=['k', 's', 'q'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_progress_tracking_display(self, mock_stdout, mock_input):
+        """Test that progress is tracked and displayed during review"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        matched_pairs = [
+            {
+                "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/1.png"},
+                "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/1.m4a"},
+                "time_gap_seconds": 16
+            },
+            {
+                "screenshot": {"filename": "Screenshot_20250122_144000.png", "path": "/fake/2.png"},
+                "voice": {"filename": "Recording_20250122_144015.m4a", "path": "/fake/2.m4a"},
+                "time_gap_seconds": 15
+            }
+        ]
+        
+        # This should fail - method doesn't exist yet
+        result = matcher.interactive_review_captures(matched_pairs)
+        
+        output = mock_stdout.getvalue()
+        
+        # Verify progress tracking
+        assert "1/2" in output or "(1 of 2)" in output, "Should show current item progress"
+        assert "2/2" in output or "(2 of 2)" in output, "Should show final item progress"
+        
+        # Verify session stats
+        assert result['session_stats']['total_reviewed'] == 2, "Should track total reviewed"
+        assert result['session_stats']['kept_count'] == 1, "Should track kept count"
+        assert result['session_stats']['skipped_count'] == 1, "Should track skipped count"
+    
+    @patch('builtins.input', side_effect=['invalid', 'k'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_invalid_input_handling(self, mock_stdout, mock_input):
+        """Test handling of invalid user input with helpful error messages"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        matched_pair = {
+            "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/1.png"},
+            "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/1.m4a"},
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        matcher.interactive_review_captures([matched_pair])
+        
+        output = mock_stdout.getvalue()
+        
+        # Verify invalid input handling
+        assert "invalid" in output.lower() or "error" in output.lower(), "Should show error for invalid input"
+        assert "try again" in output.lower() or "please enter" in output.lower(), "Should prompt for valid input"
+    
+    @patch('builtins.input', side_effect=['h', 'k'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_help_system_display(self, mock_stdout, mock_input):
+        """Test help system shows available commands and shortcuts"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        matched_pair = {
+            "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/1.png"},
+            "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/1.m4a"},
+            "time_gap_seconds": 16
+        }
+        
+        # This should fail - method doesn't exist yet
+        matcher.interactive_review_captures([matched_pair])
+        
+        output = mock_stdout.getvalue()
+        
+        # Verify help system
+        assert "help" in output.lower(), "Should show help information"
+        assert "commands" in output.lower() or "options" in output.lower(), "Should list available commands"
+        assert "k" in output and "keep" in output.lower(), "Should explain k command"
+        assert "s" in output and "skip" in output.lower(), "Should explain s command"
+        assert "d" in output and "delete" in output.lower(), "Should explain d command"

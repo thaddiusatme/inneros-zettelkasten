@@ -368,3 +368,144 @@ class CaptureMatcherPOC:
             "recent_files_count": recent_files,
             "potential_sync_issues": sync_issues
         }
+    
+    def interactive_review_captures(self, matched_pairs: List[Dict]) -> Dict:
+        """Interactive CLI review of matched capture pairs
+        
+        Args:
+            matched_pairs: List of matched screenshot/voice pairs from match_by_timestamp()
+            
+        Returns:
+            Dict with kept, skipped, deleted lists and session stats
+        """
+        # Initialize result structure
+        result = {
+            "kept": [],
+            "skipped": [],
+            "deleted": [],
+            "session_stats": {
+                "total_reviewed": 0,
+                "kept_count": 0,
+                "skipped_count": 0,
+                "deleted_count": 0
+            }
+        }
+        
+        if not matched_pairs:
+            print("No capture pairs to review.")
+            return result
+        
+        total_pairs = len(matched_pairs)
+        print(f"📋 Starting interactive review of {total_pairs} capture pairs")
+        print("Commands: [k]eep, [s]kip, [d]elete, [h]elp, [q]uit\n")
+        
+        for i, pair in enumerate(matched_pairs):
+            current_index = i + 1
+            
+            # Display pair information
+            self._display_capture_pair(pair, current_index, total_pairs)
+            
+            # Get user input
+            while True:
+                try:
+                    user_input = input(f"\n({current_index}/{total_pairs}) Action [k/s/d/h/q]: ").strip().lower()
+                    
+                    if user_input == 'k':  # Keep
+                        result["kept"].append(pair)
+                        result["session_stats"]["kept_count"] += 1
+                        print("✅ Kept pair for processing")
+                        break
+                    elif user_input == 's':  # Skip
+                        result["skipped"].append(pair)
+                        result["session_stats"]["skipped_count"] += 1
+                        print("⏭️ Skipped pair")
+                        break
+                    elif user_input == 'd':  # Delete
+                        result["deleted"].append(pair)
+                        result["session_stats"]["deleted_count"] += 1
+                        print("🗑️ Marked pair for deletion")
+                        break
+                    elif user_input == 'h':  # Help
+                        self._show_help()
+                        continue
+                    elif user_input == 'q':  # Quit
+                        print("🛑 Exiting review session...")
+                        result["session_stats"]["total_reviewed"] = current_index - 1
+                        return result
+                    else:
+                        print("❌ Invalid command. Please enter k, s, d, h, or q. Try again:")
+                        continue
+                        
+                except KeyboardInterrupt:
+                    print("\n🛑 Review session interrupted.")
+                    result["session_stats"]["total_reviewed"] = current_index - 1
+                    return result
+            
+            result["session_stats"]["total_reviewed"] = current_index
+            
+            # Add spacing between pairs
+            if current_index < total_pairs:
+                print("\n" + "─" * 50)
+        
+        print("\n🎉 Review session complete!")
+        self._show_session_summary(result["session_stats"])
+        
+        return result
+    
+    def _display_capture_pair(self, pair: Dict, current: int, total: int) -> None:
+        """Display capture pair information with formatting
+        
+        Args:
+            pair: Matched pair dict with screenshot, voice, time_gap_seconds
+            current: Current item index  
+            total: Total items count
+        """
+        screenshot = pair["screenshot"]
+        voice = pair["voice"]
+        gap_seconds = pair["time_gap_seconds"]
+        
+        # Show progress header
+        print(f"\n📋 Reviewing Pair {current}/{total}")
+        print("─" * 30)
+        
+        print(f"📸 Screenshot: {screenshot['filename']}")
+        print(f"🎤 Voice: {voice['filename']}")
+        print(f"⏱️ Time Gap: {gap_seconds} seconds")
+        
+        # Show file paths (truncated for readability)
+        screenshot_path = screenshot.get("path", "N/A")
+        voice_path = voice.get("path", "N/A")
+        if len(screenshot_path) > 60:
+            screenshot_path = "..." + screenshot_path[-57:]
+        if len(voice_path) > 60:
+            voice_path = "..." + voice_path[-57:]
+        
+        print(f"📂 Screenshot Path: {screenshot_path}")
+        print(f"📂 Voice Path: {voice_path}")
+    
+    def _show_help(self) -> None:
+        """Display help information for available commands"""
+        print("\n📋 Available Commands:")
+        print("  k - Keep this pair for markdown note generation")
+        print("  s - Skip this pair (ignore for now)")
+        print("  d - Delete this pair (remove files)")
+        print("  h - Show this help message")
+        print("  q - Quit review session")
+        print("\nNote: Only 'kept' pairs will be processed into markdown notes.")
+    
+    def _show_session_summary(self, stats: Dict) -> None:
+        """Display session summary statistics
+        
+        Args:
+            stats: Session statistics dict
+        """
+        total = stats["total_reviewed"]
+        kept = stats["kept_count"]
+        skipped = stats["skipped_count"]
+        deleted = stats["deleted_count"]
+        
+        print("📊 Session Summary:")
+        print(f"   Total Reviewed: {total}")
+        print(f"   ✅ Kept: {kept}")
+        print(f"   ⏭️ Skipped: {skipped}")
+        print(f"   🗑️ Deleted: {deleted}")
