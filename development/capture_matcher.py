@@ -788,26 +788,21 @@ Knowledge capture from Samsung S23 screenshot and voice note pair.
         
         Args:
             size_bytes: File size in bytes
-            
         Returns:
             Formatted size string (e.g., "1.0 MB", "512 KB")
         """
         if size_bytes == 0:
             return "Unknown"
         
-        # Convert to MB/KB
-        if size_bytes >= 1024 * 1024:
-            return f"{size_bytes / (1024 * 1024):.1f} MB"
-        elif size_bytes >= 1024:
-            return f"{size_bytes / 1024:.1f} KB"
-        else:
-            return f"{size_bytes} bytes"
+        # Use the enhanced utility function for consistency
+        from zettelkasten_capture_utils import ZettelkastenCaptureEnhancer
+        enhancer = ZettelkastenCaptureEnhancer()
+        return enhancer.format_file_size(size_bytes)
     
     def process_capture_notes_with_ai(self, capture_notes: List[Dict]) -> Dict:
         """Process capture notes with AI workflow integration
         
         Integrates generated capture notes with existing InnerOS AI workflow systems
-        for quality scoring, auto-tagging, and enhancement suggestions.
         
         Args:
             capture_notes: List of capture note dictionaries from generate_capture_note()
