@@ -307,3 +307,33 @@ class TestInteractiveCLI:
         assert "k" in output and "keep" in output.lower(), "Should explain k command"
         assert "s" in output and "skip" in output.lower(), "Should explain s command"
         assert "d" in output and "delete" in output.lower(), "Should explain d command"
+    
+    @patch('subprocess.run')
+    @patch('builtins.input', side_effect=['v', 'k'])
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_view_screenshot_external_viewer(self, mock_stdout, mock_input, mock_subprocess):
+        """Test 'v' command opens screenshot in external viewer"""
+        matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")
+        
+        matched_pair = {
+            "screenshot": {"filename": "Screenshot_20250122_143512.png", "path": "/fake/screenshot.png"},
+            "voice": {"filename": "Recording_20250122_143528.m4a", "path": "/fake/voice.m4a"},
+            "time_gap_seconds": 16
+        }
+        
+        # Execute interactive review
+        result = matcher.interactive_review_captures([matched_pair])
+        
+        output = mock_stdout.getvalue()
+        
+        # Verify 'v' command functionality
+        assert "opening screenshot" in output.lower() or "viewer" in output.lower(), "Should show view confirmation"
+        
+        # Verify subprocess called with correct file
+        mock_subprocess.assert_called_once()
+        call_args = mock_subprocess.call_args
+        assert "/fake/screenshot.png" in str(call_args), "Should open correct screenshot path"
+        
+        # Verify user can continue after viewing
+        assert result['kept'], "Should allow keeping after viewing"
+        assert len(result['kept']) == 1, "Should have kept the viewed pair"

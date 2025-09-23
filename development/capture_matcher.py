@@ -8,6 +8,8 @@ TDD Implementation - Core timestamp parsing and matching algorithms
 """
 
 import re
+import subprocess
+import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -397,7 +399,7 @@ class CaptureMatcherPOC:
         
         total_pairs = len(matched_pairs)
         print(f"📋 Starting interactive review of {total_pairs} capture pairs")
-        print("Commands: [k]eep, [s]kip, [d]elete, [h]elp, [q]uit\n")
+        print("Commands: [k]eep, [s]kip, [d]elete, [v]iew, [h]elp, [q]uit\n")
         
         for i, pair in enumerate(matched_pairs):
             current_index = i + 1
@@ -408,7 +410,7 @@ class CaptureMatcherPOC:
             # Get user input
             while True:
                 try:
-                    user_input = input(f"\n({current_index}/{total_pairs}) Action [k/s/d/h/q]: ").strip().lower()
+                    user_input = input(f"\n({current_index}/{total_pairs}) Action [k/s/d/v/h/q]: ").strip().lower()
                     
                     if user_input == 'k':  # Keep
                         result["kept"].append(pair)
@@ -425,6 +427,10 @@ class CaptureMatcherPOC:
                         result["session_stats"]["deleted_count"] += 1
                         print("🗑️ Marked pair for deletion")
                         break
+                    elif user_input == 'v':  # View screenshot
+                        screenshot_path = pair["screenshot"]["path"]
+                        self._open_screenshot_in_viewer(screenshot_path)
+                        continue  # Stay in the same pair after viewing
                     elif user_input == 'h':  # Help
                         self._show_help()
                         continue
@@ -433,7 +439,7 @@ class CaptureMatcherPOC:
                         result["session_stats"]["total_reviewed"] = current_index - 1
                         return result
                     else:
-                        print("❌ Invalid command. Please enter k, s, d, h, or q. Try again:")
+                        print("❌ Invalid command. Please enter k, s, d, v, h, or q. Try again:")
                         continue
                         
                 except KeyboardInterrupt:
@@ -489,6 +495,7 @@ class CaptureMatcherPOC:
         print("  k - Keep this pair for markdown note generation")
         print("  s - Skip this pair (ignore for now)")
         print("  d - Delete this pair (remove files)")
+        print("  v - View screenshot in external viewer")
         print("  h - Show this help message")
         print("  q - Quit review session")
         print("\nNote: Only 'kept' pairs will be processed into markdown notes.")
@@ -509,3 +516,30 @@ class CaptureMatcherPOC:
         print(f"   ✅ Kept: {kept}")
         print(f"   ⏭️ Skipped: {skipped}")
         print(f"   🗑️ Deleted: {deleted}")
+    
+    def _open_screenshot_in_viewer(self, screenshot_path: str) -> None:
+        """Open screenshot in external viewer (macOS Preview or default app)
+        
+        Args:
+            screenshot_path: Full path to screenshot file
+        """
+        try:
+            print("🖼️ Opening screenshot in viewer...")
+            
+            # Use macOS 'open' command which opens files with default application
+            subprocess.run(['open', screenshot_path], 
+                          capture_output=True, 
+                          text=True, 
+                          check=True)
+            
+            print("✅ Screenshot opened successfully")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Error opening screenshot: {e}")
+            print(f"   Try manually opening: {screenshot_path}")
+        except FileNotFoundError:
+            print("❌ 'open' command not found (macOS required)")
+            print(f"   Screenshot path: {screenshot_path}")
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            print(f"   Screenshot path: {screenshot_path}")
