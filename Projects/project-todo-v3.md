@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-09-21 12:24 PDT  
-**Status**: ✅ MAJOR SYSTEMS COMPLETE → Phase 6 Preparation  
+**Last Updated**: 2025-09-22 20:38 PDT  
+**Status**: ✅ MAJOR SYSTEMS COMPLETE → Knowledge Capture POC Ready  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
@@ -28,9 +28,22 @@
 
 ---
 
-## 🎯 Active Projects
+## 🎯 Active Projects (RESCOPED)
 
-### 🟡 Automated Background Daemon (NEW - Core Infrastructure)
+### 🔴 Knowledge Capture System - POC PHASE (HIGHEST PRIORITY)
+
+- **Goal**: Transform mobile screenshots + voice notes into connected Zettelkasten knowledge
+- **Innovation**: Temporal pairing of screenshot + voice context eliminates annotation burden
+- **Real Workflow**: Samsung S23 captures → OneDrive sync → timestamp matching → knowledge integration
+- **POC Focus**: Validate screenshot + voice note pairing accuracy (>90% target)
+- **Deliverables**:
+  - **POC Manifest**: `Projects/capture-matcher-poc-manifest.md` ✅
+  - **Full System Manifest**: `Projects/knowledge-capture-system-manifest.md` ✅
+  - Capture matcher script with OneDrive integration
+  - 1-week real-world validation with success metrics
+  - Go/No-Go decision for full system development
+
+### 🟡 Automated Background Daemon (Core Infrastructure)
 
 - **Goal**: Transform InnerOS into always-running, autonomous knowledge processing system
 - **Approach**: Extract existing AutoProcessor into standalone daemon service  
