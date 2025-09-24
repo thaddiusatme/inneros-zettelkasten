@@ -72,6 +72,9 @@ class LightweightTagCleanupEngine:
             self.quality_recalibrator = None
             self.enhanced_mode = False
             
+        # Initialize report generator
+        self.report_generator = CleanupReportGenerator(self.vault_path)
+            
         # Problematic tag patterns for identification
         self.garbage_patterns = {
             '#': 'reference-hash',
@@ -608,6 +611,31 @@ class LightweightTagCleanupEngine:
                 'rollback_successful': False,
                 'error': str(e)
             }
+            
+    def execute_cleanup_with_report(self, dry_run: bool = True, max_tags: int = 30, save_report: bool = True) -> tuple[Dict[str, Any], str]:
+        """Execute cleanup with automatic human-readable report generation"""
+        
+        # Get cleanup plan first for report details
+        cleanup_plan = self.generate_targeted_cleanup_plan()
+        
+        # Execute cleanup (dry-run or live)
+        if dry_run:
+            results = self.execute_cleanup(dry_run=True)
+        else:
+            results = self.execute_lightweight_cleanup(max_tags=max_tags)
+            
+        # Generate human-readable report
+        report_content = self.report_generator.generate_cleanup_report(results, cleanup_plan)
+        
+        # Save report if requested
+        if save_report:
+            report_path = self.report_generator.save_report(report_content)
+            results['report_saved'] = True
+            results['report_path'] = str(report_path)
+        else:
+            results['report_saved'] = False
+            
+        return results, report_content
 
 
 class TagCleanupValidator:
@@ -770,6 +798,193 @@ class CleanupPerformanceMonitor:
             'optimization_suggestions': ['Consider smaller batch sizes', 'Implement parallel processing'],
             'resource_efficiency': 'acceptable'
         }
+
+
+class CleanupReportGenerator:
+    """Human-readable report generation for cleanup deployment"""
+    
+    def __init__(self, vault_path: Path):
+        """Initialize report generator"""
+        self.vault_path = vault_path
+        
+    def generate_cleanup_report(self, results: Dict[str, Any], cleanup_plan: Optional[List[Dict[str, Any]]] = None) -> str:
+        """Generate comprehensive human-readable cleanup report"""
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        report = f"""# 🏷️ Enhanced AI Tag Cleanup Report
+
+**Generated**: {timestamp}  
+**Vault**: {self.vault_path.name}  
+**Mode**: {'Dry Run' if results.get('dry_run', False) else 'Live Deployment'}
+
+## 📊 Summary
+
+"""
+        
+        if results.get('dry_run', False):
+            report += self._generate_dry_run_summary(results)
+        else:
+            report += self._generate_deployment_summary(results)
+            
+        if cleanup_plan:
+            report += self._generate_cleanup_details(cleanup_plan)
+            
+        report += self._generate_safety_section(results)
+        report += self._generate_next_steps(results)
+        
+        return report
+        
+    def _generate_dry_run_summary(self, results: Dict[str, Any]) -> str:
+        """Generate dry run summary section"""
+        return f"""### 🔍 Dry Run Analysis
+- **📋 Planned Changes**: {results.get('planned_changes', 0)} tags
+- **📁 Files Affected**: {len(results.get('affected_files', []))} files
+- **⭐ Estimated Improvements**: {results.get('estimated_improvements', 0)} high-priority fixes
+- **🔒 Safety**: No changes made - preview mode only
+
+"""
+        
+    def _generate_deployment_summary(self, results: Dict[str, Any]) -> str:
+        """Generate live deployment summary section"""
+        success_rate = results.get('success_rate', 0)
+        performance_grade = results.get('performance_grade', 'unknown')
+        
+        # Emoji for performance grade
+        grade_emoji = {
+            'excellent': '🌟',
+            'good': '✅', 
+            'acceptable': '👍',
+            'needs_improvement': '⚠️'
+        }.get(performance_grade, '❓')
+        
+        return f"""### 🚀 Live Deployment Results
+- **⏱️ Processing Time**: {results.get('processing_time', 0):.2f}s
+- **🏷️ Tags Processed**: {results.get('tags_processed', 0)}
+- **✅ Successful Cleanups**: {results.get('successful_cleanups', 0)}
+- **❌ Failed Cleanups**: {results.get('failed_cleanups', 0)}
+- **📈 Success Rate**: {success_rate:.1%}
+- **📁 Files Modified**: {results.get('files_modified', 0)}
+- **{grade_emoji} Performance Grade**: {performance_grade.title()}
+- **🛡️ Prevention Actions**: {results.get('prevention_actions', 0)} applied
+
+"""
+        
+    def _generate_cleanup_details(self, cleanup_plan: List[Dict[str, Any]]) -> str:
+        """Generate detailed cleanup actions section"""
+        if not cleanup_plan:
+            return ""
+            
+        details = """## 🔧 Cleanup Details
+
+### Top Cleanup Actions:
+"""
+        
+        for i, item in enumerate(cleanup_plan[:10], 1):
+            original = item.get('original_tag', 'unknown')
+            suggested = item.get('suggested_tag', 'unknown')
+            reason = item.get('reason', 'No reason provided')
+            priority = item.get('priority', 0)
+            files_count = len(item.get('files_affected', []))
+            problem_type = item.get('problem_type', 'unknown')
+            
+            # Priority emoji
+            priority_emoji = '🔴' if priority <= 2 else '🟡' if priority <= 4 else '🟢'
+            
+            details += f"""**{i}.** `{original}` → `{suggested}`
+   - **Problem**: {problem_type}
+   - **Reason**: {reason}
+   - **Priority**: {priority_emoji} {priority}
+   - **Files Affected**: {files_count}
+
+"""
+        
+        return details
+        
+    def _generate_safety_section(self, results: Dict[str, Any]) -> str:
+        """Generate safety and backup information section"""
+        safety = """## 🔒 Safety & Backup Information
+
+"""
+        
+        if results.get('backup_created', False):
+            backup_path = results.get('backup_path', 'Created')
+            safety += f"""### ✅ Backup Status
+- **Backup Created**: Yes
+- **Backup Location**: `{backup_path}`
+- **Rollback Available**: Complete vault restoration possible
+
+"""
+        else:
+            safety += """### ⚠️ Backup Status
+- **Backup Created**: No (Dry run mode)
+- **Safety**: No changes made to original files
+
+"""
+        
+        if 'performance_warning' in results:
+            safety += f"""### ⚠️ Performance Warnings
+- {results['performance_warning']}
+
+"""
+        
+        return safety
+        
+    def _generate_next_steps(self, results: Dict[str, Any]) -> str:
+        """Generate next steps recommendations"""
+        next_steps = """## 🎯 Recommended Next Steps
+
+"""
+        
+        if results.get('dry_run', False):
+            next_steps += """1. **Review Preview**: Check the cleanup actions above
+2. **Run Live Deployment**: Execute with `dry_run=False` when ready
+3. **Start Small**: Begin with 5-10 tags for safety
+4. **Monitor Results**: Verify tag improvements after deployment
+
+"""
+        else:
+            success_rate = results.get('success_rate', 0)
+            performance_grade = results.get('performance_grade', 'unknown')
+            
+            if success_rate >= 0.8 and performance_grade in ['excellent', 'good']:
+                next_steps += """1. **Continue Cleanup**: Process next batch of problematic tags
+2. **Increase Batch Size**: Consider larger batches (10-15 tags)
+3. **Monitor Prevention**: Check template sanitization effectiveness
+4. **Quality Review**: Verify cleaned tags meet semantic standards
+
+"""
+            else:
+                next_steps += """1. **Review Issues**: Investigate failed cleanups
+2. **Adjust Strategy**: Consider smaller batches or different approaches
+3. **Check Backup**: Ensure backup is available for rollback if needed
+4. **System Optimization**: Address performance warnings if present
+
+"""
+                
+        next_steps += """### 🛠️ Available Commands
+- **Continue Cleanup**: Run next batch with same settings
+- **Increase Batch**: Scale to larger batch sizes
+- **Prevention Check**: Verify template sanitization status
+- **Rollback**: Restore from backup if issues detected
+
+---
+*Report generated by Enhanced AI Tag Cleanup Deployment*"""
+        
+        return next_steps
+        
+    def save_report(self, report_content: str, filename: Optional[str] = None) -> Path:
+        """Save report to file"""
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+            filename = f'tag-cleanup-report-{timestamp}.md'
+            
+        report_path = self.vault_path / 'Reports' / filename
+        report_path.parent.mkdir(exist_ok=True)
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write(report_content)
+            
+        return report_path
 
 
 # Mock CLI integration for tests
