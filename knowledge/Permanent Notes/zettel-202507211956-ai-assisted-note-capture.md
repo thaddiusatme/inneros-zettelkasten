@@ -1,10 +1,15 @@
 ---
-type: permanent
 created: 2025-07-21 19:56
-status: published
-tags: ["#permanent", "#ai", "#note-taking", "#workflow", "#automation"]
-visibility: private
 source: fleeting-2025-07-21-workflow-testing-ai-assisted-note-taking.md
+status: published
+tags:
+- '#permanent'
+- ai
+- note-taking
+- workflow
+- automation
+type: permanent
+visibility: private
 ---
 
 ## Core Idea

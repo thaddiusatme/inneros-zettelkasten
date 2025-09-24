@@ -22,4 +22,5 @@ FLATTEN file.tags AS tag
 GROUP BY tag
 SORT length(rows) DESC
 ```
+```
 

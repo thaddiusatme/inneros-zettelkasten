@@ -1,8 +1,13 @@
 ---
-type: permanent
 created: 2025-07-23 16:48
 status: draft
-tags: ["#zettelkasten", "#automation", "#tdd", "#context-engineering", "#prompt-engineering"]
+tags:
+- zettelkasten
+- automation
+- '#tdd'
+- '#context-engineering'
+- '#prompt-engineering'
+type: permanent
 visibility: private
 ---
 

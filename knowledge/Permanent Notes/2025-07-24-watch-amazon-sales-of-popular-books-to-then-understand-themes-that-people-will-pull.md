@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:21:00.307184
 created: 2025-07-24 19:06
 status: inbox
-tags: ["#fleeting", "#inbox", "book-sales", "notes", "personal-development", "popular-culture", "self-help", "self-help-books"]
-ai_processed: 2025-08-05T22:21:00.307184
+tags:
+- fleeting
+- inbox
+- book-sales
+- notes
+- personal-development
+- popular-culture
+- self-help
+- self-help-books
+type: permanent
 visibility: private
 ---
 <!--

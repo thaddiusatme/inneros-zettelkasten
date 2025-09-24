@@ -1,8 +1,11 @@
 ---
-type: permanent
 created: 2025-07-23 17:05
 status: draft
-tags: ["#project", "#freelancing", "#career"]
+tags:
+- project
+- '#freelancing'
+- '#career'
+type: permanent
 visibility: private
 ---
 

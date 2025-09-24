@@ -1,10 +1,14 @@
 ---
-title: InnerOS User Journey Flowchart - Phase 5 AI Integration
 author: Cascade
 created: 2025-07-22 21:36
-type: permanent
 status: draft
-tags: ["#phase5", "#ai", "#workflow", "#flowchart"]
+tags:
+- '#phase5'
+- ai
+- workflow
+- '#flowchart'
+title: InnerOS User Journey Flowchart - Phase 5 AI Integration
+type: permanent
 visibility: private
 ---
 

@@ -1,8 +1,11 @@
 ---
-type: permanent
 created: 2025-07-23 17:10
 status: draft
-tags: ["#project", "#finance", "#optimization"]
+tags:
+- project
+- '#finance'
+- '#optimization'
+type: permanent
 visibility: private
 ---
 

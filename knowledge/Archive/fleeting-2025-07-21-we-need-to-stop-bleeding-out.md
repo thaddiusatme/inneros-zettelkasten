@@ -1,8 +1,10 @@
 ---
-type: fleeting
 created: 2025-07-21 17:49
 status: inbox
-tags: ["#fleeting", "#inbox"]
+tags:
+- fleeting
+- inbox
+type: fleeting
 visibility: private
 ---
 

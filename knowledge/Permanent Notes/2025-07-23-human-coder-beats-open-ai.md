@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:24:53.253934
 created: 2025-07-23 20:04
 status: inbox
-tags: ["#fleeting", "#inbox", "ai-vs-human", "artificial-intelligence", "atcoder-world-tour-finals", "competitive-programming", "creativity", "dota-2"]
-ai_processed: 2025-08-05T22:24:53.253934
+tags:
+- fleeting
+- inbox
+- ai-vs-human
+- artificial-intelligence
+- atcoder-world-tour-finals
+- competitive-programming
+- creativity
+- dota-2
+type: permanent
 visibility: private
 ---
 <!--

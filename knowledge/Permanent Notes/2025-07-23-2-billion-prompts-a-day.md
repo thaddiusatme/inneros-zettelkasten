@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:26:17.430265
 created: 2025-07-23 20:12
 status: inbox
-tags: ["#fleeting", "#inbox", "ai", "ai-assistant", "ai-assisted", "chatbot", "chatgpt", "context-aware"]
-ai_processed: 2025-08-05T22:26:17.430265
+tags:
+- fleeting
+- inbox
+- ai
+- ai-assistant
+- ai-assisted
+- chatbot
+- chatgpt
+- context-aware
+type: permanent
 visibility: private
 ---
 <!--

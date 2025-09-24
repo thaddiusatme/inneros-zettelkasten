@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:18:33.208265
 created: 2025-07-31 14:17
 status: inbox
-tags: ["#fleeting", "#inbox", "automation", "business-growth", "digital-sales", "entrepreneurship", "freelancing", "gig-economy"]
-ai_processed: 2025-08-05T22:18:33.208265
+tags:
+- fleeting
+- inbox
+- automation
+- business-growth
+- digital-sales
+- entrepreneurship
+- freelancing
+- gig-economy
+type: permanent
 visibility: private
 ---
 <!--

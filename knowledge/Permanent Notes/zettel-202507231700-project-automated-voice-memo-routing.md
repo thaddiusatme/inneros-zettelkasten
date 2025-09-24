@@ -1,8 +1,12 @@
 ---
-type: permanent
 created: 2025-07-23 17:00
 status: draft
-tags: ["#project", "#automation", "#voice-memo", "#communication"]
+tags:
+- project
+- automation
+- '#voice-memo'
+- '#communication'
+type: permanent
 visibility: private
 ---
 

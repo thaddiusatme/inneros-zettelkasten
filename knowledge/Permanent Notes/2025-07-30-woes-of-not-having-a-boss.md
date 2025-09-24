@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:19:32.554137
 created: 2025-07-30 14:08
 status: inbox
-tags: ["#fleeting", "#inbox", "career-development", "entrepreneurship", "freelance-work", "freelancing", "job-search", "job-search-strategies"]
-ai_processed: 2025-08-05T22:19:32.554137
+tags:
+- fleeting
+- inbox
+- career-development
+- entrepreneurship
+- freelance-work
+- freelancing
+- job-search
+- job-search-strategies
+type: permanent
 visibility: private
 ---
 <!--

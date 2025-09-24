@@ -1,8 +1,12 @@
 ---
-type: permanent
 created: 2025-07-23 16:52
 status: draft
-tags: ["#zettelkasten", "#workflow", "#principles", "#note-taking"]
+tags:
+- zettelkasten
+- workflow
+- '#principles'
+- note-taking
+type: permanent
 visibility: private
 ---
 

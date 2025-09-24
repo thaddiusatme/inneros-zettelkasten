@@ -1,9 +1,17 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:24:22.621111
 created: 2025-07-29 14:30
 status: inbox
-tags: ["#fleeting", "#inbox", "age-verification", "anonymity-online", "anonymous-access", "biometric-authentication", "data-breaches", "data-privacy"]
-ai_processed: 2025-08-05T22:24:22.621111
+tags:
+- fleeting
+- inbox
+- age-verification
+- anonymity-online
+- anonymous-access
+- biometric-authentication
+- data-breaches
+- data-privacy
+type: permanent
 visibility: private
 ---
 <!--

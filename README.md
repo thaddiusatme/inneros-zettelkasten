@@ -2,10 +2,15 @@
 
     Welcome to the `innerOS` workspace! This vault is designed for frictionless idea capture, structured Zettelkasten note-taking, and AI-assisted workflows, with privacy and future collaboration in mind.
 
+## 🚀 Getting Started
+- **[GETTING-STARTED.md](GETTING-STARTED.md)** — Complete starter guide for all features
+- **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** — Essential commands and shortcuts
+- **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — Detailed command documentation
+
 ## Key Documents
-- **inneros-manifest.md** — Comprehensive project overview, architecture, AI features, and roadmap
-- **windsurf-project-changelog.md** — Detailed change history and development milestones
-- **project-todo.md** — Current priorities and next development steps
+- **Projects/inneros-manifest-v3.md** — Comprehensive project overview, architecture, AI features, and roadmap
+- **Projects/windsurf-project-changelog.md** — Detailed change history and development milestones  
+- **Projects/project-todo-v3.md** — Current priorities and next development steps
 
 ## 🏗️ Project Structure
 

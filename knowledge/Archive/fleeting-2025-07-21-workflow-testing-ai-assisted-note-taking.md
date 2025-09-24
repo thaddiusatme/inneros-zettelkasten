@@ -1,8 +1,12 @@
 ---
-type: fleeting
 created: 2025-07-21 19:56
 status: promoted
-tags: ["#fleeting", "#ai", "#note-taking", "#workflow"]
+tags:
+- fleeting
+- ai
+- note-taking
+- workflow
+type: fleeting
 visibility: private
 ---
 

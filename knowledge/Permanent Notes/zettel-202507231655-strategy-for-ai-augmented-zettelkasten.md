@@ -1,8 +1,13 @@
 ---
-type: permanent
 created: 2025-07-23 16:55
 status: draft
-tags: ["#ai", "#zettelkasten", "#strategy", "#knowledge-management", "#local-llm"]
+tags:
+- ai
+- zettelkasten
+- '#strategy'
+- '#knowledge-management'
+- '#local-llm'
+type: permanent
 visibility: private
 ---
 

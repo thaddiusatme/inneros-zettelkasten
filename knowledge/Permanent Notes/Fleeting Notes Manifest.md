@@ -1,11 +1,14 @@
 ---
-title: Fleeting Notes Project Manifest
 author: myung (and Cascade)
 created: 2025-07-20 22:42
-type: permanent
+references:
+- ../Automation Project Manifest.md
 status: published
-tags: ["#fleeting", "#manifest"]
-references: [../Automation Project Manifest.md]
+tags:
+- fleeting
+- '#manifest'
+title: Fleeting Notes Project Manifest
+type: permanent
 visibility: private
 ---
 
