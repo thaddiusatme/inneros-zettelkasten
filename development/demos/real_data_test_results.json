@@ -1,0 +1,120 @@
+{
+  "basic_functionality": {
+    "status": "completed",
+    "tests": [
+      {
+        "test": "cli_initialization",
+        "passed": true,
+        "message": "CLI initialized successfully"
+      },
+      {
+        "test": "command_execution",
+        "passed": true,
+        "message": "Command execution working"
+      },
+      {
+        "test": "utility_integration",
+        "passed": true,
+        "message": "All utilities integrated"
+      }
+    ],
+    "success_rate": 1.0
+  },
+  "vault_analysis": {
+    "status": "completed",
+    "analysis": {
+      "total_tags": 711,
+      "problematic_tags": 711,
+      "problematic_percentage": 100.0,
+      "quality_distribution": {
+        "high": 0,
+        "medium": 0,
+        "low": 711
+      },
+      "analysis_time": 0.1308000087738037,
+      "meets_target": true
+    }
+  },
+  "performance": {
+    "status": "completed",
+    "benchmarks": [
+      {
+        "command": "analyze-tags",
+        "execution_time": 0.12665534019470215,
+        "meets_target": true,
+        "target": "< 30s",
+        "total_tags": 711
+      },
+      {
+        "command": "suggest-improvements",
+        "execution_time": 0.1264820098876953,
+        "meets_target": true,
+        "target": "< 30s",
+        "suggestions_generated": 711
+      },
+      {
+        "command": "batch-simulation",
+        "execution_time": 8.797645568847656e-05,
+        "meets_target": true,
+        "target": "< 30s",
+        "simulated_tags": 698
+      }
+    ],
+    "overall": {
+      "all_meet_targets": true,
+      "average_execution_time": 0.08440844217936198,
+      "performance_grade": "A"
+    }
+  },
+  "quality": {
+    "status": "completed",
+    "quality_metrics": {
+      "total_analyzed": 711,
+      "suggestions_provided": 52,
+      "suggestion_rate": 0.07313642756680731,
+      "meets_90_percent_target": false,
+      "patterns": {
+        "common_issues": {
+          "overly_complex": 12,
+          "numeric_only": 3
+        },
+        "suggestion_types": {
+          "no_suggestions": 659,
+          "with_suggestions": 52
+        },
+        "quality_improvements": []
+      }
+    }
+  },
+  "export": {
+    "status": "completed",
+    "exports": [
+      {
+        "format": "json",
+        "success": true,
+        "data_valid": true
+      },
+      {
+        "format": "csv",
+        "success": true,
+        "data_valid": true
+      }
+    ]
+  },
+  "error_handling": {
+    "status": "completed",
+    "error_tests": [
+      {
+        "test": "invalid_vault_path",
+        "handled_gracefully": true,
+        "error_message": "Vault not found"
+      },
+      {
+        "test": "invalid_command",
+        "handled_gracefully": true,
+        "error_message": "Unknown command: invalid-command"
+      }
+    ],
+    "graceful_handling_rate": 1.0
+  }
+}

@@ -52,8 +52,8 @@ class TagAnalysisProcessor:
         # Generate suggestions if quality is low
         suggestions = []
         if quality_score < 0.7:
-            suggestion_result = self.enhancement_engine.suggestion_generator.generate_contextual_alternatives(tag, context)
-            suggestions = suggestion_result.get("alternatives", [])
+            suggestion_recommendations = self.enhancement_engine.suggestion_generator.suggest_semantic_alternatives(tag)
+            suggestions = [rec.suggested_tag for rec in suggestion_recommendations]
             
         # Identify specific issues
         issues = self._identify_tag_issues(tag, quality_result)
@@ -180,16 +180,17 @@ class UserInteractionManager:
     def collect_feedback(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
         """Collect and process user feedback"""
         # Record feedback with learning engine
-        learning_result = self.enhancement_engine.feedback_learner.record_user_correction(
-            feedback_data.get("tag", ""),
-            feedback_data.get("suggested", ""),
-            feedback_data.get("user_action", ""),
-            feedback_data.get("confidence", 0.0)
-        )
+        feedback_for_learning = {
+            "user_corrections": [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))],
+            "accepted_suggestions": [] if feedback_data.get("user_action") != "accepted" else [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))],
+            "rejected_suggestions": [] if feedback_data.get("user_action") != "rejected" else [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))]
+        }
+        
+        self.enhancement_engine.feedback_learner.learn_from_user_corrections(feedback_for_learning)
         
         return {
             "feedback_recorded": True,
-            "learning_update": learning_result,
+            "learning_update": "Feedback processed for future improvements",
             "feedback_id": f"fb_{int(time.time())}"
         }
         
