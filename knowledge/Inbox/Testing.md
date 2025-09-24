@@ -1,6 +1,9 @@
 ---
-created: {{date}}
+created: 2025-09-23 18:16
 type: dashboard
+tags: [dataview-plugin, note-taking-systems, tag-management, vault-organization]
+quality_score: 0.4
+ai_processed: '2025-09-23T22:19:44.572363'
 ---
 $
 # 🏷️ Tag Dashboard
@@ -19,3 +22,4 @@ FLATTEN file.tags AS tag
 GROUP BY tag
 SORT length(rows) DESC
 ```
+

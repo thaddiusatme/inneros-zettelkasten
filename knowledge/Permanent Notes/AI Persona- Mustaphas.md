@@ -1,13 +1,5 @@
 ---
-created: 2025-08-22 15:52
-type: permanent
-status: promoted
-tags: [acts-of-service, big-five-agreeableness-conscientiousness-extraversion, concrete-verbs,
-  culinary-gatekeeping, extraversion, food-first, herearetheextractedtagsharissa,
-  influence]
-modified: '2025-08-22'
 ai_processed: '2025-08-23T14:16:05.305106'
-promoted_date: 2025-08-23 16:52
 ai_summary: 'Here is the summary:
 
 
@@ -37,6 +29,20 @@ ai_summary: 'Here is the summary:
 
   Overall, Mustapha''s Harissa - Pantry Hero is a warm, welcoming, and helpful brand
   that values community, adaptability, and assertiveness.'
+created: 2025-08-22 15:52
+modified: '2025-08-22'
+promoted_date: 2025-08-23 16:52
+status: promoted
+tags:
+- acts-of-service
+- big-five-agreeableness
+- concrete-verbs
+- culinary-gatekeeping
+- extraversion
+- food-first
+- herearetheextractedtagsharissa
+- influence
+type: permanent
 ---
 # Inferred answers to the 15 questions
 

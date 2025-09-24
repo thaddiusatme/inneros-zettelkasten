@@ -1,9 +1,12 @@
 ---
-type: fleeting
 created: 2025-09-22 21:24
+type: fleeting
 status: inbox
-tags: [fleeting, inbox]
 visibility: private
+tags: [analytics-dashboard, fleeting, inbox, ocr-extraction, openai, poc-manifest,
+  temporal-matching, tesseract]
+quality_score: 0.85
+ai_processed: '2025-09-23T22:25:21.260799'
 ---
 
 <!--

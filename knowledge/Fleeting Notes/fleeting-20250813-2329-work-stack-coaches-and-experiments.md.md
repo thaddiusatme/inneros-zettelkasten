@@ -3,10 +3,11 @@ created: 2025-08-14 17:38
 type: fleeting
 status: inbox
 visibility: private
-tags: [audience-engagement, business-strategy, coaching, demonstration, entrepreneurship,
-  goal-setting, marketing-strategy, note-taking]
+tags: [audience-engagement, business-coaching, business-strategy, coaching, demonstration,
+  entrepreneurship, goal-setting, marketing-strategy]
+quality_score: 0.75
 modified: '2025-08-20'
-ai_processed: '2025-08-31T13:03:51.590381'
+ai_processed: '2025-09-23T22:35:28.443948'
 '{ date: YYYY-MM-DD HH:mm }': null
 ---
 <!--

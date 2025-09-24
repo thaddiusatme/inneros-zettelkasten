@@ -1,11 +1,13 @@
 ---
-type: fleeting
 created: 2025-09-18 07:34
+type: fleeting
 status: inbox
-tags: ["community-building", "consult-calls", "fleeting", "founders-launch-access", "here are the extracted tags:
-
-product-positioning", "inbox", "paid-tiers", "strategic-seeding", "threadweavers-premium", "workshop"]
 visibility: private
+tags: [automations, community-building, consult-calls, fleeting, founders-launch-access,
+  herearetheextractedtagsfounders-launch-access, herearetheextractedtagsproduct-positioning,
+  inbox]
+quality_score: 0.85
+ai_processed: '2025-09-23T22:19:15.581739'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

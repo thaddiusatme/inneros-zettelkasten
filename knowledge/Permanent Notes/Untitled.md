@@ -1,9 +1,17 @@
 ---
-type: permanent
-status: promoted
-tags: ["automation_strategies", "evergreen_notes", "fleeting_notes", "knowledge_management_systems", "note_triage", "obsidian", "productivity_tools", "workflow_optimization"]
-ai_processed: 2025-07-28T20:03:39.696777
+ai_processed: 2025-07-28 20:03:39.696777
 promoted_date: 2025-07-28 20:06
+status: promoted
+tags:
+- workflow-automation
+- evergreen_notes
+- fleeting_notes
+- project-management
+- note_triage
+- obsidian
+- productivity-tools
+- business-workflow
+type: permanent
 ---
 ## Evergreen test  
 | Criterion | Yes/No | Note |  

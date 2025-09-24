@@ -1,15 +1,12 @@
 ---
-type: fleeting
 created: '2025-07-01'
 status: inbox
 tags:
 - fleeting
 - inbox
-- '='
 - 10k_mrr_goal
-- content_scaling`
-- '|'
-- '|'
+- content-scaling`
+type: fleeting
 ---
 
 

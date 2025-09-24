@@ -3,11 +3,17 @@ created: 2025-08-18 22:00
 type: literature
 status: inbox
 visibility: private
-tags: [acceptance-criteria, agile, blocker-priority, continuous-integration, critical-path,
-  development-cycle, git-commit, herearetheextractedtagstest-driven-development]
-source: null
-author: null
-ai_processed: '2025-08-31T12:58:24.543500'
+tags:
+  - acceptance-criteria
+  - agile
+  - blocker-priority
+  - continuous-integration
+  - critical-path
+  - development-cycle
+  - git-commit
+source:
+author:
+ai_processed: 2025-08-31T12:58:24.543500
 ---
 
 help me craft the next prompt for the next/new chat with fresh context. Keep a similar structure as the below ## The prompt

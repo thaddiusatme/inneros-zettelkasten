@@ -1,12 +1,18 @@
 ---
-created: 2025-08-22 15:52
-type: fleeting
-status: inbox
-tags: [acts-of-service, big-five-agreeableness-conscientiousness-extraversion, concrete-verbs,
-  culinary-gatekeeping, extraversion, food-first, herearetheextractedtagsharissa,
-  influence]
-modified: '2025-08-22'
 ai_processed: '2025-08-23T14:16:05.305106'
+created: 2025-08-22 15:52
+modified: '2025-08-22'
+status: inbox
+tags:
+- acts-of-service
+- big-five-agreeableness
+- concrete-verbs
+- culinary-gatekeeping
+- extraversion
+- food-first
+- herearetheextractedtagsharissa
+- influence
+type: fleeting
 ---
 # Inferred answers to the 15 questions
 

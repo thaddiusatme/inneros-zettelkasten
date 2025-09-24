@@ -1,9 +1,12 @@
 ---
-type: permanent
 created: 2025-09-18 10:43
+type: permanent
 status: promoted
-tags: ["emotional-intelligence", "hero's-journey", "intimacy-at-scale", "narrative-intimacy", "personal-branding", "sales-psychology", "trust-building", "vulnerability-leadership"]
 visibility: private
+tags: [emotional-decision-making, emotional-intelligence, hero-journey-marketing,
+  heros-journey, intimacy-at-scale, narrative-intimacy, personal-branding, price-risk-decision-making]
+quality_score: 0.85
+ai_processed: '2025-09-23T22:18:44.151040'
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:
 

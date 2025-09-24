@@ -1,9 +1,10 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:23:22.452235
 created: 2025-07-30 14:07
 status: inbox
-tags: ["", " ", "#", ":", "[", "a", "anxiety", "b"]
-ai_processed: 2025-08-05T22:23:22.452235
+tags:
+- anxiety
+type: permanent
 visibility: private
 ---
 <!--

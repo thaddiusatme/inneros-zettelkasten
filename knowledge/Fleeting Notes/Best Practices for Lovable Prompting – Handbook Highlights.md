@@ -1,10 +1,11 @@
 ---
-type: fleeting
 created: '2025-07-06'
+type: fleeting
 status: inbox
-tags:
-- fleeting
-- inbox
+tags: [10k-mrr-goal, automation, best-practices, fleeting, growth2025, herearetheextractedtagsprompt-engineering,
+  inbox, lovable-dev]
+quality_score: 0.85
+ai_processed: '2025-09-23T22:36:49.541788'
 ---
 
 

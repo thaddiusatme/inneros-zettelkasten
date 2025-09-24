@@ -3,10 +3,10 @@ created: 2025-08-23 22:27
 type: fleeting
 status: inbox
 visibility: private
-tags: [andthemesagile-methodology, fleeting, freelance-portfoliio, funnel-validation,
-  hereare7highlyrelevanttagsthatcapturethekeyconcepts, inbox, portfolio-management,
-  product-goals]
-ai_processed: '2025-08-31T13:01:07.220343'
+tags: [andthemesagile-methodology, case-studies, fleeting, freelance-portfoliio, freelance-portfolio,
+  funnel-validation, hereare7highlyrelevanttagsthatcapturethekeyconcepts, inbox]
+quality_score: 0.85
+ai_processed: '2025-09-23T22:32:49.601416'
 ---
 
 <!--

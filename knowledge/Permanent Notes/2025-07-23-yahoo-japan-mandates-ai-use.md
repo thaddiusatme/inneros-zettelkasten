@@ -1,9 +1,10 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:22:58.343789
 created: 2025-07-23 20:15
 status: inbox
-tags: ["", " ", "#", "-", ":", "[", "a", "automation"]
-ai_processed: 2025-08-05T22:22:58.343789
+tags:
+- automation
+type: permanent
 visibility: private
 ---
 <!--

@@ -1,11 +1,18 @@
 ---
+ai_processed: '2025-09-23T22:35:49.634302'
 created: 2025-07-24 21:02
-type: fleeting
+quality_score: 0.65
 status: inbox
+tags:
+- ai-personalities
+- demographic-targeting
+- free-version
+- marketing-strategy
+- personality-types
+- rim-world
+- soulful-ai
+type: fleeting
 visibility: private
-tags: [a, ai-personalities, demographic-targeting, free-version, marketing-strategy,
-  personality-types, rim-world, soulful-ai]
-ai_processed: '2025-08-31T13:26:43.524244'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

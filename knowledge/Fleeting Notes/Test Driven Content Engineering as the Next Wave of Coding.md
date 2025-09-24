@@ -1,5 +1,4 @@
 ---
-type: fleeting
 created: '2025-07-03'
 status: inbox
 tags:
@@ -7,13 +6,14 @@ tags:
 - inbox
 - project
 - active
-- content_engineering
+- content-engineering
 - automation
 - claude
 - make_com
-- process_innovation
+- process-innovation
 - 10k_mrr_goal
 - tdd
+type: fleeting
 ---
 
 

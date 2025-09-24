@@ -1,9 +1,10 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:21:46.525402
 created: 2025-07-31 09:07
 status: inbox
-tags: ["", " ", "-", ":", "[", "a", "c", "career-development"]
-ai_processed: 2025-08-05T22:21:46.525402
+tags:
+- career-development
+type: permanent
 visibility: private
 ---
 <!--

@@ -1,10 +1,11 @@
 ---
-type: fleeting
 created: '2025-05-20'
+type: fleeting
 status: inbox
-tags:
-- fleeting
-- inbox
+tags: [charting, data-visualization, dataview, fleeting, herearetheextractedtagsobsidian,
+  inbox, note-taking, productivity]
+quality_score: 0.75
+ai_processed: '2025-09-23T22:35:03.255145'
 ---
 
 

@@ -1,12 +1,12 @@
 ---
-type: permanent
 created: '2025-06-30'
 status: inbox
 tags:
-- LLM‑comparison
-- Freelance‑workflow
-- Cost‑tradeoff
-- Prompt‑economy
+- "LLM\u2011comparison"
+- business-workflow
+- "Cost\u2011tradeoff"
+- "Prompt\u2011economy"
+type: permanent
 ---
 
 **Title**: **Cost–Benefit of Using Claude via BYOK in WinDsurf for Large File Syntax Fixes**  

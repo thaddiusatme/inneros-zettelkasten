@@ -1,9 +1,10 @@
 ---
-type: permanent
+ai_processed: 2025-08-05 22:25:57.928815
 created: 2025-07-29 18:27
 status: inbox
-tags: ["", " ", "#", "-", ":", "[", "a", "ai-driven travel booking"]
-ai_processed: 2025-08-05T22:25:57.928815
+tags:
+- ai-driven travel booking
+type: permanent
 visibility: private
 ---
 <!--

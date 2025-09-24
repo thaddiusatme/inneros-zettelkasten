@@ -1,10 +1,18 @@
 ---
-type: fleeting
+ai_processed: '2025-09-23T22:37:17.867119'
 created: '2025-07-05'
+quality_score: 0.85
 status: inbox
 tags:
+- ai
+- automation
+- productivity-tools
 - fleeting
+- herearetheextractedtagsgithub
 - inbox
+- project
+- storytelling
+type: fleeting
 ---
 
 

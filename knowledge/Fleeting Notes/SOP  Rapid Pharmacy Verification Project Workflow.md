@@ -1,5 +1,4 @@
 ---
-type: fleeting
 created: '2025-06-19'
 status: inbox
 tags:
@@ -8,11 +7,12 @@ tags:
 - project
 - sop
 - automation
-- data_verification
+- data-verification
 - make_com
 - profit_margin
 - systems
 - 10k_mrr_goal
+type: fleeting
 ---
 
 

@@ -1,18 +1,16 @@
 ---
-tags: ["after analyzing the provided text", "and the text highlights their importance in shaping purchasing decisions.
-5. **loss aversion**: the study discusses loss aversion", "are applied to understand consumer decision-making.
-10. **psychology**: psychological concepts", "are used to explain consumer behavior.
-11. **behavioral economics**: the study incorporates insights from behavioral economics to better understand how consumers make decisions.
-12. **cultural factors**: cultural factors are discussed as influencing consumer behavior and purchasing decisions.
-
-these tags provide a summary of the key concepts and themes present in the provided text.", "including the impact of price perception on consumer behavior.
-2. **consumer behavior**: the study explores how consumers make purchasing decisions and how prices influence these decisions.
-3. **neuromarketing**: the text mentions neuromarketing as a field that studies the neural basis of consumer decision-making.
-4. **emotions**: emotions play a crucial role in consumer behavior", "like emotions and loss aversion", "such as prospect theory", "which refers to the tendency for people to prefer avoiding losses over acquiring gains.
-6. **prospect theory**: prospect theory is mentioned as a framework that helps understand how consumers make decisions under uncertainty.
-7. **conjoint analysis**: conjoint analysis is discussed as a method used in marketing research to estimate consumer preferences and behavior.
-8. **marketing research**: the text highlights the importance of marketing research in understanding consumer behavior and informing pricing strategies.
-9. **economics**: economic theories"]
+ai_processed: '2025-09-23T22:23:33.881430'
+created: 2025-09-21 16:03
+quality_score: 0.8
+tags:
+- afteranalyzingtheprovidedtext
+- andtheaffectheuristic3emotionsindecision-makingthetexthighlightstheroleofemotionsindecision-making
+- andthetexthighlightstheirimportanceinshapingpurchasingdecisions5lossaversionthestudydiscusseslossaversion
+- areappliedtounderstandconsumerdecision-making10psychologypsychologicalconcepts
+- artificial-intelligence
+- highlightingitspotentialtoinfluenceconsumerbehavior7prospecttheorythetextdiscussesprospecttheoryanditsimplicationsforpricinganddecision-making8affectheuristicthearticleexaminestheaffectheuristicanditsroleinshapingconsumerbehavior9riskperceptionthetextexploresriskperceptionandhowitaffectspurchasingdecisions
+- includingpriceperception
+- includingtheimpactofpriceperceptiononconsumerbehavior2consumerbehaviorthestudyexploreshowconsumersmakepurchasingdecisionsandhowpricesinfluencethesedecisions3neuromarketingthetextmentionsneuromarketingasafieldthatstudiestheneuralbasisofconsumerdecision-making4emotionsemotionsplayacrucialroleinconsumerbehavior
 ---
 ## Executive Summary
 
