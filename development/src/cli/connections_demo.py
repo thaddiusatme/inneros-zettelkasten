@@ -80,24 +80,28 @@ def handle_suggest_links_command(args):
         print(f"📚 Loaded {len(corpus)} notes from corpus")
         print("🤖 Generating intelligent link suggestions...")
         
-        # Initialize LinkSuggestionEngine
-        engine = LinkSuggestionEngine(
-            vault_path=args.corpus_dir,
-            quality_threshold=args.min_quality,
-            max_suggestions=args.max_results
+        # Use enhanced real connection discovery (REFACTOR phase - production implementation)
+        from cli.real_connection_cli_utils import RealConnectionCLIHelper
+        
+        # Create enhanced processor with comprehensive error handling
+        processor = RealConnectionCLIHelper.create_enhanced_processor(args.corpus_dir)
+        
+        # Process and get formatted results
+        results = RealConnectionCLIHelper.process_and_format_results(
+            processor, args.target, args.corpus_dir, 
+            args.min_quality, args.max_results, show_performance=True
         )
         
-        # Mock connections for now (GREEN phase - minimal implementation)
-        # In real implementation, this would use AIConnections to find similar notes first
-        mock_connections = []
+        if not results["success"]:
+            print(results["summary"])
+            return []
         
-        # Generate suggestions
-        suggestions = engine.generate_link_suggestions(
-            target_note=args.target,
-            connections=mock_connections,
-            min_quality=args.min_quality,
-            max_results=args.max_results
-        )
+        suggestions = results["suggestions"]
+        
+        # Display enhanced summary and performance report
+        print(results["summary"])
+        if results["performance_report"]:
+            print(results["performance_report"])
         
         if not suggestions:
             print("ℹ️  No link suggestions found above the quality threshold.")
