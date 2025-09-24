@@ -237,7 +237,13 @@ class PreventionStatisticsCollector:
                               prevented_count: int, processing_time: float):
         """Record a prevention event for statistics"""
         self.session_stats['total_tags_processed'] += tags_processed
-        self.session_stats[f'{event_type}_prevented'] += prevented_count
+        
+        # Handle dynamic event types
+        prevention_key = f'{event_type}_prevented'
+        if prevention_key not in self.session_stats:
+            self.session_stats[prevention_key] = 0
+        self.session_stats[prevention_key] += prevented_count
+        
         self.session_stats['processing_times'].append(processing_time)
         
         if tags_processed > 0:
@@ -246,11 +252,14 @@ class PreventionStatisticsCollector:
             
     def get_prevention_summary(self) -> Dict[str, Any]:
         """Get comprehensive prevention statistics summary"""
-        total_prevented = (
-            self.session_stats['paragraph_tags_prevented'] +
-            self.session_stats['artifact_tags_prevented'] +
-            self.session_stats['sentence_fragments_prevented']
-        )
+        # Calculate total prevented from all prevention types
+        total_prevented = 0
+        breakdown = {}
+        
+        for key, value in self.session_stats.items():
+            if key.endswith('_prevented'):
+                total_prevented += value
+                breakdown[key.replace('_prevented', '')] = value
         
         avg_processing_time = (
             sum(self.session_stats['processing_times']) / 
@@ -272,11 +281,7 @@ class PreventionStatisticsCollector:
             'avg_processing_time': avg_processing_time,
             'avg_quality_improvement': avg_quality_improvement,
             'performance_target_met': avg_processing_time < 1.0,  # <1s per batch
-            'breakdown': {
-                'paragraph_tags': self.session_stats['paragraph_tags_prevented'],
-                'artifacts': self.session_stats['artifact_tags_prevented'],
-                'sentence_fragments': self.session_stats['sentence_fragments_prevented']
-            }
+            'breakdown': breakdown
         }
 
 
