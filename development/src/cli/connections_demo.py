@@ -13,6 +13,22 @@ import glob
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.connections import AIConnections
+from src.ai.link_suggestion_engine import LinkSuggestionEngine
+from cli.smart_link_cli_utils import (
+    display_suggestion_interactively,
+    display_suggestions_summary,
+    display_dry_run_results,
+    display_cli_error,
+    process_suggestions_batch,
+    filter_suggestions_by_quality
+)
+from cli.smart_link_cli_enhanced import (
+    SmartLinkCLIOrchestrator,
+    CLITheme,
+    InteractiveSuggestionPresenter,
+    BatchProcessingReporter,
+    CLIOutputFormatter
+)
 
 
 def load_note_corpus(directory: str) -> dict:
@@ -46,7 +62,100 @@ def load_single_note(file_path: str) -> str:
         sys.exit(1)
 
 
-def main():
+def handle_suggest_links_command(args):
+    """Handle the suggest-links command with LinkSuggestionEngine"""
+    try:
+        print(f"🔗 Smart Link Suggestions for: {args.target}")
+        print(f"📁 Searching in: {args.corpus_dir}")
+        print(f"🎚️  Min Quality: {args.min_quality}")
+        print(f"📊 Max Results: {args.max_results}")
+        if args.dry_run:
+            print("🔍 DRY RUN MODE - No modifications will be made")
+        print("-" * 60)
+        
+        # Load target note and corpus
+        target_content = load_single_note(args.target)
+        corpus = load_note_corpus(args.corpus_dir)
+        
+        print(f"📚 Loaded {len(corpus)} notes from corpus")
+        print("🤖 Generating intelligent link suggestions...")
+        
+        # Initialize LinkSuggestionEngine
+        engine = LinkSuggestionEngine(
+            vault_path=args.corpus_dir,
+            quality_threshold=args.min_quality,
+            max_suggestions=args.max_results
+        )
+        
+        # Mock connections for now (GREEN phase - minimal implementation)
+        # In real implementation, this would use AIConnections to find similar notes first
+        mock_connections = []
+        
+        # Generate suggestions
+        suggestions = engine.generate_link_suggestions(
+            target_note=args.target,
+            connections=mock_connections,
+            min_quality=args.min_quality,
+            max_results=args.max_results
+        )
+        
+        if not suggestions:
+            print("ℹ️  No link suggestions found above the quality threshold.")
+            return
+        
+        # Filter by quality
+        filtered_suggestions = filter_suggestions_by_quality(suggestions, args.min_quality)
+        
+        print(f"✅ Generated {len(filtered_suggestions)} quality link suggestions:")
+        print("-" * 60)
+        
+        # Handle dry-run mode
+        if args.dry_run:
+            display_dry_run_results(filtered_suggestions, args.target)
+            return filtered_suggestions
+        
+        # Process suggestions using enhanced orchestrator
+        if args.interactive:
+            # Use enhanced interactive workflow
+            orchestrator = SmartLinkCLIOrchestrator()
+            results = orchestrator.execute_interactive_workflow(
+                filtered_suggestions, 
+                args.target, 
+                dry_run=args.dry_run
+            )
+            return results
+        else:
+            # Non-interactive mode with enhanced reporting
+            reporter = BatchProcessingReporter()
+            reporter.start_batch(len(filtered_suggestions), "Link Suggestion Processing")
+            
+            results = []
+            for i, suggestion in enumerate(filtered_suggestions, 1):
+                reporter.update_progress(i, suggestion.target_note, "evaluating")
+                
+                # Auto-accept high quality suggestions in non-interactive mode
+                action = 'accept' if suggestion.confidence == 'high' else 'skip'
+                results.append({'suggestion': suggestion, 'action': action})
+            
+            # Final reporting
+            summary = {
+                'accepted': sum(1 for r in results if r['action'] == 'accept'),
+                'skipped': sum(1 for r in results if r['action'] == 'skip'),
+                'processed': len(results)
+            }
+            reporter.finish_batch(summary)
+            return results
+            
+    except FileNotFoundError as e:
+        display_cli_error(f"File not found: {e}", args.target)
+        sys.exit(1)
+    except Exception as e:
+        display_cli_error(f"Error generating suggestions: {e}", "")
+        sys.exit(1)
+
+
+def create_parser():
+    """Create and return the argument parser - extracted for testing"""
     parser = argparse.ArgumentParser(description="AI-powered connection discovery demo")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -66,6 +175,31 @@ def main():
     links_parser.add_argument("--threshold", type=float, default=0.7,
                              help="Similarity threshold (0.0-1.0)")
     
+    # Smart Link Management command (NEW)
+    suggest_parser = subparsers.add_parser("suggest-links", help="Generate smart link suggestions with quality assessment")
+    suggest_parser.add_argument("target", help="Path to the target note file")
+    suggest_parser.add_argument("corpus_dir", help="Directory containing note corpus")
+    suggest_parser.add_argument("--interactive", action="store_true", default=False,
+                               help="Interactive suggestion review")
+    def validate_quality(value):
+        fvalue = float(value)
+        if fvalue < 0.0 or fvalue > 1.0:
+            raise argparse.ArgumentTypeError("Quality threshold must be between 0.0 and 1.0")
+        return fvalue
+    
+    suggest_parser.add_argument("--min-quality", type=validate_quality, default=0.6,
+                               help="Minimum quality threshold (0.0-1.0)")
+    def validate_max_results(value):
+        ivalue = int(value)
+        if ivalue <= 0:
+            raise argparse.ArgumentTypeError("Max results must be positive")
+        return ivalue
+    
+    suggest_parser.add_argument("--max-results", type=validate_max_results, default=5,
+                               help="Maximum number of results")
+    suggest_parser.add_argument("--dry-run", action="store_true", default=False,
+                               help="Preview suggestions without modification")
+    
     # Connection map command
     map_parser = subparsers.add_parser("map", help="Build connection map for all notes")
     map_parser.add_argument("corpus_dir", help="Directory containing note corpus")
@@ -73,15 +207,25 @@ def main():
                            help="Similarity threshold (0.0-1.0)")
     map_parser.add_argument("--output", help="Output file for connection map (JSON)")
     
+    return parser
+
+
+def main():
+    parser = create_parser()
+    
     args = parser.parse_args()
     
     if not args.command:
         parser.print_help()
         return
     
-    # Initialize connections system
+    # Handle suggest-links command separately (uses different system)
+    if args.command == "suggest-links":
+        return handle_suggest_links_command(args)
+    
+    # Initialize connections system for other commands
     connections = AIConnections(
-        similarity_threshold=args.threshold,
+        similarity_threshold=getattr(args, 'threshold', 0.7),
         max_suggestions=getattr(args, 'max_results', 5)
     )
     
