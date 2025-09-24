@@ -1,0 +1,514 @@
+{
+  "session_info": {
+    "timestamp": "2025-09-23T17:01:35.867306",
+    "vault_path": "/Users/thaddius/repos/inneros-zettelkasten",
+    "notes_analyzed": 8,
+    "connections_found": 20
+  },
+  "relationship_connections": [
+    {
+      "connection_id": "rel_0_1",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "fleeting-2025-05-19-ai-notebook-strategy.md",
+        "domain": "technology",
+        "concepts": [
+          "productivity",
+          "ai",
+          "strategy",
+          "connection",
+          "notes"
+        ],
+        "key_snippet": "# AI Notebook Strategy\n\nQuick thoughts on integrating AI more effectively into my note-taking workflow.\n\n## Ideas\n- Use local LLMs for sensitive content processing\n- Create templater scripts that can call AI for auto-tagging\n- Consider different AI models for different note types\n- Explore ways to use AI for connecting ideas acrnoss notes\n\n## Potential Tools\n- Obsidian Copilot plugin\n- Local LLM setup (Ollama?)\n- Custom GPTs for specific note processing tasks\n\n## Questions\n- How to maintain privacy while leveraging AI?\n- What's the right balance of manual vs"
+      },
+      "note2": {
+        "name": "reference-ai-humble-servant-audience-profile.md",
+        "domain": "technology",
+        "concepts": [
+          "framework",
+          "inbox",
+          "business",
+          "pattern",
+          "connection"
+        ],
+        "key_snippet": "em-dashes\n\nEmotional Throughline: Empowerment without overwhelm, em-dashes\n\n</voice>\n\nhere is my audience"
+      },
+      "ai_prediction": {
+        "relationship_type": "contradicts",
+        "confidence": 0.85,
+        "explanation": "Detected contradiction",
+        "processing_time": 1.1205673217773438e-05
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_0_2",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "fleeting-2025-05-19-ai-notebook-strategy.md",
+        "domain": "technology",
+        "concepts": [
+          "productivity",
+          "ai",
+          "strategy",
+          "connection",
+          "notes"
+        ],
+        "key_snippet": "# AI Notebook Strategy\n\nQuick thoughts on integrating AI more effectively into my note-taking workflow.\n\n## Ideas\n- Use local LLMs for sensitive content processing\n- Create templater scripts that can call AI for auto-tagging\n- Consider different AI models for different note types\n- Explore ways to use AI for connecting ideas acrnoss notes\n\n## Potential Tools\n- Obsidian Copilot plugin\n- Local LLM setup (Ollama?)\n- Custom GPTs for specific note processing tasks\n\n## Questions\n- How to maintain privacy while leveraging AI?\n- What's the right balance of manual vs"
+      },
+      "note2": {
+        "name": "Upwork as Revenue.md",
+        "domain": "technology",
+        "concepts": [
+          "consulting",
+          "business",
+          "business-implementation",
+          "automation",
+          "cash-flow"
+        ],
+        "key_snippet": "- **Type**: Fleeting\n- **Context**: Considering additional income streams while scaling AI Humble Servant\n- **Idea**: Treat Upwork as a low-risk sandbox to rapidly validate micro-offers (e.g., 5-hour GPT prompt audits, quick automations)\n- **Why it matters**:\n    1"
+      },
+      "ai_prediction": {
+        "relationship_type": "contradicts",
+        "confidence": 0.85,
+        "explanation": "Detected contradiction",
+        "processing_time": 5.9604644775390625e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_1_2",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "reference-ai-humble-servant-audience-profile.md",
+        "domain": "technology",
+        "concepts": [
+          "framework",
+          "inbox",
+          "business",
+          "pattern",
+          "connection"
+        ],
+        "key_snippet": "em-dashes\n\nEmotional Throughline: Empowerment without overwhelm, em-dashes\n\n</voice>\n\nhere is my audience"
+      },
+      "note2": {
+        "name": "Upwork as Revenue.md",
+        "domain": "technology",
+        "concepts": [
+          "consulting",
+          "business",
+          "business-implementation",
+          "automation",
+          "cash-flow"
+        ],
+        "key_snippet": "- **Type**: Fleeting\n- **Context**: Considering additional income streams while scaling AI Humble Servant\n- **Idea**: Treat Upwork as a low-risk sandbox to rapidly validate micro-offers (e.g., 5-hour GPT prompt audits, quick automations)\n- **Why it matters**:\n    1"
+      },
+      "ai_prediction": {
+        "relationship_type": "contradicts",
+        "confidence": 0.85,
+        "explanation": "Detected contradiction",
+        "processing_time": 5.9604644775390625e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_1_3",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "reference-ai-humble-servant-audience-profile.md",
+        "domain": "technology",
+        "concepts": [
+          "framework",
+          "inbox",
+          "business",
+          "pattern",
+          "connection"
+        ],
+        "key_snippet": "em-dashes\n\nEmotional Throughline: Empowerment without overwhelm, em-dashes\n\n</voice>\n\nhere is my audience"
+      },
+      "note2": {
+        "name": "prompt-20250824-1044.md.md",
+        "domain": "technology",
+        "concepts": [
+          "critical-thinking",
+          "inbox",
+          "prompt",
+          "credibility-assessment",
+          "data"
+        ],
+        "key_snippet": "ALTERNATIVE PERSPECTIVES  \nResearch contrarian viewpoints or alternative approaches  \nFind expert disagreements or debates on the topic  \nIdentify potential risks or downsides not mentioned  \n5"
+      },
+      "ai_prediction": {
+        "relationship_type": "contradicts",
+        "confidence": 0.85,
+        "explanation": "Detected contradiction",
+        "processing_time": 5.7220458984375e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_2_3",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "Upwork as Revenue.md",
+        "domain": "technology",
+        "concepts": [
+          "consulting",
+          "business",
+          "business-implementation",
+          "automation",
+          "cash-flow"
+        ],
+        "key_snippet": "- **Type**: Fleeting\n- **Context**: Considering additional income streams while scaling AI Humble Servant\n- **Idea**: Treat Upwork as a low-risk sandbox to rapidly validate micro-offers (e.g., 5-hour GPT prompt audits, quick automations)\n- **Why it matters**:\n    1"
+      },
+      "note2": {
+        "name": "prompt-20250824-1044.md.md",
+        "domain": "technology",
+        "concepts": [
+          "critical-thinking",
+          "inbox",
+          "prompt",
+          "credibility-assessment",
+          "data"
+        ],
+        "key_snippet": "ALTERNATIVE PERSPECTIVES  \nResearch contrarian viewpoints or alternative approaches  \nFind expert disagreements or debates on the topic  \nIdentify potential risks or downsides not mentioned  \n5"
+      },
+      "ai_prediction": {
+        "relationship_type": "builds_on",
+        "confidence": 0.6,
+        "explanation": "Default classification",
+        "processing_time": 7.867813110351562e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_2_4",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "Upwork as Revenue.md",
+        "domain": "technology",
+        "concepts": [
+          "consulting",
+          "business",
+          "business-implementation",
+          "automation",
+          "cash-flow"
+        ],
+        "key_snippet": "- **Type**: Fleeting\n- **Context**: Considering additional income streams while scaling AI Humble Servant\n- **Idea**: Treat Upwork as a low-risk sandbox to rapidly validate micro-offers (e.g., 5-hour GPT prompt audits, quick automations)\n- **Why it matters**:\n    1"
+      },
+      "note2": {
+        "name": "prompt-20250821-0842-test.md",
+        "domain": "technology",
+        "concepts": [
+          "inbox",
+          "git-commit",
+          "strategy",
+          "chatgpt",
+          "git"
+        ],
+        "key_snippet": "## The prompt\nLet's create a new branch for the next feature: test.\nWe want to perform TDD with red, green, refactor phases, followed by git commit and lessons learned documentation"
+      },
+      "ai_prediction": {
+        "relationship_type": "builds_on",
+        "confidence": 0.6,
+        "explanation": "Default classification",
+        "processing_time": 1.0967254638671875e-05
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_3_4",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "prompt-20250824-1044.md.md",
+        "domain": "technology",
+        "concepts": [
+          "critical-thinking",
+          "inbox",
+          "prompt",
+          "credibility-assessment",
+          "data"
+        ],
+        "key_snippet": "ALTERNATIVE PERSPECTIVES  \nResearch contrarian viewpoints or alternative approaches  \nFind expert disagreements or debates on the topic  \nIdentify potential risks or downsides not mentioned  \n5"
+      },
+      "note2": {
+        "name": "prompt-20250821-0842-test.md",
+        "domain": "technology",
+        "concepts": [
+          "inbox",
+          "git-commit",
+          "strategy",
+          "chatgpt",
+          "git"
+        ],
+        "key_snippet": "## The prompt\nLet's create a new branch for the next feature: test.\nWe want to perform TDD with red, green, refactor phases, followed by git commit and lessons learned documentation"
+      },
+      "ai_prediction": {
+        "relationship_type": "builds_on",
+        "confidence": 0.6,
+        "explanation": "Default classification",
+        "processing_time": 9.775161743164062e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "rel_3_5",
+      "connection_type": "relationship_detection",
+      "note1": {
+        "name": "prompt-20250824-1044.md.md",
+        "domain": "technology",
+        "concepts": [
+          "critical-thinking",
+          "inbox",
+          "prompt",
+          "credibility-assessment",
+          "data"
+        ],
+        "key_snippet": "ALTERNATIVE PERSPECTIVES  \nResearch contrarian viewpoints or alternative approaches  \nFind expert disagreements or debates on the topic  \nIdentify potential risks or downsides not mentioned  \n5"
+      },
+      "note2": {
+        "name": "fleeting-20250823-2227-sprint-2-plannig.md.md",
+        "domain": "technology",
+        "concepts": [
+          "triage",
+          "notes",
+          "inbox",
+          "portfolio-management",
+          "automation"
+        ],
+        "key_snippet": "<!--\nNOTE: This file uses a static date for validation"
+      },
+      "ai_prediction": {
+        "relationship_type": "builds_on",
+        "confidence": 0.6,
+        "explanation": "Default classification",
+        "processing_time": 6.9141387939453125e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    }
+  ],
+  "strength_connections": [
+    {
+      "connection_id": "strength_0_1",
+      "connection_type": "strength_calculation",
+      "concept1": "prompt",
+      "concept2": "credibility-assessment",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 9.5367431640625e-07
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_0_2",
+      "connection_type": "strength_calculation",
+      "concept1": "prompt",
+      "concept2": "git-commit",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 9.5367431640625e-07
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_1_2",
+      "connection_type": "strength_calculation",
+      "concept1": "credibility-assessment",
+      "concept2": "git-commit",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_1_3",
+      "connection_type": "strength_calculation",
+      "concept1": "credibility-assessment",
+      "concept2": "note-taking-system",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_2_3",
+      "connection_type": "strength_calculation",
+      "concept1": "git-commit",
+      "concept2": "note-taking-system",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_2_4",
+      "connection_type": "strength_calculation",
+      "concept1": "git-commit",
+      "concept2": "fleeting",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 1.1920928955078125e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_3_4",
+      "connection_type": "strength_calculation",
+      "concept1": "note-taking-system",
+      "concept2": "fleeting",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_3_5",
+      "connection_type": "strength_calculation",
+      "concept1": "note-taking-system",
+      "concept2": "fact-checking",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 1.1920928955078125e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_4_5",
+      "connection_type": "strength_calculation",
+      "concept1": "fleeting",
+      "concept2": "fact-checking",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_4_6",
+      "connection_type": "strength_calculation",
+      "concept1": "fleeting",
+      "concept2": "hereare7highlyrelevanttagsthatcapturethekeyconcepts",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_5_6",
+      "connection_type": "strength_calculation",
+      "concept1": "fact-checking",
+      "concept2": "hereare7highlyrelevanttagsthatcapturethekeyconcepts",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 0.0
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    },
+    {
+      "connection_id": "strength_5_7",
+      "connection_type": "strength_calculation",
+      "concept1": "fact-checking",
+      "concept2": "consulting-marketing",
+      "ai_prediction": {
+        "strength_score": 0.5,
+        "confidence_interval_width": 0.3,
+        "confidence_lower": 0,
+        "confidence_upper": 1,
+        "components": {},
+        "processing_time": 1.1920928955078125e-06
+      },
+      "feedback_collected": false,
+      "user_feedback": null,
+      "feedback_timestamp": null
+    }
+  ],
+  "cross_domain_connections": [],
+  "processing_stats": {}
+}
