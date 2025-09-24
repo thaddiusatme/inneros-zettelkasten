@@ -106,3 +106,6 @@ knowledge/.obsidian/
 
 # Ignore dev temp artifacts
 development/tmp/
+
+# Tag cleanup backup directories (created during Enhanced AI Tag Cleanup)
+tag-cleanup-backup-*/
