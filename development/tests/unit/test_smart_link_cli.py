@@ -20,22 +20,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
 from ai.link_suggestion_engine import LinkSuggestionEngine, LinkSuggestion
 from ai.link_suggestion_utils import QualityScore
 
-class TestSmartLinkCLIIntegration:
-    """Test suite for CLI integration with LinkSuggestionEngine"""
-    
-    @pytest.fixture
-    def temp_vault(self):
-        """Create temporary vault structure with test notes for CLI testing"""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            vault_path = Path(temp_dir)
-            
-            # Create directory structure
-            (vault_path / "Permanent Notes").mkdir()
-            (vault_path / "Fleeting Notes").mkdir()
-            
-            # Create test notes with realistic content
-            ai_note = vault_path / "Permanent Notes" / "ai-concepts.md"
-            ai_note.write_text("""---
+@pytest.fixture
+def temp_vault():
+    """Create temporary vault structure with test notes for CLI testing"""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        vault_path = Path(temp_dir)
+        
+        # Create directory structure
+        (vault_path / "Permanent Notes").mkdir()
+        (vault_path / "Fleeting Notes").mkdir()
+        
+        # Create test notes with realistic content
+        ai_note = vault_path / "Permanent Notes" / "ai-concepts.md"
+        ai_note.write_text("""---
 type: permanent
 tags: [ai, machine-learning, concepts]
 ---
@@ -48,9 +45,9 @@ machine learning algorithms and neural networks.
 - Deep learning fundamentals  
 - Neural network architectures
 """)
-            
-            ml_note = vault_path / "Permanent Notes" / "machine-learning-basics.md"
-            ml_note.write_text("""---
+        
+        ml_note = vault_path / "Permanent Notes" / "machine-learning-basics.md"
+        ml_note.write_text("""---
 type: permanent
 tags: [machine-learning, algorithms]  
 ---
@@ -63,47 +60,47 @@ Introduction to machine learning algorithms and their applications.
 - Unsupervised learning
 - Deep neural networks
 """)
-            
-            yield vault_path
-    
-    @pytest.fixture
-    def mock_suggestions(self):
-        """Mock LinkSuggestion objects for testing display and interaction"""
-        return [
-            LinkSuggestion(
-                source_note="ai-concepts.md",
-                target_note="machine-learning-basics.md",
-                suggested_link_text="[[Machine Learning Basics]]",
-                similarity_score=0.85,
-                quality_score=0.87,
-                confidence="high", 
-                explanation="Strong semantic similarity (85%) with shared AI/ML concepts",
-                insertion_context="## Core Concepts",
-                suggested_location="related_concepts"
-            ),
-            LinkSuggestion(
-                source_note="ai-concepts.md", 
-                target_note="neural-networks.md",
-                suggested_link_text="[[Neural Networks]]",
-                similarity_score=0.72,
-                quality_score=0.75,
-                confidence="medium",
-                explanation="Moderate semantic relationship (72%) with neural network concepts",
-                insertion_context="## Related Topics", 
-                suggested_location="see_also"
-            ),
-            LinkSuggestion(
-                source_note="ai-concepts.md",
-                target_note="data-science.md", 
-                suggested_link_text="[[Data Science]]",
-                similarity_score=0.45,
-                quality_score=0.48,
-                confidence="low",
-                explanation="Weak connection (45%) - manual review recommended",
-                insertion_context="## See Also",
-                suggested_location="see_also"
-            )
-        ]
+        
+        yield vault_path
+
+@pytest.fixture
+def mock_suggestions():
+    """Mock LinkSuggestion objects for testing display and interaction"""
+    return [
+        LinkSuggestion(
+            source_note="ai-concepts.md",
+            target_note="machine-learning-basics.md",
+            suggested_link_text="[[Machine Learning Basics]]",
+            similarity_score=0.85,
+            quality_score=0.87,
+            confidence="high", 
+            explanation="Strong semantic similarity (85%) with shared AI/ML concepts",
+            insertion_context="## Core Concepts",
+            suggested_location="related_concepts"
+        ),
+        LinkSuggestion(
+            source_note="ai-concepts.md", 
+            target_note="neural-networks.md",
+            suggested_link_text="[[Neural Networks]]",
+            similarity_score=0.72,
+            quality_score=0.75,
+            confidence="medium",
+            explanation="Moderate semantic relationship (72%) with neural network concepts",
+            insertion_context="## Related Topics", 
+            suggested_location="see_also"
+        ),
+        LinkSuggestion(
+            source_note="ai-concepts.md",
+            target_note="data-science.md", 
+            suggested_link_text="[[Data Science]]",
+            similarity_score=0.45,
+            quality_score=0.48,
+            confidence="low",
+            explanation="Weak connection (45%) - manual review recommended",
+            insertion_context="## See Also",
+            suggested_location="see_also"
+        )
+    ]
 
 class TestCLIArgumentParsing:
     """Test CLI argument parsing for suggest-links command"""
@@ -172,6 +169,63 @@ class TestCLIArgumentParsing:
 class TestLinkSuggestionEngineIntegration:
     """Test integration between CLI and LinkSuggestionEngine"""
     
+    @patch('cli.connections_demo.AIConnections')
+    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch('cli.connections_demo.load_single_note')
+    @patch('cli.connections_demo.load_note_corpus')
+    def test_real_connection_discovery_integration(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, temp_vault):
+        """Test integration with real AIConnections instead of mock data"""
+        from cli.connections_demo import handle_suggest_links_command
+        
+        # Mock the AIConnections instance and its methods
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.find_similar_notes.return_value = [
+            ('machine-learning-basics.md', 0.85),
+            ('neural-networks.md', 0.72)
+        ]
+        mock_ai_connections.return_value = mock_ai_instance
+        
+        # Mock other dependencies
+        mock_note.return_value = "test note content about AI"
+        mock_corpus.return_value = {"note1.md": "content1", "note2.md": "content2"}
+        
+        # Mock LinkSuggestionEngine
+        mock_engine_instance = MagicMock()
+        mock_engine_instance.generate_link_suggestions.return_value = []
+        mock_engine.return_value = mock_engine_instance
+        
+        # Create mock args
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = False
+        mock_args.dry_run = False
+        
+        # Execute CLI command
+        handle_suggest_links_command(mock_args)
+        
+        # Verify AIConnections was initialized and used
+        mock_ai_connections.assert_called_once()
+        mock_ai_instance.find_similar_notes.assert_called_once_with(
+            "test note content about AI", 
+            {"note1.md": "content1", "note2.md": "content2"}
+        )
+        
+        # Verify LinkSuggestionEngine received the real connection data
+        mock_engine_instance.generate_link_suggestions.assert_called_once()
+        
+        # Get the actual connections passed to the engine
+        actual_connections_call = mock_engine_instance.generate_link_suggestions.call_args[0][0]
+        
+        # Verify the format matches expected connection data structure
+        assert len(actual_connections_call) == 2
+        assert actual_connections_call[0]['target'] == 'machine-learning-basics.md'
+        assert actual_connections_call[0]['similarity'] == 0.85
+        assert actual_connections_call[1]['target'] == 'neural-networks.md'
+        assert actual_connections_call[1]['similarity'] == 0.72
+    
     @patch('cli.connections_demo.LinkSuggestionEngine')
     @patch('cli.connections_demo.load_single_note')
     @patch('cli.connections_demo.load_note_corpus')
@@ -228,6 +282,8 @@ class TestLinkSuggestionEngineIntegration:
             mock_args.corpus_dir = "vault/"
             mock_args.interactive = False
             mock_args.dry_run = False
+            mock_args.min_quality = 0.7
+            mock_args.max_results = 5
             
             result = handle_suggest_links_command(mock_args)
             
@@ -499,6 +555,8 @@ class TestCLIIntegrationEndToEnd:
         mock_args.corpus_dir = "vault/"
         mock_args.interactive = False
         mock_args.dry_run = False
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
         
         with patch('cli.connections_demo.load_single_note') as mock_note, \
              patch('cli.connections_demo.load_note_corpus') as mock_corpus:

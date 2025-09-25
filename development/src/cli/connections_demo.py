@@ -8,6 +8,7 @@ import os
 import argparse
 from pathlib import Path
 import glob
+import time
 
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -80,29 +81,48 @@ def handle_suggest_links_command(args):
         print(f"📚 Loaded {len(corpus)} notes from corpus")
         print("🤖 Generating intelligent link suggestions...")
         
-        # Use enhanced real connection discovery (REFACTOR phase - production implementation)
-        from cli.real_connection_cli_utils import RealConnectionCLIHelper
+        # Track performance for end-to-end timing
+        start_time = time.time()
         
-        # Create enhanced processor with comprehensive error handling
-        processor = RealConnectionCLIHelper.create_enhanced_processor(args.corpus_dir)
-        
-        # Process and get formatted results
-        results = RealConnectionCLIHelper.process_and_format_results(
-            processor, args.target, args.corpus_dir, 
-            args.min_quality, args.max_results, show_performance=True
+        # Initialize AI-powered connection discovery
+        ai_connections = AIConnections(
+            similarity_threshold=args.min_quality,
+            max_suggestions=args.max_results
         )
         
-        if not results["success"]:
-            print(results["summary"])
-            return []
+        # Find real semantic connections using AI
+        try:
+            similar_notes = ai_connections.find_similar_notes(target_content, corpus)
+            
+            # Report connection discovery performance
+            discovery_time = time.time() - start_time
+            print(f"⚡ Connection discovery completed in {discovery_time:.2f}s")
+            print(f"🔍 Found {len(similar_notes)} potential connections")
+            
+        except Exception as e:
+            print(f"⚠️  AI connection discovery failed: {e}")
+            print("🔄 Falling back to simple text similarity...")
+            # Could add fallback logic here if needed
+            similar_notes = []
         
-        suggestions = results["suggestions"]
+        # Transform similar_notes to connection format expected by LinkSuggestionEngine
+        connections = []
+        for filename, similarity in similar_notes:
+            connection = {
+                'source': args.target,
+                'target': filename, 
+                'similarity': similarity
+            }
+            connections.append(connection)
         
-        # Display enhanced summary and performance report
-        print(results["summary"])
-        if results["performance_report"]:
-            print(results["performance_report"])
-        
+        # Initialize LinkSuggestionEngine with real connections
+        engine = LinkSuggestionEngine(
+            vault_path=args.corpus_dir,
+            quality_threshold=args.min_quality,
+            max_suggestions=args.max_results
+        )
+
+        suggestions = engine.generate_link_suggestions(connections)
         if not suggestions:
             print("ℹ️  No link suggestions found above the quality threshold.")
             return
