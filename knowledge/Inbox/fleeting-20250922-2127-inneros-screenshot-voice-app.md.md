@@ -3,10 +3,10 @@ created: 2025-09-22 21:24
 type: fleeting
 status: inbox
 visibility: private
-tags: [analytics-dashboard, fleeting, inbox, ocr-extraction, openai, poc-manifest,
-  temporal-matching, tesseract]
+tags: [analytics-dashboard, content-creation, desktop-processing-station, fleeting,
+  inbox, metadata-schema, ocr-extraction, openai]
 quality_score: 0.85
-ai_processed: '2025-09-23T22:25:21.260799'
+ai_processed: '2025-09-24T14:14:28.622985'
 ---
 
 <!--

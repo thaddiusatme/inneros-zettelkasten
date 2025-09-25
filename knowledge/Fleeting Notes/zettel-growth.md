@@ -3,9 +3,9 @@ created: '2025-05-20'
 type: fleeting
 status: inbox
 tags: [charting, data-visualization, dataview, fleeting, herearetheextractedtagsobsidian,
-  inbox, note-taking, productivity]
+  inbox, note-taking, obsidian]
 quality_score: 0.75
-ai_processed: '2025-09-23T22:35:03.255145'
+ai_processed: '2025-09-24T14:19:42.799345'
 ---
 
 

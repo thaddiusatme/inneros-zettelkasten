@@ -2,10 +2,10 @@
 created: '2025-07-02'
 type: fleeting
 status: inbox
-tags: [consumer-psychographics, fleeting, herearetheextractedtagspersonal-growth,
-  holistic-wellness, inbox, personal-branding, purpose, self-discovery]
+tags: [agreeableness, calm-urgency, conscientiousness, consumer-psychographics, disc-dynamics,
+  extraversion, fleeting, herearetheextractedtagspersonal-growth]
 quality_score: 0.85
-ai_processed: '2025-09-23T22:27:38.633504'
+ai_processed: '2025-09-24T14:16:03.753106'
 ---
 
 

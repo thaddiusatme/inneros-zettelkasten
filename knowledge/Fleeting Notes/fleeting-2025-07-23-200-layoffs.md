@@ -1,17 +1,12 @@
 ---
-ai_processed: '2025-08-31T13:27:05.117221'
 created: 2025-07-23 20:13
-status: inbox
-tags:
-- addiction-management
-- ai-assisted-addiction-management
-- ai-slop
-- candy-crush
-- game-design
-- game-development
-- game-industry-trends
 type: fleeting
+status: inbox
 visibility: private
+tags: [addiction-management, ai-assisted-addiction-management, ai-slop, artificial-intelligence,
+  candy-crush, game-addiction, game-design, game-development]
+quality_score: 0.75
+ai_processed: '2025-09-24T14:23:51.568282'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

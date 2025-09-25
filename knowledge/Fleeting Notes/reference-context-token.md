@@ -1,10 +1,11 @@
 ---
-type: fleeting
 created: '2025-07-02'
+type: fleeting
 status: inbox
-tags:
-- fleeting
-- inbox
+tags: [ai-assistant, blog, chatbot-segmentation, content-marketing, faceless-content-scripts,
+  fleeting, funnel-delivery, inbox]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:22:07.340943'
 ---
 
 

@@ -3,9 +3,10 @@ created: 2025-08-23 17:19
 type: fleeting
 status: inbox
 visibility: private
-tags: [channel-roles, fleeting, herearetheextractedtagscontent-calendar, inbox, light-production-checklist,
-  one-week-calendar-template, pillar-content, platform-cheat-sheet]
-ai_processed: '2025-08-31T13:21:19.351720'
+tags: [40-to-60-percent-tracker-template, channel-roles, channel-roles-routing-rules,
+  content-marketing, cta-bank, daily-slot-template, fleeting, herearetheextractedtagscontent-calendar]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:28:32.882257'
 ---
 
 <!--

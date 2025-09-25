@@ -7,7 +7,7 @@ tags: [automations, community-building, consult-calls, fleeting, founders-launch
   herearetheextractedtagsfounders-launch-access, herearetheextractedtagsproduct-positioning,
   inbox]
 quality_score: 0.85
-ai_processed: '2025-09-23T22:19:15.581739'
+ai_processed: '2025-09-24T14:09:53.806860'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

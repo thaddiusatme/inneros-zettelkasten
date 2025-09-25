@@ -1,9 +1,12 @@
 ---
-type: fleeting
 created: 2025-09-03 12:33
+type: fleeting
 status: inbox
-tags: [prompt, chatgpt, inbox]
 visibility: private
+tags: [brainstorming, brand-management, business, chatgpt, content-creation, inbox,
+  marketing-strategy, prompt]
+quality_score: 0.7
+ai_processed: '2025-09-24T14:30:05.857723'
 ---
 
 ## The prompt

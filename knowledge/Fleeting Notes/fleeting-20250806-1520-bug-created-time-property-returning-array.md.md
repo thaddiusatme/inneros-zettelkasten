@@ -5,8 +5,8 @@ status: inbox
 visibility: private
 tags: [creative-thinking, fleeting, idea-generation, inbox, knowledge-graphing, mental-mapping,
   mind-mapping, note-taking]
-quality_score: 1.0
-ai_processed: '2025-09-23T22:34:25.842406'
+quality_score: 0.7
+ai_processed: '2025-09-24T14:19:18.117936'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

@@ -1,19 +1,11 @@
 ---
 created: '2025-07-03'
-status: inbox
-tags:
-- fleeting
-- inbox
-- project
-- active
-- content-engineering
-- automation
-- claude
-- make_com
-- process-innovation
-- 10k_mrr_goal
-- tdd
 type: fleeting
+status: inbox
+tags: [10k_mrr_goal, active, audience-needs, automation, claude, claude-make-zapier,
+  consistency, content-engineering]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:28:57.445152'
 ---
 
 

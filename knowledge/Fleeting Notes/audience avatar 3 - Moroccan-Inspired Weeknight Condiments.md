@@ -2,10 +2,11 @@
 created: 2025-08-22 16:11
 type: fleeting
 status: inbox
-tags: [authentic-flavors, chef-tested-recipes, clean-labels, co-op-stories, coastal-metros,
-  culturally-diverse-cities, customer-avatar, demographic-information]
+tags: [authentic-flavors, chef-tested-recipes, chermoula, clean-label, clean-labels,
+  clear-use-it-tonight-recipes, co-op-stories, coastal-metros]
+quality_score: 0.85
 modified: '2025-08-22'
-ai_processed: '2025-08-31T13:16:24.679219'
+ai_processed: '2025-09-24T14:26:00.227239'
 ---
 # Customer Avatar Profile: Moroccan-Inspired Weeknight Condiments
 

@@ -1,10 +1,11 @@
 ---
-type: fleeting
 created: '2025-07-01'
+type: fleeting
 status: inbox
-tags:
-- fleeting
-- inbox
+tags: [content-curation, downdetector, fleeting, google-alerts, herearetheextractedtagsnatural-language-processing,
+  inbox, large-language-models, linkedin]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:29:45.331513'
 ---
 
 

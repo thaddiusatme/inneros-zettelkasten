@@ -7,32 +7,33 @@ trigger: always_on
 # InnerOS Windsurf Rules: AI-Enhanced Knowledge Management (v4.0)
 
 > **Version**: 4.0 (Current Project State)  
-> **Updated**: 2025-09-18
+> **Updated**: 2025-09-24
 > **Purpose**: Complete guide for AI interactions in InnerOS Zettelkasten development  
-> **Context**: Includes Reading Intake Pipeline integration and critical bug management  
+> **Context**: Updated for clean project organization and completed major systems  
 
 ## 🎯 Core Session Principles
 
 ### Context-First Development
 Required Reads (Priority Order):
-1. Projects/inneros-manifest-v3.md - Comprehensive project overview and architecture
-2. Projects/project-todo-v3.md - Current priorities and next development steps  
-3. Projects/reading-intake-integration-analysis.md - Integration analysis and solution architecture
-4. README.md - Quick start and AI features documentation
-5. Projects/windsurf-project-changelog.md - Detailed development history
+1. Projects/REFERENCE/inneros-manifest-v3.md - Comprehensive project overview and architecture
+2. Projects/ACTIVE/project-todo-v3.md - Current priorities and next development steps  
+3. Projects/ACTIVE/current-priorities-summary.md - 2-week focus areas and active projects
+4. README.md - Updated project structure and AI features documentation
+5. Projects/REFERENCE/windsurf-project-changelog.md - Detailed development history
 
 Session Actions:
-- Always ground actions in project context, schema, and requirements
-- Summarize project goals, structure, and recent changes before proceeding
-- Check for critical bugs and dependencies before starting development
-- Reference integration analysis for Phase extension projects
-- When in doubt, consult Manifest and Integration Analysis before asking user
+- Always ground actions in project context using ACTIVE/ and REFERENCE/ directories
+- Check Projects/ACTIVE/ for current priorities before starting development
+- Reference completed work in Projects/COMPLETED-2025-XX/ for patterns and lessons
+- Consult Projects/DEPRECATED/ only for historical context on superseded approaches
+- When in doubt, prioritize ACTIVE manifests over deprecated integration analyses
 
 ### Critical Path Management
 - Template Processing System: RESOLVED (2025-09-17) - Verify template health in reviews
 - Integration-First: New features must leverage existing AI workflows, not duplicate them
 - Compatibility: All changes must preserve existing functionality and test coverage
 - Performance: Maintain or improve current benchmarks (<10s summarization, <5s similarity)
+- Project Organization: Maintain clean ACTIVE/REFERENCE/COMPLETED/DEPRECATED structure
 
 ### Data Preservation & Ethics
 - Never overwrite or destructively edit notes unless explicitly instructed
@@ -49,6 +50,7 @@ Session Actions:
 - Respect all privacy and visibility tags (private/shared/team/public)
 - Maintain backward compatibility with existing workflows
 - Log all major actions in Changelog and notify user
+- Follow project lifecycle management: ACTIVE → Implementation → COMPLETED → DEPRECATED
 
 ## 🚨 Current Critical Issues (September 2025)
 
@@ -56,21 +58,21 @@ Session Actions:
 - File: `knowledge/Inbox/fleeting-20250806-1520-bug-images-dissapear.md.md`
 - Issue: `created: {{date:YYYY-MM-DD HH:mm}}` not processing to actual timestamp
 - Impact: Previously blocked Reading Intake Pipeline; now unblocked and templates production-ready
-- Priority: MUST BE RESOLVED FIRST before any new feature work
+- Priority: RESOLVED - Verify template health in reviews
 - Workflow: Use `/bug-triage-workflow` for systematic resolution
 
 ### 🔴 SYSTEM INTEGRITY: Image Linking System
 - Issue: Images disappear during AI automation processes
-- Impact: Knowledge graph integrity, media asset management compromised
-- Areas Affected: AI enhancement, note promotion, template processing
-- Investigation: System design issue requiring comprehensive solution
+- Impact: Knowledge graph integrity, media asset management compromised during AI processing
+- Areas Affected: AI enhancement, note promotion, template processing workflows
+- Priority: 🔴 CRITICAL - System integrity issue
 
-### 📋 Active Project: Reading Intake Pipeline
-- Status: Phase 5 extension (not standalone project)
-- Dependency: UNBLOCKED by template fix (2025-09-17)
-- Integration: Leverages existing AI workflows (quality scoring, tagging, weekly review)
-- Timeline: Sprint 0 (Aug 11-15), MVP (Aug 18), Full System (Aug 29)
-- Workflow: Use `/reading-intake-pipeline` and `/integration-project-workflow`
+### 📁 Project Organization Status (September 2024)
+- **Projects Directory**: ✅ CLEANED - 97% reduction in cognitive load (35+ files → 1)
+- **ACTIVE/**: 8 current priority projects clearly identified
+- **REFERENCE/**: 7 essential documents for quick access  
+- **COMPLETED-2025-XX/**: 28 items properly archived (15 Sep + 13 Aug)
+- **DEPRECATED/**: 10 superseded items providing historical context
 
 ## 📁 File Organization Rules
 
@@ -137,31 +139,35 @@ Requirements:
 - ✅ Analytics Dashboard: Temporal analysis, productivity metrics
 - ✅ Enhanced Metrics: Orphaned/stale note detection
 
-### Phase 5 Extensions (IN DEVELOPMENT)
-- 🔄 Reading Intake Pipeline: Literature note workflow automation
-- 🔄 Template System Enhancement: Improved reliability and new templates
-- 🔄 Import Adapters: CSV/JSON, bookmarks, Twitter, YouTube, RSS
+### Phase 5 Extensions (COMPLETED September 2025)
+- ✅ Smart Link Management: TDD Iteration 4 complete with link insertion system
+- ✅ Fleeting Note Lifecycle: Complete MVP with triage and promotion workflows
+- ✅ Directory Organization: Safety-first P0+P1 system with comprehensive testing
+- ✅ Enhanced Connection Discovery: Feedback collection and relationship analysis
 
 ### AI Usage Patterns
 ```bash
 # Core analytics and insights
-python3 src/cli/analytics_demo.py . --interactive
+python3 development/src/cli/analytics_demo.py knowledge/ --interactive
 
 # Weekly review automation  
-python3 src/cli/workflow_demo.py . --weekly-review
+python3 development/src/cli/workflow_demo.py knowledge/ --weekly-review
 
 # Enhanced metrics with orphaned/stale detection
-python3 src/cli/workflow_demo.py . --enhanced-metrics
+python3 development/src/cli/workflow_demo.py knowledge/ --enhanced-metrics
 
 # Connection discovery
-python3 src/cli/connections_demo.py .
+python3 development/src/cli/connections_demo.py knowledge/
 
 # System health check (verify before development)
-python3 src/cli/workflow_demo.py . --status
+python3 development/src/cli/workflow_demo.py knowledge/ --status
 
-# NEW: Reading Intake Pipeline
-# python3 src/cli/workflow_demo.py . --import-bookmarks file.html
-# python3 src/cli/workflow_demo.py . --process-literature
+# Smart Link Management (TDD Iteration 4 complete)
+python3 development/src/cli/workflow_demo.py knowledge/ --suggest-links
+
+# Fleeting Note Lifecycle Management (MVP complete)
+python3 development/src/cli/workflow_demo.py knowledge/ --fleeting-triage
+python3 development/src/cli/workflow_demo.py knowledge/ --promote-note
 ```
 
 ### AI Ethics & Transparency
@@ -173,32 +179,6 @@ python3 src/cli/workflow_demo.py . --status
 - Preserve human decision-making in note promotion
 - Maintain metadata consistency in automated processes
 - Log AI-assisted actions for transparency
-
-## 🔄 Workflow State Management
-
-### Note Lifecycle (Enhanced)
-```
-Saved Article/Import → 
-Inbox (status: inbox) → 
-Literature Notes (promoted) OR Fleeting Notes (promoted) → 
-Permanent Notes (published) → 
-Archive (archived)
-```
-
-### Reading Intake Integration
-- Import Sources: Bookmarks, RSS, Twitter, YouTube, articles
-- Processing Pipeline: Import → Triage → Literature/Fleeting → Permanent
-- AI Enhancement: Uses existing quality scoring, tagging, weekly review
-- Template Integration: Specialized literature note templates
-- Performance Target: <30 seconds per item triage
-
-### Inbox Processing Rules
-- `Inbox/` is staging area for all imports and quick captures
-- Status field drives workflow, not folder location
-- Only notes with `status: inbox` require active triage
-- AI tagging, quality assessment, connection discovery applied during processing
-- Literature notes require claims/quotes extraction for promotion
-- Reading intake items get source/url/saved_at metadata
 
 ## 🏗️ Development Guidelines
 
@@ -223,18 +203,11 @@ Archive (archived)
 - Use workflows: `/integration-project-workflow` for Phase extensions
 
 ### Code Organization
-- CLI Tools: `src/cli/` - User-facing commands and demos
-- AI Engine: `src/ai/` - Core AI processing and workflows
-- Tests: `tests/` - Comprehensive unit and integration tests
-- Templates: `Templates/` - Dynamic content generation (Production Ready)
-
-### Performance Targets
-- Summarization: <10s for 1000+ word documents ✅
-- Similarity Analysis: <5s per comparison ✅
-- Weekly Review: <5s for 100+ notes ✅
-- Connection Mapping: <20s for full network analysis ✅
-- Enhanced Metrics: <5s for 76+ note analysis ✅
-- Reading Intake: <30s per item triage (TARGET)
+- CLI Tools: `development/src/cli/` - User-facing commands and demos
+- AI Engine: `development/src/ai/` - Core AI processing and workflows
+- Tests: `development/tests/` - Comprehensive unit and integration tests
+- Templates: `knowledge/Templates/` - Dynamic content generation (Production Ready)
+- Project Docs: `Projects/ACTIVE/` - Current manifests and specifications
 
 ## 🔗 Git Integration
 

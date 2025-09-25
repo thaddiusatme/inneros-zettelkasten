@@ -1,9 +1,10 @@
 ---
 created: 2025-09-23 18:16
 type: dashboard
-tags: [dataview-plugin, note-taking-systems, tag-management, vault-organization]
-quality_score: 0.4
-ai_processed: '2025-09-23T22:19:44.572363'
+tags: [dataview, dataview-plugin, note-taking, note-taking-systems, plugin, tag-management,
+  tags, vault-organization]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:10:09.391960'
 ---
 $
 # 🏷️ Tag Dashboard

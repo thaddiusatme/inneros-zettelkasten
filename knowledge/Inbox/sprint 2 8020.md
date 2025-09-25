@@ -1,11 +1,9 @@
 ---
-ai_processed: '2025-09-23T22:24:26.364864'
 created: 2025-08-23 22:34
-quality_score: 0.8
-tags:
-- audience-builder-gpt
-- content-calendar-consolidation
-- freelance-pipeline-unlock
+tags: [80/20-analysis, audience-builder-gpt, content-calendar-consolidation, freelance-marketing,
+  freelance-pipeline-unlock, portfolio-anchors, sales-push, tripwire-marketing]
+quality_score: 0.85
+ai_processed: '2025-09-24T14:13:41.572572'
 ---
 # 80/20 analysis of your Kanban board
 

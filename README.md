@@ -8,9 +8,9 @@
 - **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — Detailed command documentation
 
 ## Key Documents
-- **Projects/inneros-manifest-v3.md** — Comprehensive project overview, architecture, AI features, and roadmap
-- **Projects/windsurf-project-changelog.md** — Detailed change history and development milestones  
-- **Projects/project-todo-v3.md** — Current priorities and next development steps
+- **Projects/REFERENCE/inneros-manifest-v3.md** — Comprehensive project overview, architecture, AI features, and roadmap
+- **Projects/REFERENCE/windsurf-project-changelog.md** — Detailed change history and development milestones  
+- **Projects/ACTIVE/project-todo-v3.md** — Current priorities and next development steps
 
 ## 🏗️ Project Structure
 
@@ -30,7 +30,11 @@
 │   ├── Templates/        # Obsidian templates and Templater scripts
 │   ├── .obsidian/        # Obsidian configuration
 │   └── README-knowledge.md # Knowledge worker documentation
-├── Projects/             # 📋 Project documentation
+├── Projects/             # 📋 Project documentation & management
+│   ├── ACTIVE/           # Current priority projects (8 items)
+│   ├── REFERENCE/        # Essential docs (manifests, guides, DFDs)
+│   ├── COMPLETED-2025-XX/ # Monthly archives of completed work
+│   └── DEPRECATED/       # Superseded plans and manifests
 ├── Reviews/              # 📊 Weekly reviews and retrospectives
 ├── Workflows/            # 🔄 Process documentation
 └── Media/                # 🖼️ Images and attachments
@@ -39,7 +43,11 @@
 ### **Directory Purpose**
 - **development/**: All Python code, tests, and technical artifacts
 - **knowledge/**: Complete Zettelkasten system (Obsidian vault)
-- **Projects/**: Project management and planning documents
+- **Projects/**: Clean project management with systematic organization:
+  - **ACTIVE/**: Current priority projects and manifests (8 items)
+  - **REFERENCE/**: Essential documentation, guides, and architecture docs (7 items)  
+  - **COMPLETED-2025-XX/**: Monthly archives of completed lessons learned and reports
+  - **DEPRECATED/**: Superseded manifests and planning documents
 - **Reviews/**: Weekly reviews and progress tracking
 - **Workflows/**: Process documentation and SOPs
 
@@ -224,12 +232,42 @@ python3 test_real_analytics.py
     - `.git/hooks/pre-commit` — Validates metadata in staged markdown files before committing.
     - `.git/hooks/post-commit` — Automatically updates `Windsurf Project Changelog.md` with the commit message after a successful commit.
 
+    ## 🗂️ Project Organization (Updated September 2024)
+
+    The **Projects/** directory has been systematically reorganized for maximum clarity and minimal cognitive load:
+
+    ### **ACTIVE/** - Current Focus (8 files)
+    - `project-todo-v3.md` — Current task management and 2-week roadmap
+    - `smart-link-management-system-manifest-v1.md` — TDD Iteration 4 complete
+    - `intelligent-tag-management-system-manifest.md` — Next major AI project
+    - `visual-knowledge-capture-manifest.md` — Mobile workflow requirements
+    - `knowledge-capture-system-manifest.md` — Voice note integration
+    - Plus project planning and priority summaries
+
+    ### **REFERENCE/** - Essential Docs (7 files)  
+    - `inneros-manifest-v3.md` — Complete project overview
+    - `windsurf-project-changelog.md` — Development history
+    - `CONNECTION-DISCOVERY-DFD.md` — System architecture diagrams
+    - `FEATURE-STATUS.md`, `GETTING-STARTED.md`, `QUICK-REFERENCE.md`, `README.md`
+
+    ### **COMPLETED-2025-XX/** - Monthly Archives
+    - **September 2025**: 15 completed TDD lessons learned (Advanced Tag Enhancement, Smart Link Management, Enhanced Connections)
+    - **August 2025**: 13 completed items (Capture System, Directory Organization, Voice Integration, Bug fixes)
+
+    ### **DEPRECATED/** - Historical Context (10 files)
+    - Superseded manifests and completed proof-of-concepts
+    - Legacy project versions (v2 docs replaced by v3)
+    - Integration analyses that have been implemented
+
+    **Result**: 97% reduction in main directory clutter (35+ files → 1 cleanup plan), crystal clear focus on 8 active priorities.
+
     ## Getting Started
-    1. **Read the Manifest**: Start with `inneros-manifest.md` for complete project context
-    2. **Quick Demo**: Run `python3 quick_demo.py` to see AI features in action
-    3. **Process Your Notes**: Use `python3 src/cli/workflow_demo.py . --process-inbox`
-    4. **Explore Templates**: Use provided templates for consistent note creation
-    5. **Weekly Review**: Run `python3 src/cli/workflow_demo.py . --weekly-review`
+    1. **Read the Manifest**: Start with `Projects/REFERENCE/inneros-manifest-v3.md` for complete project context
+    2. **Check Current Priorities**: Review `Projects/ACTIVE/project-todo-v3.md` for active tasks
+    3. **Quick Demo**: Run `python3 quick_demo.py` to see AI features in action
+    4. **Process Your Notes**: Use `python3 src/cli/workflow_demo.py . --process-inbox`
+    5. **Explore Templates**: Use provided templates for consistent note creation
+    6. **Weekly Review**: Run `python3 src/cli/workflow_demo.py . --weekly-review`
 
     ---
 

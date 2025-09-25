@@ -4,8 +4,9 @@ type: fleeting
 status: inbox
 visibility: private
 tags: [fleeting, inbox, note-taking, personal-knowledge-management, productivity,
-  thought-recording]
-ai_processed: '2025-08-31T13:19:50.765903'
+  productivity-systems, thought-management, thought-recording]
+quality_score: 0.7
+ai_processed: '2025-09-24T14:27:26.722759'
 ---
 
 <!--

@@ -4,8 +4,9 @@ type: fleeting
 status: inbox
 tags: [acceptance-criteria, andthemeschatgpt-prompt, chatgpt, filename, fleeting,
   frontmatter, frontmatter-management, hereare3-8highlyrelevanttagsthatcapturethekeyconcepts]
+quality_score: 0.75
 modified: '2025-08-22'
-ai_processed: '2025-08-31T13:15:02.715468'
+ai_processed: '2025-09-24T14:24:16.359555'
 ---
 # One-prompt template survey
 

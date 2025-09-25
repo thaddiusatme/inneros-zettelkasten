@@ -1,12 +1,10 @@
 ---
 created: '2025-07-01'
-status: inbox
-tags:
-- fleeting
-- inbox
-- 10k_mrr_goal
-- content-scaling`
 type: fleeting
+status: inbox
+tags: [10k_mrr_goal, ai, canva-api, claude, content-scaling, fleeting, ghl, inbox]
+quality_score: 0.8
+ai_processed: '2025-09-24T14:24:40.970587'
 ---
 
 

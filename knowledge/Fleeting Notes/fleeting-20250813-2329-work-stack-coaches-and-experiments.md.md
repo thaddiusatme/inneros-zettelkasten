@@ -5,9 +5,9 @@ status: inbox
 visibility: private
 tags: [audience-engagement, business-coaching, business-strategy, coaching, demonstration,
   entrepreneurship, goal-setting, marketing-strategy]
-quality_score: 0.75
+quality_score: 0.7
 modified: '2025-08-20'
-ai_processed: '2025-09-23T22:35:28.443948'
+ai_processed: '2025-09-24T14:20:01.395578'
 '{ date: YYYY-MM-DD HH:mm }': null
 ---
 <!--

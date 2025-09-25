@@ -6,7 +6,7 @@ visibility: private
 tags: [emotional-decision-making, emotional-intelligence, hero-journey-marketing,
   heros-journey, intimacy-at-scale, narrative-intimacy, personal-branding, price-risk-decision-making]
 quality_score: 0.85
-ai_processed: '2025-09-23T22:18:44.151040'
+ai_processed: '2025-09-24T14:09:30.878641'
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:
 
