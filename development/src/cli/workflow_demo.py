@@ -850,6 +850,44 @@ Examples:
         action="store_true",
         help="Remove old backup directories (use with --keep)"
     )
+    
+    # TDD Iteration 4: Safe Workflow Processing Commands (GREEN Phase)
+    action_group.add_argument(
+        "--process-inbox-safe",
+        action="store_true",
+        help="Process inbox notes with image preservation and atomic operations"
+    )
+    
+    action_group.add_argument(
+        "--batch-process-safe", 
+        action="store_true",
+        help="Batch process notes with comprehensive safety guarantees and image preservation"
+    )
+    
+    action_group.add_argument(
+        "--performance-report",
+        action="store_true",
+        help="Generate comprehensive performance metrics report for safe workflow processing"
+    )
+    
+    action_group.add_argument(
+        "--integrity-report",
+        action="store_true", 
+        help="Generate comprehensive image integrity report with monitoring details"
+    )
+    
+    action_group.add_argument(
+        "--start-safe-session",
+        metavar="SESSION_NAME",
+        help="Start a new concurrent safe processing session"
+    )
+    
+    action_group.add_argument(
+        "--process-in-session",
+        nargs=2,
+        metavar=("SESSION_ID", "NOTE_PATH"),
+        help="Process note within specified session"
+    )
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -873,6 +911,47 @@ Examples:
         type=int,
         metavar="N",
         help="Number of recent backups to keep when pruning (use with --prune-backups)"
+    )
+    
+    # TDD Iteration 4: Safe Processing Options (GREEN Phase)
+    parser.add_argument(
+        "--performance-metrics",
+        action="store_true",
+        help="Include performance metrics in safe processing operations"
+    )
+    
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=2,
+        metavar="N",
+        help="Maximum number of concurrent processing sessions (default: 2)"
+    )
+    
+    parser.add_argument(
+        "--progress",
+        action="store_true",
+        help="Show progress indicators during batch processing"
+    )
+    
+    parser.add_argument(
+        "--benchmark-mode",
+        action="store_true",
+        help="Enable benchmark mode for performance testing"
+    )
+    
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Number of notes to process per batch (default: 10)"
+    )
+    
+    parser.add_argument(
+        "--note",
+        metavar="PATH",
+        help="Specific note path for session-based processing"
     )
     
     args = parser.parse_args()
@@ -1416,6 +1495,163 @@ Examples:
             
         except Exception as e:
             print(f"❌ Error pruning backups: {e}")
+            return 1
+    
+    # TDD Iteration 4 REFACTOR: Safe Workflow Processing Commands (using CLI utilities)
+    elif args.process_inbox_safe:
+        print("🛡️ Processing inbox notes with image preservation...")
+        try:
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir), max_concurrent=args.max_concurrent)
+            result = cli.execute_command("process-inbox-safe", {
+                "progress": args.progress,
+                "performance_metrics": args.performance_metrics,
+                "batch_size": args.batch_size
+            })
+            
+            if args.format == "json":
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                print_header("SAFE INBOX PROCESSING COMPLETE")
+                if result.get("success"):
+                    processing_result = result.get("result", {})
+                    print(f"   ✅ Processed: {processing_result.get('successful_notes', 0)}/{processing_result.get('total_notes', 0)} notes")
+                    print(f"   🖼️ Images preserved: {processing_result.get('total_images_preserved', 0)}")
+                    print(f"   🛡️ Atomic operations: Enabled")
+                    print(f"   ⏱️ Execution time: {result.get('execution_time', 0):.2f}s")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            print(f"❌ Error during safe processing: {e}")
+            return 1
+    
+    elif args.batch_process_safe:
+        print("🛡️ Batch processing with comprehensive safety guarantees...")
+        try:
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir), max_concurrent=args.max_concurrent)
+            result = cli.execute_command("batch-process-safe", {
+                "batch_size": args.batch_size,
+                "progress": args.progress,
+                "performance_metrics": args.performance_metrics
+            })
+            
+            if args.format == "json":
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                print_header("SAFE BATCH PROCESSING COMPLETE")
+                if result.get("success"):
+                    batch_result = result.get("result", {})
+                    print(f"   ✅ Total files processed: {batch_result.get('total_files', 0)}")
+                    print(f"   🖼️ Total images preserved: {batch_result.get('images_preserved_total', 0)}")
+                    print(f"   ⏱️ Processing time: {result.get('execution_time', 0):.2f}s") 
+                    print(f"   🛡️ Image integrity: {batch_result.get('image_integrity_report', {}).get('successful_image_preservation', 0)} successful")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            print(f"❌ Error during batch processing: {e}")
+            return 1
+    
+    elif args.performance_report:
+        print("📊 Generating performance metrics report...")
+        try:
+            # Get comprehensive performance metrics
+            stats = workflow.safe_workflow_processor.get_processing_statistics()
+            
+            if args.format == "json":
+                report = {
+                    "command": "performance-report",
+                    "processing_statistics": stats,
+                    "timestamp": datetime.now().isoformat()
+                }
+                print(json.dumps(report, indent=2, default=str))
+            else:
+                print_header("PERFORMANCE METRICS REPORT")
+                print(f"   📈 Total operations: {stats.get('total_operations', 0)}")
+                print(f"   ✅ Success rate: {stats.get('success_rate', 0):.2%}")
+                print(f"   ⏱️ Average processing time: {stats.get('average_processing_time', 0):.2f}s")
+                print(f"   🖼️ Total images preserved: {stats.get('total_images_preserved', 0)}")
+                
+        except Exception as e:
+            print(f"❌ Error generating performance report: {e}")
+            return 1
+    
+    elif args.integrity_report:
+        print("🔍 Generating image integrity report...")
+        try:
+            # Generate comprehensive integrity report
+            report = workflow.image_integrity_monitor.generate_audit_report()
+            
+            if args.format == "json":
+                full_report = {
+                    "command": "integrity-report",
+                    "integrity_analysis": report,
+                    "timestamp": datetime.now().isoformat()
+                }
+                print(json.dumps(full_report, indent=2, default=str))
+            else:
+                print_header("IMAGE INTEGRITY REPORT")
+                print(f"   🖼️ Images tracked: {len(report.get('tracked_images', {}))}")
+                print(f"   📊 Monitoring enabled: Yes")
+                print(f"   🔍 Scan complete: {report.get('scan_timestamp', 'N/A')}")
+            
+            # Export if requested
+            if args.export:
+                export_path = Path(args.export)
+                with open(export_path, 'w', encoding='utf-8') as f:
+                    json.dump(full_report, f, indent=2, default=str)
+                print(f"\n📄 Integrity report exported to: {export_path}")
+                
+        except Exception as e:
+            print(f"❌ Error generating integrity report: {e}")
+            return 1
+    
+    elif args.start_safe_session:
+        print(f"🚀 Starting safe processing session: {args.start_safe_session}")
+        try:
+            session_id = workflow.start_safe_processing_session(args.start_safe_session)
+            
+            if args.format == "json":
+                result = {
+                    "command": "start-safe-session",
+                    "session_name": args.start_safe_session,
+                    "session_id": session_id,
+                    "timestamp": datetime.now().isoformat()
+                }
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                print_header("SAFE SESSION STARTED")
+                print(f"   🆔 Session ID: {session_id}")
+                print(f"   📝 Session Name: {args.start_safe_session}")
+                print(f"   ✅ Status: Active")
+                print(f"\n💡 Use --process-in-session {session_id} <note_path> to process notes")
+                
+        except Exception as e:
+            print(f"❌ Error starting session: {e}")
+            return 1
+    
+    elif args.process_in_session:
+        session_id, note_path = args.process_in_session
+        print(f"🔄 Processing note in session {session_id}: {note_path}")
+        try:
+            result = workflow.process_note_in_session(note_path, session_id)
+            
+            if args.format == "json":
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                print_header("SESSION PROCESSING COMPLETE")
+                print(f"   ✅ Success: {result.get('success', False)}")
+                print(f"   🆔 Session ID: {result.get('session_id', 'N/A')}")
+                print(f"   🖼️ Images preserved: {result.get('processing_result', {}).get('image_preservation', {}).get('images_preserved', 0)}")
+                
+        except Exception as e:
+            print(f"❌ Error processing in session: {e}")
             return 1
     
     else:
