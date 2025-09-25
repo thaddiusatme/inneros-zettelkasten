@@ -21,9 +21,12 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 try:
     from ai.workflow_manager import WorkflowManager
+    from ai.llama_vision_ocr import LlamaVisionOCR, VisionAnalysisResult
 except ImportError:
     # Fallback for test environments
     WorkflowManager = None
+    LlamaVisionOCR = None
+    VisionAnalysisResult = None
 
 
 class TimestampParser:
@@ -153,18 +156,92 @@ Knowledge capture from Samsung S23 screenshot and voice note pair.
 - [ ] Consider promotion to permanent note
 
 """
+
+    # Vision-enhanced template for screenshots with OCR analysis
+    VISION_ENHANCED_TEMPLATE = """
+# Screenshot Capture with AI Analysis
+
+Knowledge capture from Samsung S3 screenshot with Llama Vision analysis.
+
+## Screenshot Reference
+
+- **File**: {screenshot_filename}
+- **Size**: {screenshot_size}
+- **Timestamp**: {screenshot_timestamp}
+- **Path**: {screenshot_path}
+
+## Capture Metadata
+
+- **Device**: Samsung S23 (detected from filename patterns)
+- **Capture Session**: {capture_session}
+- **Capture Type**: {capture_type}
+
+## 🤖 AI Vision Analysis
+
+### Content Summary
+{content_summary}
+
+### Extracted Text
+```
+{extracted_text}
+```
+
+### Key Topics
+{main_topics_list}
+
+### Key Insights
+{key_insights_list}
+
+### Suggested Connections
+{suggested_connections_list}
+
+**Content Type**: {content_type}  
+**AI Confidence**: {confidence_score}/1.0  
+**Processing Time**: {processing_time}s
+
+## Processing Notes
+
+*Add your analysis, insights, and connections here*
+
+- [ ] Review AI-extracted content above
+- [ ] Validate key insights and connections
+- [ ] Add manual context or corrections
+- [ ] Link to related notes in your knowledge base
+- [ ] Consider if this should be expanded into a permanent note
+
+## Next Steps
+
+- What was the context when you took this screenshot?
+- Which AI insights are most valuable?
+- What connections should be made to existing notes?
+
+"""
     
-    def __init__(self, screenshots_dir: str, voice_dir: str):
+    def __init__(self, screenshots_dir: str, voice_dir: str, enable_vision: bool = True):
         """Initialize matcher with source directories
         
         Args:
             screenshots_dir: Path to Samsung screenshots directory
             voice_dir: Path to voice recordings directory
+            enable_vision: Whether to enable Llama Vision OCR analysis
         """
         self.screenshots_dir = screenshots_dir
         self.voice_dir = voice_dir
         self.match_threshold = 60  # seconds
         self.inbox_dir = None  # Will be set via configure_inbox_directory()
+        
+        # Initialize Llama Vision OCR if available
+        self.enable_vision = enable_vision and LlamaVisionOCR is not None
+        self.vision_ocr = None
+        
+        if self.enable_vision:
+            try:
+                # Initialize with local Ollama by default (can be configured)
+                self.vision_ocr = LlamaVisionOCR(local_mode=True)
+                print("✅ Llama Vision OCR initialized successfully")
+            except Exception as e:
+                print(f"⚠️  Llama Vision OCR initialization failed: {e}")
+                self.enable_vision = False
     
     @classmethod
     def create_with_onedrive_defaults(cls, base_onedrive_path: Optional[str] = None) -> 'CaptureMatcherPOC':
@@ -183,6 +260,41 @@ Knowledge capture from Samsung S23 screenshot and voice note pair.
         voice_dir = f"{base_onedrive_path}/Voice Recorder/Voice Recorder"
         
         return cls(screenshots_dir, voice_dir)
+    
+    def analyze_screenshot_with_vision(self, screenshot_path: Path) -> Optional[Dict]:
+        """Analyze screenshot using Llama Vision OCR if enabled
+        
+        Args:
+            screenshot_path: Path to screenshot image file
+            
+        Returns:
+            Dict with vision analysis results or None if unavailable
+        """
+        if not self.enable_vision or not self.vision_ocr:
+            return None
+        
+        try:
+            print(f"🤖 Analyzing screenshot with Llama Vision: {screenshot_path.name}")
+            result = self.vision_ocr.analyze_screenshot(screenshot_path)
+            
+            if result:
+                return {
+                    "extracted_text": result.extracted_text,
+                    "content_summary": result.content_summary,
+                    "main_topics": result.main_topics,
+                    "key_insights": result.key_insights,
+                    "suggested_connections": result.suggested_connections,
+                    "content_type": result.content_type,
+                    "confidence_score": result.confidence_score,
+                    "processing_time": result.processing_time
+                }
+            else:
+                print("⚠️  Vision analysis returned no results")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Vision analysis failed: {e}")
+            return None
     
     def parse_filename_timestamp(self, filename: str) -> Optional[datetime]:
         """Extract timestamp from Samsung filename patterns using TimestampParser

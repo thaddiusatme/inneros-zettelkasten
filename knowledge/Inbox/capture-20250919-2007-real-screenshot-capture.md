@@ -1,21 +1,21 @@
 ---
-created: 2025-09-19 20:07
 type: fleeting
+created: 2025-09-19 20:07
 status: inbox
-tags: [ai-enhancement, analysis-insights, analysis-notes, capture, knowledge-capture,
-  knowledge-graph, metadata-extraction, metadata-processing]
+tags:
+  - capture
+  - samsung-s23
+  - screenshot-only
 source: capture
-quality_score: 0.85
-ai_tags:
-- capture
-- samsung-s23
-- knowledge-management
 device: Samsung S23
 capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
-ai_processed_at: 2025-09-22 22:27:42
-ai_processed: '2025-09-24T14:07:35.205322'
+ai_processed_at: 2025-09-24 17:30:12
+ai_tags:
+  - capture
+  - samsung-s23
+  - knowledge-management
 ---
 # Screenshot Capture
 
