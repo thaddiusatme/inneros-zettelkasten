@@ -642,5 +642,322 @@ class TestCLIIntegrationEndToEnd:
             assert (end_time - start_time) < 2.0
 
 
+class TestBatchProcessingTDDIteration5:
+    """Test suite for TDD Iteration 5: Batch Processing & Enhanced UX - WILL FAIL"""
+    
+    @patch('cli.connections_demo.LinkInsertionEngine')
+    @patch('cli.connections_demo.AIConnections')
+    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch('cli.connections_demo.load_single_note')
+    @patch('cli.connections_demo.load_note_corpus')
+    def test_batch_acceptance_mode_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+        """TEST: Interactive workflow supports [B]atch option for multiple suggestions - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        from ai.link_insertion_engine import InsertionResult
+        from ai.link_suggestion_engine import LinkSuggestion
+        
+        # Mock multiple high-quality suggestions
+        suggestions = [
+            LinkSuggestion(
+                source_note="test-note.md",
+                target_note="machine-learning-basics.md",
+                suggested_link_text="[[Machine Learning Basics]]",
+                similarity_score=0.95,
+                quality_score=0.9,
+                confidence="high",
+                explanation="Strong semantic similarity",
+                insertion_context="## Core Concepts",
+                suggested_location="core_concepts"
+            ),
+            LinkSuggestion(
+                source_note="test-note.md", 
+                target_note="ai-concepts.md",
+                suggested_link_text="[[AI Concepts]]",
+                similarity_score=0.88,
+                quality_score=0.85,
+                confidence="high",
+                explanation="High conceptual overlap",
+                insertion_context="## Related Topics",
+                suggested_location="related_topics"
+            ),
+            LinkSuggestion(
+                source_note="test-note.md",
+                target_note="neural-networks.md", 
+                suggested_link_text="[[Neural Networks]]",
+                similarity_score=0.82,
+                quality_score=0.8,
+                confidence="high",
+                explanation="Technical connection",
+                insertion_context="## Advanced Topics",
+                suggested_location="advanced_topics"
+            )
+        ]
+        
+        # Mock dependencies
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.find_similar_notes.return_value = [
+            ('machine-learning-basics.md', 0.95),
+            ('ai-concepts.md', 0.88),
+            ('neural-networks.md', 0.82)
+        ]
+        mock_ai_connections.return_value = mock_ai_instance
+        
+        mock_engine_instance = MagicMock()
+        mock_engine_instance.generate_link_suggestions.return_value = suggestions
+        mock_engine.return_value = mock_engine_instance
+        
+        mock_insertion_instance = MagicMock()
+        mock_insertion_instance.insert_suggestions_into_note.return_value = InsertionResult(
+            success=True,
+            insertions_made=3,
+            backup_path="/path/to/backup.md"
+        )
+        mock_insertion_engine.return_value = mock_insertion_instance
+        
+        mock_note.return_value = "test note content about AI and machine learning"
+        mock_corpus.return_value = {"note1.md": "content1", "note2.md": "content2"}
+        
+        # Create args for interactive mode
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        # Mock user selecting batch mode, then confirming batch processing
+        with patch('builtins.input', side_effect=['b', 'y']):  # User selects batch, then confirms
+            handle_suggest_links_command(mock_args)
+        
+        # Verify batch processing was used
+        mock_insertion_instance.insert_suggestions_into_note.assert_called_once_with(
+            "test-note.md",
+            suggestions,  # All suggestions should be processed in batch
+            check_duplicates=True,
+            auto_detect_location=True
+        )
+    
+    @patch('cli.connections_demo.LinkInsertionEngine')
+    @patch('cli.connections_demo.AIConnections')
+    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch('cli.connections_demo.load_single_note')
+    @patch('cli.connections_demo.load_note_corpus')
+    def test_preview_mode_functionality_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+        """TEST: Interactive workflow supports [P]review option for file changes - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        from ai.link_suggestion_engine import LinkSuggestion
+        
+        test_suggestion = LinkSuggestion(
+            source_note="test-note.md",
+            target_note="machine-learning-basics.md",
+            suggested_link_text="[[Machine Learning Basics]]",
+            similarity_score=0.85,
+            quality_score=0.8,
+            confidence="high",
+            explanation="High semantic similarity",
+            insertion_context="## Related Concepts",
+            suggested_location="related_concepts"
+        )
+        
+        # Mock dependencies
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.find_similar_notes.return_value = [('machine-learning-basics.md', 0.85)]
+        mock_ai_connections.return_value = mock_ai_instance
+        
+        mock_engine_instance = MagicMock()
+        mock_engine_instance.generate_link_suggestions.return_value = [test_suggestion]
+        mock_engine.return_value = mock_engine_instance
+        
+        # Mock preview functionality
+        mock_insertion_instance = MagicMock()
+        mock_insertion_instance.preview_changes.return_value = {
+            'original_content': 'Original note content\n## Related Concepts\nSome existing content',
+            'modified_content': 'Original note content\n## Related Concepts\n[[Machine Learning Basics]]\nSome existing content',
+            'diff': '+[[Machine Learning Basics]]'
+        }
+        mock_insertion_engine.return_value = mock_insertion_instance
+        
+        mock_note.return_value = "test note content about AI"
+        mock_corpus.return_value = {"note1.md": "content1"}
+        
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        # Mock user selecting preview mode, then accepting suggestion
+        with patch('builtins.input', side_effect=['p', 'a', 'y']):  # Preview, accept, confirm
+            handle_suggest_links_command(mock_args)
+        
+        # Verify preview functionality was called
+        mock_insertion_instance.preview_changes.assert_called_once_with(
+            "test-note.md",
+            [test_suggestion]
+        )
+    
+    @patch('cli.connections_demo.SmartLinkCLIOrchestrator')
+    def test_enhanced_interactive_options_display_fails(self, mock_orchestrator, temp_vault):
+        """TEST: Interactive suggestions display includes enhanced options [B]atch, [P]review, [C]onfigure - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        
+        # Mock orchestrator to capture display calls
+        mock_orchestrator_instance = MagicMock()
+        mock_orchestrator.return_value = mock_orchestrator_instance
+        
+        # Mock the execute_interactive_workflow to examine what options are presented
+        mock_orchestrator_instance.execute_interactive_workflow.return_value = {
+            'accepted': 0,
+            'rejected': 0,
+            'skipped': 1,
+            'actions': []
+        }
+        
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=[]),\
+             patch('cli.connections_demo.LinkInsertionEngine'),\
+             patch('cli.connections_demo.AIConnections'),\
+             patch('cli.connections_demo.LinkSuggestionEngine'),\
+             patch('cli.connections_demo.load_single_note'),\
+             patch('cli.connections_demo.load_note_corpus'):
+            handle_suggest_links_command(mock_args)
+        
+        # Verify enhanced interactive workflow was initiated with enhanced options
+        mock_orchestrator_instance.execute_enhanced_interactive_workflow.assert_called_once()
+    
+    @patch('cli.smart_link_cli_enhanced.BatchProcessor')  
+    @patch('cli.connections_demo.LinkInsertionEngine')
+    def test_batch_processing_progress_tracking_fails(self, mock_insertion_engine, mock_batch_processor, temp_vault):
+        """TEST: Batch processing shows progress tracking and can be cancelled - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        from ai.link_suggestion_engine import LinkSuggestion
+        
+        # Mock batch processor functionality
+        mock_batch_instance = MagicMock()
+        mock_batch_instance.process_batch.return_value = {
+            'total_processed': 3,
+            'successful_insertions': 3,
+            'failed_insertions': 0,
+            'cancelled': False
+        }
+        mock_batch_processor.return_value = mock_batch_instance
+        
+        suggestions = [
+            LinkSuggestion(
+                source_note="test-note.md",
+                target_note="note1.md",
+                suggested_link_text="[[Note 1]]",
+                similarity_score=0.9,
+                quality_score=0.85,
+                confidence="high",
+                explanation="Test",
+                insertion_context="## Test",
+                suggested_location="test"
+            ),
+            LinkSuggestion(
+                source_note="test-note.md",
+                target_note="note2.md", 
+                suggested_link_text="[[Note 2]]",
+                similarity_score=0.88,
+                quality_score=0.82,
+                confidence="high",
+                explanation="Test",
+                insertion_context="## Test",
+                suggested_location="test"
+            ),
+            LinkSuggestion(
+                source_note="test-note.md",
+                target_note="note3.md",
+                suggested_link_text="[[Note 3]]",
+                similarity_score=0.85,
+                quality_score=0.8,
+                confidence="high", 
+                explanation="Test",
+                insertion_context="## Test",
+                suggested_location="test"
+            )
+        ]
+        
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=suggestions),\
+             patch('cli.connections_demo.AIConnections'),\
+             patch('cli.connections_demo.LinkSuggestionEngine'),\
+             patch('cli.connections_demo.load_single_note'),\
+             patch('cli.connections_demo.load_note_corpus'),\
+             patch('builtins.input', side_effect=['b', 'y']):  # Batch mode, confirm
+            handle_suggest_links_command(mock_args)
+        
+        # Verify batch processor was used with progress tracking
+        mock_batch_instance.process_batch.assert_called_once_with(
+            suggestions,
+            target_file="test-note.md",
+            show_progress=True,
+            allow_cancellation=True
+        )
+    
+    @patch('cli.smart_link_cli_enhanced.UserConfiguration')
+    def test_configuration_system_fails(self, mock_config, temp_vault):
+        """TEST: Interactive workflow supports [C]onfigure option for user preferences - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        from ai.link_suggestion_engine import LinkSuggestion
+        
+        # Create a test suggestion so the interactive workflow can process input
+        test_suggestion = LinkSuggestion(
+            source_note="test-note.md",
+            target_note="config-test.md",
+            suggested_link_text="[[Config Test]]",
+            similarity_score=0.8,
+            quality_score=0.75,
+            confidence="medium",
+            explanation="Test configuration",
+            insertion_context="## Test",
+            suggested_location="test"
+        )
+        
+        # Mock configuration system
+        mock_config_instance = MagicMock()
+        mock_config_instance.get_quality_threshold.return_value = 0.8
+        mock_config_instance.get_auto_batch_threshold.return_value = 0.9
+        mock_config_instance.get_preview_mode.return_value = True
+        mock_config.return_value = mock_config_instance
+        
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=[test_suggestion]),\
+             patch('cli.connections_demo.LinkInsertionEngine'),\
+             patch('cli.connections_demo.AIConnections'),\
+             patch('cli.connections_demo.LinkSuggestionEngine'),\
+             patch('cli.connections_demo.load_single_note'),\
+             patch('cli.connections_demo.load_note_corpus'),\
+             patch('builtins.input', side_effect=['c', 'q']):  # Configure mode, then quit
+            handle_suggest_links_command(mock_args)
+        
+        # Verify configuration system was accessed
+        mock_config_instance.interactive_configuration.assert_called_once()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

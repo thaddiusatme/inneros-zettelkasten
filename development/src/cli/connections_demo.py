@@ -29,7 +29,9 @@ from cli.smart_link_cli_enhanced import (
     CLITheme,
     InteractiveSuggestionPresenter,
     BatchProcessingReporter,
-    CLIOutputFormatter
+    CLIOutputFormatter,
+    BatchProcessor,
+    UserConfiguration
 )
 
 
@@ -144,16 +146,30 @@ def handle_suggest_links_command(args):
             # Initialize LinkInsertionEngine for actual file modifications
             link_inserter = LinkInsertionEngine(vault_path=args.corpus_dir)
             
-            # Use enhanced interactive workflow with actual link insertion
+            # Use enhanced interactive workflow with batch processing, preview, and configuration
             orchestrator = SmartLinkCLIOrchestrator()
-            results = orchestrator.execute_interactive_workflow(
+            results = orchestrator.execute_enhanced_interactive_workflow(
                 filtered_suggestions, 
                 args.target, 
                 dry_run=args.dry_run
             )
             
-            # Process accepted suggestions through LinkInsertionEngine
+            # Process different types of actions through LinkInsertionEngine
             if not args.dry_run and 'actions' in results:
+                # Handle preview actions
+                preview_suggestions = [
+                    action['suggestion'] for action in results['actions'] 
+                    if action['action'] == 'preview'
+                ]
+                
+                if preview_suggestions:
+                    print("👁️  Generating previews...")
+                    for suggestion in preview_suggestions:
+                        preview_result = link_inserter.preview_changes(args.target, [suggestion])
+                        print(f"Preview for {suggestion.suggested_link_text}:")
+                        print(f"Diff: {preview_result.get('diff', 'No changes')}")
+                
+                # Handle accepted suggestions (including batch processed ones)
                 accepted_suggestions = [
                     action['suggestion'] for action in results['actions'] 
                     if action['action'] == 'accept'

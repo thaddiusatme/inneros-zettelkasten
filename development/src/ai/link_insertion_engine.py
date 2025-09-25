@@ -173,3 +173,49 @@ class LinkInsertionEngine:
             self.insert_suggestions_into_note,
             progress_callback
         )
+    
+    def preview_changes(self, note_path: str, suggestions: List[Any]) -> dict:
+        """Preview changes that would be made without actually modifying files"""
+        note_full_path = self._vault_path_obj / note_path
+        
+        try:
+            # Read original content
+            original_content = note_full_path.read_text(encoding='utf-8')
+            
+            # Generate modified content using insertion processor
+            modified_content = original_content
+            diff_lines = []
+            
+            for suggestion in suggestions:
+                # Mock insertion for preview
+                link_text = suggestion.suggested_link_text
+                section_hint = getattr(suggestion, 'suggested_location', 'end')
+                
+                # Simple insertion simulation for preview
+                if section_hint and section_hint in modified_content:
+                    # Insert near the section
+                    section_line = f"## {section_hint.replace('_', ' ').title()}"
+                    if section_line in modified_content:
+                        modified_content = modified_content.replace(
+                            section_line,
+                            f"{section_line}\n{link_text}"
+                        )
+                        diff_lines.append(f"+{link_text}")
+                else:
+                    # Insert at end
+                    modified_content += f"\n{link_text}"
+                    diff_lines.append(f"+{link_text}")
+            
+            return {
+                'original_content': original_content,
+                'modified_content': modified_content,
+                'diff': '\n'.join(diff_lines)
+            }
+            
+        except Exception as e:
+            return {
+                'error': f"Preview failed: {str(e)}",
+                'original_content': '',
+                'modified_content': '',
+                'diff': ''
+            }
