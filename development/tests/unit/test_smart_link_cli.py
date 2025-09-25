@@ -169,6 +169,76 @@ class TestCLIArgumentParsing:
 class TestLinkSuggestionEngineIntegration:
     """Test integration between CLI and LinkSuggestionEngine"""
     
+    @patch('cli.connections_demo.LinkInsertionEngine')
+    @patch('cli.connections_demo.AIConnections')
+    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch('cli.connections_demo.load_single_note')
+    @patch('cli.connections_demo.load_note_corpus')
+    def test_cli_integration_with_link_insertion_engine_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+        """TEST: CLI integrates with LinkInsertionEngine when users accept suggestions - WILL FAIL"""
+        from cli.connections_demo import handle_suggest_links_command
+        from ai.link_insertion_engine import InsertionResult
+        from ai.link_suggestion_engine import LinkSuggestion
+        
+        # Mock AI connection discovery
+        mock_ai_instance = MagicMock()
+        mock_ai_instance.find_similar_notes.return_value = [
+            ('machine-learning-basics.md', 0.85),
+        ]
+        mock_ai_connections.return_value = mock_ai_instance
+        
+        # Mock suggestion generation
+        test_suggestion = LinkSuggestion(
+            source_note="test-note.md",
+            target_note="machine-learning-basics.md",
+            suggested_link_text="[[Machine Learning Basics]]",
+            similarity_score=0.85,
+            quality_score=0.8,
+            confidence="high",
+            explanation="High semantic similarity",
+            insertion_context="## Related Concepts",
+            suggested_location="related_concepts"
+        )
+        
+        mock_engine_instance = MagicMock()
+        mock_engine_instance.generate_link_suggestions.return_value = [test_suggestion]
+        mock_engine.return_value = mock_engine_instance
+        
+        # Mock LinkInsertionEngine
+        mock_insertion_instance = MagicMock()
+        mock_insertion_instance.insert_suggestions_into_note.return_value = InsertionResult(
+            success=True,
+            insertions_made=1,
+            backup_path="/path/to/backup.md"
+        )
+        mock_insertion_engine.return_value = mock_insertion_instance
+        
+        # Mock other dependencies
+        mock_note.return_value = "test note content about AI"
+        mock_corpus.return_value = {"note1.md": "content1", "note2.md": "content2"}
+        
+        # Create args for interactive mode
+        mock_args = MagicMock()
+        mock_args.target = "test-note.md"
+        mock_args.corpus_dir = str(temp_vault)
+        mock_args.min_quality = 0.7
+        mock_args.max_results = 5
+        mock_args.interactive = True
+        mock_args.dry_run = False
+        
+        # Mock user accepting the suggestion in interactive mode
+        with patch('builtins.input', side_effect=['a', 'y']):  # User accepts suggestion, then confirms insertion
+            handle_suggest_links_command(mock_args)
+        
+        # Verify LinkInsertionEngine was initialized and used
+        mock_insertion_engine.assert_called_once_with(vault_path=str(temp_vault))
+        mock_insertion_instance.insert_suggestions_into_note.assert_called_once_with(
+            "test-note.md",
+            [test_suggestion],
+            check_duplicates=True,
+            auto_detect_location=True
+        )
+    
     @patch('cli.connections_demo.AIConnections')
     @patch('cli.connections_demo.LinkSuggestionEngine')
     @patch('cli.connections_demo.load_single_note')

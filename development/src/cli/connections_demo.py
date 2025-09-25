@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.connections import AIConnections
 from src.ai.link_suggestion_engine import LinkSuggestionEngine
+from src.ai.link_insertion_engine import LinkInsertionEngine
 from cli.smart_link_cli_utils import (
     display_suggestion_interactively,
     display_suggestions_summary,
@@ -138,15 +139,62 @@ def handle_suggest_links_command(args):
             display_dry_run_results(filtered_suggestions, args.target)
             return filtered_suggestions
         
-        # Process suggestions using enhanced orchestrator
+        # Process suggestions using enhanced orchestrator with LinkInsertionEngine integration
         if args.interactive:
-            # Use enhanced interactive workflow
+            # Initialize LinkInsertionEngine for actual file modifications
+            link_inserter = LinkInsertionEngine(vault_path=args.corpus_dir)
+            
+            # Use enhanced interactive workflow with actual link insertion
             orchestrator = SmartLinkCLIOrchestrator()
             results = orchestrator.execute_interactive_workflow(
                 filtered_suggestions, 
                 args.target, 
                 dry_run=args.dry_run
             )
+            
+            # Process accepted suggestions through LinkInsertionEngine
+            if not args.dry_run and 'actions' in results:
+                accepted_suggestions = [
+                    action['suggestion'] for action in results['actions'] 
+                    if action['action'] == 'accept'
+                ]
+                
+                if accepted_suggestions:
+                    print(f"\n🔗 Processing {len(accepted_suggestions)} accepted suggestions...")
+                    
+                    # Show what will be inserted
+                    print("📋 Links to be inserted:")
+                    for suggestion in accepted_suggestions:
+                        print(f"   • {suggestion.suggested_link_text} → {suggestion.suggested_location}")
+                    
+                    # Confirm insertion unless in non-interactive mode
+                    print(f"\n📝 Target note: {args.target}")
+                    confirmation = input("🤔 Proceed with link insertion? [Y/n]: ").lower().strip()
+                    
+                    if confirmation in ['', 'y', 'yes']:
+                        try:
+                            insertion_result = link_inserter.insert_suggestions_into_note(
+                                args.target,
+                                accepted_suggestions,
+                                check_duplicates=True,
+                                auto_detect_location=True
+                            )
+                            
+                            if insertion_result.success:
+                                print(f"✅ Successfully inserted {insertion_result.insertions_made} links")
+                                if insertion_result.duplicates_skipped > 0:
+                                    print(f"⚠️  Skipped {insertion_result.duplicates_skipped} duplicate links")
+                                if insertion_result.backup_path:
+                                    print(f"💾 Backup created: {Path(insertion_result.backup_path).name}")
+                            else:
+                                print(f"❌ Link insertion failed: {insertion_result.error_message}")
+                                
+                        except Exception as e:
+                            print(f"❌ Unexpected error during link insertion: {str(e)}")
+                            print("🔄 All changes have been rolled back safely")
+                    else:
+                        print("❌ Link insertion cancelled by user")
+            
             return results
         else:
             # Non-interactive mode with enhanced reporting
