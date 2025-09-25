@@ -228,6 +228,10 @@ class CLISessionManager:
         
         return session_id
     
+    def process_note_in_session(self, note_path: str, session_id: str) -> Dict[str, Any]:
+        """Process note within specified session context (wrapper for existing method)"""
+        return self.process_in_session(note_path, session_id, preserve_images=True)
+    
     def process_in_session(self, note_path: str, session_id: str, 
                           preserve_images: bool = True) -> Dict[str, Any]:
         """Process note within specified session context"""
@@ -351,7 +355,34 @@ class SafeWorkflowCLI:
                 stats = {"total_operations": 10, "success_rate": 0.95, "average_processing_time": 5.0}
                 result = self.performance_reporter.generate_performance_report(stats)
             elif command == "integrity-report":
-                result = self.integrity_monitor.generate_integrity_report(self.vault_path)
+                base_result = self.integrity_monitor.generate_integrity_report(self.vault_path)
+                result = base_result
+                
+                # Handle export if requested
+                export_path = options.get("export")
+                if export_path:
+                    export_result = self.integrity_monitor.export_integrity_report(
+                        base_result, export_path
+                    )
+                    result.update({
+                        "exported": export_result.get("success", False),
+                        "export_path": export_result.get("export_path")
+                    })
+            elif command == "start-safe-session":
+                session_name = options.get("session_name", "default")
+                session_id = self.session_manager.start_safe_processing_session(session_name)
+                result = {
+                    "session_id": session_id,
+                    "session_name": session_name,
+                    "timestamp": datetime.now().isoformat()
+                }
+            elif command == "process-in-session":
+                session_id = options.get("session_id", "")
+                note_path = options.get("note_path", "")
+                if not session_id or not note_path:
+                    result = {"error": "Missing session_id or note_path"}
+                else:
+                    result = self.session_manager.process_note_in_session(note_path, session_id)
             else:
                 result = {"error": f"Unknown command: {command}"}
             

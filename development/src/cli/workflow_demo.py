@@ -1561,22 +1561,27 @@ Examples:
     elif args.performance_report:
         print("📊 Generating performance metrics report...")
         try:
-            # Get comprehensive performance metrics
-            stats = workflow.safe_workflow_processor.get_processing_statistics()
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir))
+            result = cli.execute_command("performance-report", {
+                "format": args.format,
+                "performance_metrics": args.performance_metrics
+            })
             
             if args.format == "json":
-                report = {
-                    "command": "performance-report",
-                    "processing_statistics": stats,
-                    "timestamp": datetime.now().isoformat()
-                }
-                print(json.dumps(report, indent=2, default=str))
+                print(json.dumps(result, indent=2, default=str))
             else:
                 print_header("PERFORMANCE METRICS REPORT")
-                print(f"   📈 Total operations: {stats.get('total_operations', 0)}")
-                print(f"   ✅ Success rate: {stats.get('success_rate', 0):.2%}")
-                print(f"   ⏱️ Average processing time: {stats.get('average_processing_time', 0):.2f}s")
-                print(f"   🖼️ Total images preserved: {stats.get('total_images_preserved', 0)}")
+                if result.get("success"):
+                    stats = result.get("result", {})
+                    print(f"   📈 Total operations: {stats.get('total_operations', 0)}")
+                    print(f"   ✅ Success rate: {stats.get('success_rate', 0):.2%}")
+                    print(f"   ⏱️ Average processing time: {stats.get('average_processing_time', 0):.2f}s")
+                    print(f"   🖼️ Total images preserved: {stats.get('total_images_preserved', 0)}")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
                 
         except Exception as e:
             print(f"❌ Error generating performance report: {e}")
@@ -1585,28 +1590,30 @@ Examples:
     elif args.integrity_report:
         print("🔍 Generating image integrity report...")
         try:
-            # Generate comprehensive integrity report
-            report = workflow.image_integrity_monitor.generate_audit_report()
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir))
+            result = cli.execute_command("integrity-report", {
+                "format": args.format,
+                "export": args.export if hasattr(args, 'export') else None
+            })
             
             if args.format == "json":
-                full_report = {
-                    "command": "integrity-report",
-                    "integrity_analysis": report,
-                    "timestamp": datetime.now().isoformat()
-                }
-                print(json.dumps(full_report, indent=2, default=str))
+                print(json.dumps(result, indent=2, default=str))
             else:
                 print_header("IMAGE INTEGRITY REPORT")
-                print(f"   🖼️ Images tracked: {len(report.get('tracked_images', {}))}")
-                print(f"   📊 Monitoring enabled: Yes")
-                print(f"   🔍 Scan complete: {report.get('scan_timestamp', 'N/A')}")
-            
-            # Export if requested
-            if args.export:
-                export_path = Path(args.export)
-                with open(export_path, 'w', encoding='utf-8') as f:
-                    json.dump(full_report, f, indent=2, default=str)
-                print(f"\n📄 Integrity report exported to: {export_path}")
+                if result.get("success"):
+                    report = result.get("result", {})
+                    print(f"   🖼️ Images tracked: {len(report.get('tracked_images', {}))}")
+                    print(f"   📊 Monitoring enabled: Yes")
+                    print(f"   🔍 Scan complete: {report.get('scan_timestamp', 'N/A')}")
+                    
+                    # Export notification if requested
+                    if result.get("exported"):
+                        print(f"\n📄 Integrity report exported to: {result.get('export_path')}")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
                 
         except Exception as e:
             print(f"❌ Error generating integrity report: {e}")
@@ -1615,22 +1622,27 @@ Examples:
     elif args.start_safe_session:
         print(f"🚀 Starting safe processing session: {args.start_safe_session}")
         try:
-            session_id = workflow.start_safe_processing_session(args.start_safe_session)
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir))
+            result = cli.execute_command("start-safe-session", {
+                "session_name": args.start_safe_session,
+                "format": args.format
+            })
             
             if args.format == "json":
-                result = {
-                    "command": "start-safe-session",
-                    "session_name": args.start_safe_session,
-                    "session_id": session_id,
-                    "timestamp": datetime.now().isoformat()
-                }
                 print(json.dumps(result, indent=2, default=str))
             else:
                 print_header("SAFE SESSION STARTED")
-                print(f"   🆔 Session ID: {session_id}")
-                print(f"   📝 Session Name: {args.start_safe_session}")
-                print(f"   ✅ Status: Active")
-                print(f"\n💡 Use --process-in-session {session_id} <note_path> to process notes")
+                if result.get("success"):
+                    session_data = result.get("result", {})
+                    print(f"   🆔 Session ID: {session_data.get('session_id', 'N/A')}")
+                    print(f"   📝 Session Name: {args.start_safe_session}")
+                    print(f"   ✅ Status: Active")
+                    print(f"\n💡 Use --process-in-session {session_data.get('session_id')} <note_path> to process notes")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
                 
         except Exception as e:
             print(f"❌ Error starting session: {e}")
@@ -1640,15 +1652,27 @@ Examples:
         session_id, note_path = args.process_in_session
         print(f"🔄 Processing note in session {session_id}: {note_path}")
         try:
-            result = workflow.process_note_in_session(note_path, session_id)
+            # REFACTOR: Use extracted CLI utility classes
+            from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
+            
+            cli = SafeWorkflowCLI(str(base_dir))
+            result = cli.execute_command("process-in-session", {
+                "session_id": session_id,
+                "note_path": note_path,
+                "format": args.format
+            })
             
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
             else:
                 print_header("SESSION PROCESSING COMPLETE")
-                print(f"   ✅ Success: {result.get('success', False)}")
-                print(f"   🆔 Session ID: {result.get('session_id', 'N/A')}")
-                print(f"   🖼️ Images preserved: {result.get('processing_result', {}).get('image_preservation', {}).get('images_preserved', 0)}")
+                if result.get("success"):
+                    processing_data = result.get("result", {})
+                    print(f"   ✅ Success: {processing_data.get('success', False)}")
+                    print(f"   🆔 Session ID: {processing_data.get('session_id', session_id)}")
+                    print(f"   🖼️ Images preserved: {processing_data.get('processing_result', {}).get('image_preservation', {}).get('images_preserved', 0)}")
+                else:
+                    print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
                 
         except Exception as e:
             print(f"❌ Error processing in session: {e}")
