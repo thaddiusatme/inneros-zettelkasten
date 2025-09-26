@@ -14,7 +14,16 @@ with comprehensive error handling, progress reporting, and configuration managem
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import List, Dict, Any
+
+# REFACTOR: Import extracted interactive CLI components
+from .interactive_cli_components import (
+    InteractiveProgressReporter,
+    UserInteractionManager, 
+    CLIErrorHandler,
+    PerformanceReporter
+)
+from typing import Optional
 from datetime import datetime
 
 from .evening_screenshot_processor import EveningScreenshotProcessor
@@ -379,18 +388,18 @@ class ConfigurationManager:
 
 class CLIProgressReporter:
     """
-    Utility for interactive progress reporting with real-time ETA calculations
+    REFACTOR: Enhanced progress reporting using extracted InteractiveProgressReporter
     
-    Provides progress tracking with ETA calculations within 15% margin of
-    actual completion time and real-time status updates.
+    Provides progress tracking with improved ETA calculations and professional UI.
+    Now uses extracted utility for better precision and reusability.
     """
     
     def __init__(self):
-        """Initialize progress reporter"""
+        """Initialize enhanced progress reporter"""
         self.logger = logging.getLogger(__name__)
-        self.start_time = None
-        self.current_step = 0
-        self.total_steps = 0
+        # REFACTOR: Use extracted InteractiveProgressReporter for enhanced functionality
+        self.progress_reporter = InteractiveProgressReporter(update_frequency=0.3)
+        self.performance_reporter = PerformanceReporter()
     
     def process_with_progress_reporting(self, screenshots: List[Path], 
                                       progress_callback=None) -> Dict[str, Any]:
@@ -449,44 +458,26 @@ class CLIProgressReporter:
         }
     
     def start_progress(self, total_steps: int, description: str = "Processing"):
-        """Start progress tracking"""
-        import time
-        self.start_time = time.time()
-        self.total_steps = total_steps
-        self.current_step = 0
-        print(f"🔄 {description} ({total_steps} items)...")
+        """REFACTOR: Start enhanced progress tracking"""
+        self.progress_reporter.start_progress(total_steps, description)
     
     def update_progress(self, step: int, item_description: str = ""):
-        """Update progress with current step"""
-        self.current_step = step
-        if self.total_steps > 0:
-            percentage = (step / self.total_steps) * 100
-            print(f"   📊 Progress: {step}/{self.total_steps} ({percentage:.1f}%) {item_description}")
+        """REFACTOR: Update progress with enhanced ETA precision"""
+        self.progress_reporter.update_progress(step, item_description)
     
     def complete_progress(self) -> Dict[str, Any]:
-        """Complete progress tracking and return metrics"""
-        import time
-        if self.start_time:
-            duration = time.time() - self.start_time
-            return {
-                "duration": duration,
-                "items_processed": self.current_step,
-                "rate": self.current_step / duration if duration > 0 else 0
-            }
-        return {}
+        """REFACTOR: Complete progress tracking with enhanced metrics"""
+        return self.progress_reporter.complete_progress()
     
     def report_performance_metrics(self, result: Dict[str, Any]) -> None:
-        """Report performance metrics following established patterns"""
-        processing_time = result.get('processing_time', 0)
-        target_met = processing_time < 600  # 10 minutes
+        """REFACTOR: Report performance metrics using extracted reporter"""
+        # Define performance targets for Samsung Screenshot workflow
+        targets = {
+            'processing_time': 600,  # <10 minutes
+            'memory_growth': 100    # <100MB memory growth
+        }
         
-        print(f"\n📊 Performance Metrics:")
-        print(f"   ⏱️ Processing time: {processing_time:.2f}s")
-        print(f"   🎯 <10min target met: {'✅' if target_met else '❌'}")
-        
-        if result.get('processed_count', 0) > 0:
-            rate = result['processed_count'] / processing_time if processing_time > 0 else 0
-            print(f"   📈 Processing rate: {rate:.2f} screenshots/second")
+        self.performance_reporter.report_performance_metrics(result, targets)
 
 
 class ErrorHandlingManager:
