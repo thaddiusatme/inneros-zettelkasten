@@ -41,6 +41,13 @@ from src.cli.evening_screenshot_utils import (
     SmartLinkIntegrator,
     SafeScreenshotManager
 )
+from src.cli.individual_screenshot_utils import (
+    ContextualFilenameGenerator,
+    RichContextAnalyzer,
+    TemplateNoteRenderer,
+    IndividualProcessingOrchestrator,
+    SmartLinkIntegrator as IndividualSmartLinkIntegrator
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +77,13 @@ class EveningScreenshotProcessor:
         self.note_generator = DailyNoteGenerator(knowledge_path)
         self.link_integrator = SmartLinkIntegrator(knowledge_path)
         self.safe_manager = SafeScreenshotManager(knowledge_path)
+        
+        # Initialize TDD Iteration 5 individual processing utilities
+        self.filename_generator = ContextualFilenameGenerator()
+        self.context_analyzer = RichContextAnalyzer()
+        self.template_renderer = TemplateNoteRenderer()
+        self.individual_orchestrator = IndividualProcessingOrchestrator(self.knowledge_path)
+        self.individual_link_integrator = IndividualSmartLinkIntegrator()
         
         logger.info(f"Initialized EveningScreenshotProcessor for {knowledge_path}")
     
@@ -849,3 +863,200 @@ Captured {len(screenshots)} screenshots processed with OCR analysis.
                 'Use manual processing as alternative'
             ]
         })
+    
+    # =================================================================
+    # TDD ITERATION 5 GREEN PHASE: Individual Screenshot Processing Methods
+    # =================================================================
+    
+    def generate_individual_capture_notes(self, screenshots: List[Path], ocr_results: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate individual capture notes for each screenshot with rich OCR context
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            ocr_results: Dictionary mapping screenshot paths to OCR results
+            
+        Returns:
+            Individual processing results with note paths and summary
+        """
+        individual_notes_created = 0
+        note_paths = []
+        processing_summary = {}
+        description_extraction_success = True
+        
+        for screenshot in screenshots:
+            try:
+                # Get OCR result for this screenshot
+                screenshot_key = str(screenshot)
+                ocr_result = ocr_results.get(screenshot_key)
+                
+                if not ocr_result:
+                    logger.warning(f"No OCR result found for {screenshot}")
+                    continue
+                
+                # Generate contextual filename  
+                # Use test-friendly timestamp if available, otherwise current time
+                if hasattr(self, '_test_timestamp'):
+                    timestamp = self._test_timestamp
+                else:
+                    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+                filename = self.generate_contextual_filename(screenshot, ocr_result, timestamp)
+                
+                # Create individual note path
+                note_path = self.knowledge_path / "Inbox" / filename
+                
+                # Generate rich context analysis
+                rich_context = self.analyze_screenshot_with_rich_context(screenshot)
+                
+                # Generate template-based note content
+                note_content = self.generate_template_based_note_content(screenshot, rich_context, filename)
+                
+                # Write individual note
+                with open(note_path, 'w') as f:
+                    f.write(note_content)
+                
+                note_paths.append(str(note_path))
+                individual_notes_created += 1
+                
+                logger.info(f"Created individual note: {filename}")
+                
+            except Exception as e:
+                logger.error(f"Failed to create individual note for {screenshot}: {e}")
+                description_extraction_success = False
+        
+        processing_summary = {
+            'total_screenshots': len(screenshots),
+            'successful_notes': individual_notes_created,
+            'failed_notes': len(screenshots) - individual_notes_created
+        }
+        
+        return {
+            'individual_notes_created': individual_notes_created,
+            'note_paths': note_paths,
+            'processing_summary': processing_summary,
+            'description_extraction_success': description_extraction_success
+        }
+    
+    def generate_contextual_filename(self, screenshot_path: Path, ocr_result: Any, timestamp: str) -> str:
+        """
+        Generate contextual filename from OCR content analysis
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            ocr_result: OCR analysis result
+            timestamp: Timestamp string (YYYYMMDD-HHMM format)
+            
+        Returns:
+            Contextual filename in capture-YYYYMMDD-HHMM-description.md format
+        """
+        # Delegate to extracted utility class
+        return self.filename_generator.generate_contextual_filename(screenshot_path, ocr_result, timestamp)
+    
+    def analyze_screenshot_with_rich_context(self, screenshot_path: Path) -> Dict[str, Any]:
+        """
+        Analyze screenshot with rich OCR context including content summaries
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            
+        Returns:
+            Rich context analysis with comprehensive metadata
+        """
+        # Delegate to extracted utility class
+        return self.context_analyzer.analyze_screenshot_with_rich_context(screenshot_path)
+    
+    def generate_template_based_note_content(self, screenshot_path: Path, rich_context: Dict[str, Any], filename: str) -> str:
+        """
+        Generate structured template content for individual screenshot notes
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            rich_context: Rich context analysis results
+            filename: Generated filename for the note
+            
+        Returns:
+            Complete note content with YAML frontmatter and structured sections
+        """
+        # Delegate to extracted utility class
+        return self.template_renderer.generate_template_based_note_content(screenshot_path, rich_context, filename)
+    
+    def extract_intelligent_description(self, ocr_text: str, content_summary: str) -> str:
+        """
+        Extract intelligent description from OCR content for filename generation
+        
+        Args:
+            ocr_text: Raw OCR text extraction
+            content_summary: AI-generated content summary
+            
+        Returns:
+            Cleaned description suitable for filename (kebab-case)
+        """
+        # Delegate to extracted utility class
+        return self.filename_generator.extract_intelligent_description(ocr_text, content_summary)
+    
+    def generate_fallback_description(self, screenshot_path: Path, strategy: str) -> str:
+        """
+        Generate fallback description when content analysis fails
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            strategy: Fallback strategy ('app-based', 'timestamp-based', 'generic')
+            
+        Returns:
+            Fallback description string
+        """
+        # Delegate to extracted utility class
+        return self.filename_generator.generate_fallback_description(screenshot_path, strategy)
+    
+    def suggest_smart_links_for_individual_note(self, note_path: Path) -> List[Dict[str, str]]:
+        """
+        Suggest Smart Links for individual capture notes
+        
+        Args:
+            note_path: Path to the generated individual note
+            
+        Returns:
+            List of link suggestions with target and reason
+        """
+        # Delegate to extracted utility class
+        return self.individual_link_integrator.suggest_smart_links_for_individual_note(note_path)
+    
+    def process_screenshots_individually_optimized(self, screenshots: List[Path]) -> Dict[str, Any]:
+        """
+        Process screenshots with optimized individual file generation
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            
+        Returns:
+            Optimization results with performance metrics
+        """
+        # Delegate to extracted utility class
+        return self.individual_orchestrator.process_screenshots_individually_optimized(screenshots)
+    
+    def process_with_individual_progress_reporting(self, screenshots: List[Path], progress_callback=None) -> Dict[str, Any]:
+        """
+        Process screenshots with enhanced progress reporting for individual creation
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            progress_callback: Function to call with progress updates
+            
+        Returns:
+            Processing results with detailed progress tracking
+        """
+        # Delegate to extracted utility class
+        return self.individual_orchestrator.process_with_individual_progress_reporting(screenshots, progress_callback)
+    
+    def process_individual_with_error_recovery(self, screenshots: List[Path]) -> Dict[str, Any]:
+        """
+        Process individual screenshots with comprehensive error handling and recovery
+        
+        Args:
+            screenshots: List of screenshot paths to process (may include problematic files)
+            
+        Returns:
+            Error recovery results with detailed failure analysis
+        """
+        # Delegate to extracted utility class
+        return self.individual_orchestrator.process_individual_with_error_recovery(screenshots)
