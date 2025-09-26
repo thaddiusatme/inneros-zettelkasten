@@ -21,6 +21,14 @@ from src.ai.import_manager import (
     JSONImportAdapter,
     NoteWriter,
 )
+from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
+from src.cli.evening_screenshot_cli_utils import (
+    EveningScreenshotCLIOrchestrator,
+    CLIProgressReporter,
+    ConfigurationManager,
+    CLIOutputFormatter,
+    CLIExportManager
+)
 
 
 def print_header(title: str):
@@ -888,6 +896,13 @@ Examples:
         metavar=("SESSION_ID", "NOTE_PATH"),
         help="Process note within specified session"
     )
+    
+    # TDD Iteration 2: Samsung Screenshot Evening Workflow CLI Integration
+    action_group.add_argument(
+        "--evening-screenshots",
+        action="store_true",
+        help="Process Samsung S23 screenshots from OneDrive into daily notes with OCR and smart linking"
+    )
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -952,6 +967,28 @@ Examples:
         "--note",
         metavar="PATH",
         help="Specific note path for session-based processing"
+    )
+    
+    # TDD Iteration 2: Samsung Screenshot Evening Workflow Options
+    parser.add_argument(
+        "--onedrive-path",
+        metavar="PATH",
+        default="/Users/thaddius/Library/CloudStorage/OneDrive-Personal/backlog/Pictures/Samsung Gallery/DCIM/Screenshots/",
+        help="Path to OneDrive Samsung Screenshots directory"
+    )
+    
+    parser.add_argument(
+        "--max-screenshots",
+        type=int,
+        metavar="N",
+        help="Maximum number of screenshots to process"
+    )
+    
+    parser.add_argument(
+        "--quality-threshold",
+        type=float,
+        metavar="THRESHOLD",
+        help="Quality threshold for filtering (0.0-1.0)"
     )
     
     args = parser.parse_args()
@@ -1676,6 +1713,95 @@ Examples:
                 
         except Exception as e:
             print(f"❌ Error processing in session: {e}")
+            return 1
+    
+    elif args.evening_screenshots:
+        print("📸 Processing Samsung Screenshot Evening Workflow...")
+        try:
+            # REFACTOR: Use extracted utility classes
+            config_manager = ConfigurationManager()
+            config = config_manager.apply_configuration(args)
+            
+            # Validate OneDrive path
+            path_validation = config["path_validation"]
+            if not path_validation["valid"]:
+                formatter = CLIOutputFormatter(args.format)
+                error_output = formatter.format_error(
+                    path_validation["error"],
+                    [path_validation.get("suggestion", "")]
+                )
+                print(error_output)
+                return 1
+            
+            # Initialize CLI orchestrator
+            orchestrator = EveningScreenshotCLIOrchestrator(
+                knowledge_path=str(base_dir),
+                onedrive_path=config["onedrive_path"]
+            )
+            
+            # Initialize progress reporter if requested
+            progress_reporter = CLIProgressReporter() if config["progress"] else None
+            
+            # Execute command based on mode
+            if config["dry_run"]:
+                if progress_reporter:
+                    progress_reporter.start_progress(1, "Scanning screenshots")
+                
+                result = orchestrator.execute_command("dry-run", config)
+                
+                if progress_reporter:
+                    progress_reporter.update_progress(1, "Scan complete")
+                    progress_reporter.complete_progress()
+            else:
+                if progress_reporter:
+                    progress_reporter.start_progress(4, "Processing screenshots")
+                    progress_reporter.update_progress(1, "Initializing processor")
+                
+                result = orchestrator.execute_command("process", config)
+                
+                if progress_reporter:
+                    progress_reporter.update_progress(4, "Processing complete")
+                    metrics = progress_reporter.complete_progress()
+                    if config["performance_metrics"]:
+                        progress_reporter.report_performance_metrics(result.get("result", {}))
+            
+            # Handle results
+            if not result["success"]:
+                formatter = CLIOutputFormatter(args.format)
+                error_output = formatter.format_error(result["error"])
+                print(error_output)
+                return 1
+            
+            # Format output
+            formatter = CLIOutputFormatter(args.format)
+            
+            if config["dry_run"]:
+                output = formatter.format_dry_run_results(result["result"])
+            else:
+                output = formatter.format_processing_results(result["result"])
+                
+                # Performance metrics if requested
+                if config["performance_metrics"] and not progress_reporter:
+                    reporter = CLIProgressReporter()
+                    reporter.report_performance_metrics(result["result"])
+            
+            print(output)
+            
+            # Export if requested
+            if args.export:
+                export_manager = CLIExportManager()
+                export_success = export_manager.export_results(
+                    result["result"], 
+                    args.export, 
+                    "json"
+                )
+                if export_success:
+                    print(f"\n📄 Results exported to: {args.export}")
+                else:
+                    print(f"\n❌ Export failed to: {args.export}")
+                    
+        except Exception as e:
+            print(f"❌ Error during evening screenshot processing: {e}")
             return 1
     
     else:
