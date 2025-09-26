@@ -386,3 +386,260 @@ class CLIExportManager:
                 result.get('suggested_links', 0),
                 result.get('daily_note_path', '')
             ])
+
+
+# =================================================================
+# TDD ITERATION 4: CLI Integration & User Experience Enhancement
+# Additional Utility Classes for Advanced CLI Features
+# =================================================================
+
+class ConfigurationManager:
+    """
+    Utility for OneDrive path configuration and validation with user guidance
+    
+    Provides configuration management with path validation and user-friendly
+    error messages for common OneDrive setup issues.
+    """
+    
+    def __init__(self):
+        """Initialize configuration manager"""
+        self.logger = logging.getLogger(__name__)
+    
+    def validate_onedrive_path(self, path: str) -> Dict[str, Any]:
+        """
+        Validate OneDrive path with user guidance
+        
+        Args:
+            path: OneDrive path to validate
+            
+        Returns:
+            Validation result with guidance
+        """
+        # Placeholder for TDD RED phase - will fail
+        raise NotImplementedError("ConfigurationManager.validate_onedrive_path not implemented")
+    
+    def get_default_samsung_onedrive_paths(self) -> List[str]:
+        """Get default Samsung OneDrive paths for auto-detection"""
+        raise NotImplementedError("ConfigurationManager.get_default_samsung_onedrive_paths not implemented")
+    
+    def suggest_onedrive_path_fixes(self, invalid_path: str) -> List[Dict[str, str]]:
+        """Suggest fixes for invalid OneDrive paths"""
+        raise NotImplementedError("ConfigurationManager.suggest_onedrive_path_fixes not implemented")
+
+
+class CLIProgressReporter:
+    """
+    Utility for interactive progress reporting with real-time ETA calculations
+    
+    Provides progress tracking with ETA calculations within 15% margin of
+    actual completion time and real-time status updates.
+    """
+    
+    def __init__(self):
+        """Initialize progress reporter"""
+        self.logger = logging.getLogger(__name__)
+    
+    def process_with_progress_reporting(self, screenshots: List[Path], 
+                                      progress_callback=None) -> Dict[str, Any]:
+        """
+        Process with interactive progress reporting
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            progress_callback: Function to call with progress updates
+            
+        Returns:
+            Processing results with progress tracking
+        """
+        # Placeholder for TDD RED phase - will fail
+        raise NotImplementedError("CLIProgressReporter.process_with_progress_reporting not implemented")
+
+
+class ErrorHandlingManager:
+    """
+    Utility for comprehensive error handling scenarios with user guidance
+    
+    Handles common error scenarios gracefully with user-friendly error
+    messages and specific troubleshooting steps.
+    """
+    
+    def __init__(self):
+        """Initialize error handling manager"""
+        self.logger = logging.getLogger(__name__)
+    
+    def handle_onedrive_offline_error(self) -> Dict[str, Any]:
+        """Handle OneDrive offline scenario"""
+        raise NotImplementedError("ErrorHandlingManager.handle_onedrive_offline_error not implemented")
+    
+    def handle_ocr_service_unavailable_error(self) -> Dict[str, Any]:
+        """Handle OCR service unavailable scenario"""
+        raise NotImplementedError("ErrorHandlingManager.handle_ocr_service_unavailable_error not implemented")
+    
+    def handle_insufficient_disk_space_error(self) -> Dict[str, Any]:
+        """Handle insufficient disk space scenario"""
+        raise NotImplementedError("ErrorHandlingManager.handle_insufficient_disk_space_error not implemented")
+    
+    def handle_permission_denied_error(self) -> Dict[str, Any]:
+        """Handle permission denied scenario"""
+        raise NotImplementedError("ErrorHandlingManager.handle_permission_denied_error not implemented")
+    
+    def handle_invalid_screenshot_format_error(self) -> Dict[str, Any]:
+        """Handle invalid screenshot format scenario"""
+        raise NotImplementedError("ErrorHandlingManager.handle_invalid_screenshot_format_error not implemented")
+
+
+class PerformanceValidator:
+    """
+    Utility for performance validation with <10 minutes batch processing
+    
+    Validates real Samsung screenshot batch processing performance and
+    provides comprehensive performance breakdown and memory metrics.
+    """
+    
+    def __init__(self):
+        """Initialize performance validator"""
+        self.logger = logging.getLogger(__name__)
+    
+    def validate_batch_processing_performance(self, screenshots: List[Path], 
+                                            target_time_minutes: int = 10) -> Dict[str, Any]:
+        """
+        Validate batch processing performance
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            target_time_minutes: Target processing time in minutes
+            
+        Returns:
+            Performance validation results
+        """
+        raise NotImplementedError("PerformanceValidator.validate_batch_processing_performance not implemented")
+
+
+class AdvancedConfigurationManager:
+    """
+    Utility for advanced configuration management with persistence
+    
+    Provides configuration persistence across sessions and automatic
+    OneDrive path detection with user preference management.
+    """
+    
+    def __init__(self):
+        """Initialize advanced configuration manager"""
+        self.logger = logging.getLogger(__name__)
+    
+    def save_configuration(self, config: Dict[str, Any]) -> bool:
+        """Save configuration with persistence"""
+        raise NotImplementedError("AdvancedConfigurationManager.save_configuration not implemented")
+    
+    def load_configuration(self) -> Dict[str, Any]:
+        """Load persisted configuration"""
+        raise NotImplementedError("AdvancedConfigurationManager.load_configuration not implemented")
+    
+    def auto_detect_samsung_onedrive_paths(self) -> List[str]:
+        """Auto-detect Samsung OneDrive paths"""
+        raise NotImplementedError("AdvancedConfigurationManager.auto_detect_samsung_onedrive_paths not implemented")
+    
+    def calculate_optimal_batch_size(self, total_screenshots: int, 
+                                   available_memory_mb: int) -> int:
+        """Calculate optimal batch size for performance"""
+        raise NotImplementedError("AdvancedConfigurationManager.calculate_optimal_batch_size not implemented")
+
+
+class ExportManager:
+    """
+    Utility for export functionality with JSON/CSV automation integration
+    
+    Generates automation-ready JSON/CSV export formats with complete
+    metadata for external processing tools.
+    """
+    
+    def __init__(self):
+        """Initialize export manager"""
+        self.logger = logging.getLogger(__name__)
+    
+    def export_to_json(self, processing_results: Dict[str, Any]) -> str:
+        """Export processing results to JSON format"""
+        raise NotImplementedError("ExportManager.export_to_json not implemented")
+    
+    def export_to_csv(self, processing_results: Dict[str, Any]) -> str:
+        """Export processing results to CSV format"""
+        raise NotImplementedError("ExportManager.export_to_csv not implemented")
+    
+    def export_to_file(self, processing_results: Dict[str, Any], 
+                      format: str, output_path: str) -> str:
+        """Export processing results to file"""
+        raise NotImplementedError("ExportManager.export_to_file not implemented")
+
+
+class SmartLinkIntegrationManager:
+    """
+    Utility for Smart Link Management integration with automatic connection discovery
+    
+    Integrates with existing Smart Link Management system for automatic
+    connection discovery and link insertion in generated daily notes.
+    """
+    
+    def __init__(self):
+        """Initialize Smart Link integration manager"""
+        self.logger = logging.getLogger(__name__)
+    
+    def discover_connections_from_daily_note(self, daily_note_content: str) -> List[Dict[str, Any]]:
+        """Discover connections from daily note content"""
+        raise NotImplementedError("SmartLinkIntegrationManager.discover_connections_from_daily_note not implemented")
+    
+    def auto_insert_smart_links(self, daily_note_path: str, 
+                               connections: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Auto-insert smart links into daily note"""
+        raise NotImplementedError("SmartLinkIntegrationManager.auto_insert_smart_links not implemented")
+
+
+class PerformanceOptimizer:
+    """
+    Utility for performance optimization with memory monitoring
+    
+    Maintains stable memory usage during processing with <100MB peak memory
+    growth and provides performance improvement recommendations.
+    """
+    
+    def __init__(self):
+        """Initialize performance optimizer"""
+        self.logger = logging.getLogger(__name__)
+    
+    def process_with_memory_monitoring(self, screenshots: List[Path]) -> Dict[str, Any]:
+        """Process with comprehensive memory monitoring"""
+        raise NotImplementedError("PerformanceOptimizer.process_with_memory_monitoring not implemented")
+    
+    def test_concurrent_processing_safety(self, screenshots: List[Path]) -> Dict[str, Any]:
+        """Test concurrent processing capabilities"""
+        raise NotImplementedError("PerformanceOptimizer.test_concurrent_processing_safety not implemented")
+    
+    def calculate_optimal_processing_rate(self, screenshot_count: int, 
+                                        target_time_minutes: int,
+                                        available_memory_mb: int) -> Dict[str, Any]:
+        """Calculate optimal processing rate"""
+        raise NotImplementedError("PerformanceOptimizer.calculate_optimal_processing_rate not implemented")
+
+
+class WeeklyReviewIntegrator:
+    """
+    Utility for weekly review system compatibility integration
+    
+    Ensures generated daily notes are compatible with existing weekly
+    review automation and appear in fleeting note triage workflows.
+    """
+    
+    def __init__(self):
+        """Initialize weekly review integrator"""
+        self.logger = logging.getLogger(__name__)
+    
+    def check_weekly_review_compatibility(self, daily_note_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Check daily note compatibility with weekly review"""
+        raise NotImplementedError("WeeklyReviewIntegrator.check_weekly_review_compatibility not implemented")
+    
+    def check_triage_eligibility(self, daily_note_path: str) -> Dict[str, Any]:
+        """Check if daily note is eligible for triage"""
+        raise NotImplementedError("WeeklyReviewIntegrator.check_triage_eligibility not implemented")
+    
+    def analyze_promotion_pathway(self, daily_note_metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze promotion pathway compatibility"""
+        raise NotImplementedError("WeeklyReviewIntegrator.analyze_promotion_pathway not implemented")
