@@ -901,8 +901,9 @@ Examples:
     action_group.add_argument(
         "--evening-screenshots",
         action="store_true",
-        help="Process Samsung S23 screenshots from OneDrive into daily notes with OCR and smart linking"
+        help="Process Samsung S3 screenshots from OneDrive into daily notes with OCR and smart linking"
     )
+    
     parser.add_argument(
         "--validate-only",
         action="store_true",
@@ -1799,6 +1800,13 @@ Examples:
                     print(f"\n📄 Results exported to: {args.export}")
                 else:
                     print(f"\n❌ Export failed to: {args.export}")
+            
+            # Return result dictionary for testing
+            return {
+                'processed_screenshots': result["result"].get('processed_count', 0),
+                'processing_time': result["result"].get('processing_time', 0),
+                'daily_note_generated': result["result"].get('daily_note_path') is not None
+            }
                     
         except Exception as e:
             print(f"❌ Error during evening screenshot processing: {e}")
