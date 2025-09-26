@@ -219,3 +219,63 @@ class LinkInsertionEngine:
                 'modified_content': '',
                 'diff': ''
             }
+
+
+class UndoManager:
+    """Simple stack-based undo tracker for link insertions (TDD Iteration 6).
+
+    Notes:
+        - This minimal implementation is designed to satisfy RED→GREEN tests.
+        - It records insertion operations and returns the latest on undo.
+        - When restore=False, no filesystem side effects are performed (unit-test safe).
+        - Future iterations can integrate safetyBackupManager for actual restore behavior.
+    """
+
+    def __init__(self, max_history: int = 50):
+        self._max_history = max_history
+        self._history: list[dict] = []
+
+    def record_insertion(self, operation: dict) -> None:
+        """Record an insertion operation for potential undo.
+
+        Expected keys include: target_file, insertions, backup_path, timestamp
+        """
+        if not isinstance(operation, dict):
+            return
+        self._history.append(operation)
+        # Enforce max history size (drop oldest)
+        if len(self._history) > self._max_history:
+            self._history.pop(0)
+
+    def history_size(self) -> int:
+        return len(self._history)
+
+    def can_undo(self) -> bool:
+        return bool(self._history)
+
+    def undo_last(self, restore: bool = True) -> dict:
+        """Undo the most recent insertion operation.
+
+        Args:
+            restore: If True, attempt to restore from backup (no-op in unit tests).
+
+        Returns:
+            Dict with keys: success (bool), message (str optional), target_file (str optional), backup_path (str optional)
+        """
+        if not self._history:
+            return {"success": False, "message": "No operations to undo"}
+
+        op = self._history.pop()
+
+        # In this minimal implementation, we do not perform actual file restoration.
+        # Future work: Use SafetyBackupManager.restore_from_backup(op['backup_path'], op['target_file'])
+        # when restore is True and paths are valid.
+        result = {
+            "success": True,
+            "target_file": op.get("target_file"),
+            "backup_path": op.get("backup_path"),
+        }
+        if restore:
+            # Indicate that a restore would be attempted in full implementation
+            result["restored"] = False
+        return result

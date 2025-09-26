@@ -73,24 +73,29 @@
   - CLI import adapters + triage
   - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
 
----
-
+-
 ## 🛣️ Next 2 Weeks Roadmap
 
-1. **Automated Background Daemon** (NEW - Priority 1)
+1. **Smart Link Management — Iteration 6 (Undo & Bidirectional)** (Priority 1)
+   - [ ] Create branch: `feat/smart-link-management-undo-tdd-6`
+   - [ ] Add failing tests for `UndoManager` and CLI `--undo`
+   - [ ] Implement minimal undo stack with backup integration
+   - [ ] Plan bidirectional link consistency and atomic operations
+
+2. **Automated Background Daemon** (Priority 2)
    - [ ] Extract AutoProcessor into daemon controller
    - [ ] Add APScheduler for automated maintenance tasks
    - [ ] Create daemon control CLI (`inneros daemon --start/stop/status`)
    - [ ] Design macOS LaunchD service configuration
    - [ ] Test background processing and scheduling
 
-2. **Image Linking System** (Priority 2)
+3. **Image Linking System** (Priority 3)
    - [ ] Formalize link model (paths, IDs, fallback)
    - [ ] Add tests: copy/move/update scenarios
    - [ ] Implement preservation + rewriting
    - [ ] Integrate with directory organizer and AI workflows
 
-3. **Reading Intake Pipeline** (Priority 3)
+4. **Reading Intake Pipeline** (Priority 4)
    - [ ] Extend YAML validator for `source:` and `saved_at`
    - [ ] Add literature templates + import adapters (CSV/JSON, bookmarks)
    - [ ] CLI: `--import-bookmarks`, `--process-literature`

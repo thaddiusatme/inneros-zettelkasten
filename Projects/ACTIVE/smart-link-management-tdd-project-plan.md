@@ -5,6 +5,15 @@
 **Estimated Duration**: 3-4 TDD iterations  
 **Dependencies**: Connection Discovery System ✅ (Complete)
 
+> Status Update (2025-09-25)
+> - Iterations 1–5 COMPLETE
+>   - Iter 1: LinkSuggestionEngine
+>   - Iter 2: CLI Integration
+>   - Iter 3: Real AI Integration
+>   - Iter 4: Link Insertion System
+>   - Iter 5: Batch Processing & Enhanced UX
+> - Next Target: Iteration 6 — Undo Functionality & Bidirectional Links
+
 ---
 
 ## 🎯 Project Vision
@@ -322,22 +331,23 @@ python3 development/src/cli/workflow_demo.py . --weekly-review --include-link-su
 
 ---
 
-## 🚀 Immediate Next Steps
+## 🚀 Immediate Next Steps (Iteration 6)
 
-### **Phase 0: Research & Validation** (This Week)
-1. **User research**: Review current manual linking workflow pain points
-2. **Technical validation**: Prototype basic link insertion safety
-3. **Integration analysis**: Ensure compatibility with existing systems
+### **Phase 0: Research & Validation (Undo & Bidirectional)**
+1. Confirm safety model for undo/rollback with backups
+2. Define atomic operation boundaries for batch undo
+3. Validate bidirectional link scenarios and edge cases
 
-### **Phase 1: TDD Setup** (Next Week)
-1. **Create branch**: `feat/smart-link-management-tdd-iteration-1`
-2. **Set up test infrastructure**: Link management test utilities
-3. **Define MVP scope**: Focus on core suggestion engine first
+### **Phase 1: TDD Setup**
+1. **Create branch**: `feat/smart-link-management-undo-tdd-6`
+2. **Red Phase**: Add failing tests for `UndoManager` and CLI `--undo`
+3. **Green Phase**: Minimal stack-based undo + integration points
+4. **Refactor Phase**: Extract helpers, optimize memory and UX
 
-### **Phase 2: Development Sprint** (Following 4 weeks)
-- Execute TDD iterations 1-4 as planned above
-- Weekly demo sessions to validate user experience
-- Continuous integration with existing AI workflow systems
+### **Phase 2: Development Sprint**
+- Implement BidirectionalLinkManager integration with undo support
+- Add preview for undo operations and batch progress
+- Performance validation and safety tests
 
 ---
 

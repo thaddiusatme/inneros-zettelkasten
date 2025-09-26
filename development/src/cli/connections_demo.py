@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.connections import AIConnections
 from src.ai.link_suggestion_engine import LinkSuggestionEngine
-from src.ai.link_insertion_engine import LinkInsertionEngine
+from src.ai.link_insertion_engine import LinkInsertionEngine, UndoManager
 from cli.smart_link_cli_utils import (
     display_suggestion_interactively,
     display_suggestions_summary,
@@ -26,13 +26,11 @@ from cli.smart_link_cli_utils import (
 )
 from cli.smart_link_cli_enhanced import (
     SmartLinkCLIOrchestrator,
-    CLITheme,
-    InteractiveSuggestionPresenter,
     BatchProcessingReporter,
-    CLIOutputFormatter,
-    BatchProcessor,
-    UserConfiguration
 )
+
+# Session-scoped undo manager (non-persistent)
+_UNDO_MANAGER = UndoManager()
 
 
 def load_note_corpus(directory: str) -> dict:
@@ -202,6 +200,23 @@ def handle_suggest_links_command(args):
                                     print(f"⚠️  Skipped {insertion_result.duplicates_skipped} duplicate links")
                                 if insertion_result.backup_path:
                                     print(f"💾 Backup created: {Path(insertion_result.backup_path).name}")
+                                # Record operation for undo within this session
+                                if insertion_result.insertions_made > 0:
+                                    try:
+                                        op = {
+                                            "target_file": args.target,
+                                            "insertions": [
+                                                {
+                                                    "text": s.suggested_link_text,
+                                                    "section": getattr(s, 'suggested_location', None),
+                                                } for s in accepted_suggestions
+                                            ],
+                                            "backup_path": insertion_result.backup_path,
+                                        }
+                                        _UNDO_MANAGER.record_insertion(op)
+                                        print("↩️  Undo available this session: re-run with --undo")
+                                    except Exception as e:
+                                        print(f"⚠️  Failed to record undo operation: {e}")
                             else:
                                 print(f"❌ Link insertion failed: {insertion_result.error_message}")
                                 
@@ -287,6 +302,8 @@ def create_parser():
                                help="Maximum number of results")
     suggest_parser.add_argument("--dry-run", action="store_true", default=False,
                                help="Preview suggestions without modification")
+    suggest_parser.add_argument("--undo", action="store_true", default=False,
+                               help="Undo the last link insertion from this session (if available)")
     
     # Connection map command
     map_parser = subparsers.add_parser("map", help="Build connection map for all notes")
@@ -309,6 +326,24 @@ def main():
     
     # Handle suggest-links command separately (uses different system)
     if args.command == "suggest-links":
+        # Handle undo request first
+        if getattr(args, "undo", False):
+            if _UNDO_MANAGER.can_undo():
+                print("↩️  Undo last link insertion")
+                confirm = input("🤔 Proceed with undo (restore from backup if available)? [Y/n]: ").lower().strip()
+                if confirm in ['', 'y', 'yes']:
+                    result = _UNDO_MANAGER.undo_last(restore=True)
+                    if result.get("success"):
+                        print("✅ Undo prepared (restore integration pending)")
+                        if result.get("backup_path"):
+                            print(f"💾 Backup path: {result['backup_path']}")
+                        return result
+                    else:
+                        print(f"❌ Undo failed: {result.get('message', 'unknown error')}")
+                        return result
+            else:
+                print("ℹ️  No operations to undo in this session")
+                return {"success": False, "message": "no undo available"}
         return handle_suggest_links_command(args)
     
     # Initialize connections system for other commands
