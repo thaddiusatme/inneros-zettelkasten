@@ -23,7 +23,7 @@ import sys
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.ai.llama_vision_ocr import VisionAnalysisResult
+from src.ai.llama_vision_ocr import VisionAnalysisResult, LlamaVisionOCR
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +167,12 @@ class RichContextAnalyzer:
     device metadata, and capture context for enhanced note generation.
     """
     
+    def __init__(self):
+        """Initialize the analyzer with real OCR integration and utility classes"""
+        self.ocr_processor = RealOCRProcessor(local_mode=True)
+        self.content_analyzer = ContentIntelligenceAnalyzer()
+        self.performance_optimizer = OCRPerformanceOptimizer(cache_size=50)
+    
     def analyze_screenshot_with_rich_context(self, screenshot_path: Path) -> Dict[str, Any]:
         """
         Analyze screenshot with rich OCR context including content summaries
@@ -177,23 +183,62 @@ class RichContextAnalyzer:
         Returns:
             Rich context analysis with comprehensive metadata
         """
-        # Basic OCR extraction (mock for GREEN phase)
-        basic_ocr = f"OCR text extracted from {screenshot_path.name}"
+        # Real OCR analysis using optimized processing
+        optimization_result = self.performance_optimizer.optimize_ocr_processing(screenshot_path, self.ocr_processor)
+        vision_result = optimization_result['ocr_result']
         
-        # Content summary (mock AI analysis)
-        content_summary = f"AI-generated summary of content in {screenshot_path.name}"
+        # Track performance metrics (stored for potential future logging)
+        cache_hit = optimization_result['cache_hit']
+        processing_time = optimization_result['processing_time']
         
-        # Extract key topics from filename and content
-        key_topics = ["screenshot", "visual-capture", "knowledge-intake"]
+        logger.debug(f"OCR processing: cache_hit={cache_hit}, time={processing_time:.3f}s")
         
-        # Contextual insights
-        contextual_insights = [
-            "Screenshot contains valuable visual information",
-            "Content suitable for knowledge base integration"
-        ]
+        if vision_result:
+            # Use real OCR extraction
+            basic_ocr = vision_result.extracted_text
+            content_summary = vision_result.content_summary
+            key_topics = vision_result.main_topics
+            contextual_insights = vision_result.key_insights
+            
+            # Enhanced fields for real OCR integration
+            ocr_confidence = vision_result.confidence_score
+            quality_assessment = 'high' if ocr_confidence > 0.8 else 'medium' if ocr_confidence > 0.5 else 'low'
+            
+            # App-specific analysis using ContentIntelligenceAnalyzer
+            app_analysis = self.content_analyzer.analyze_app_specific_content(
+                vision_result.content_type, basic_ocr, content_summary, key_topics
+            )
+            conversation_participants = app_analysis.get('participants', [])
+            conversation_topic = app_analysis.get('topic', 'unknown')
+            sentiment_analysis = app_analysis.get('sentiment', 'neutral')
+            
+            # Performance metrics
+            processing_metrics = {
+                'ocr_processing_time': vision_result.processing_time,
+                'total_processing_time': vision_result.processing_time + 0.1  # Add analysis overhead
+            }
+            
+            # OCR status tracking
+            ocr_status = 'success'
+            
+        else:
+            # Fallback when OCR fails
+            basic_ocr = "[OCR processing failed - using fallback content]"
+            content_summary = "Visual content captured but OCR processing failed. Manual review recommended for content extraction."
+            key_topics = ["screenshot", "visual-capture", "ocr-failed"]
+            contextual_insights = ["OCR processing unavailable", "Manual review needed"]
+            
+            # Fallback values
+            ocr_confidence = 0.0
+            quality_assessment = 'failed'
+            conversation_participants = []
+            conversation_topic = 'unknown'
+            sentiment_analysis = 'neutral'
+            processing_metrics = {'ocr_processing_time': 0.0, 'total_processing_time': 0.1}
+            ocr_status = 'failed'
         
         # Description keywords for filename generation
-        description_keywords = ["visual", "content", "capture"]
+        description_keywords = key_topics[:3] if key_topics else ["visual", "content", "capture"]
         
         # Device metadata extraction from Samsung naming pattern
         device_metadata = {
@@ -215,15 +260,72 @@ class RichContextAnalyzer:
             'processing_mode': 'individual'
         }
         
-        return {
+        result = {
             'basic_ocr': basic_ocr,
             'content_summary': content_summary,
             'key_topics': key_topics,
             'contextual_insights': contextual_insights,
             'description_keywords': description_keywords,
             'device_metadata': device_metadata,
-            'capture_context': capture_context
+            'capture_context': capture_context,
+            # Real OCR integration fields
+            'ocr_confidence': ocr_confidence,
+            'quality_assessment': quality_assessment,
+            'conversation_participants': conversation_participants,
+            'conversation_topic': conversation_topic,
+            'sentiment_analysis': sentiment_analysis,
+            'processing_metrics': processing_metrics,
+            'ocr_status': ocr_status
         }
+        
+        # Add fallback content field when OCR fails
+        if ocr_status == 'failed':
+            result['fallback_content'] = "Visual content captured but OCR processing failed. The image has been preserved for manual review and can be reprocessed when OCR services are available."
+        
+        return result
+    
+    def _extract_conversation_participants(self, text: str, content_type: str) -> List[str]:
+        """Extract conversation participants from messaging app content"""
+        if content_type not in ['messaging_app', 'social_media']:
+            return []
+        
+        import re
+        # Look for "Name:" patterns common in messaging apps
+        participants = re.findall(r'([A-Za-z]+):', text)
+        return list(set(participants))  # Remove duplicates
+    
+    def _extract_conversation_topic(self, text: str, topics: List[str]) -> str:
+        """Extract main conversation topic from text and detected topics"""
+        if not topics:
+            return 'general conversation'
+        
+        # Use the first few topics as conversation theme
+        topic_words = []
+        for topic in topics[:2]:
+            if topic not in ['conversation', 'messaging', 'social', 'screenshot']:
+                topic_words.append(topic)
+        
+        return ' '.join(topic_words) if topic_words else 'general conversation'
+    
+    def _analyze_sentiment(self, insights: List[str]) -> str:
+        """Basic sentiment analysis from contextual insights"""
+        if not insights:
+            return 'neutral'
+        
+        text = ' '.join(insights).lower()
+        
+        positive_words = ['positive', 'great', 'amazing', 'excellent', 'good', 'productive']
+        negative_words = ['negative', 'bad', 'terrible', 'poor', 'failed', 'problem']
+        
+        positive_count = sum(1 for word in positive_words if word in text)
+        negative_count = sum(1 for word in negative_words if word in text)
+        
+        if positive_count > negative_count:
+            return 'positive'
+        elif negative_count > positive_count:
+            return 'negative'
+        else:
+            return 'neutral'
 
 
 class TemplateNoteRenderer:
@@ -596,3 +698,305 @@ class SmartLinkIntegrator:
             })
         
         return link_suggestions
+
+
+class RealOCRProcessor:
+    """
+    Real OCR processing utility for modular OCR integration
+    
+    Provides centralized OCR processing with error handling and performance optimization.
+    Extracted from RichContextAnalyzer for production-ready modular architecture.
+    """
+    
+    def __init__(self, local_mode: bool = True):
+        """Initialize the OCR processor"""
+        self.vision_ocr = LlamaVisionOCR(local_mode=local_mode)
+        self.processing_stats = {'total_processed': 0, 'successful': 0, 'failed': 0}
+    
+    def process_screenshot_with_vision(self, screenshot_path: Path) -> Optional[VisionAnalysisResult]:
+        """
+        Process screenshot with vision analysis and statistics tracking
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            
+        Returns:
+            VisionAnalysisResult or None if processing fails
+        """
+        self.processing_stats['total_processed'] += 1
+        
+        try:
+            result = self.vision_ocr.analyze_screenshot(screenshot_path)
+            if result:
+                self.processing_stats['successful'] += 1
+                logger.info(f"OCR processing successful for {screenshot_path.name}")
+            else:
+                self.processing_stats['failed'] += 1
+                logger.warning(f"OCR processing failed for {screenshot_path.name}")
+            return result
+        except Exception as e:
+            self.processing_stats['failed'] += 1
+            logger.error(f"OCR processing error for {screenshot_path.name}: {e}")
+            return None
+    
+    def get_processing_statistics(self) -> Dict[str, Any]:
+        """Get OCR processing statistics"""
+        total = self.processing_stats['total_processed']
+        success_rate = (self.processing_stats['successful'] / total) * 100 if total > 0 else 0
+        
+        return {
+            'total_processed': total,
+            'successful': self.processing_stats['successful'],
+            'failed': self.processing_stats['failed'],
+            'success_rate': round(success_rate, 2)
+        }
+
+
+class ContentIntelligenceAnalyzer:
+    """
+    Content intelligence analyzer for app-specific analysis
+    
+    Provides specialized analysis for different content types including
+    messaging apps, social media, and web articles.
+    """
+    
+    def analyze_app_specific_content(self, content_type: str, extracted_text: str, 
+                                   content_summary: str = "", key_topics: Optional[List[str]] = None) -> Dict[str, Any]:
+        """
+        Analyze content based on specific app context
+        
+        Args:
+            content_type: Type of content (messaging_app, social_media, article, etc.)
+            extracted_text: OCR extracted text
+            content_summary: AI-generated summary
+            key_topics: List of identified topics
+            
+        Returns:
+            App-specific analysis results
+        """
+        key_topics = key_topics or []
+        
+        if content_type == 'messaging_app':
+            return self._analyze_messaging_content(extracted_text, content_summary, key_topics)
+        elif content_type == 'social_media':
+            return self._analyze_social_media_content(extracted_text, content_summary, key_topics)
+        elif content_type in ['article', 'web_content']:
+            return self._analyze_article_content(extracted_text, content_summary, key_topics)
+        else:
+            return self._analyze_generic_content(extracted_text, content_summary, key_topics)
+    
+    def _analyze_messaging_content(self, text: str, summary: str, topics: List[str]) -> Dict[str, Any]:
+        """Analyze messaging app content"""
+        import re
+        
+        # Extract conversation participants
+        participants = re.findall(r'([A-Za-z]+):', text)
+        participants = list(set(participants))  # Remove duplicates
+        
+        # Extract conversation topic
+        topic_words = [topic for topic in topics if topic not in ['conversation', 'messaging', 'social']]
+        topic = ' '.join(topic_words[:2]) if topic_words else 'general conversation'
+        
+        # Basic sentiment analysis
+        sentiment = self._analyze_text_sentiment(text + " " + summary)
+        
+        return {
+            'participants': participants,
+            'topic': topic,
+            'sentiment': sentiment,
+            'conversation_length': len(text.split()),
+            'participant_count': len(participants)
+        }
+    
+    def _analyze_social_media_content(self, text: str, summary: str, topics: List[str]) -> Dict[str, Any]:
+        """Analyze social media content"""
+        # Detect engagement indicators
+        engagement_words = ['like', 'share', 'comment', 'retweet', 'follow']
+        has_engagement = any(word in text.lower() for word in engagement_words)
+        
+        # Detect hashtags and mentions
+        import re
+        hashtags = re.findall(r'#\w+', text)
+        mentions = re.findall(r'@\w+', text)
+        
+        return {
+            'participants': mentions,
+            'topic': ' '.join(topics[:2]) if topics else 'social media post',
+            'sentiment': self._analyze_text_sentiment(text + " " + summary),
+            'hashtags': hashtags,
+            'mentions': mentions,
+            'has_engagement': has_engagement
+        }
+    
+    def _analyze_article_content(self, text: str, summary: str, topics: List[str]) -> Dict[str, Any]:
+        """Analyze article/web content"""
+        # Estimate reading time
+        word_count = len(text.split())
+        reading_time = max(1, word_count // 200)  # ~200 words per minute
+        
+        return {
+            'participants': [],  # Articles don't have conversation participants
+            'topic': ' '.join(topics[:3]) if topics else 'article content',
+            'sentiment': self._analyze_text_sentiment(text + " " + summary),
+            'word_count': word_count,
+            'estimated_reading_time': reading_time,
+            'content_density': 'high' if word_count > 500 else 'medium' if word_count > 100 else 'low'
+        }
+    
+    def _analyze_generic_content(self, text: str, summary: str, topics: List[str]) -> Dict[str, Any]:
+        """Analyze generic content"""
+        return {
+            'participants': [],
+            'topic': ' '.join(topics[:2]) if topics else 'general content',
+            'sentiment': self._analyze_text_sentiment(text + " " + summary),
+            'content_type': 'generic',
+            'analysis_confidence': 'medium'
+        }
+    
+    def _analyze_text_sentiment(self, text: str) -> str:
+        """Basic sentiment analysis"""
+        if not text:
+            return 'neutral'
+        
+        text_lower = text.lower()
+        
+        positive_words = ['great', 'amazing', 'excellent', 'good', 'awesome', 'fantastic', 'wonderful']
+        negative_words = ['bad', 'terrible', 'awful', 'poor', 'horrible', 'disappointing']
+        
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        negative_count = sum(1 for word in negative_words if word in text_lower)
+        
+        if positive_count > negative_count:
+            return 'positive'
+        elif negative_count > positive_count:
+            return 'negative'
+        else:
+            return 'neutral'
+
+
+class OCRPerformanceOptimizer:
+    """
+    OCR performance optimizer for caching and optimization
+    
+    Provides intelligent caching, batch processing optimization,
+    and performance monitoring for OCR operations.
+    """
+    
+    def __init__(self, cache_size: int = 100):
+        """Initialize the performance optimizer"""
+        self.cache = {}
+        self.cache_size = cache_size
+        self.performance_metrics = {
+            'cache_hits': 0,
+            'cache_misses': 0,
+            'total_processing_time': 0.0,
+            'total_operations': 0
+        }
+    
+    def optimize_ocr_processing(self, screenshot_path: Path, ocr_processor: Optional['RealOCRProcessor'] = None) -> Dict[str, Any]:
+        """
+        Optimize OCR processing with caching and performance tracking
+        
+        Args:
+            screenshot_path: Path to screenshot file
+            ocr_processor: OCR processor instance (optional)
+            
+        Returns:
+            Optimization results with cache status and performance metrics
+        """
+        import time
+        import hashlib
+        
+        start_time = time.time()
+        
+        # Generate cache key from file path and modification time
+        file_stat = screenshot_path.stat() if screenshot_path.exists() else None
+        cache_key = hashlib.md5(f"{screenshot_path}_{file_stat.st_mtime if file_stat else 0}".encode()).hexdigest()
+        
+        # Check cache
+        if cache_key in self.cache:
+            self.performance_metrics['cache_hits'] += 1
+            processing_time = time.time() - start_time
+            
+            return {
+                'cache_hit': True,
+                'processing_time': processing_time,
+                'ocr_result': self.cache[cache_key],
+                'cache_stats': self._get_cache_stats()
+            }
+        
+        # Cache miss - process with OCR
+        self.performance_metrics['cache_misses'] += 1
+        
+        if ocr_processor:
+            ocr_result = ocr_processor.process_screenshot_with_vision(screenshot_path)
+        else:
+            # Fallback: create basic result
+            ocr_result = None
+        
+        # Cache the result
+        if len(self.cache) >= self.cache_size:
+            # Remove oldest entry
+            oldest_key = next(iter(self.cache))
+            del self.cache[oldest_key]
+        
+        self.cache[cache_key] = ocr_result
+        
+        processing_time = time.time() - start_time
+        self.performance_metrics['total_processing_time'] += processing_time
+        self.performance_metrics['total_operations'] += 1
+        
+        return {
+            'cache_hit': False,
+            'processing_time': processing_time,
+            'ocr_result': ocr_result,
+            'cache_stats': self._get_cache_stats()
+        }
+    
+    def _get_cache_stats(self) -> Dict[str, Any]:
+        """Get current cache statistics"""
+        total_requests = self.performance_metrics['cache_hits'] + self.performance_metrics['cache_misses']
+        hit_rate = (self.performance_metrics['cache_hits'] / total_requests * 100) if total_requests > 0 else 0
+        
+        avg_processing_time = (
+            self.performance_metrics['total_processing_time'] / self.performance_metrics['total_operations']
+            if self.performance_metrics['total_operations'] > 0 else 0
+        )
+        
+        return {
+            'cache_size': len(self.cache),
+            'max_cache_size': self.cache_size,
+            'hit_rate': round(hit_rate, 2),
+            'total_requests': total_requests,
+            'average_processing_time': round(avg_processing_time, 3)
+        }
+    
+    def clear_cache(self):
+        """Clear the OCR cache"""
+        self.cache.clear()
+        logger.info("OCR cache cleared")
+    
+    def get_performance_report(self) -> Dict[str, Any]:
+        """Get comprehensive performance report"""
+        return {
+            'metrics': self.performance_metrics.copy(),
+            'cache_stats': self._get_cache_stats(),
+            'optimization_recommendations': self._get_optimization_recommendations()
+        }
+    
+    def _get_optimization_recommendations(self) -> List[str]:
+        """Get performance optimization recommendations"""
+        recommendations = []
+        
+        cache_stats = self._get_cache_stats()
+        
+        if cache_stats['hit_rate'] < 20:
+            recommendations.append("Consider increasing cache size for better performance")
+        
+        if cache_stats['average_processing_time'] > 10:
+            recommendations.append("OCR processing time is high - consider optimizing vision model")
+        
+        if self.performance_metrics['total_operations'] > 100 and cache_stats['hit_rate'] > 80:
+            recommendations.append("Excellent cache performance - current optimization is working well")
+        
+        return recommendations
