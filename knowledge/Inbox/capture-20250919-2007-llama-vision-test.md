@@ -1,21 +1,21 @@
 ---
-type: fleeting
 created: 2025-09-19 20:07
+type: fleeting
 status: inbox
-tags:
-  - capture
-  - samsung-s3
-  - llama-vision
+tags: [agent, agent-topology, ai, artificial-intelligence, attention, attention-context-window,
+  capture, computer-vision]
 source: capture
+quality_score: 0.75
+ai_tags:
+- AI
+- agent
+- topology
 device: Samsung S23
 capture_type: vision_enhanced
 ai_quality_score: 0.85
 ai_processing_method: llama-vision
 ai_processed_at: 2025-09-24 21:50:46
-ai_tags:
-  - AI
-  - agent
-  - topology
+ai_processed: '2025-09-27T21:41:16.435691'
 ---
 
 

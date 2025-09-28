@@ -1,12 +1,15 @@
 ---
-type: fleeting
 created: 2025-09-25 22:08
+type: fleeting
 status: inbox
 visibility: private
-tags: ["daily-screenshots", "debugging", "messaging-app", "neovim", "pair-programming", "samsung-s23", "social media", "visual-knowledge"]
+tags: [daily-screenshots, debugging, ides, messaging-app, neovim, onedrive, pair-programming,
+  samsung-s23]
+source: samsung_s23_onedrive
+quality_score: 0.85
 screenshot_count: 3
 processing_date: 2025-09-25
-source: samsung_s23_onedrive
+ai_processed: '2025-09-27T21:33:22.750799'
 ---
 ## Daily Screenshot Summary
 

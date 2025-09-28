@@ -3,10 +3,11 @@ created: 2025-09-18 10:43
 type: permanent
 status: promoted
 visibility: private
-tags: [emotional-decision-making, emotional-intelligence, hero-journey-marketing,
-  heros-journey, intimacy-at-scale, narrative-intimacy, personal-branding, price-risk-decision-making]
+tags: [business-intimacy, decision-making-emotions, emotional-decision-making, emotional-intelligence,
+  emotional-marketing, herearetheextractedtagsbusiness-storytelling, herearetheextractedtagsstorytelling-in-business,
+  hero-journey-marketing]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:09:30.878641'
+ai_processed: '2025-09-27T21:35:47.181238'
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:
 

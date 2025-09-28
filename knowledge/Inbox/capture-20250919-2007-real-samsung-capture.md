@@ -2,8 +2,8 @@
 created: 2025-09-19 20:07
 type: fleeting
 status: inbox
-tags: [ai-enhancement, ai-enhancement-suggestions, capture, knowledge-capture, metadata,
-  processing-notes, s23, samsung]
+tags: [ai-enhancement, ai-enhancement-suggestions, capture, capture-session, capture-session-tracking,
+  device-detection, knowledge-capture, metadata]
 source: capture
 quality_score: 0.75
 ai_tags:
@@ -15,7 +15,7 @@ time_gap_seconds: 15
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-22 22:24:15
-ai_processed: '2025-09-24T14:09:04.928811'
+ai_processed: '2025-09-27T21:35:10.552609'
 ---
 # Capture Summary
 

@@ -3,10 +3,10 @@ created: 2025-09-17 10:00
 type: fleeting
 status: inbox
 visibility: private
-tags: [ai-humble-servant, ai-tool-review, aihumbleservant, artificial-intelligence,
-  arxiv-papers, breakingnews, chatgpt, communication]
-quality_score: 0.8
-ai_processed: '2025-09-24T14:10:50.310823'
+tags: [ai-assistant, ai-humble-servant, ai-newsletter, ai-tool-review, aihumbleservant,
+  artificial-intelligence, arxiv-papers, breaking-ai-news]
+quality_score: 0.85
+ai_processed: '2025-09-27T21:37:31.220033'
 ---
 You are an AI assistant tasked with drafting the weekly AI Humble Servant newsletter. Create a newsletter that tells a story, provokes thought, and delivers practical value. Follow this structure:
 
