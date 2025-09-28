@@ -92,14 +92,18 @@ check_disk_space() {
 
 # Check backup recency
 check_backup_recency() {
-    local backup_dir="$HOME/backups/$(basename "$REPO_ROOT")"
+    # Backups are created by the CLI using the knowledge directory basename (e.g., 'knowledge')
+    local backup_root_name
+    backup_root_name="$(basename "$KNOWLEDGE_DIR")"
+    local backup_dir="$HOME/backups/$backup_root_name"
     
     if [[ ! -d "$backup_dir" ]]; then
         send_alert "No backup directory" "Backup directory not found: $backup_dir. Create initial backup."
         return 1
     fi
     
-    local latest_backup=$(find "$backup_dir" -maxdepth 1 -type d -name "knowledge-*" | sort | tail -1)
+    # Match any timestamped backup for this vault (e.g., knowledge-YYYYMMDD-HHMMSS)
+    local latest_backup=$(find "$backup_dir" -maxdepth 1 -type d -name "${backup_root_name}-*" | sort | tail -1)
     
     if [[ -z "$latest_backup" ]]; then
         send_alert "No backups found" "No backups found in $backup_dir. Create initial backup."
@@ -117,11 +121,19 @@ check_backup_recency() {
     return 0
 }
 
-# Quick system responsiveness check
+# Quick system responsiveness check (macOS-compatible timeout)
 check_system_responsiveness() {
     local start_time=$(date +%s)
-    
-    if timeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then
+    local ok=1
+    if command -v gtimeout >/dev/null 2>&1; then
+        if gtimeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+    elif command -v timeout >/dev/null 2>&1; then
+        if timeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+    else
+        # No timeout available; run directly
+        if "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+    fi
+    if [[ $ok -eq 0 ]]; then
         local duration=$(($(date +%s) - start_time))
         log "✅ System responsive: ${duration}s"
         return 0
