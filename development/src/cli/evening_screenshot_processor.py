@@ -27,7 +27,7 @@ import logging
 import time
 from pathlib import Path
 from datetime import datetime, date
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import sys
 
 # Add development directory to path for imports
@@ -87,18 +87,24 @@ class EveningScreenshotProcessor:
         
         logger.info(f"Initialized EveningScreenshotProcessor for {knowledge_path}")
     
-    def scan_todays_screenshots(self) -> List[Path]:
+    def scan_todays_screenshots(self, limit: Optional[int] = None) -> List[Path]:
         """
         Scan OneDrive for today's Samsung screenshots
+        
+        Args:
+            limit: Optional limit on number of screenshots to return
         
         Returns:
             List of screenshot file paths from today
         """
-        return self.screenshot_detector.scan_todays_screenshots()
+        return self.screenshot_detector.scan_todays_screenshots(limit=limit)
     
-    def process_evening_batch(self) -> Dict[str, Any]:
+    def process_evening_batch(self, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Process evening batch of screenshots with OCR and daily note generation
+        
+        Args:
+            limit: Optional limit on number of screenshots to process
         
         Returns:
             Processing results with counts, paths, and timing
@@ -111,7 +117,7 @@ class EveningScreenshotProcessor:
         
         try:
             # Step 2: Scan today's screenshots
-            screenshots = self.scan_todays_screenshots()
+            screenshots = self.scan_todays_screenshots(limit=limit)
             logger.info(f"Found {len(screenshots)} screenshots for processing")
             
             if not screenshots:
@@ -123,7 +129,12 @@ class EveningScreenshotProcessor:
                 }
             
             # Step 3: Process screenshots with OCR
-            ocr_results = self.ocr_processor.process_batch(screenshots)
+            print(f"\n🔍 Processing {len(screenshots)} screenshots with AI OCR...")
+            
+            def progress_callback(current, total, filename):
+                print(f"   [{current}/{total}] 🤖 Analyzing: {filename}")
+            
+            ocr_results = self.ocr_processor.process_batch(screenshots, progress_callback=progress_callback)
             logger.info(f"Completed OCR processing for {len(ocr_results)} screenshots")
             
             # Step 4: Generate daily note

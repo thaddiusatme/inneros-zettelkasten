@@ -905,6 +905,14 @@ Examples:
     )
     
     parser.add_argument(
+        "--limit",
+        type=int,
+        metavar="N",
+        default=None,
+        help="Limit number of screenshots to process (most recent N)"
+    )
+    
+    parser.add_argument(
         "--validate-only",
         action="store_true",
         help="Validate inputs only (no file writes)"

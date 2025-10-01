@@ -51,18 +51,26 @@ class OneDriveScreenshotDetector:
         
         logger.info(f"Initialized OneDriveScreenshotDetector for {onedrive_path}")
     
-    def scan_todays_screenshots(self) -> List[Path]:
+    def scan_todays_screenshots(self, limit: Optional[int] = None) -> List[Path]:
         """
-        Scan for today's Samsung screenshots
+        Scan for recent Samsung screenshots (last 7 days)
+        
+        Args:
+            limit: Optional limit on number of screenshots to return (most recent)
         
         Returns:
-            List of screenshot file paths from today
+            List of screenshot file paths from the last 7 days
         """
         if not self.onedrive_path.exists():
             logger.warning(f"OneDrive path does not exist: {self.onedrive_path}")
             return []
         
-        today_str = date.today().strftime("%Y%m%d")
+        from datetime import timedelta
+        
+        # Get date range for last 7 days
+        today = date.today()
+        date_range = [(today - timedelta(days=i)).strftime("%Y%m%d") for i in range(7)]
+        
         screenshots = []
         
         try:
@@ -70,12 +78,20 @@ class OneDriveScreenshotDetector:
                 if self.is_samsung_screenshot(file_path.name):
                     # Extract date from filename
                     match = self.samsung_pattern.match(file_path.name)
-                    if match and match.group(1) == today_str:
+                    if match and match.group(1) in date_range:
                         screenshots.append(file_path)
-                        logger.debug(f"Found today's screenshot: {file_path.name}")
+                        logger.debug(f"Found recent screenshot: {file_path.name}")
             
-            logger.info(f"Found {len(screenshots)} screenshots for today ({today_str})")
-            return sorted(screenshots)  # Sort by filename (chronological)
+            # Sort by filename (chronological), newest first
+            screenshots = sorted(screenshots, reverse=True)
+            
+            # Apply limit if specified
+            if limit and limit > 0:
+                screenshots = screenshots[:limit]
+                logger.info(f"Limited to {len(screenshots)} most recent screenshots")
+            
+            logger.info(f"Found {len(screenshots)} screenshots from last 7 days")
+            return screenshots
             
         except Exception as e:
             logger.error(f"Error scanning screenshots: {e}")
@@ -163,19 +179,26 @@ class ScreenshotOCRProcessor:
             logger.error(f"Error processing screenshot {image_path}: {e}")
             return self.vision_ocr.get_fallback_analysis(image_path)
     
-    def process_batch(self, image_paths: List[Path]) -> Dict[str, VisionAnalysisResult]:
+    def process_batch(self, image_paths: List[Path], progress_callback=None) -> Dict[str, VisionAnalysisResult]:
         """
         Process batch of screenshots with OCR
         
         Args:
             image_paths: List of screenshot paths
+            progress_callback: Optional callback for progress updates (current, total, filename)
             
         Returns:
             Dictionary mapping image paths to OCR results
         """
         results = {}
+        total = len(image_paths)
         
         for i, image_path in enumerate(image_paths):
+            # Progress callback with detailed info
+            if progress_callback:
+                progress_callback(i + 1, total, image_path.name)
+            
+            logger.info(f"🔍 Processing [{i+1}/{total}]: {image_path.name}")
             result = self.process_screenshot(image_path)
             if result:
                 # Use index to handle duplicate paths in batch processing

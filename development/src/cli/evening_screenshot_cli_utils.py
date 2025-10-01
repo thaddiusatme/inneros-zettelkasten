@@ -102,20 +102,23 @@ class EveningScreenshotCLIOrchestrator:
     
     def _execute_dry_run(self, options: Dict[str, Any]) -> Dict[str, Any]:
         """Execute dry-run command"""
-        screenshots = self.processor.scan_todays_screenshots()
+        limit = options.get('limit')
+        screenshots = self.processor.scan_todays_screenshots(limit=limit)
         return {
             "success": True,
             "result": {
                 "dry_run": True,
                 "screenshots_found": len(screenshots),
                 "screenshot_paths": [str(p) for p in screenshots],
-                "onedrive_path": self.onedrive_path
+                "onedrive_path": self.onedrive_path,
+                "limit_applied": limit
             }
         }
     
     def _execute_processing(self, options: Dict[str, Any]) -> Dict[str, Any]:
         """Execute main processing command"""
-        result = self.processor.process_evening_batch()
+        limit = options.get('limit')
+        result = self.processor.process_evening_batch(limit=limit)
         return {
             "success": True,
             "result": result
@@ -123,7 +126,8 @@ class EveningScreenshotCLIOrchestrator:
     
     def _execute_scan(self, options: Dict[str, Any]) -> Dict[str, Any]:
         """Execute screenshot scanning command"""
-        screenshots = self.processor.scan_todays_screenshots()
+        limit = options.get('limit')
+        screenshots = self.processor.scan_todays_screenshots(limit=limit)
         return {
             "success": True,
             "result": {
@@ -328,11 +332,11 @@ class ConfigurationManager:
         
         # Common OneDrive Samsung screenshot paths
         possible_paths = [
+            "~/Library/CloudStorage/OneDrive-Personal/backlog/Pictures/Samsung Gallery/DCIM/Screenshots",
             "~/Library/CloudStorage/OneDrive-Personal/Pictures/Samsung Screenshots",
             "~/OneDrive/Pictures/Samsung Screenshots", 
             "~/OneDrive/Pictures/Screenshots",
-            "~/Library/CloudStorage/OneDrive-Personal/Samsung Screenshots",
-            "/Users/thaddius/Library/CloudStorage/OneDrive-Personal/backlog/Pictures/Samsung Galaxy/DCIM/Screenshots/"
+            "~/Library/CloudStorage/OneDrive-Personal/Samsung Screenshots"
         ]
         
         # Return expanded paths that exist, or all possibilities if none exist (for testing/reference)
@@ -376,7 +380,8 @@ class ConfigurationManager:
             'onedrive_path': getattr(args, 'onedrive_path', self.default_onedrive_path),
             'dry_run': getattr(args, 'dry_run', False),
             'progress': getattr(args, 'progress', False),
-            'performance_metrics': getattr(args, 'performance_metrics', False)
+            'performance_metrics': getattr(args, 'performance_metrics', False),
+            'limit': getattr(args, 'limit', None)
         }
         
         # Validate OneDrive path
