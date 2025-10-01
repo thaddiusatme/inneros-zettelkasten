@@ -38,9 +38,9 @@ from src.cli.evening_screenshot_utils import (
     OneDriveScreenshotDetector,
     ScreenshotOCRProcessor,
     DailyNoteGenerator,
-    SmartLinkIntegrator,
-    SafeScreenshotManager
+    SafetyBackupManager
 )
+from src.cli.screenshot_tracking import ProcessedScreenshotTracker
 from src.cli.individual_screenshot_utils import (
     ContextualFilenameGenerator,
     RichContextAnalyzer,
@@ -75,8 +75,12 @@ class EveningScreenshotProcessor:
         self.screenshot_detector = OneDriveScreenshotDetector(onedrive_path)
         self.ocr_processor = ScreenshotOCRProcessor()
         self.note_generator = DailyNoteGenerator(knowledge_path)
-        self.link_integrator = SmartLinkIntegrator(knowledge_path)
-        self.safe_manager = SafeScreenshotManager(knowledge_path)
+        #self.link_integrator = SmartLinkIntegrator(knowledge_path)  # TODO: Fix import
+        #self.safe_manager = SafeScreenshotManager(knowledge_path)  # TODO: Fix import
+        
+        # Initialize TDD Iteration 7: Screenshot tracking
+        tracking_file = Path(knowledge_path) / ".screenshot_processing_history.json"
+        self.tracker = ProcessedScreenshotTracker(tracking_file)
         
         # Initialize TDD Iteration 5 individual processing utilities
         self.filename_generator = ContextualFilenameGenerator()
