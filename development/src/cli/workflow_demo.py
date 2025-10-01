@@ -21,9 +21,9 @@ from src.ai.import_manager import (
     JSONImportAdapter,
     NoteWriter,
 )
-from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
-from src.cli.evening_screenshot_cli_utils import (
-    EveningScreenshotCLIOrchestrator,
+from src.cli.screenshot_processor import ScreenshotProcessor
+from src.cli.screenshot_cli_utils import (
+    ScreenshotCLIOrchestrator,
     CLIProgressReporter,
     ConfigurationManager,
     CLIOutputFormatter,
@@ -897,11 +897,11 @@ Examples:
         help="Process note within specified session"
     )
     
-    # TDD Iteration 2: Samsung Screenshot Evening Workflow CLI Integration
+    # Screenshot Processing Workflow CLI Integration
     action_group.add_argument(
-        "--evening-screenshots",
+        "--screenshots",
         action="store_true",
-        help="Process Samsung S3 screenshots from OneDrive into daily notes with OCR and smart linking"
+        help="Process Samsung screenshots from OneDrive (last 7 days) into daily notes with OCR and smart linking"
     )
     
     parser.add_argument(
@@ -1724,8 +1724,8 @@ Examples:
             print(f"❌ Error processing in session: {e}")
             return 1
     
-    elif args.evening_screenshots:
-        print("📸 Processing Samsung Screenshot Evening Workflow...")
+    elif args.screenshots:
+        print("📸 Processing Samsung Screenshots...")
         try:
             # REFACTOR: Use extracted utility classes
             config_manager = ConfigurationManager()
@@ -1743,7 +1743,7 @@ Examples:
                 return 1
             
             # Initialize CLI orchestrator
-            orchestrator = EveningScreenshotCLIOrchestrator(
+            orchestrator = ScreenshotCLIOrchestrator(
                 knowledge_path=str(base_dir),
                 onedrive_path=config["onedrive_path"]
             )
