@@ -118,7 +118,8 @@ class EveningScreenshotCLIOrchestrator:
     def _execute_processing(self, options: Dict[str, Any]) -> Dict[str, Any]:
         """Execute main processing command"""
         limit = options.get('limit')
-        result = self.processor.process_evening_batch(limit=limit)
+        force = options.get('force', False)
+        result = self.processor.process_evening_batch(limit=limit, force=force)
         return {
             "success": True,
             "result": result
@@ -381,7 +382,8 @@ class ConfigurationManager:
             'dry_run': getattr(args, 'dry_run', False),
             'progress': getattr(args, 'progress', False),
             'performance_metrics': getattr(args, 'performance_metrics', False),
-            'limit': getattr(args, 'limit', None)
+            'limit': getattr(args, 'limit', None),
+            'force': getattr(args, 'force', False)
         }
         
         # Validate OneDrive path

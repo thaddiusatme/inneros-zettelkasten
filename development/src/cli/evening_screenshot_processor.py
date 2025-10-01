@@ -37,8 +37,7 @@ from src.ai.llama_vision_ocr import VisionAnalysisResult
 from src.cli.evening_screenshot_utils import (
     OneDriveScreenshotDetector,
     ScreenshotOCRProcessor,
-    DailyNoteGenerator,
-    SafetyBackupManager
+    DailyNoteGenerator
 )
 from src.cli.screenshot_tracking import ProcessedScreenshotTracker
 from src.cli.individual_screenshot_utils import (
@@ -91,45 +90,70 @@ class EveningScreenshotProcessor:
         
         logger.info(f"Initialized EveningScreenshotProcessor for {knowledge_path}")
     
-    def scan_todays_screenshots(self, limit: Optional[int] = None) -> List[Path]:
+    def scan_todays_screenshots(self, limit: Optional[int] = None, force: bool = False) -> List[Path]:
         """
-        Scan OneDrive for today's Samsung screenshots
+        Scan OneDrive for recent Samsung screenshots (last 7 days)
         
         Args:
             limit: Optional limit on number of screenshots to return
-        
+            force: If True, include already-processed screenshots
+            
         Returns:
-            List of screenshot file paths from today
+            List of screenshot file paths to process
         """
-        return self.screenshot_detector.scan_todays_screenshots(limit=limit)
+        # Get all screenshots from last 7 days
+        all_screenshots = self.screenshot_detector.scan_todays_screenshots(limit=None)
+        
+        # Filter to unprocessed only (unless force=True)
+        unprocessed = self.tracker.filter_unprocessed(all_screenshots, force=force)
+        
+        # Apply limit if specified
+        if limit and limit > 0:
+            unprocessed = unprocessed[:limit]
+        
+        logger.info(f"Scan results: {len(all_screenshots)} total, {len(unprocessed)} unprocessed")
+        return unprocessed
     
-    def process_evening_batch(self, limit: Optional[int] = None) -> Dict[str, Any]:
+    def process_evening_batch(self, limit: Optional[int] = None, force: bool = False) -> Dict[str, Any]:
         """
-        Process evening batch of screenshots with OCR and daily note generation
+        Process batch of screenshots with OCR and daily note generation
         
         Args:
             limit: Optional limit on number of screenshots to process
+            force: If True, reprocess already-processed screenshots
         
         Returns:
             Processing results with counts, paths, and timing
         """
         start_time = datetime.now()
         
-        # Step 1: Create backup for safety
-        backup_path = self.safe_manager.create_evening_backup()
-        logger.info(f"Created evening backup: {backup_path}")
+        # Step 1: Scan screenshots (with tracking filter)
+        all_screenshots = self.screenshot_detector.scan_todays_screenshots(limit=None)
+        screenshots = self.scan_todays_screenshots(limit=limit, force=force)
+        
+        # Get tracking statistics
+        tracking_stats = self.tracker.get_statistics(all_screenshots)
+        
+        logger.info(f"Tracking stats: {tracking_stats['new_screenshots']} new, "
+                   f"{tracking_stats['already_processed']} already processed")
+        
+        print(f"\n📊 Screenshot Analysis:")
+        print(f"   Total available (last 7 days): {len(all_screenshots)}")
+        print(f"   Already processed: {tracking_stats['already_processed']}")
+        print(f"   New/unprocessed: {tracking_stats['new_screenshots']}")
+        print(f"   Selected for processing: {len(screenshots)}")
+        if force:
+            print(f"   ⚡ Force mode: Reprocessing all")
         
         try:
-            # Step 2: Scan today's screenshots
-            screenshots = self.scan_todays_screenshots(limit=limit)
-            logger.info(f"Found {len(screenshots)} screenshots for processing")
-            
             if not screenshots:
+                print("\n✅ No new screenshots to process!")
                 return {
                     'processed_count': 0,
                     'daily_note_path': None,
                     'processing_time': (datetime.now() - start_time).total_seconds(),
-                    'backup_path': backup_path
+                    'tracking_stats': tracking_stats,
+                    'skipped_count': tracking_stats['already_processed']
                 }
             
             # Step 3: Process screenshots with OCR
@@ -150,19 +174,24 @@ class EveningScreenshotProcessor:
             )
             logger.info(f"Generated daily note: {daily_note_path}")
             
-            # Step 5: Smart link integration
-            if daily_note_path:
-                suggested_links = []
-                for ocr_result in ocr_results.values():
-                    links = self.link_integrator.suggest_moc_connections(ocr_result)
-                    suggested_links.extend(links)
-                
-                if suggested_links:
-                    self.link_integrator.auto_insert_links(
-                        Path(daily_note_path), 
-                        suggested_links[:4]  # Limit to top 4 suggestions
-                    )
-                    logger.info(f"Inserted {len(suggested_links[:4])} smart links")
+            # Step 5: Mark screenshots as processed
+            for screenshot in screenshots:
+                self.tracker.mark_processed(screenshot, daily_note_path or "batch-note.md")
+            logger.info(f"Marked {len(screenshots)} screenshots as processed")
+            
+            # Step 6: Smart link integration (disabled - needs link_integrator)
+            # if daily_note_path:
+            #     suggested_links = []
+            #     for ocr_result in ocr_results.values():
+            #         links = self.link_integrator.suggest_moc_connections(ocr_result)
+            #         suggested_links.extend(links)
+            #     
+            #     if suggested_links:
+            #         self.link_integrator.auto_insert_links(
+            #             Path(daily_note_path), 
+            #             suggested_links[:4]  # Limit to top 4 suggestions
+            #         )
+            #         logger.info(f"Inserted {len(suggested_links[:4])} smart links")
             
             processing_time = (datetime.now() - start_time).total_seconds()
             
@@ -170,15 +199,13 @@ class EveningScreenshotProcessor:
                 'processed_count': len(screenshots),
                 'daily_note_path': daily_note_path,
                 'processing_time': processing_time,
-                'backup_path': backup_path,
-                'ocr_results': len(ocr_results),
-                'suggested_links': len(suggested_links) if 'suggested_links' in locals() else 0
+                'tracking_stats': tracking_stats,
+                'skipped_count': tracking_stats['already_processed'],
+                'ocr_results': len(ocr_results)
             }
             
         except Exception as e:
-            logger.error(f"Evening processing failed: {e}")
-            # Rollback on failure
-            self.safe_manager.rollback_from_backup(backup_path)
+            logger.error(f"Screenshot processing failed: {e}")
             raise
     
     def process_with_workflow_manager(self) -> Dict[str, Any]:
