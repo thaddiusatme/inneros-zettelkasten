@@ -1,9 +1,9 @@
 ---
 created: 2025-08-23 22:34
 tags: [80/20-analysis, audience-builder-gpt, business-productivity, content-calendar-consolidation,
-  decision-making, delegation, focus, freelance-marketing]
-quality_score: 0.8
-ai_processed: '2025-09-27T21:41:55.008613'
+  content-marketing, decision-making, delegation, entrepreneurship]
+quality_score: 0.85
+ai_processed: '2025-09-28T09:50:22.429941'
 ---
 # 80/20 analysis of your Kanban board
 

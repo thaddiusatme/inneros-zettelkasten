@@ -3,7 +3,7 @@ created: 2025-09-19 20:07
 type: fleeting
 status: inbox
 tags: [ai-enhancement, ai-enhancement-suggestions, capture, capture-session, capture-session-tracking,
-  device-detection, knowledge-capture, metadata]
+  device-detection, herearetheextractedrelevanttagssamsung-s23, knowledge-capture]
 source: capture
 quality_score: 0.75
 ai_tags:
@@ -15,7 +15,7 @@ time_gap_seconds: 15
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-22 22:24:15
-ai_processed: '2025-09-27T21:35:10.552609'
+ai_processed: '2025-09-28T09:44:14.207582'
 ---
 # Capture Summary
 

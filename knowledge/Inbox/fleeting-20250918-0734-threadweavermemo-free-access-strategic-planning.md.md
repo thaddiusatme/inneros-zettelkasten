@@ -4,10 +4,9 @@ type: fleeting
 status: inbox
 visibility: private
 tags: [automations, community-building, consult-calls, fleeting, founders-launch-access,
-  herearetheextractedrelevanttagsproduct-positioning, herearetheextractedtagsfounders-launch-access,
-  herearetheextractedtagsinkebab-caseformatproduct-positioning]
+  free-access, herearetheextractedrelevanttagsproduct-positioning, herearetheextractedtagsfounders-launch-access]
 quality_score: 0.85
-ai_processed: '2025-09-27T21:36:14.471567'
+ai_processed: '2025-09-28T09:45:17.466488'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

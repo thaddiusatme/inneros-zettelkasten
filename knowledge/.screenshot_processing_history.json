@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "processed_screenshots": {
+    "Screenshot_20250927_131418_Threads.jpg": {
+      "processed_at": "2025-09-30T20:53:14.276152",
+      "daily_note": "/Users/thaddius/repos/inneros-zettelkasten/knowledge/Inbox/daily-screenshots-2025-09-30.md",
+      "file_hash": "sha256:43aebbf6af771edf8f61d47ee1a5be5c318d1f5eccaef9c63695c3304517931e"
+    },
+    "Screenshot_20250927_083404_Threads.jpg": {
+      "processed_at": "2025-09-30T20:53:14.280380",
+      "daily_note": "/Users/thaddius/repos/inneros-zettelkasten/knowledge/Inbox/daily-screenshots-2025-09-30.md",
+      "file_hash": "sha256:02089acac69ad73116bb8736e8c8c689f7ffe76a305275eb434b5920a4240bd9"
+    },
+    "Screenshot_20250927_083322_Threads.jpg": {
+      "processed_at": "2025-09-30T20:54:31.403541",
+      "daily_note": "/Users/thaddius/repos/inneros-zettelkasten/knowledge/Inbox/daily-screenshots-2025-09-30.md",
+      "file_hash": "sha256:ba6eb5a324460865b29d5668e76950b9d54e75d0e604655e7eb66395f20e01e1"
+    },
+    "Screenshot_20250927_083303_Threads.jpg": {
+      "processed_at": "2025-09-30T20:54:31.404699",
+      "daily_note": "/Users/thaddius/repos/inneros-zettelkasten/knowledge/Inbox/daily-screenshots-2025-09-30.md",
+      "file_hash": "sha256:5363cd7188ac5a7ce8789c2b0a6233089f1be560d6448cfd8b6301380eb887c8"
+    },
+    "Screenshot_20250927_083236_Threads.jpg": {
+      "processed_at": "2025-09-30T20:56:56.885663",
+      "daily_note": "/Users/thaddius/repos/inneros-zettelkasten/knowledge/Inbox/daily-screenshots-2025-09-30.md",
+      "file_hash": "sha256:3f07feeab2dc7519945001b5ed159e0270b7b35a522bbc6ded5599d13a635563"
+    }
+  }
+}

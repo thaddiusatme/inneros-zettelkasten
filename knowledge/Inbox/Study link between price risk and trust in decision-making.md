@@ -1,14 +1,14 @@
 ---
 created: 2025-09-21 16:03
-tags: [afteranalyzingtheprovidedtext, andtheaffectheuristic3emotionsindecision-makingthetexthighlightstheroleofemotionsindecision-making,
+tags: [abehavioraleconomicsframeworkthatexplainshowpeoplemakedecisionsunderuncertainty7lossaversionthetextexploreslossaversion,
+  afteranalyzingtheprovidedtext, andtheaffectheuristic3emotionsindecision-makingthetexthighlightstheroleofemotionsindecision-making,
   andthetexthighlightstheirimportanceinshapingpurchasingdecisions5lossaversionthestudydiscusseslossaversion,
   areappliedtounderstandconsumerdecision-making10psychologypsychologicalconcepts,
   areappliedtounderstandconsumerdecision-makingprocesses10psychologypsychologicalconcepts,
   arediscussedasawaythatconsumerssimplifycomplexdecision-makingprocesses7cognitivebiasesthetexttouchesoncognitivebiases,
-  areexploredtoexplainconsumerbehavioranddecision-makingthesetagsprovideacomprehensiveoverviewofthetopicsdiscussedinthetext,
-  artificial-intelligence]
+  areexploredtoexplainconsumerbehavioranddecision-makingthesetagsprovideacomprehensiveoverviewofthetopicsdiscussedinthetext]
 quality_score: 0.8
-ai_processed: '2025-09-27T21:40:37.241297'
+ai_processed: '2025-09-28T09:49:09.014955'
 ---
 ## Executive Summary
 

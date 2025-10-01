@@ -5,7 +5,7 @@ status: inbox
 tags: [aienhancementsuggestions, android, android-devices, capture, capture-metadata,
   capture-session, capturesession, contentanalysischecklist]
 source: capture
-quality_score: 0.8
+quality_score: 0.75
 ai_tags:
 - capture
 - samsung-s23
@@ -15,7 +15,7 @@ capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-22 22:35:53
-ai_processed: '2025-09-27T21:38:22.637734'
+ai_processed: '2025-09-28T09:47:15.117443'
 ---
 # Screenshot Capture
 

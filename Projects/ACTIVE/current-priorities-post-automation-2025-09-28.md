@@ -12,11 +12,25 @@
 
 ### **P1: Advanced Feature Development**
 
-#### **1. Reading Intake Pipeline (Phase Extension)**
-- **Status**: Ready for implementation with proven automation foundation
-- **Goal**: Seamless article/book processing with claims/quotes extraction
-- **Timeline**: Next 2-3 weeks
-- **Dependencies**: None - automation infrastructure supports this extension
+#### **1. Visual Knowledge Capture System - POC (NEW PRIORITY)** 🔥
+- **Status**: Ready for immediate implementation - Samsung infrastructure 70% complete
+- **Goal**: Validate screenshot + voice note temporal pairing (±60s matching)
+- **Innovation**: Eliminates "capture graveyards" - transform 50+ weekly screenshots into connected knowledge
+- **Timeline**: 
+  - POC validation: 1 week (Oct 1-7)
+  - Go/No-Go decision: Oct 8
+  - Full system: 3-4 weeks if POC succeeds
+- **Foundation Complete**: Samsung Screenshot TDD Iterations 1-6 ✅
+  - OneDrive sync detection ✅
+  - Real OCR integration (LlamaVisionOCR) ✅
+  - Daily note generation ✅
+  - Smart linking integration ✅
+
+**Success Criteria (POC)**:
+- >90% accurate screenshot + voice note pairing
+- <2 minutes processing time per capture pair
+- Capture notes integrate with existing weekly review
+- Zero disruption to current automation
 
 #### **2. Enhanced Directory Organization**
 - **Status**: P0+P1 safety systems complete, ready for P2 enhancements
@@ -46,19 +60,23 @@
 - **Goal**: Advanced insights into knowledge network structure
 - **Features**: Cluster analysis, knowledge gaps detection, growth patterns
 
-## 📊 **Weekly Goals (Sept 30 - Oct 6)**
+## 📊 **Current Week Focus (Sept 30 - Oct 6)**
 
-### **Week 1 Focus: Reading Intake Pipeline**
-- Design TDD iteration for article processing
-- Implement claims/quotes extraction system
-- Test with real articles and books
-- Integrate with existing automation workflows
+### **Week 1: Visual Capture POC - TDD Iteration 1**
+1. **Create POC branch**: `feat/visual-capture-poc-tdd-1`
+2. **Voice note detection**: Scan OneDrive Voice Recorder folder
+3. **Temporal pairing algorithm**: Match screenshot + voice within ±60s
+4. **Capture note template**: Combined visual + audio context
+5. **Real-world validation**: Test with actual captures from this week
+6. **Metrics collection**: Pairing accuracy, processing time, user satisfaction
 
 ### **Success Metrics**
-- Articles automatically processed into structured notes
-- Claims and quotes properly extracted and linked
-- Integration with weekly review promotion workflows
-- <45s processing time for typical articles
+- Voice notes detected from OneDrive path ✅
+- Timestamp extraction from both file types ✅
+- >90% pairing accuracy on real data
+- Capture notes created with paired content
+- <2 minutes per capture pair processing
+- Weekly review integration confirmed
 
 ## 🏆 **Recently Completed (September 2025)**
 
@@ -97,4 +115,27 @@
 
 ---
 
-**InnerOS has transitioned from development phase to production optimization phase. The core automation infrastructure is complete and operational, enabling focus on advanced features and user experience enhancements.**
+## 📦 **Future Phases (After Visual Capture MVP)**
+
+### **Reading Intake Pipeline (Deferred)**
+- **Original Goal**: Browser bookmark imports, claims/quotes extraction from articles
+- **Status**: Deferred - actual workflow is screenshot-first, not bookmark-first
+- **Decision Point**: Revisit after Visual Capture proves 80% processing rate
+- **Timeline**: TBD based on Visual Capture success
+- **Reference**: `Projects/DEPRECATED/reading-intake-integration-analysis.md`
+
+### **Gamification Layer ("Mind Garden")**
+- **Vision**: Transform knowledge work into addictive visual game
+- **Status**: Strategic opportunity identified, implementation post-MVP
+- **Reference**: `Projects/ACTIVE/inneros-gamification-discovery-manifest.md`
+
+### **Multi-User/Enterprise Features**
+- **Vision**: Team collaboration, shared knowledge graphs
+- **Status**: Foundation laid, Phase 6 planning stage
+- **Timeline**: Q1 2026
+
+---
+
+**InnerOS has transitioned from development phase to production optimization phase. The core automation infrastructure is complete and operational. Next focus: Transform mobile screenshot captures into connected knowledge through Visual Capture System POC.**
+
+**Priority Shift (2025-09-29)**: Reading Intake Pipeline → Visual Capture System based on actual workflow analysis (50+ screenshots weekly vs. occasional bookmark saves).

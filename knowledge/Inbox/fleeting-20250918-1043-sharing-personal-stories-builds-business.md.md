@@ -4,10 +4,9 @@ type: permanent
 status: promoted
 visibility: private
 tags: [business-intimacy, decision-making-emotions, emotional-decision-making, emotional-intelligence,
-  emotional-marketing, herearetheextractedtagsbusiness-storytelling, herearetheextractedtagsstorytelling-in-business,
-  hero-journey-marketing]
+  emotional-marketing, emotional-resonance, hammer-point-style-media-reference, herearetheextractedtagsbusiness-storytelling]
 quality_score: 0.85
-ai_processed: '2025-09-27T21:35:47.181238'
+ai_processed: '2025-09-28T09:44:47.808915'
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:
 

@@ -15,7 +15,7 @@ capture_type: vision_enhanced
 ai_quality_score: 0.85
 ai_processing_method: llama-vision
 ai_processed_at: 2025-09-24 21:50:46
-ai_processed: '2025-09-27T21:41:16.435691'
+ai_processed: '2025-09-28T09:49:47.397713'
 ---
 
 
