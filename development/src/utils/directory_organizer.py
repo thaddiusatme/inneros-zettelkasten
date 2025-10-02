@@ -51,7 +51,14 @@ import re
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Set, Tuple
+from typing import List, Dict, Any, Set, Tuple, Optional
+
+# Image linking system integration
+try:
+    from .image_link_manager import ImageLinkManager
+    IMAGE_LINK_SUPPORT = True
+except ImportError:
+    IMAGE_LINK_SUPPORT = False
 
 
 class BackupError(Exception):
@@ -163,6 +170,15 @@ class DirectoryOrganizer:
         
         # Setup logging
         self.logger = logging.getLogger(f"{__name__}.DirectoryOrganizer")
+        
+        # Image linking system integration (TDD Iteration 10)
+        self.image_manager: Optional['ImageLinkManager'] = None
+        if IMAGE_LINK_SUPPORT:
+            try:
+                self.image_manager = ImageLinkManager(base_path=self.vault_root)
+                self.logger.info("Image link preservation enabled")
+            except Exception as e:
+                self.logger.warning(f"Could not initialize image link manager: {e}")
         
         # P0 Guardrail: Prevent recursive backup nesting
         self._validate_backup_path_not_nested()
@@ -559,6 +575,19 @@ class DirectoryOrganizer:
                 # Perform the move with enhanced logging
                 self.logger.info(f"Move {i}/{total_moves}: {move.source.name} → {move.target.parent.name}/")
                 self.logger.debug(f"Full path: {move.source} → {move.target}")
+                
+                # TDD Iteration 10: Preserve image links before move
+                if self.image_manager and move.source.suffix == '.md':
+                    try:
+                        content = move.source.read_text(encoding='utf-8')
+                        updated_content = self.image_manager.update_image_links_for_move(
+                            content, move.source, move.target
+                        )
+                        move.source.write_text(updated_content, encoding='utf-8')
+                        self.logger.debug(f"Updated image links for: {move.source.name}")
+                    except Exception as img_error:
+                        self.logger.warning(f"Could not update image links in {move.source}: {img_error}")
+                        # Continue with move even if image link update fails
                 
                 try:
                     shutil.move(str(move.source), str(move.target))
