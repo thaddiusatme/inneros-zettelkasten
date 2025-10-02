@@ -114,16 +114,80 @@ class ScreenshotProcessor:
         logger.info(f"Scan results: {len(all_screenshots)} total, {len(unprocessed)} unprocessed")
         return unprocessed
     
+    def _generate_individual_notes(self, screenshots: List[Path], ocr_results: Dict[str, Any]) -> List[str]:
+        """
+        Generate individual note files for each screenshot (TDD Iteration 8)
+        
+        Args:
+            screenshots: List of screenshot paths to process
+            ocr_results: Dictionary mapping screenshot paths to OCR results
+            
+        Returns:
+            List of created note file paths
+        """
+        print(f"\n📝 Creating {len(screenshots)} individual notes...")
+        individual_note_paths = []
+        success_count = 0
+        failure_count = 0
+        
+        for i, screenshot in enumerate(screenshots, 1):
+            screenshot_key = str(screenshot)
+            ocr_result = ocr_results.get(screenshot_key)
+            
+            if ocr_result:
+                try:
+                    # Generate individual note using orchestrator
+                    note_path = self.individual_orchestrator.process_single_screenshot(
+                        screenshot=screenshot,
+                        ocr_result=ocr_result
+                    )
+                    individual_note_paths.append(note_path)
+                    
+                    # Mark screenshot as processed with individual note path
+                    self.tracker.mark_processed(screenshot, note_path)
+                    
+                    success_count += 1
+                    print(f"   [{i}/{len(screenshots)}] ✅ Created: {Path(note_path).name}")
+                    logger.debug(f"Successfully created individual note: {note_path}")
+                    
+                except Exception as e:
+                    failure_count += 1
+                    logger.error(f"Failed to create note for {screenshot.name}: {e}", exc_info=True)
+                    print(f"   [{i}/{len(screenshots)}] ❌ Failed: {screenshot.name}")
+            else:
+                failure_count += 1
+                logger.warning(f"No OCR result for {screenshot.name}, skipping")
+                print(f"   [{i}/{len(screenshots)}] ⚠️  Skipped: {screenshot.name} (no OCR result)")
+        
+        # Summary logging
+        logger.info(
+            f"Individual note generation complete: "
+            f"{success_count} created, {failure_count} failed/skipped, "
+            f"total: {len(screenshots)}"
+        )
+        
+        return individual_note_paths
+    
     def process_batch(self, limit: Optional[int] = None, force: bool = False) -> Dict[str, Any]:
         """
-        Process batch of screenshots with OCR and daily note generation
+        Process batch of screenshots with OCR and individual note generation (TDD Iteration 8)
+        
+        Creates one individual note file per screenshot with semantic filenames.
+        Each note is tracked separately and contains rich context from OCR analysis.
         
         Args:
             limit: Optional limit on number of screenshots to process
             force: If True, reprocess already-processed screenshots
         
         Returns:
-            Processing results with counts, paths, and timing
+            Dict containing:
+                - processed_count: Number of screenshots processed
+                - individual_note_paths: List of created note file paths
+                - daily_note_path: None (deprecated - use individual_note_paths)
+                - processing_time: Total processing time in seconds
+                - tracking_stats: Statistics from screenshot tracker
+                - skipped_count: Number of already-processed screenshots
+                - ocr_results: Number of OCR results generated
         """
         start_time = datetime.now()
         
@@ -165,19 +229,8 @@ class ScreenshotProcessor:
             ocr_results = self.ocr_processor.process_batch(screenshots, progress_callback=progress_callback)
             logger.info(f"Completed OCR processing for {len(ocr_results)} screenshots")
             
-            # Step 4: Generate daily note
-            today_str = date.today().strftime("%Y-%m-%d")
-            daily_note_path = self.note_generator.generate_daily_note(
-                ocr_results=list(ocr_results.values()),
-                screenshot_paths=[str(p) for p in screenshots],
-                date_str=today_str
-            )
-            logger.info(f"Generated daily note: {daily_note_path}")
-            
-            # Step 5: Mark screenshots as processed
-            for screenshot in screenshots:
-                self.tracker.mark_processed(screenshot, daily_note_path or "batch-note.md")
-            logger.info(f"Marked {len(screenshots)} screenshots as processed")
+            # Step 4: Generate individual notes (TDD Iteration 8)
+            individual_note_paths = self._generate_individual_notes(screenshots, ocr_results)
             
             # Step 6: Smart link integration (disabled - needs link_integrator)
             # if daily_note_path:
@@ -197,7 +250,8 @@ class ScreenshotProcessor:
             
             return {
                 'processed_count': len(screenshots),
-                'daily_note_path': daily_note_path,
+                'individual_note_paths': individual_note_paths,
+                'daily_note_path': None,  # Deprecated - use individual_note_paths
                 'processing_time': processing_time,
                 'tracking_stats': tracking_stats,
                 'skipped_count': tracking_stats['already_processed'],

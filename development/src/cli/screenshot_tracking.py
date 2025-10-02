@@ -98,15 +98,16 @@ class ProcessedScreenshotTracker:
         
         Args:
             screenshot_path: Path to screenshot file
-            daily_note: Name of generated daily note
+            daily_note: Name of generated note (daily note or individual note path)
         """
         with FileLock(self.lock_file):
             history = self._load_history()
             
-            # Add entry
+            # Add entry with both keys for backward compatibility
             history['processed_screenshots'][screenshot_path.name] = {
                 "processed_at": datetime.now().isoformat(),
-                "daily_note": daily_note,
+                "note_path": daily_note,  # New key (TDD Iteration 8)
+                "daily_note": daily_note,  # Legacy key (backward compatibility)
                 "file_hash": self._compute_file_hash(screenshot_path)
             }
             

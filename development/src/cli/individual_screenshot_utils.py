@@ -430,6 +430,72 @@ class IndividualProcessingOrchestrator:
         self.context_analyzer = RichContextAnalyzer()
         self.template_renderer = TemplateNoteRenderer()
     
+    def _extract_timestamp_from_filename(self, screenshot: Path) -> str:
+        """
+        Extract timestamp from Samsung screenshot filename
+        
+        Args:
+            screenshot: Path to screenshot file (format: Screenshot_YYYYMMDD_HHMMSS_AppName.jpg)
+            
+        Returns:
+            Timestamp string in YYYYMMDD-HHMM format
+        """
+        try:
+            # Parse Samsung filename: Screenshot_YYYYMMDD_HHMMSS_AppName.jpg
+            parts = screenshot.stem.split('_')
+            if len(parts) >= 3:
+                date_part = parts[1]  # YYYYMMDD
+                time_part = parts[2]  # HHMMSS
+                # Format as YYYYMMDD-HHMM (drop seconds for cleaner filenames)
+                return f"{date_part}-{time_part[:4]}"
+        except Exception as e:
+            logger.warning(f"Could not extract timestamp from {screenshot.name}: {e}")
+        
+        # Fallback to current time
+        return datetime.now().strftime("%Y%m%d-%H%M")
+    
+    def process_single_screenshot(self, screenshot: Path, ocr_result: VisionAnalysisResult) -> str:
+        """
+        Process a single screenshot into an individual note file
+        
+        Args:
+            screenshot: Path to screenshot file
+            ocr_result: OCR analysis result for this screenshot
+            
+        Returns:
+            Path to created note file
+        """
+        try:
+            # Extract timestamp from Samsung screenshot filename for uniqueness
+            # Format: Screenshot_YYYYMMDD_HHMMSS_AppName.jpg
+            timestamp = self._extract_timestamp_from_filename(screenshot)
+            
+            filename = self.filename_generator.generate_contextual_filename(
+                screenshot, ocr_result, timestamp
+            )
+            
+            # Create individual note path
+            note_path = self.knowledge_path / "Inbox" / filename
+            
+            # Generate rich context analysis
+            rich_context = self.context_analyzer.analyze_screenshot_with_rich_context(screenshot)
+            
+            # Generate template-based note content
+            note_content = self.template_renderer.generate_template_based_note_content(
+                screenshot, rich_context, filename
+            )
+            
+            # Write individual note
+            with open(note_path, 'w') as f:
+                f.write(note_content)
+            
+            logger.info(f"Created individual note: {note_path}")
+            return str(note_path)
+            
+        except Exception as e:
+            logger.error(f"Failed to create individual note for {screenshot}: {e}")
+            raise
+    
     def process_screenshots_individually_optimized(self, screenshots: List[Path]) -> Dict[str, Any]:
         """
         Process screenshots with optimized individual file generation
