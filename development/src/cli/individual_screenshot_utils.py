@@ -240,18 +240,24 @@ class RichContextAnalyzer:
         # Description keywords for filename generation
         description_keywords = key_topics[:3] if key_topics else ["visual", "content", "capture"]
         
-        # Device metadata extraction from Samsung naming pattern
-        device_metadata = {
-            'device_type': 'Samsung Galaxy S23',
-            'app_name': 'Unknown'
-        }
-        
-        # Extract app name from Samsung screenshot naming pattern
-        if '_' in screenshot_path.name:
-            parts = screenshot_path.name.split('_')
-            if len(parts) > 3:
-                app_name = parts[3].replace('.jpg', '').replace('.png', '')
-                device_metadata['app_name'] = app_name
+        # Device metadata extraction - prioritize from OCR result if available (TDD Iteration 9)
+        if vision_result and hasattr(vision_result, 'device_metadata'):
+            # Multi-device mode: Use metadata from MultiDeviceDetector
+            device_metadata = vision_result.device_metadata.copy()
+        else:
+            # Legacy mode: Extract from Samsung naming pattern
+            device_metadata = {
+                'device_type': 'samsung_s23',
+                'device_name': 'Samsung Galaxy S23',
+                'app_name': 'Unknown'
+            }
+            
+            # Extract app name from Samsung screenshot naming pattern
+            if '_' in screenshot_path.name:
+                parts = screenshot_path.name.split('_')
+                if len(parts) > 3:
+                    app_name = parts[3].replace('.jpg', '').replace('.png', '')
+                    device_metadata['app_name'] = app_name
         
         # Capture context
         capture_context = {
@@ -350,8 +356,9 @@ class TemplateNoteRenderer:
         """
         # Extract components for template
         timestamp = rich_context['capture_context']['timestamp']
-        app_name = rich_context['device_metadata']['app_name']
+        app_name = rich_context['device_metadata'].get('app_name', 'Unknown')
         device_type = rich_context['device_metadata']['device_type']
+        device_name = rich_context['device_metadata'].get('device_name', 'Unknown Device')
         
         # Generate YAML frontmatter
         frontmatter = f"""---
@@ -360,6 +367,7 @@ status: inbox
 created: {timestamp}
 tags: [screenshot, visual-capture, {app_name.lower()}, individual-processing]
 device_type: {device_type}
+device_name: {device_name}
 app_name: {app_name}
 processing_mode: individual
 screenshot_source: {screenshot_path.name}

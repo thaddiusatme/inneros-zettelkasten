@@ -47,6 +47,7 @@ from src.cli.individual_screenshot_utils import (
     IndividualProcessingOrchestrator,
     SmartLinkIntegrator as IndividualSmartLinkIntegrator
 )
+from src.cli.multi_device_detector import MultiDeviceDetector, DeviceType
 
 logger = logging.getLogger(__name__)
 
@@ -59,23 +60,45 @@ class ScreenshotProcessor:
     following established TDD patterns from Smart Link Management system.
     """
     
-    def __init__(self, onedrive_path: str, knowledge_path: str):
+    def __init__(self, onedrive_path: Optional[str] = None, knowledge_path: str = None, 
+                 device_paths: Optional[List[str]] = None):
         """
-        Initialize Evening Screenshot Processor
+        Initialize Evening Screenshot Processor with multi-device support
+        
+        Supports two modes:
+        1. Legacy mode: Single onedrive_path (backwards compatible)
+        2. Multi-device mode: device_paths list (TDD Iteration 9)
         
         Args:
-            onedrive_path: Path to OneDrive Samsung Screenshots directory
+            onedrive_path: (Legacy) Path to OneDrive Samsung Screenshots directory
             knowledge_path: Path to knowledge base root directory
+            device_paths: (New) List of device screenshot paths for multi-device processing
         """
-        self.onedrive_path = Path(onedrive_path)
         self.knowledge_path = Path(knowledge_path)
         
-        # Initialize utility components
-        self.screenshot_detector = OneDriveScreenshotDetector(onedrive_path)
+        # TDD Iteration 9: Multi-device support
+        if device_paths:
+            # Multi-device mode
+            self.device_paths = [Path(p) for p in device_paths]
+            self.multi_device_mode = True
+            self.multi_device_detector = MultiDeviceDetector()
+            # Legacy single path for backwards compatibility
+            self.onedrive_path = self.device_paths[0] if self.device_paths else None
+        else:
+            # Legacy single-device mode
+            self.onedrive_path = Path(onedrive_path) if onedrive_path else None
+            self.device_paths = [self.onedrive_path] if self.onedrive_path else []
+            self.multi_device_mode = False
+            self.multi_device_detector = None
+        
+        # Initialize utility components (legacy)
+        if self.onedrive_path:
+            self.screenshot_detector = OneDriveScreenshotDetector(str(self.onedrive_path))
+        else:
+            self.screenshot_detector = None
+            
         self.ocr_processor = ScreenshotOCRProcessor()
         self.note_generator = DailyNoteGenerator(knowledge_path)
-        #self.link_integrator = SmartLinkIntegrator(knowledge_path)  # TODO: Fix import
-        #self.safe_manager = SafeScreenshotManager(knowledge_path)  # TODO: Fix import
         
         # Initialize TDD Iteration 7: Screenshot tracking
         tracking_file = Path(knowledge_path) / ".screenshot_processing_history.json"
@@ -88,7 +111,8 @@ class ScreenshotProcessor:
         self.individual_orchestrator = IndividualProcessingOrchestrator(self.knowledge_path)
         self.individual_link_integrator = IndividualSmartLinkIntegrator()
         
-        logger.info(f"Initialized ScreenshotProcessor for {knowledge_path}")
+        mode = "multi-device" if self.multi_device_mode else "single-device"
+        logger.info(f"Initialized ScreenshotProcessor in {mode} mode for {knowledge_path}")
     
     def scan_todays_screenshots(self, limit: Optional[int] = None, force: bool = False) -> List[Path]:
         """
@@ -113,6 +137,159 @@ class ScreenshotProcessor:
         
         logger.info(f"Scan results: {len(all_screenshots)} total, {len(unprocessed)} unprocessed")
         return unprocessed
+    
+    def scan_multi_device_screenshots(self, sort_by_timestamp: bool = False) -> List[Path]:
+        """
+        Scan multiple device paths for screenshots (TDD Iteration 9)
+        
+        Args:
+            sort_by_timestamp: If True, sort screenshots by timestamp (oldest first)
+            
+        Returns:
+            List of screenshot file paths from all configured devices
+        """
+        if not self.multi_device_mode:
+            logger.warning("scan_multi_device_screenshots called in single-device mode")
+            return []
+        
+        all_screenshots = []
+        
+        for device_path in self.device_paths:
+            if not device_path.exists():
+                logger.warning(f"Device path does not exist: {device_path}")
+                continue
+            
+            # Scan for screenshots - handle both flat and nested structures
+            screenshots = list(device_path.rglob("*.jpg")) + list(device_path.rglob("*.png"))
+            
+            # Filter to valid device screenshots using MultiDeviceDetector
+            for screenshot in screenshots:
+                device_type = self.multi_device_detector.detect_device(screenshot)
+                if device_type != DeviceType.UNKNOWN:
+                    all_screenshots.append(screenshot)
+                    logger.debug(f"Found {device_type.value} screenshot: {screenshot.name}")
+        
+        # Sort by timestamp if requested
+        if sort_by_timestamp:
+            screenshots_with_timestamps = []
+            for screenshot in all_screenshots:
+                timestamp = self.multi_device_detector.extract_timestamp(screenshot)
+                if timestamp:
+                    screenshots_with_timestamps.append((screenshot, timestamp))
+            
+            # Sort by timestamp (oldest first)
+            screenshots_with_timestamps.sort(key=lambda x: x[1])
+            all_screenshots = [s[0] for s in screenshots_with_timestamps]
+        
+        logger.info(f"Found {len(all_screenshots)} screenshots across {len(self.device_paths)} device paths")
+        return all_screenshots
+    
+    def scan_with_device_metadata(self) -> List[Dict[str, Any]]:
+        """
+        Scan screenshots and return with device metadata (TDD Iteration 9)
+        
+        Returns:
+            List of dictionaries with screenshot path and device metadata
+        """
+        if not self.multi_device_mode:
+            logger.warning("scan_with_device_metadata called in single-device mode")
+            return []
+        
+        screenshots = self.scan_multi_device_screenshots(sort_by_timestamp=True)
+        screenshot_metadata = []
+        
+        for screenshot in screenshots:
+            metadata = self.multi_device_detector.extract_metadata(screenshot)
+            metadata['screenshot_path'] = str(screenshot)
+            screenshot_metadata.append(metadata)
+        
+        return screenshot_metadata
+    
+    def process_multi_device_batch(self, limit: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Process multi-device screenshot batch with unified OCR pipeline (TDD Iteration 9)
+        
+        Creates individual notes for each screenshot with device metadata in frontmatter.
+        
+        Args:
+            limit: Optional limit on number of screenshots to process
+            
+        Returns:
+            Dict containing:
+                - processed_count: Number of screenshots processed
+                - individual_note_paths: List of created note file paths
+                - ocr_results: Number of OCR results generated
+                - processing_time: Total processing time in seconds
+                - device_breakdown: Count per device type
+        """
+        start_time = datetime.now()
+        
+        if not self.multi_device_mode:
+            logger.error("process_multi_device_batch called in single-device mode")
+            return {'processed_count': 0, 'error': 'Not in multi-device mode'}
+        
+        # Step 1: Scan all device screenshots with metadata
+        screenshot_metadata_list = self.scan_with_device_metadata()
+        
+        if limit and limit > 0:
+            screenshot_metadata_list = screenshot_metadata_list[:limit]
+        
+        screenshots = [Path(m['screenshot_path']) for m in screenshot_metadata_list]
+        
+        print(f"\n📊 Multi-Device Screenshot Analysis:")
+        print(f"   Total screenshots found: {len(screenshots)}")
+        
+        # Device breakdown
+        device_counts = {}
+        for metadata in screenshot_metadata_list:
+            device_name = metadata.get('device_name', 'Unknown')
+            device_counts[device_name] = device_counts.get(device_name, 0) + 1
+        
+        for device, count in device_counts.items():
+            print(f"   {device}: {count} screenshots")
+        
+        if not screenshots:
+            print("\n✅ No screenshots to process!")
+            return {
+                'processed_count': 0,
+                'individual_note_paths': [],
+                'ocr_results': 0,
+                'processing_time': 0,
+                'device_breakdown': device_counts
+            }
+        
+        # Step 2: Process screenshots with OCR
+        print(f"\n🔍 Processing {len(screenshots)} screenshots with AI OCR...")
+        
+        def progress_callback(current, total, filename):
+            print(f"   [{current}/{total}] 🤖 Analyzing: {filename}")
+        
+        ocr_results = self.ocr_processor.process_batch(screenshots, progress_callback=progress_callback)
+        logger.info(f"Completed OCR processing for {len(ocr_results)} screenshots")
+        
+        # Step 3: Enrich OCR results with device metadata
+        enriched_ocr_results = {}
+        for screenshot, metadata in zip(screenshots, screenshot_metadata_list):
+            screenshot_key = str(screenshot)
+            if screenshot_key in ocr_results:
+                ocr_result = ocr_results[screenshot_key]
+                # Attach device metadata to OCR result
+                if not hasattr(ocr_result, 'device_metadata'):
+                    ocr_result.device_metadata = metadata
+                enriched_ocr_results[screenshot_key] = ocr_result
+        
+        # Step 4: Generate individual notes with device metadata
+        individual_note_paths = self._generate_individual_notes(screenshots, enriched_ocr_results)
+        
+        processing_time = (datetime.now() - start_time).total_seconds()
+        
+        return {
+            'processed_count': len(screenshots),
+            'individual_note_paths': individual_note_paths,
+            'ocr_results': len(enriched_ocr_results),
+            'processing_time': processing_time,
+            'device_breakdown': device_counts
+        }
     
     def _generate_individual_notes(self, screenshots: List[Path], ocr_results: Dict[str, Any]) -> List[str]:
         """
