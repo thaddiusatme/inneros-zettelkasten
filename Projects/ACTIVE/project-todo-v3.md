@@ -1,12 +1,19 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-09-22 20:38 PDT  
-**Status**: ✅ MAJOR SYSTEMS COMPLETE → Knowledge Capture POC Ready  
+**Last Updated**: 2025-10-01 19:40 PDT  
+**Status**: ✅ TDD Iteration 8 Complete → Multi-Device Support Ready  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
 
 ## ✅ Recently Completed Major Systems
+
+### ✅ TDD Iteration 8: Individual Screenshot Files (Oct 2025)
+
+- Individual file generation per screenshot (vs daily batch notes)
+- Semantic filenames: `capture-YYYYMMDD-HHMM-keywords.md`
+- Real data validation: 3 Samsung S23 screenshots processed
+- 6/6 tests passing, performance: 96s per screenshot (real OCR)
 
 ### ✅ Fleeting Note Lifecycle Management MVP (Phase 5.6)
 
@@ -30,7 +37,21 @@
 
 ## 🎯 Active Projects (RESCOPED)
 
-### 🔴 Knowledge Capture System - POC PHASE (HIGHEST PRIORITY)
+### 🔴 TDD Iteration 9: Multi-Device Screenshot Support (HIGHEST PRIORITY)
+
+- **Goal**: Extend Samsung S23 processing to support iPad screenshots in unified workflow
+- **Status**: 📋 MANIFEST COMPLETE → Ready for implementation
+- **Approach**: TDD methodology (RED → GREEN → REFACTOR → COMMIT)
+- **Deliverables**:
+  - **Manifest**: `Projects/ACTIVE/multi-device-screenshot-support-tdd-iteration-9-manifest.md` ✅
+  - Device detection system (Samsung S23 + iPad patterns)
+  - Multi-device scanner with unified processing
+  - 10+ comprehensive tests (device detection, timestamp extraction, integration)
+  - Real data validation: Samsung + iPad screenshots
+- **Timeline**: 3 days (1 RED, 1 GREEN, 1 REFACTOR/COMMIT)
+- **Volume**: Samsung (1,476) + iPad (26) = 1,502 total screenshots
+
+### 🟡 Knowledge Capture System - POC PHASE
 
 - **Goal**: Transform mobile screenshots + voice notes into connected Zettelkasten knowledge
 - **Innovation**: Temporal pairing of screenshot + voice context eliminates annotation burden
