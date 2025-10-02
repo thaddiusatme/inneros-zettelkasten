@@ -1,12 +1,20 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-01 19:40 PDT  
-**Status**: ✅ TDD Iteration 8 Complete → Multi-Device Support Ready  
+**Last Updated**: 2025-10-02 07:57 PDT  
+**Status**: ✅ TDD Iteration 9 Complete → Image Linking System Priority  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
 
 ## ✅ Recently Completed Major Systems
+
+### ✅ TDD Iteration 9: Multi-Device Screenshot Support (Oct 2025)
+
+- Samsung S23 + iPad unified processing pipeline
+- 31/31 tests passing (11 unit + 6 integration + real data)
+- Device-aware metadata in note frontmatter
+- Zero regressions, 100% real data validation
+- Volume: 1,502 total screenshots (Samsung 1,476 + iPad 26)
 
 ### ✅ TDD Iteration 8: Individual Screenshot Files (Oct 2025)
 
@@ -37,19 +45,18 @@
 
 ## 🎯 Active Projects (RESCOPED)
 
-### 🔴 TDD Iteration 9: Multi-Device Screenshot Support (HIGHEST PRIORITY)
+### 🔴 Image Linking System (HIGHEST PRIORITY - System Integrity)
 
-- **Goal**: Extend Samsung S23 processing to support iPad screenshots in unified workflow
-- **Status**: 📋 MANIFEST COMPLETE → Ready for implementation
-- **Approach**: TDD methodology (RED → GREEN → REFACTOR → COMMIT)
+- **Problem**: Images disappear during AI automation processes
+- **Impact**: Critical system integrity issue affecting media preservation
+- **Goal**: Preserve media assets and references through all workflows
+- **Status**: 📋 Ready for TDD implementation
 - **Deliverables**:
-  - **Manifest**: `Projects/ACTIVE/multi-device-screenshot-support-tdd-iteration-9-manifest.md` ✅
-  - Device detection system (Samsung S23 + iPad patterns)
-  - Multi-device scanner with unified processing
-  - 10+ comprehensive tests (device detection, timestamp extraction, integration)
-  - Real data validation: Samsung + iPad screenshots
-- **Timeline**: 3 days (1 RED, 1 GREEN, 1 REFACTOR/COMMIT)
-- **Volume**: Samsung (1,476) + iPad (26) = 1,502 total screenshots
+  - Media reference audit + comprehensive test coverage
+  - Link rewriting/preservation strategy
+  - Integration into WorkflowManager operations
+  - Integration with DirectoryOrganizer for safe file moves
+  - **Manifest**: `Projects/ACTIVE/image-linking-system-bug-fix-manifest.md` ✅
 
 ### 🟡 Knowledge Capture System - POC PHASE
 
@@ -75,15 +82,6 @@
   - Automated maintenance tasks (weekly review, orphan detection)
   - **Manifest**: `Projects/automated-background-daemon-manifest.md` ✅
 
-### 🔴 Image Linking System (System Integrity)
-
-- **Problem**: Images disappear during AI automation processes
-- **Goal**: Preserve media assets and references through all workflows
-- **Deliverables**:
-  - Media reference audit + test coverage
-  - Link rewriting/preservation strategy
-  - Integration into WorkflowManager operations
-
 ### 📚 Reading Intake Pipeline (Phase 5 Extension)
 
 - **Approach**: Integration-first; reuse Phase 5 AI workflows
@@ -94,35 +92,47 @@
   - CLI import adapters + triage
   - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
 
--
+---
+
 ## 🛣️ Next 2 Weeks Roadmap
 
-1. **Smart Link Management — Iteration 6 (Undo & Bidirectional)** (Priority 1)
+1. **Image Linking System** (Priority 1 - CRITICAL) 🔴
+   - [ ] Create branch: `feat/image-linking-system-tdd-10`
+   - [ ] Media reference audit across all workflows
+   - [ ] Formalize link model (paths, IDs, fallback strategies)
+   - [ ] Add comprehensive tests: copy/move/update scenarios
+   - [ ] Implement preservation + rewriting logic
+   - [ ] Integrate with DirectoryOrganizer and WorkflowManager
+   - [ ] Real data validation with existing notes containing images
+
+2. **Knowledge Capture System - POC** (Priority 2) 🔥
+   - [ ] Create branch: `feat/visual-capture-poc-tdd-1`
+   - [ ] Voice note detection from OneDrive
+   - [ ] Screenshot + voice temporal pairing (±60s)
+   - [ ] Combined capture note template
+   - [ ] 1-week real-world validation
+   - [ ] Go/No-Go decision based on >90% pairing accuracy
+
+3. **Smart Link Management — Iteration 6** (Priority 3)
    - [ ] Create branch: `feat/smart-link-management-undo-tdd-6`
    - [ ] Add failing tests for `UndoManager` and CLI `--undo`
    - [ ] Implement minimal undo stack with backup integration
    - [ ] Plan bidirectional link consistency and atomic operations
 
-2. **Automated Background Daemon** (Priority 2)
+4. **Automated Background Daemon** (Priority 4)
    - [ ] Extract AutoProcessor into daemon controller
    - [ ] Add APScheduler for automated maintenance tasks
    - [ ] Create daemon control CLI (`inneros daemon --start/stop/status`)
    - [ ] Design macOS LaunchD service configuration
    - [ ] Test background processing and scheduling
 
-3. **Image Linking System** (Priority 3)
-   - [ ] Formalize link model (paths, IDs, fallback)
-   - [ ] Add tests: copy/move/update scenarios
-   - [ ] Implement preservation + rewriting
-   - [ ] Integrate with directory organizer and AI workflows
-
-4. **Reading Intake Pipeline** (Priority 4)
+5. **Reading Intake Pipeline** (Priority 5)
    - [ ] Extend YAML validator for `source:` and `saved_at`
    - [ ] Add literature templates + import adapters (CSV/JSON, bookmarks)
    - [ ] CLI: `--import-bookmarks`, `--process-literature`
    - [ ] Performance: <30s per item triage
 
-4. **Phase 6 Preparation** (Background)
+6. **Phase 6 Preparation** (Background)
    - [ ] Define multi-user data model and permissions
    - [ ] API surface (read-only) and events design
    - [ ] UI scaffolding plan (analytics dashboard)
