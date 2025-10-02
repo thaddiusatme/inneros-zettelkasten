@@ -48,6 +48,7 @@ from src.cli.individual_screenshot_utils import (
     SmartLinkIntegrator as IndividualSmartLinkIntegrator
 )
 from src.cli.multi_device_detector import MultiDeviceDetector, DeviceType
+from src.utils.image_attachment_manager import ImageAttachmentManager
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,9 @@ class ScreenshotProcessor:
         self.template_renderer = TemplateNoteRenderer()
         self.individual_orchestrator = IndividualProcessingOrchestrator(self.knowledge_path)
         self.individual_link_integrator = IndividualSmartLinkIntegrator()
+        
+        # TDD Iteration 11: Centralized image storage
+        self.image_manager = ImageAttachmentManager(self.knowledge_path)
         
         mode = "multi-device" if self.multi_device_mode else "single-device"
         logger.info(f"Initialized ScreenshotProcessor in {mode} mode for {knowledge_path}")
@@ -295,6 +299,9 @@ class ScreenshotProcessor:
         """
         Generate individual note files for each screenshot (TDD Iteration 8)
         
+        TDD Iteration 11: Now centralizes screenshots to attachments/YYYY-MM/ before note generation
+        and cleans up original OneDrive files after successful processing.
+        
         Args:
             screenshots: List of screenshot paths to process
             ocr_results: Dictionary mapping screenshot paths to OCR results
@@ -313,15 +320,26 @@ class ScreenshotProcessor:
             
             if ocr_result:
                 try:
-                    # Generate individual note using orchestrator
+                    # TDD Iteration 11: Centralize screenshot before note generation
+                    centralized_path = self.image_manager.save_to_attachments(screenshot)
+                    logger.info(f"Centralized screenshot: {screenshot.name} → {centralized_path}")
+                    
+                    # Generate individual note using centralized path
                     note_path = self.individual_orchestrator.process_single_screenshot(
-                        screenshot=screenshot,
+                        screenshot=centralized_path,
                         ocr_result=ocr_result
                     )
                     individual_note_paths.append(note_path)
                     
                     # Mark screenshot as processed with individual note path
                     self.tracker.mark_processed(screenshot, note_path)
+                    
+                    # TDD Iteration 11: Clean up original OneDrive file after successful centralization
+                    try:
+                        screenshot.unlink()
+                        logger.info(f"Cleaned up original OneDrive screenshot: {screenshot}")
+                    except Exception as cleanup_error:
+                        logger.warning(f"Could not delete original screenshot {screenshot}: {cleanup_error}")
                     
                     success_count += 1
                     print(f"   [{i}/{len(screenshots)}] ✅ Created: {Path(note_path).name}")

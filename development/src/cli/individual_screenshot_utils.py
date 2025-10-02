@@ -340,6 +340,8 @@ class TemplateNoteRenderer:
     
     Generates comprehensive note content with YAML frontmatter and
     structured sections following capture-* format standards.
+    
+    TDD Iteration 11: Updated to use relative paths for centralized attachments.
     """
     
     def generate_template_based_note_content(self, screenshot_path: Path, rich_context: Dict[str, Any], filename: str) -> str:
@@ -379,11 +381,27 @@ screenshot_source: {screenshot_path.name}
         title_base = filename.replace('capture-', '').replace('.md', '').replace('-', ' ').title()
         title = f"# {title_base}"
         
+        # TDD Iteration 11: Calculate relative path from Inbox/ to centralized attachments/
+        # If screenshot is in attachments/, use relative path; otherwise use absolute path
+        if 'attachments' in str(screenshot_path):
+            # Extract the attachments/YYYY-MM/filename.jpg portion
+            parts = screenshot_path.parts
+            if 'attachments' in parts:
+                attachments_index = parts.index('attachments')
+                relative_parts = parts[attachments_index:]
+                image_reference = '../' + '/'.join(relative_parts)
+            else:
+                # Fallback to absolute path if structure unexpected
+                image_reference = str(screenshot_path)
+        else:
+            # For non-centralized images (backward compatibility)
+            image_reference = str(screenshot_path)
+        
         # Generate content sections
         content_sections = f"""
 ## Screenshot Reference
 
-![{screenshot_path.name}]({screenshot_path})
+![{screenshot_path.name}]({image_reference})
 
 **Source:** {screenshot_path.name}  
 **Device:** {device_type}  
