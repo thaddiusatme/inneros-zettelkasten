@@ -1,3 +1,7 @@
+---
+trigger: manual
+---
+
 # AI Integration Guidelines
 
 > **Purpose**: AI capabilities, usage patterns, ethics & transparency  

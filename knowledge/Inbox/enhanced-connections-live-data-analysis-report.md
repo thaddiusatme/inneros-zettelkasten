@@ -1,10 +1,9 @@
 ---
 created: 2025-09-23 09:25
-tags: [ai-workflows, business-strategy, cross-domain-discovery, integration-opportunities,
-  knowledge-management, philosophical-tensions, recommendations-for-knowledge-development,
-  zettelkasten]
+tags: [ai-workflows, business-strategy, cash-flow, concept-level-connections, concept-maturity-analysis,
+  contextual-analysis, cross-domain-discovery, herearetheextractedtagsknowledge-management]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:11:50.058499'
+ai_processed: '2025-09-28T09:47:51.424932'
 ---
 # Enhanced Connection Discovery System - Live Data Analysis Report
 

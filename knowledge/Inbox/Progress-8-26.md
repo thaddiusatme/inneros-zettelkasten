@@ -1,9 +1,9 @@
 ---
 created: 2025-08-26 22:12
 tags: [audience-builder-gpt, case-studies, claude, claude-pass, client-deliverables,
-  client-work-protected, content-engine-cadence, content-marketing]
+  client-work, client-work-protected, content-calendar]
 quality_score: 0.8
-ai_processed: '2025-09-24T14:15:35.504100'
+ai_processed: '2025-09-28T09:52:44.084199'
 ---
 ## ✅ Progress so far (by Aug 26 EOD)
 
