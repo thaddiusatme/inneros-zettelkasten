@@ -27,25 +27,23 @@ from src.utils.image_link_parser import ImageLinkParser
 def test_centralized_image_storage():
     """
     US-1: Centralized Image Storage
-    Test Case: Images saved to attachments/YYYY-MM/ with proper structure
+    Test Case: Images saved to attachments/YYYY-MM/ with auto-detected date
     """
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Given: Screenshot from Samsung S23 with capture date
-        capture_date = datetime(2025, 10, 2, 8, 30, 0)
-        
-        # Create test image file
+        # Given: Screenshot from Samsung S23 with date in filename
+        # Filename: Screenshot_20251002_083000_Chrome.jpg
         test_image = Path(tmpdir) / "Screenshot_20251002_083000_Chrome.jpg"
         test_image.write_text("fake image data")
         
-        # When: ImageAttachmentManager saves image to centralized location
+        # When: ImageAttachmentManager saves image (auto-detects date and device)
         base_path = Path(tmpdir) / "knowledge"
         manager = ImageAttachmentManager(base_path=base_path)
-        saved_path = manager.save_to_attachments(test_image, capture_date, device_prefix="samsung")
+        saved_path = manager.save_to_attachments(test_image)
         
         # Then: Image stored in attachments/2025-10/ with device prefix
         assert saved_path.exists()
-        assert saved_path.parent.name == "2025-10"
-        assert "samsung" in saved_path.name
+        assert saved_path.parent.name == "2025-10"  # Auto-detected from filename
+        assert "samsung" in saved_path.name  # Auto-detected device prefix
         assert saved_path.suffix == ".jpg"
 
 

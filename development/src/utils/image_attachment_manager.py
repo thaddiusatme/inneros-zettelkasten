@@ -33,19 +33,16 @@ class ImageAttachmentManager:
         self.base_path = Path(base_path)
         self.attachments_root = self.base_path / "attachments"
     
-    def save_to_attachments(
-        self, 
-        image_path: Path, 
-        capture_date: datetime,
-        device_prefix: Optional[str] = None
-    ) -> Path:
+    def save_to_attachments(self, image_path: Path) -> Path:
         """
         Save image to centralized attachments/YYYY-MM/ structure.
         
+        Automatically detects:
+        - Capture date from filename (Samsung/iPad) or file metadata
+        - Device type from filename patterns
+        
         Args:
             image_path: Current path to image file
-            capture_date: Date when image was captured
-            device_prefix: Optional device prefix (samsung, ipad, etc.)
             
         Returns:
             Path to saved image in attachments/
@@ -60,6 +57,10 @@ class ImageAttachmentManager:
         if not image_path.is_file():
             raise ValueError(f"Path is not a file: {image_path}")
         
+        # Auto-detect capture date and device
+        capture_date = self._extract_capture_date(image_path)
+        device_prefix = self._detect_device_from_filename(image_path.name)
+        
         # Create destination folder
         dest_folder = self.create_month_folder(capture_date.year, capture_date.month)
         
@@ -69,7 +70,7 @@ class ImageAttachmentManager:
         
         # Copy image to attachments (preserve original)
         shutil.copy2(image_path, dest_path)
-        logger.info(f"Saved image to attachments: {dest_path}")
+        logger.info(f"Saved image to attachments: {dest_path} (captured: {capture_date.strftime('%Y-%m-%d %H:%M:%S')})")
         
         return dest_path
     
@@ -162,6 +163,55 @@ class ImageAttachmentManager:
         else:
             # Use original filename
             return image_path.name
+    
+    def _extract_capture_date(self, image_path: Path) -> datetime:
+        """
+        Extract capture date from filename or file metadata.
+        
+        Priority:
+        1. Samsung filename: Screenshot_YYYYMMDD_HHMMSS_*.jpg
+        2. iPad filename: YYYYMMDD_HHMMSS000_iOS.png
+        3. File modification date (fallback)
+        
+        Args:
+            image_path: Path to image file
+            
+        Returns:
+            Capture datetime
+        """
+        filename = image_path.name
+        
+        # Try Samsung pattern: Screenshot_20251002_083000_Chrome.jpg
+        if filename.startswith("Screenshot_"):
+            parts = filename.split("_")
+            if len(parts) >= 3:
+                try:
+                    date_str = parts[1]  # 20251002
+                    time_str = parts[2]  # 083000
+                    capture_date = datetime.strptime(f"{date_str}{time_str}", "%Y%m%d%H%M%S")
+                    logger.debug(f"Extracted Samsung capture date: {capture_date}")
+                    return capture_date
+                except (ValueError, IndexError):
+                    logger.debug(f"Could not parse Samsung date from: {filename}")
+        
+        # Try iPad pattern: 20241002_083000000_iOS.png
+        if "_iOS" in filename or "_ios" in filename:
+            parts = filename.split("_")
+            if len(parts) >= 2:
+                try:
+                    date_str = parts[0]  # 20241002
+                    time_str = parts[1][:6]  # 083000 (first 6 digits)
+                    capture_date = datetime.strptime(f"{date_str}{time_str}", "%Y%m%d%H%M%S")
+                    logger.debug(f"Extracted iPad capture date: {capture_date}")
+                    return capture_date
+                except (ValueError, IndexError):
+                    logger.debug(f"Could not parse iPad date from: {filename}")
+        
+        # Fallback: Use file modification date
+        stat = image_path.stat()
+        capture_date = datetime.fromtimestamp(stat.st_mtime)
+        logger.debug(f"Using file modification date: {capture_date}")
+        return capture_date
     
     def _detect_device_from_filename(self, filename: str) -> Optional[str]:
         """
