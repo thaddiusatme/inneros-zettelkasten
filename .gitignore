@@ -103,9 +103,16 @@ knowledge/.obsidian/
 # Automation artifacts
 .automation/backups/
 .automation/reports/
+.automation/review_queue/ALERT_*.md
 
 # Ignore dev temp artifacts
 development/tmp/
 
 # Tag cleanup backup directories (created during Enhanced AI Tag Cleanup)
 tag-cleanup-backup-*/
+
+# Knowledge capture policy (Option B)
+knowledge/Inbox/
+knowledge/Fleeting Notes/
+knowledge/Literature Notes/
+knowledge/Archive/

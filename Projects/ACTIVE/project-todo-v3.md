@@ -152,8 +152,42 @@
 
 ## 🔁 Backlog (Future Phases)
 
-- Phase 7: Packaging, distribution, monitoring, configuration
-- Phase 8: Mobile/voice integrations, multi-modal AI, plugin architecture
+### YouTube Transcript AI Processing System ⭐ HIGH PRIORITY
+**Status**: 📋 PLANNING - Complete manifest ready for implementation  
+**Manifest**: `Projects/ACTIVE/youtube-transcript-ai-processing-manifest.md` ✅  
+**Impact**: Transforms major workflow input (YouTube videos) into AI-enhanced knowledge
+
+**User Story**: "Watch YouTube → Add 1-2 sentence insight → LLM auto-extracts relevant quotes with timestamps"
+
+**Implementation Plan** (4 TDD Iterations):
+1. **TDD Iteration 1**: Transcript fetching (`youtube-transcript-api`, no API key)
+2. **TDD Iteration 2**: Context-aware quote extraction (user insight guides LLM)
+3. **TDD Iteration 3**: Template integration & storage (update youtube-video.md notes)
+4. **TDD Iteration 4**: CLI + automation (on-demand + background daemon)
+
+**Key Features**:
+- Only 2 prompts maintained (URL + insight)
+- Automated + on-demand processing modes
+- Quality-based + user-guided quote selection
+- Timestamps preserved for video reference
+- 83-90% time savings vs manual transcription
+
+**Integration Investigation** (Backlog):
+- [ ] Investigate existing Connection Discovery integration for transcript → wiki-link automation
+- [ ] Evaluate existing WorkflowManager patterns for quality scoring
+- [ ] Review AutoProcessor daemon for background processing patterns
+
+**Future Enhancements** (Post-MVP):
+- YouTube Data API v3 for enhanced metadata
+- Multi-language transcript support
+- Playlist batch processing
+- Chapter detection and summarization
+
+### Phase 7
+- Packaging, distribution, monitoring, configuration
+
+### Phase 8
+- Mobile/voice integrations, multi-modal AI, plugin architecture
 
 ---
 
