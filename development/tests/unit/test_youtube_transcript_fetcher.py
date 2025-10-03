@@ -64,15 +64,19 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
         """
         fetcher = YouTubeTranscriptFetcher()
         
-        # Video ID without transcripts (mock scenario)
+        # Mock a video that exists but has no transcripts
         video_id = "NO_TRANSCRIPT"
         
-        with pytest.raises(TranscriptNotAvailableError) as exc_info:
-            fetcher.fetch_transcript(video_id)
-        
-        # Error message should be helpful
-        assert "transcript" in str(exc_info.value).lower()
-        assert video_id in str(exc_info.value)
+        from youtube_transcript_api._errors import TranscriptsDisabled
+        with patch.object(fetcher.api, 'list') as mock_list:
+            mock_list.side_effect = TranscriptsDisabled(video_id)
+            
+            with pytest.raises(TranscriptNotAvailableError) as exc_info:
+                fetcher.fetch_transcript(video_id)
+            
+            # Error message should be helpful
+            assert "transcript" in str(exc_info.value).lower()
+            assert video_id in str(exc_info.value)
     
     def test_fetch_manual_vs_auto_transcript_preference(self):
         """
@@ -86,22 +90,27 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
         video_id = "BOTH_TYPES"
         
         # Mock the transcript API to return both types
-        with patch('youtube_transcript_api.YouTubeTranscriptApi.list_transcripts') as mock_list:
+        with patch.object(fetcher.api, 'list') as mock_list:
             # Setup mock to have both manual and auto-generated
             mock_transcript_list = Mock()
             mock_manual = Mock()
             mock_manual.is_generated = False
             mock_manual.language_code = "en"
-            mock_manual.fetch.return_value = [
-                {"text": "Manual transcript", "start": 0.0, "duration": 2.0}
-            ]
+            # Create mock transcript snippet objects
+            mock_entry = Mock()
+            mock_entry.text = "Manual transcript"
+            mock_entry.start = 0.0
+            mock_entry.duration = 2.0
+            mock_manual.fetch.return_value = [mock_entry]
             
             mock_auto = Mock()
             mock_auto.is_generated = True
             mock_auto.language_code = "en"
-            mock_auto.fetch.return_value = [
-                {"text": "Auto-generated transcript", "start": 0.0, "duration": 2.0}
-            ]
+            mock_auto_entry = Mock()
+            mock_auto_entry.text = "Auto-generated transcript"
+            mock_auto_entry.start = 0.0
+            mock_auto_entry.duration = 2.0
+            mock_auto.fetch.return_value = [mock_auto_entry]
             
             mock_transcript_list.__iter__ = Mock(return_value=iter([mock_manual, mock_auto]))
             mock_list.return_value = mock_transcript_list
@@ -199,8 +208,9 @@ class TestYouTubeTranscriptFetcherErrorHandling:
         video_id = "RATE_LIMIT_TEST"
         
         # Mock rate limit scenario
-        with patch('youtube_transcript_api.YouTubeTranscriptApi.get_transcript') as mock_get:
-            mock_get.side_effect = Exception("Too many requests")
+        from youtube_transcript_api._errors import RequestBlocked
+        with patch.object(fetcher.api, 'list') as mock_list:
+            mock_list.side_effect = RequestBlocked("Too many requests")
             
             with pytest.raises(RateLimitError) as exc_info:
                 fetcher.fetch_transcript(video_id)
@@ -220,8 +230,8 @@ class TestYouTubeTranscriptFetcherErrorHandling:
         video_id = "NETWORK_ERROR_TEST"
         
         # Mock network error
-        with patch('youtube_transcript_api.YouTubeTranscriptApi.get_transcript') as mock_get:
-            mock_get.side_effect = ConnectionError("Network unreachable")
+        with patch.object(fetcher.api, 'list') as mock_list:
+            mock_list.side_effect = ConnectionError("Network unreachable")
             
             with pytest.raises(Exception) as exc_info:
                 fetcher.fetch_transcript(video_id)

@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
 """
-YouTube Transcript Fetcher - TDD Iteration 1
+YouTube Transcript Fetcher - TDD Iteration 1 GREEN Phase
 
 Fetches and formats YouTube video transcripts for knowledge capture workflow.
 Part of YouTube Transcript AI Processing System (4-iteration roadmap).
 
-RED Phase: This module exists but is not implemented yet.
-All methods will raise NotImplementedError until GREEN Phase.
+GREEN Phase: Minimal implementation to pass all 10 tests.
 """
+import re
+import logging
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import (
+    TranscriptsDisabled,
+    NoTranscriptFound,
+    VideoUnavailable,
+    YouTubeRequestFailed,
+    RequestBlocked
+)
+
+logger = logging.getLogger(__name__)
 
 
 class TranscriptNotAvailableError(Exception):
@@ -29,12 +40,14 @@ class YouTubeTranscriptFetcher:
     """
     Fetches YouTube video transcripts using youtube-transcript-api.
     
-    RED Phase: Class structure defined, implementation pending GREEN Phase.
+    GREEN Phase: Minimal implementation to pass all tests.
     """
     
     def __init__(self):
         """Initialize transcript fetcher"""
-        raise NotImplementedError("RED Phase: Implementation pending")
+        # Create API instance
+        self.api = YouTubeTranscriptApi()
+        logger.debug("YouTubeTranscriptFetcher initialized")
     
     def fetch_transcript(self, video_id: str, prefer_manual: bool = True) -> dict:
         """
@@ -52,7 +65,103 @@ class YouTubeTranscriptFetcher:
             TranscriptNotAvailableError: No transcript available
             RateLimitError: API rate limit exceeded
         """
-        raise NotImplementedError("RED Phase: Implementation pending")
+        # Validate video ID
+        if not video_id or not isinstance(video_id, str):
+            raise InvalidVideoIdError(f"Invalid video ID: {video_id}")
+        
+        video_id = video_id.strip()
+        
+        if not video_id or not re.match(r'^[\w-]+$', video_id):
+            raise InvalidVideoIdError(f"Invalid video ID format: {video_id}")
+        
+        try:
+            # Fetch transcript using youtube-transcript-api
+            transcript_list = self.api.list(video_id)
+            
+            if prefer_manual:
+                # Try to get manual transcript first
+                for transcript in transcript_list:
+                    if not transcript.is_generated:
+                        transcript_data = transcript.fetch()
+                        # Convert transcript objects to dict format
+                        transcript_entries = [
+                            {
+                                "text": entry.text,
+                                "start": entry.start,
+                                "duration": entry.duration
+                            }
+                            for entry in transcript_data
+                        ]
+                        return {
+                            "video_id": video_id,
+                            "transcript": transcript_entries,
+                            "is_manual": True,
+                            "language": transcript.language_code
+                        }
+                
+                # If no manual found, use auto-generated
+                for transcript in transcript_list:
+                    if transcript.is_generated:
+                        transcript_data = transcript.fetch()
+                        # Convert transcript objects to dict format
+                        transcript_entries = [
+                            {
+                                "text": entry.text,
+                                "start": entry.start,
+                                "duration": entry.duration
+                            }
+                            for entry in transcript_data
+                        ]
+                        return {
+                            "video_id": video_id,
+                            "transcript": transcript_entries,
+                            "is_manual": False,
+                            "language": transcript.language_code
+                        }
+            else:
+                # Simple fetch (first available transcript)
+                for transcript in transcript_list:
+                    transcript_data = transcript.fetch()
+                    # Convert transcript objects to dict format
+                    transcript_entries = [
+                        {
+                            "text": entry.text,
+                            "start": entry.start,
+                            "duration": entry.duration
+                        }
+                        for entry in transcript_data
+                    ]
+                    return {
+                        "video_id": video_id,
+                        "transcript": transcript_entries,
+                        "is_manual": not transcript.is_generated,
+                        "language": transcript.language_code
+                    }
+                
+        except (YouTubeRequestFailed, RequestBlocked) as e:
+            raise RateLimitError(
+                f"Rate limit exceeded. Please retry later. Details: {str(e)}"
+            )
+        except (TranscriptsDisabled, NoTranscriptFound) as e:
+            raise TranscriptNotAvailableError(
+                f"No transcript available for video: {video_id}. Details: {str(e)}"
+            )
+        except VideoUnavailable as e:
+            raise InvalidVideoIdError(
+                f"Video not found or unavailable: {video_id}. Details: {str(e)}"
+            )
+        except ConnectionError as e:
+            raise Exception(
+                f"Network connection error: {str(e)}"
+            )
+        except Exception as e:
+            # Check if it's a rate limit error in disguise
+            if "too many requests" in str(e).lower():
+                raise RateLimitError(
+                    f"Rate limit exceeded. Please retry later. Details: {str(e)}"
+                )
+            # Re-raise other exceptions
+            raise
     
     def format_timestamp(self, seconds: float) -> str:
         """
@@ -64,7 +173,9 @@ class YouTubeTranscriptFetcher:
         Returns:
             Formatted timestamp string (MM:SS)
         """
-        raise NotImplementedError("RED Phase: Implementation pending")
+        minutes = int(seconds // 60)
+        secs = int(seconds % 60)
+        return f"{minutes:02d}:{secs:02d}"
     
     def format_for_llm(self, transcript: list) -> str:
         """
@@ -76,4 +187,14 @@ class YouTubeTranscriptFetcher:
         Returns:
             Clean formatted text with timestamps
         """
-        raise NotImplementedError("RED Phase: Implementation pending")
+        if not transcript:
+            return ""
+        
+        # Format each entry with timestamp
+        formatted_lines = []
+        for entry in transcript:
+            timestamp = self.format_timestamp(entry['start'])
+            text = entry['text'].strip()
+            formatted_lines.append(f"[{timestamp}] {text}")
+        
+        return "\n".join(formatted_lines)
