@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-02 07:57 PDT  
-**Status**: ✅ TDD Iteration 9 Complete → Image Linking System Priority  
+**Last Updated**: 2025-10-03 09:06 PDT  
+**Status**: 🔴 Critical Bug Documented → Image Linking System Implementation Urgent  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
@@ -50,8 +50,11 @@
 - **Problem**: Images disappear during AI automation processes
 - **Impact**: Critical system integrity issue affecting media preservation
 - **Goal**: Preserve media assets and references through all workflows
-- **Status**: 📋 Ready for TDD implementation
+- **Status**: 🔍 CRITICAL BUG DOCUMENTED - Immediate implementation required
+- **Active Bug Report**: `Projects/ACTIVE/BUG-20251003-0906-screenshot-image-linking.md` ✅
 - **Deliverables**:
+  - MediaAssetManager utility class for image copying
+  - Relative path generation for repository-local images
   - Media reference audit + comprehensive test coverage
   - Link rewriting/preservation strategy
   - Integration into WorkflowManager operations
