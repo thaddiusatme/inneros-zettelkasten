@@ -43,11 +43,43 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         [05:30] Future trends point toward hybrid AI-human workflows
         """
         
-        result = extractor.extract_quotes(
-            transcript=sample_transcript,
-            max_quotes=7,
-            min_quality=0.7
-        )
+        # Mock LLM response
+        mock_response = '''```json
+{
+    "summary": "Discussion of AI's role in modern software development",
+    "quotes": [
+        {
+            "text": "The key insight is that context matters more than raw data",
+            "timestamp": "01:30",
+            "relevance_score": 0.85,
+            "context": "Core principle for AI systems",
+            "category": "key-insight"
+        },
+        {
+            "text": "Best practice: Always validate your outputs with real users",
+            "timestamp": "04:00",
+            "relevance_score": 0.90,
+            "context": "Actionable advice for development",
+            "category": "actionable"
+        },
+        {
+            "text": "Future trends point toward hybrid AI-human workflows",
+            "timestamp": "05:30",
+            "relevance_score": 0.80,
+            "context": "Industry trend prediction",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["ai", "software-development", "best-practices"]
+}
+```'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(
+                transcript=sample_transcript,
+                max_quotes=7,
+                min_quality=0.7
+            )
         
         # Verify result structure
         assert result is not None
@@ -89,11 +121,34 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         
         user_context = "I'm interested in creator economy and digital entrepreneurship"
         
-        result = extractor.extract_quotes(
-            transcript=sample_transcript,
-            user_context=user_context,
-            max_quotes=5
-        )
+        # Mock LLM response - context-aware
+        mock_response = '''{
+    "summary": "Overview of creator economy and entrepreneurship opportunities",
+    "quotes": [
+        {
+            "text": "The creator economy is booming with new opportunities",
+            "timestamp": "04:00",
+            "relevance_score": 0.95,
+            "context": "Directly addresses user's interest in creator economy",
+            "category": "key-insight"
+        },
+        {
+            "text": "Digital entrepreneurship has low barriers to entry",
+            "timestamp": "05:30",
+            "relevance_score": 0.92,
+            "context": "Relevant to user's entrepreneurship interests",
+            "category": "actionable"
+        }
+    ],
+    "key_themes": ["creator-economy", "entrepreneurship", "opportunities"]
+}'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(
+                transcript=sample_transcript,
+                user_context=user_context,
+                max_quotes=5
+            )
         
         # Verify context influenced selection
         quotes = result["quotes"]
@@ -126,11 +181,34 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         [04:00] Revolutionary breakthrough in quantum entanglement achieved
         """
         
-        result = extractor.extract_quotes(
-            transcript=sample_transcript,
-            user_context=None,  # No context provided
-            max_quotes=5
-        )
+        # Mock LLM response - generic insights
+        mock_response = '''{
+    "summary": "Key insights on success and breakthroughs",
+    "quotes": [
+        {
+            "text": "The most important lesson: start before you're ready",
+            "timestamp": "00:15",
+            "relevance_score": 0.88,
+            "context": "Universal advice for taking action",
+            "category": "actionable"
+        },
+        {
+            "text": "Data shows 80% of success comes from consistency",
+            "timestamp": "01:30",
+            "relevance_score": 0.85,
+            "context": "Evidence-based success principle",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["success", "action", "consistency"]
+}'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(
+                transcript=sample_transcript,
+                user_context=None,  # No context provided
+                max_quotes=5
+            )
         
         # Should still extract valuable quotes
         quotes = result["quotes"]
@@ -158,7 +236,37 @@ class TestContextAwareQuoteExtractorFormatting:
         [10:45] Third major point at 10 minutes 45 seconds
         """
         
-        result = extractor.extract_quotes(transcript=sample_transcript)
+        # Mock LLM response with various timestamps
+        mock_response = '''{
+    "summary": "Key points with timestamps",
+    "quotes": [
+        {
+            "text": "First important point at 15 seconds",
+            "timestamp": "00:15",
+            "relevance_score": 0.80,
+            "context": "Early insight",
+            "category": "key-insight"
+        },
+        {
+            "text": "Second key insight at 1 minute 30 seconds",
+            "timestamp": "01:30",
+            "relevance_score": 0.85,
+            "context": "Mid-point insight",
+            "category": "key-insight"
+        },
+        {
+            "text": "Third major point at 10 minutes 45 seconds",
+            "timestamp": "10:45",
+            "relevance_score": 0.90,
+            "context": "Later insight",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["insights", "timestamps"]
+}'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(transcript=sample_transcript)
         
         quotes = result["quotes"]
         assert len(quotes) > 0
@@ -190,7 +298,30 @@ class TestContextAwareQuoteExtractorFormatting:
         [02:45] Critical insight: context determines everything in ML systems
         """
         
-        result = extractor.extract_quotes(transcript=sample_transcript)
+        # Mock LLM response with varied quality scores
+        mock_response = '''{
+    "summary": "AI safety and ML insights",
+    "quotes": [
+        {
+            "text": "Groundbreaking research reveals new paradigm in AI safety",
+            "timestamp": "00:15",
+            "relevance_score": 0.92,
+            "context": "Significant AI safety development",
+            "category": "key-insight"
+        },
+        {
+            "text": "Critical insight: context determines everything in ML systems",
+            "timestamp": "02:45",
+            "relevance_score": 0.88,
+            "context": "Core ML principle",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["ai-safety", "machine-learning", "research"]
+}'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(transcript=sample_transcript)
         
         quotes = result["quotes"]
         assert len(quotes) > 0
@@ -224,11 +355,41 @@ class TestContextAwareQuoteExtractorFiltering:
         [02:45] Critical insight: data quality trumps quantity always
         """
         
+        # Mock LLM response with mixed quality scores
+        mock_response = '''{
+    "summary": "Quantum computing and data insights",
+    "quotes": [
+        {
+            "text": "Revolutionary breakthrough in quantum computing achieved",
+            "timestamp": "00:15",
+            "relevance_score": 0.95,
+            "context": "Major technical achievement",
+            "category": "key-insight"
+        },
+        {
+            "text": "Um, so, like, yeah, interesting stuff here",
+            "timestamp": "01:30",
+            "relevance_score": 0.40,
+            "context": "Low value filler content",
+            "category": "quote"
+        },
+        {
+            "text": "Critical insight: data quality trumps quantity always",
+            "timestamp": "02:45",
+            "relevance_score": 0.90,
+            "context": "Important data principle",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["quantum-computing", "data-quality"]
+}'''
+        
         # Set high quality threshold
-        result = extractor.extract_quotes(
-            transcript=sample_transcript,
-            min_quality=0.75
-        )
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(
+                transcript=sample_transcript,
+                min_quality=0.75
+            )
         
         quotes = result["quotes"]
         
@@ -259,11 +420,28 @@ class TestContextAwareQuoteExtractorFiltering:
         [11:30] Tenth incredible advancement in robotics
         """
         
+        # Mock LLM response with 8 quotes (more than max_quotes=5)
+        mock_response = '''{
+    "summary": "Comprehensive AI insights",
+    "quotes": [
+        {"text": "First important insight about AI systems", "timestamp": "00:15", "relevance_score": 0.90, "context": "AI foundation", "category": "key-insight"},
+        {"text": "Second key point on machine learning", "timestamp": "01:30", "relevance_score": 0.88, "context": "ML principle", "category": "key-insight"},
+        {"text": "Third critical observation on data quality", "timestamp": "02:45", "relevance_score": 0.92, "context": "Data importance", "category": "key-insight"},
+        {"text": "Fourth major breakthrough in NLP", "timestamp": "04:00", "relevance_score": 0.85, "context": "NLP advance", "category": "key-insight"},
+        {"text": "Fifth revolutionary discovery in CV", "timestamp": "05:15", "relevance_score": 0.87, "context": "Computer vision", "category": "key-insight"},
+        {"text": "Sixth groundbreaking research result", "timestamp": "06:30", "relevance_score": 0.83, "context": "Research", "category": "key-insight"},
+        {"text": "Seventh essential principle for ML", "timestamp": "07:45", "relevance_score": 0.86, "context": "ML core", "category": "key-insight"},
+        {"text": "Eighth paradigm shift in AI safety", "timestamp": "09:00", "relevance_score": 0.91, "context": "Safety", "category": "key-insight"}
+    ],
+    "key_themes": ["ai", "machine-learning", "breakthroughs"]
+}'''
+        
         # Request maximum of 5 quotes
-        result = extractor.extract_quotes(
-            transcript=sample_transcript,
-            max_quotes=5
-        )
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(
+                transcript=sample_transcript,
+                max_quotes=5
+            )
         
         quotes = result["quotes"]
         assert len(quotes) <= 5, f"Expected <=5 quotes, got {len(quotes)}"
@@ -391,7 +569,44 @@ class TestContextAwareQuoteExtractorAdvancedFeatures:
         [04:00] Critical insight: context determines everything in machine learning
         """
         
-        result = extractor.extract_quotes(transcript=sample_transcript)
+        # Mock LLM response with all category types
+        mock_response = '''{
+    "summary": "AI definitions and best practices",
+    "quotes": [
+        {
+            "text": "The fundamental definition: AI is the simulation of human intelligence",
+            "timestamp": "00:15",
+            "relevance_score": 0.85,
+            "context": "Core AI concept",
+            "category": "definition"
+        },
+        {
+            "text": "Action item: Always test your models with real user data",
+            "timestamp": "01:30",
+            "relevance_score": 0.90,
+            "context": "Practical testing advice",
+            "category": "actionable"
+        },
+        {
+            "text": "As Einstein said, Imagination is more important than knowledge",
+            "timestamp": "02:45",
+            "relevance_score": 0.82,
+            "context": "Famous quote on creativity",
+            "category": "quote"
+        },
+        {
+            "text": "Critical insight: context determines everything in machine learning",
+            "timestamp": "04:00",
+            "relevance_score": 0.93,
+            "context": "Core ML principle",
+            "category": "key-insight"
+        }
+    ],
+    "key_themes": ["ai", "testing", "machine-learning"]
+}'''
+        
+        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+            result = extractor.extract_quotes(transcript=sample_transcript)
         
         quotes = result["quotes"]
         assert len(quotes) > 0
