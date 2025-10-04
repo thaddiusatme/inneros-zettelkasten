@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-03 23:00 PDT  
-**Status**: ✅ TDD Iteration 1 YouTube Transcript Complete → Image Linking System Priority  
+**Last Updated**: 2025-10-03 23:23 PDT  
+**Status**: ✅ TDD Iteration 2 Planning Complete → Ready for RED Phase  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
@@ -102,6 +102,24 @@
   - Literature templates with claims/quotes
   - CLI import adapters + triage
   - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
+
+### 🎬 YouTube Transcript AI Processing System (4-Iteration Roadmap)
+
+- **Goal**: Transform YouTube videos into high-value knowledge quotes with 83-90% time savings
+- **Status**: 📋 TDD Iteration 2 Planning Complete → Ready for RED Phase
+- **Approach**: Systematic TDD methodology (RED → GREEN → REFACTOR)
+- **Progress**:
+  - ✅ **Iteration 1 COMPLETE**: Transcript fetching (10/10 tests, 412 entries in 2.4s)
+  - 📋 **Iteration 2 PLANNED**: Context-aware quote extraction (11 tests, <10s target)
+  - ⏳ **Iteration 3**: Template integration
+  - ⏳ **Iteration 4**: CLI + automation
+- **Deliverables**:
+  - [x] YouTubeTranscriptFetcher class (production-ready)
+  - [ ] ContextAwareQuoteExtractor class (planning complete)
+  - [ ] Template enhancement for `youtube-video.md`
+  - [ ] CLI command: `--process-youtube-notes`
+  - **Planning Doc**: `Projects/ACTIVE/youtube-transcript-tdd-2-quote-extraction-planning.md` ✅
+  - **Iteration 1 Lessons**: `Projects/COMPLETED-2025-10/youtube-transcript-tdd-iteration-1-complete-lessons-learned.md` ✅
 
 ---
 
