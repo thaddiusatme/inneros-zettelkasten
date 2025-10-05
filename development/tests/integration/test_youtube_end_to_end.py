@@ -115,7 +115,10 @@ class TestYouTubeProcessorEndToEnd:
         mock_extractor_class.return_value = mock_extractor
         
         mock_formatter = Mock()
-        mock_formatter.format_youtube_note.return_value = "# Formatted Note\n\nContent here"
+        mock_formatter.format_template.return_value = {
+            "markdown": "# Formatted Note\n\nContent here",
+            "metadata": {"quote_count": 1}
+        }
         mock_formatter_class.return_value = mock_formatter
         
         # Process video
@@ -131,7 +134,7 @@ class TestYouTubeProcessorEndToEnd:
         # Verify components called correctly
         mock_fetcher.fetch_transcript.assert_called_once_with("FLpS7OfD5-s")
         mock_extractor.extract_quotes.assert_called_once()
-        mock_formatter.format_youtube_note.assert_called_once()
+        mock_formatter.format_template.assert_called_once()
     
     @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
     def test_process_with_user_context(self, mock_fetcher_class):
@@ -229,13 +232,16 @@ class TestYouTubeProcessorFileCreation:
         mock_extractor.extract_quotes.return_value = {
             "quotes": [],
             "summary": "Summary",
-            "key_themes": [],
+            "key_themes": ["test", "demo"],
             "processing_time": 1.0
         }
         mock_extractor_class.return_value = mock_extractor
         
         mock_formatter = Mock()
-        mock_formatter.format_youtube_note.return_value = "---\ntitle: Test\n---\n\nContent"
+        mock_formatter.format_template.return_value = {
+            "markdown": "# Test\n\nFormatted content",
+            "metadata": {"quote_count": 0}
+        }
         mock_formatter_class.return_value = mock_formatter
 
 
