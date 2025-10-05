@@ -1,22 +1,33 @@
----
-type: literature
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: inbox
-tags: [youtube, video-notes, literature]
-visibility: private
-source: youtube
-url: 
-video_id: 
-channel: 
-duration: 
----
 <%*
 /*------------------------------------------------------------------
-  1. Get Video ID
+  1. Get YouTube URL and Extract Video ID
 ------------------------------------------------------------------*/
-const videoId = await tp.system.prompt("YouTube Video ID (from URL)?");
-if (!videoId) {
-  await tp.system.alert("Cancelled – no video ID provided.");
+const youtubeUrl = await tp.system.prompt("Paste YouTube URL:");
+if (!youtubeUrl) {
+  await tp.system.alert("Cancelled – no URL provided.");
+  return;
+}
+
+// Extract video ID from URL (supports various YouTube URL formats)
+let videoId = "";
+try {
+  const urlObj = new URL(youtubeUrl);
+  
+  // Standard format: youtube.com/watch?v=ID
+  if (urlObj.hostname.includes("youtube.com")) {
+    videoId = urlObj.searchParams.get("v");
+  }
+  // Short format: youtu.be/ID
+  else if (urlObj.hostname.includes("youtu.be")) {
+    videoId = urlObj.pathname.substring(1);
+  }
+  
+  if (!videoId) {
+    await tp.system.alert("Could not extract video ID from URL. Please check the URL format.");
+    return;
+  }
+} catch (e) {
+  await tp.system.alert("Invalid URL format: " + e.message);
   return;
 }
 
@@ -28,12 +39,7 @@ const fname  = `youtube-${stamp}-${videoId}.md`;
 const target = `Inbox/${fname}`;
 
 /*------------------------------------------------------------------
-  3. Set URL
-------------------------------------------------------------------*/
-const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-
-/*------------------------------------------------------------------
-  4. Rename & Move (with graceful error)
+  3. Rename & Move (with graceful error)
 ------------------------------------------------------------------*/
 try {
   await tp.file.rename(fname);
@@ -42,13 +48,19 @@ try {
   await tp.system.alert("Rename/Move failed – " + e.message);
   return;
 }
-
-/*------------------------------------------------------------------
-  5. Update Frontmatter
-------------------------------------------------------------------*/
-tR += `\nurl: ${videoUrl}`;
-tR += `\nvideo_id: ${videoId}`;
 %>
+---
+type: literature
+created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
+status: inbox
+tags: [youtube, video-notes, literature]
+visibility: private
+source: youtube
+url: <% youtubeUrl %>
+video_id: <% videoId %>
+channel:
+duration:
+---
 
 # Video Summary
 
