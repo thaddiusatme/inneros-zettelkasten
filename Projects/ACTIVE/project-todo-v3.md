@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-05 10:32 PDT  
-**Status**: ✅ YouTube TDD Iteration 4 COMPLETE + Distribution Strategy Ready  
+**Last Updated**: 2025-10-05 10:50 PDT  
+**Status**: 🔴 **PRIORITY 1: WorkflowManager Refactor** (Image Bug Already Fixed)  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
 
 ---
@@ -66,20 +66,37 @@
 
 ---
 
-## 🎯 Active Projects (RESCOPED)
+## 🎯 Active Projects (RESCOPED - ARCHITECTURAL FOCUS)
 
-### 🔴 Image Linking System (HIGHEST PRIORITY - System Integrity)
+### 🔴 WorkflowManager Refactor (HIGHEST PRIORITY - P1)
 
-- **Problem**: Images disappear during AI automation processes
-- **Impact**: Critical system integrity issue affecting media preservation
-- **Goal**: Preserve media assets and references through all workflows
-- **Status**: 📋 Ready for TDD implementation
+- **Problem**: God class - 2,374 LOC, 59 methods (threshold: 500 LOC, 10-15 methods)
+- **Impact**: Architectural debt compounding exponentially, blocks all new features
+- **Root Cause**: TDD focused on features, not architecture (user's "code smell" was correct)
+- **Goal**: Split into 4 domain managers (Core, Analytics, AI, Connections)
+- **Status**: 📋 Ready for TDD execution (Week 1: Oct 6-12)
+- **Timeline**: 4 weeks (Oct 6 - Nov 2, 2025)
+- **Blockers**: All new features BLOCKED until complete
 - **Deliverables**:
-  - Media reference audit + comprehensive test coverage
-  - Link rewriting/preservation strategy
-  - Integration into WorkflowManager operations
-  - Integration with DirectoryOrganizer for safe file moves
-  - **Manifest**: `Projects/ACTIVE/image-linking-system-bug-fix-manifest.md` ✅
+  - [ ] 4 focused managers (<500 LOC each)
+  - [ ] Migrate 13 test files
+  - [ ] Update 17 imports across codebase
+  - [ ] Architecture Decision Record (ADR)
+  - [ ] Add class size linting to prevent future god classes
+  - **Manifest**: `Projects/ACTIVE/workflow-manager-refactor-tdd-manifest.md` ✅
+
+### ✅ Image Linking System (COMPLETED Oct 3, 2025)
+
+- **Status**: ✅ **FIXED** - TDD Iteration 10 Complete
+- **Solution**: Complete image linking system with preservation across all workflows
+- **Tests**: 10/10 passing (validated Oct 5, 2025)
+- **Implementation**: 3 core classes (536 LOC), 2 production integrations
+- **Performance**: 50-500x faster than targets
+- **Deliverables**:
+  - ✅ ImageLinkParser, ImageAttachmentManager, ImageLinkManager
+  - ✅ WorkflowManager integration (image reference tracking)
+  - ✅ DirectoryOrganizer integration (link preservation)
+  - **Lessons Learned**: `Projects/COMPLETED-2025-10/tdd-iteration-10-complete-lessons-learned.md` ✅
 
 ### 🟡 Knowledge Capture System - POC PHASE
 
@@ -134,16 +151,26 @@
 
 ---
 
-## 🛣️ Next 2 Weeks Roadmap
+## 🛣️ Next 4 Weeks Roadmap (ARCHITECTURAL FOCUS)
 
-1. **Image Linking System** (Priority 1 - CRITICAL) 🔴
-   - [ ] Create branch: `feat/image-linking-system-tdd-10`
-   - [ ] Media reference audit across all workflows
-   - [ ] Formalize link model (paths, IDs, fallback strategies)
-   - [ ] Add comprehensive tests: copy/move/update scenarios
-   - [ ] Implement preservation + rewriting logic
-   - [ ] Integrate with DirectoryOrganizer and WorkflowManager
-   - [ ] Real data validation with existing notes containing images
+1. **WorkflowManager Refactor** (Priority 1 - ARCHITECTURAL DEBT) 🔴
+   - [ ] Week 1 (Oct 6-12): Architecture design + RED phase
+     - Extract all 59 method signatures
+     - Design 4 manager interfaces
+     - Write 30 failing tests
+   - [ ] Week 2 (Oct 13-19): GREEN phase - Extract managers
+     - CoreWorkflowManager (~200 LOC)
+     - AnalyticsManager (~400 LOC)
+     - AIEnhancementManager (~600 LOC)
+     - ConnectionManager (~400 LOC)
+   - [ ] Week 3 (Oct 20-26): REFACTOR phase - Migrate tests
+     - Update 13 test files
+     - Verify all 759 tests passing
+   - [ ] Week 4 (Oct 27 - Nov 2): Production integration
+     - Update 17 imports
+     - CLI integration
+     - Add class size linting
+     - Lessons learned
 
 2. **Knowledge Capture System - POC** (Priority 2) 🔥
    - [ ] Create branch: `feat/visual-capture-poc-tdd-1`
