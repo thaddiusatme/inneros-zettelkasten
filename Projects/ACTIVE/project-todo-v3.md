@@ -1,8 +1,39 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-05 10:50 PDT  
+**Last Updated**: 2025-10-05 12:15 PDT  
 **Status**: 🔴 **PRIORITY 1: WorkflowManager Refactor** (Image Bug Already Fixed)  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
+
+---
+
+## 🏗️ Architectural Health Tracking
+
+**Last Review**: 2025-10-05  
+**Next Review**: 2025-11-04 (First Monday of November)
+
+### Current Architectural Concerns
+- 🔴 **WorkflowManager**: 2,374 LOC, 59 methods (threshold: 500 LOC, 20 methods) - **Priority: P1**
+  - **Action**: 4-week refactoring sprint (Oct 6 - Nov 2, 2025)
+  - **Plan**: Split into CoreWorkflowManager, AnalyticsManager, AIEnhancementManager, ConnectionManager
+  - **Manifest**: `Projects/ACTIVE/workflow-manager-refactor-tdd-manifest.md` ✅
+
+### Refactoring Queue
+1. **WorkflowManager** - Effort: 4 weeks - Scheduled: Oct 6-Nov 2, 2025 - Status: 📋 Ready
+
+### Architectural Guardrails Status
+- [ ] Class size linting enabled (Future: Pre-commit hooks)
+- [ ] Method count linting enabled (Future: Pre-commit hooks)
+- [x] Architectural constraints documented (`.windsurf/rules/architectural-constraints.md`)
+- [x] TDD methodology updated with architectural checks
+- [ ] Monthly reviews scheduled (Next: Nov 4, 2025)
+- [x] ADR template created (`Projects/TEMPLATES/adr-template.md`)
+- [x] Architectural review template created (`Projects/TEMPLATES/architectural-review-template.md`)
+
+### Success Metrics
+- **Current Classes >500 LOC**: 1 (WorkflowManager)
+- **Current Classes >20 methods**: 1 (WorkflowManager)
+- **Target**: Zero classes exceeding limits by Nov 2, 2025
+- **ADRs Created**: 0 (First ADR: WorkflowManager refactoring)
 
 ---
 
@@ -211,6 +242,9 @@
 - Tests must remain 66/66 passing (baseline) or expand with new features
 - Performance targets must be preserved or improved
 - Maintain backward compatibility and workflow integrity
+- **Architectural constraints**: All classes must be <500 LOC, <20 methods
+- **Pre-development check**: Run class size audit before adding features
+- **Monthly architectural review**: First Monday of each month
 
 ---
 
