@@ -53,6 +53,24 @@ class YouTubeProcessor:
         >>> print(f"Created: {result['file_path']}")
     """
     
+    # URL parsing patterns
+    URL_PATTERN_STANDARD = r'[?&]v=([^&]+)'  # youtube.com/watch?v=VIDEO_ID
+    URL_PATTERN_SHORT = r'youtu\.be/([^?]+)'  # youtu.be/VIDEO_ID
+    
+    # Validation patterns
+    YOUTUBE_DOMAINS = [
+        r'youtube\.com/watch\?v=',
+        r'youtu\.be/'
+    ]
+    
+    # Metadata constants
+    NOTE_TYPE = "literature"
+    NOTE_STATUS = "inbox"
+    INBOX_SUBDIR = "Inbox"
+    FILE_PREFIX = "youtube"
+    TIMESTAMP_FORMAT = "%Y%m%d-%H%M"
+    METADATA_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
+    
     def __init__(self, knowledge_dir: Optional[Path] = None):
         """
         Initialize YouTube processor with optional knowledge directory.
@@ -92,15 +110,20 @@ class YouTubeProcessor:
             FLpS7OfD5-s
         """
         # Try standard format: youtube.com/watch?v=VIDEO_ID
-        match = re.search(r'[?&]v=([^&]+)', url)
+        match = re.search(self.URL_PATTERN_STANDARD, url)
         if match:
-            return match.group(1)
+            video_id = match.group(1)
+            logger.debug(f"Extracted video ID from standard URL: {video_id}")
+            return video_id
         
         # Try short format: youtu.be/VIDEO_ID
-        match = re.search(r'youtu\.be/([^?]+)', url)
+        match = re.search(self.URL_PATTERN_SHORT, url)
         if match:
-            return match.group(1)
+            video_id = match.group(1)
+            logger.debug(f"Extracted video ID from short URL: {video_id}")
+            return video_id
         
+        logger.warning(f"Failed to extract video ID from URL: {url}")
         raise ValueError(f"Invalid YouTube URL: {url}")
     
     def validate_url(self, url: str) -> bool:
@@ -121,15 +144,13 @@ class YouTubeProcessor:
             False
         """
         if not url:
+            logger.debug("URL validation failed: empty string")
             return False
         
         # Check for YouTube domains
-        youtube_patterns = [
-            r'youtube\.com/watch\?v=',
-            r'youtu\.be/'
-        ]
-        
-        return any(re.search(pattern, url) for pattern in youtube_patterns)
+        is_valid = any(re.search(pattern, url) for pattern in self.YOUTUBE_DOMAINS)
+        logger.debug(f"URL validation for '{url}': {is_valid}")
+        return is_valid
     
     def process_video(
         self,
@@ -284,14 +305,16 @@ class YouTubeProcessor:
             Path to created file
         """
         # Create Inbox directory if it doesn't exist
-        inbox_dir = self.knowledge_dir / "Inbox"
+        inbox_dir = self.knowledge_dir / self.INBOX_SUBDIR
         inbox_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Inbox directory ensured: {inbox_dir}")
         
         # Generate filename: youtube-YYYYMMDD-HHmm-{video_id}.md
         now = datetime.now()
-        timestamp = now.strftime("%Y%m%d-%H%M")
-        filename = f"youtube-{timestamp}-{video_id}.md"
+        timestamp = now.strftime(self.TIMESTAMP_FORMAT)
+        filename = f"{self.FILE_PREFIX}-{timestamp}-{video_id}.md"
         file_path = inbox_dir / filename
+        logger.debug(f"Generated filename: {filename}")
         
         # Build complete content with frontmatter
         frontmatter_lines = ["---"]
@@ -333,9 +356,9 @@ class YouTubeProcessor:
         now = datetime.now()
         
         metadata = {
-            "type": "literature",
-            "status": "inbox",
-            "created": now.strftime("%Y-%m-%d %H:%M"),
+            "type": self.NOTE_TYPE,
+            "status": self.NOTE_STATUS,
+            "created": now.strftime(self.METADATA_TIMESTAMP_FORMAT),
             "video_id": video_id,
             "source": f"https://youtube.com/watch?v={video_id}",
             "tags": quotes_data.get("key_themes", [])
@@ -344,5 +367,7 @@ class YouTubeProcessor:
         # Add video title if available
         if "title" in transcript_metadata.get("metadata", {}):
             metadata["title"] = transcript_metadata["metadata"]["title"]
+            logger.debug(f"Added video title to metadata: {metadata['title']}")
         
+        logger.info(f"Built metadata with {len(metadata['tags'])} tags")
         return metadata
