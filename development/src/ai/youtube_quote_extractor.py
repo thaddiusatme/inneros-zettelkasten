@@ -65,6 +65,12 @@ class ContextAwareQuoteExtractor:
         Args:
             config: Optional configuration for Ollama client
         """
+        # Use longer timeout for quote extraction (large transcripts)
+        if config is None:
+            config = {}
+        if "timeout" not in config:
+            config["timeout"] = 120  # 2 minutes for large transcripts
+        
         self.ollama_client = OllamaClient(config=config)
     
     def extract_quotes(
@@ -134,13 +140,25 @@ class ContextAwareQuoteExtractor:
             # Generate completion with LLM
             logger.info("Calling LLM for quote extraction")
             llm_start = time.time()
+            
+            # Increase max_tokens for larger transcripts
+            estimated_tokens = len(prompt) // 4
+            max_tokens = min(4000, max(2000, estimated_tokens // 2))
+            logger.debug(f"Using max_tokens={max_tokens} (estimated prompt tokens: {estimated_tokens})")
+            
             response = self.ollama_client.generate_completion(
                 prompt=prompt,
                 system_prompt="You are an expert at extracting high-value quotes from content.",
-                max_tokens=2000
+                max_tokens=max_tokens
             )
             llm_duration = time.time() - llm_start
             logger.info(f"LLM response received in {llm_duration:.2f}s, {len(response)} characters")
+            
+            # DEBUG: Log response for troubleshooting
+            if len(response) == 0:
+                logger.error("LLM returned EMPTY response!")
+            elif len(response) < 100:
+                logger.warning(f"LLM returned very short response: '{response}'")
             
             # Parse LLM response (handle markdown wrapping and malformed JSON)
             logger.debug("Parsing LLM JSON response")
@@ -238,7 +256,9 @@ IMPORTANT EDGE CASES:
 - NEVER fabricate quotes - only use verbatim text from transcript
 - If unsure about relevance, err on the side of lower score
 
-RETURN FORMAT (JSON):
+CRITICAL: Return ONLY valid JSON, no explanations or markdown. Start your response with {{ immediately.
+
+RETURN FORMAT (JSON ONLY):
 {{
     "summary": "2-3 sentence video overview",
     "quotes": [
@@ -253,7 +273,7 @@ RETURN FORMAT (JSON):
     "key_themes": ["theme1", "theme2", "theme3"]
 }}
 
-Focus on quality over quantity. 3 great quotes > 7 mediocre quotes."""
+Focus on quality over quantity. 3 great quotes > 7 mediocre quotes. Return ONLY the JSON object above."""
         
         return prompt
     
@@ -286,6 +306,16 @@ Focus on quality over quantity. 3 great quotes > 7 mediocre quotes."""
         
         cleaned = cleaned.strip()
         
+        # If response doesn't start with {, try to find JSON object
+        if cleaned and not cleaned.startswith('{'):
+            logger.debug("Response doesn't start with JSON, attempting to extract")
+            # Look for first { and last }
+            start_idx = cleaned.find('{')
+            end_idx = cleaned.rfind('}')
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                cleaned = cleaned[start_idx:end_idx+1]
+                logger.debug(f"Extracted JSON from response: {len(cleaned)} characters")
+        
         # Attempt to parse JSON
         try:
             logger.debug("Attempting JSON parse")
@@ -294,6 +324,7 @@ Focus on quality over quantity. 3 great quotes > 7 mediocre quotes."""
             return result
         except json.JSONDecodeError as first_error:
             logger.warning(f"Initial JSON parse failed: {str(first_error)}, attempting repair")
+            logger.debug(f"Failed to parse response (first 500 chars): {cleaned[:500]}")
             # Attempt repair: remove trailing commas
             repaired = re.sub(r',(\s*[}\]])', r'\1', cleaned)
             try:
