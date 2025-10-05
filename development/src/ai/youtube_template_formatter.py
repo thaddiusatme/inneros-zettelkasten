@@ -29,14 +29,41 @@ class YouTubeTemplateFormatter:
     - Graceful handling of missing data
     
     Example:
-        formatter = YouTubeTemplateFormatter()
-        result = formatter.format_template(
-            quotes_data=extraction_result,
-            video_id="dQw4w9WgXcQ",
-            video_title="Example Video"
-        )
-        print(result["markdown"])
+        >>> formatter = YouTubeTemplateFormatter()
+        >>> quotes_data = {
+        ...     "summary": "Video about AI trends",
+        ...     "quotes": [{
+        ...         "text": "AI will transform everything",
+        ...         "timestamp": "01:15",
+        ...         "relevance_score": 0.88,
+        ...         "context": "Discusses AI impact",
+        ...         "category": "key-insight"
+        ...     }],
+        ...     "key_themes": ["AI", "Technology"]
+        ... }
+        >>> result = formatter.format_template(
+        ...     quotes_data=quotes_data,
+        ...     video_id="dQw4w9WgXcQ"
+        ... )
+        >>> print(result["markdown"])
+        # Video Summary
+        Video about AI trends
+        ...
     """
+    
+    # Category display names with emojis (class constant)
+    CATEGORY_DISPLAY = {
+        "key-insight": "🎯 Key Insights",
+        "actionable": "💡 Actionable Insights",
+        "quote": "📝 Notable Quotes",
+        "definition": "📖 Definitions"
+    }
+    
+    # Category processing order
+    CATEGORY_ORDER = ["key-insight", "actionable", "quote", "definition"]
+    
+    # YouTube URL template
+    YOUTUBE_URL_TEMPLATE = "https://youtu.be/{video_id}?t={seconds}"
     
     def __init__(self):
         """Initialize the template formatter."""
@@ -57,28 +84,52 @@ class YouTubeTemplateFormatter:
                 - quotes: List of quote objects
                 - summary: Video summary string
                 - key_themes: List of theme strings
-            video_id: YouTube video ID
-            video_title: Optional video title
+            video_id: YouTube video ID (e.g., "dQw4w9WgXcQ")
+            video_title: Optional video title for metadata
             
         Returns:
             Dict with:
-                - markdown: Formatted markdown string
-                - metadata: Template metadata (quote_count, categories, etc)
+                - markdown: Complete formatted markdown string
+                - metadata: Template metadata including:
+                  - quote_count: Number of quotes
+                  - categories: List of quote categories present
+                  - average_score: Mean relevance score
+                  - video_id: YouTube video ID
+                  - has_summary: Whether summary exists
+                  - theme_count: Number of themes
                 
         Raises:
-            ValueError: If required data is missing
+            ValueError: If quotes_data is None or video_id is empty
+            
+        Example:
+            >>> result = formatter.format_template(
+            ...     quotes_data={"summary": "...", "quotes": [...], "key_themes": [...]},
+            ...     video_id="abc123"
+            ... )
+            >>> print(result["metadata"]["quote_count"])
+            5
         """
+        # Input validation
+        if quotes_data is None:
+            raise ValueError("quotes_data cannot be None")
+        if not video_id or not video_id.strip():
+            raise ValueError("video_id cannot be empty")
+        
         logger.info(f"Formatting template for video: {video_id}")
         
         # Store video_id for use in timestamp links
         self._current_video_id = video_id
         
-        # Extract data from quotes_data
+        # Extract data from quotes_data with defaults
         quotes = quotes_data.get("quotes", [])
         summary = quotes_data.get("summary", "")
         themes = quotes_data.get("key_themes", [])
         
-        logger.debug(f"Processing {len(quotes)} quotes, summary length: {len(summary)}, {len(themes)} themes")
+        logger.debug(
+            f"Processing {len(quotes)} quotes, "
+            f"summary length: {len(summary)} chars, "
+            f"{len(themes)} themes"
+        )
         
         # Build markdown sections
         sections = []
@@ -130,24 +181,18 @@ class YouTubeTemplateFormatter:
         if not quotes:
             return "*No quotes available.*\n"
         
-        # Group quotes by category
+        logger.debug(f"Grouping {len(quotes)} quotes by category")
         grouped = self.group_quotes_by_category(quotes)
-        
-        # Category display names and emojis
-        category_display = {
-            "key-insight": "🎯 Key Insights",
-            "actionable": "💡 Actionable Insights",
-            "quote": "📝 Notable Quotes",
-            "definition": "📖 Definitions"
-        }
+        logger.debug(f"Found {len(grouped)} categories: {list(grouped.keys())}")
         
         sections = []
         
-        # Format each category
-        for category in ["key-insight", "actionable", "quote", "definition"]:
+        # Format each category in defined order
+        for category in self.CATEGORY_ORDER:
             if category in grouped and grouped[category]:
                 cat_quotes = grouped[category]
-                display_name = category_display.get(category, category.title())
+                display_name = self.CATEGORY_DISPLAY.get(category, category.title())
+                logger.debug(f"Formatting {len(cat_quotes)} quotes for category: {category}")
                 
                 sections.append(f"\n### {display_name}\n")
                 
@@ -177,10 +222,20 @@ class YouTubeTemplateFormatter:
         Group quotes by their category field.
         
         Args:
-            quotes: List of quote objects
+            quotes: List of quote objects with 'category' field
             
         Returns:
             Dict mapping category names to lists of quotes
+            
+        Example:
+            >>> quotes = [
+            ...     {"text": "Q1", "category": "key-insight"},
+            ...     {"text": "Q2", "category": "actionable"},
+            ...     {"text": "Q3", "category": "key-insight"}
+            ... ]
+            >>> grouped = formatter.group_quotes_by_category(quotes)
+            >>> len(grouped["key-insight"])
+            2
         """
         grouped = {}
         
@@ -190,6 +245,7 @@ class YouTubeTemplateFormatter:
                 grouped[category] = []
             grouped[category].append(quote)
         
+        logger.debug(f"Grouped {len(quotes)} quotes into {len(grouped)} categories")
         return grouped
     
     def format_summary_section(
@@ -205,19 +261,29 @@ class YouTubeTemplateFormatter:
             themes: List of key theme strings
             
         Returns:
-            Formatted markdown string
+            Formatted markdown string with summary and themes
+            
+        Example:
+            >>> markdown = formatter.format_summary_section(
+            ...     summary="Great video about AI",
+            ...     themes=["AI", "Technology"]
+            ... )
+            >>> "# Video Summary" in markdown
+            True
         """
+        logger.debug(f"Formatting summary section: {len(themes)} themes")
         sections = []
         
-        # Summary
-        sections.append("# Video Summary\n\n")
+        # Summary header and content
+        sections.append(self._create_markdown_header("Video Summary", level=1))
         sections.append(f"{summary}\n")
         
-        # Themes
+        # Themes section
         if themes:
-            sections.append("\n## Key Themes\n\n")
+            sections.append(self._create_markdown_header("Key Themes", level=2))
             for theme in themes:
                 sections.append(f"- {theme}\n")
+            logger.debug(f"Added {len(themes)} themes to summary section")
         
         return "".join(sections)
     
@@ -235,9 +301,15 @@ class YouTubeTemplateFormatter:
             
         Returns:
             Markdown link: [MM:SS](https://youtu.be/ID?t=seconds)
+            
+        Example:
+            >>> link = formatter.create_timestamp_link("01:15", "abc123")
+            >>> link
+            '[01:15](https://youtu.be/abc123?t=75)'
         """
         seconds = self._timestamp_to_seconds(timestamp)
-        return f"[{timestamp}](https://youtu.be/{video_id}?t={seconds})"
+        url = self.YOUTUBE_URL_TEMPLATE.format(video_id=video_id, seconds=seconds)
+        return f"[{timestamp}]({url})"
     
     def _timestamp_to_seconds(self, timestamp: str) -> int:
         """
@@ -247,15 +319,44 @@ class YouTubeTemplateFormatter:
             timestamp: Timestamp in MM:SS or HH:MM:SS format
             
         Returns:
-            Total seconds as integer
+            Total seconds as integer (0 if invalid format)
+            
+        Example:
+            >>> formatter._timestamp_to_seconds("01:15")
+            75
+            >>> formatter._timestamp_to_seconds("01:05:30")
+            3930
         """
-        parts = timestamp.split(":")
-        
-        if len(parts) == 2:  # MM:SS
-            minutes, seconds = map(int, parts)
-            return minutes * 60 + seconds
-        elif len(parts) == 3:  # HH:MM:SS
-            hours, minutes, seconds = map(int, parts)
-            return hours * 3600 + minutes * 60 + seconds
-        else:
+        try:
+            parts = timestamp.split(":")
+            
+            if len(parts) == 2:  # MM:SS
+                minutes, seconds = map(int, parts)
+                return minutes * 60 + seconds
+            elif len(parts) == 3:  # HH:MM:SS
+                hours, minutes, seconds = map(int, parts)
+                return hours * 3600 + minutes * 60 + seconds
+            else:
+                logger.warning(f"Invalid timestamp format: {timestamp}")
+                return 0
+        except (ValueError, AttributeError) as e:
+            logger.error(f"Failed to parse timestamp '{timestamp}': {e}")
             return 0
+    
+    def _create_markdown_header(self, text: str, level: int = 1) -> str:
+        """
+        Create markdown header with proper formatting.
+        
+        Args:
+            text: Header text
+            level: Header level (1-6)
+            
+        Returns:
+            Formatted markdown header with newlines
+            
+        Example:
+            >>> formatter._create_markdown_header("Summary", level=2)
+            '\\n## Summary\\n\\n'
+        """
+        prefix = "#" * min(max(level, 1), 6)
+        return f"\n{prefix} {text}\n\n" if level > 1 else f"{prefix} {text}\n\n"
