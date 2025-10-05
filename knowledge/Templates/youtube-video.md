@@ -35,7 +35,7 @@ try {
   2. Build File Name & Path
 ------------------------------------------------------------------*/
 const stamp  = tp.date.now("YYYYMMDD-HHmm");
-const fname  = `youtube-${stamp}-${videoId}.md`;
+const fname  = `youtube-${stamp}-${videoId}`;
 const target = `Inbox/${fname}`;
 
 /*------------------------------------------------------------------
@@ -53,13 +53,14 @@ try {
 type: literature
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
-tags: [youtube, video-notes, literature]
+tags:
+  - youtube
+  - video-notes
+  - literature
 visibility: private
 source: youtube
 url: <% youtubeUrl %>
 video_id: <% videoId %>
-channel:
-duration:
 ---
 
 # Video Summary

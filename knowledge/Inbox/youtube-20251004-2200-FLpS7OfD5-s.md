@@ -1,15 +1,15 @@
-
 ---
 type: literature
 created: 2025-10-04 22:00
 status: inbox
-tags: [youtube, video-notes, literature]
+tags:
+  - youtube
+  - video-notes
+  - literature
 visibility: private
 source: youtube
 url: https://www.youtube.com/watch?v=FLpS7OfD5-s
 video_id: FLpS7OfD5-s
-channel:
-duration:
 ---
 
 # Video Summary
