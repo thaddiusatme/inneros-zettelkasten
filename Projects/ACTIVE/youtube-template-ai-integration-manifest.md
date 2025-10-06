@@ -16,6 +16,306 @@
 
 ---
 
+## 📊 Stakeholder Diagrams
+
+### 1. User Workflow Flowchart
+
+**Shows**: End-to-end user experience from template submission to enhanced note
+
+```mermaid
+flowchart TD
+    Start([User Finds YouTube Video]) --> OpenTemplate[Open YouTube Template in Obsidian]
+    OpenTemplate --> Prompt1[Templater Prompt 1: Paste YouTube URL]
+    Prompt1 --> ValidateURL{URL Valid?}
+    
+    ValidateURL -->|No| ErrorURL[Show Error: Invalid URL]
+    ErrorURL --> Prompt1
+    
+    ValidateURL -->|Yes| FetchMeta[Fetch Metadata via oEmbed API]
+    FetchMeta --> Prompt2[Templater Prompt 2: Why saving this?]
+    Prompt2 --> CreateNote[Create Note with Metadata<br/>Title, Channel, Thumbnail<br/>User's reason]
+    
+    CreateNote --> TriggerAI[🆕 Trigger AI Processing]
+    TriggerAI --> ShowNotif[Show Notification:<br/>'Processing transcript in background...']
+    ShowNotif --> UserContinues[User Continues Working]
+    
+    TriggerAI --> QueueAdd[Add to Processing Queue]
+    QueueAdd --> FetchTranscript[Fetch YouTube Transcript]
+    
+    FetchTranscript --> TranscriptCheck{Transcript<br/>Available?}
+    TranscriptCheck -->|No| HandleNoTranscript[Update Note:<br/>'Transcript unavailable'<br/>Status: failed]
+    HandleNoTranscript --> NotifyUser1[Notify User:<br/>Manual quotes needed]
+    
+    TranscriptCheck -->|Yes| CallLLM[Call Ollama LLM<br/>Extract Relevant Quotes]
+    CallLLM --> LLMCheck{LLM<br/>Available?}
+    
+    LLMCheck -->|No| RetryQueue[Add to Retry Queue]
+    RetryQueue --> WaitRetry[Wait for Retry Delay]
+    WaitRetry --> RetryCheck{Retry<br/>Attempts<br/>Left?}
+    RetryCheck -->|Yes| CallLLM
+    RetryCheck -->|No| HandleLLMFail[Update Note:<br/>Status: retry_failed]
+    HandleLLMFail --> NotifyUser2[Notify User:<br/>Manual processing available]
+    
+    LLMCheck -->|Yes| ExtractQuotes[Extract 3-12 Quotes<br/>by Category]
+    ExtractQuotes --> FormatQuotes[Format Quotes Section<br/>with Markdown]
+    FormatQuotes --> ParseNote[Parse Existing Note Structure]
+    ParseNote --> InsertQuotes[Insert Quotes Section<br/>After 'Why I'm Saving This']
+    InsertQuotes --> UpdateMeta[Update Frontmatter:<br/>ai_processed: true<br/>processed_at: timestamp<br/>quote_count: X]
+    UpdateMeta --> SaveNote[Save Enhanced Note]
+    SaveNote --> NotifySuccess[Notify User:<br/>'Note enhanced with AI quotes']
+    
+    NotifyUser1 --> End([Complete - Note Preserved])
+    NotifyUser2 --> End
+    NotifySuccess --> End
+    UserContinues --> End
+    
+    style TriggerAI fill:#90EE90
+    style QueueAdd fill:#87CEEB
+    style CallLLM fill:#FFD700
+    style SaveNote fill:#90EE90
+    style HandleNoTranscript fill:#FFA07A
+    style HandleLLMFail fill:#FFA07A
+```
+
+### 2. System Dataflow Diagram
+
+**Shows**: How data moves between components and external services
+
+```mermaid
+flowchart LR
+    subgraph User["👤 User (Obsidian)"]
+        Template[Templater Template]
+        Note[Enhanced Note File]
+    end
+    
+    subgraph External["🌐 External Services"]
+        YouTube[YouTube oEmbed API<br/>Title, Channel, Thumb]
+        TranscriptAPI[YouTube Transcript API<br/>Full Video Transcript]
+        Ollama[Ollama LLM Service<br/>Quote Extraction]
+    end
+    
+    subgraph NewComponents["🆕 New Components"]
+        Bridge[TemplaterBridge<br/>Template → Python]
+        Queue[(ProcessingQueue<br/>SQLite Database)]
+        Enhancer[YouTubeNoteEnhancer<br/>Note Parser & Updater]
+    end
+    
+    subgraph ExistingComponents["✅ Existing Components (Tested)"]
+        Processor[YouTubeProcessor<br/>Orchestration]
+        Fetcher[YouTubeTranscriptFetcher<br/>API Client]
+        Extractor[ContextAwareQuoteExtractor<br/>AI Logic]
+        Formatter[YouTubeTemplateFormatter<br/>Markdown Builder]
+    end
+    
+    Template -->|1. video_url<br/>user_reason| YouTube
+    YouTube -->|2. metadata JSON| Template
+    Template -->|3. Create note<br/>metadata + frontmatter| Note
+    Template -->|4. Trigger processing<br/>note_path, video_url| Bridge
+    
+    Bridge -->|5. Add job<br/>note_path, video_id| Queue
+    Queue -->|6. Pop next job| Processor
+    
+    Processor -->|7. Request transcript<br/>video_id| Fetcher
+    Fetcher -->|8. API call| TranscriptAPI
+    TranscriptAPI -->|9. transcript segments| Fetcher
+    Fetcher -->|10. formatted transcript| Processor
+    
+    Processor -->|11. Extract quotes<br/>transcript + context| Extractor
+    Extractor -->|12. LLM prompt| Ollama
+    Ollama -->|13. AI response<br/>extracted quotes| Extractor
+    Extractor -->|14. quotes + metadata| Processor
+    
+    Processor -->|15. Format quotes<br/>quotes data| Formatter
+    Formatter -->|16. markdown section| Processor
+    
+    Processor -->|17. Enhance note<br/>quotes + metadata| Enhancer
+    Enhancer -->|18. Read existing content| Note
+    Note -->|19. current structure| Enhancer
+    Enhancer -->|20. Write enhanced content<br/>preserve metadata| Note
+    
+    Enhancer -->|21. Update status<br/>completed/failed| Queue
+    Queue -->|22. Status update| Bridge
+    Bridge -->|23. Notify user<br/>success/failure| Template
+    
+    style Bridge fill:#90EE90
+    style Queue fill:#87CEEB
+    style Enhancer fill:#90EE90
+    style Note fill:#FFD700
+```
+
+### 3. Processing State Machine
+
+**Shows**: Note lifecycle from creation to AI-enhanced completion
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created: Template submits
+    
+    Created --> Queued: Add to processing queue<br/>frontmatter: ai_processed=false
+    
+    Queued --> Processing: Worker picks up job<br/>Update: processing=true
+    
+    Processing --> FetchingTranscript: Call transcript API
+    
+    FetchingTranscript --> TranscriptSuccess: Transcript received
+    FetchingTranscript --> TranscriptFailed: No transcript available
+    
+    TranscriptSuccess --> ExtractingQuotes: Call Ollama LLM
+    
+    ExtractingQuotes --> QuotesSuccess: Quotes extracted
+    ExtractingQuotes --> LLMFailed: LLM unavailable
+    
+    QuotesSuccess --> Enhancing: Parse & insert quotes
+    
+    Enhancing --> Enhanced: Note saved successfully<br/>frontmatter: ai_processed=true
+    
+    LLMFailed --> Retry: Retry attempt < 3
+    Retry --> ExtractingQuotes: Wait & retry
+    
+    LLMFailed --> RetryExhausted: Max retries reached
+    TranscriptFailed --> Failed: Update frontmatter<br/>status: failed
+    RetryExhausted --> Failed
+    
+    Enhanced --> [*]: ✅ Complete
+    Failed --> ManualProcessing: User triggers<br/>--force flag
+    ManualProcessing --> Queued: Re-queue
+    Failed --> [*]: ⚠️ Preserved without AI
+    
+    note right of Created
+        Note has metadata:
+        - Title, Channel, Thumb
+        - User reason
+        - video_url, video_id
+    end note
+    
+    note right of Enhanced
+        Enhanced note includes:
+        - Original metadata
+        - AI-extracted quotes
+        - Processing timestamp
+        - Quote statistics
+    end note
+    
+    note right of Failed
+        Failed note preserved:
+        - All metadata intact
+        - Error reason logged
+        - Manual retry available
+    end note
+```
+
+### 4. Error Handling & Recovery Flow
+
+**Shows**: Graceful degradation and user recovery options
+
+```mermaid
+flowchart TD
+    Start([Processing Triggered]) --> CheckTranscript{Can Fetch<br/>Transcript?}
+    
+    CheckTranscript -->|Yes| CheckLLM{Is Ollama<br/>Running?}
+    CheckTranscript -->|No| TransError[Error: Transcript Unavailable]
+    
+    CheckLLM -->|Yes| Processing[Extract Quotes Successfully]
+    CheckLLM -->|No| LLMError[Error: LLM Service Down]
+    
+    TransError --> UpdateNote1[Update Note Frontmatter:<br/>ai_processed: false<br/>error: transcript_unavailable]
+    UpdateNote1 --> Notify1[Obsidian Notification:<br/>'Transcript not available<br/>for this video']
+    Notify1 --> Note1[Note Preserved with:<br/>✓ Metadata<br/>✓ User reason<br/>✗ No AI quotes]
+    Note1 --> Option1[User Options:<br/>1. Keep note as-is<br/>2. Add quotes manually<br/>3. Find alternative source]
+    
+    LLMError --> RetryLogic{Retry<br/>Attempt < 3?}
+    RetryLogic -->|Yes| QueueRetry[Add to Retry Queue<br/>Wait 60s]
+    QueueRetry --> WaitNotify[Notification:<br/>'Retrying in background...']
+    WaitNotify --> CheckLLM
+    
+    RetryLogic -->|No| UpdateNote2[Update Note Frontmatter:<br/>ai_processed: false<br/>error: llm_unavailable<br/>retry_count: 3]
+    UpdateNote2 --> Notify2[Obsidian Notification:<br/>'AI processing failed<br/>Manual retry available']
+    Notify2 --> Note2[Note Preserved with:<br/>✓ Metadata<br/>✓ User reason<br/>✗ No AI quotes]
+    Note2 --> Option2[User Options:<br/>1. Try manual CLI command<br/>2. Wait and retry later<br/>3. Keep note as-is]
+    
+    Processing --> Success[Update Note:<br/>ai_processed: true<br/>Insert AI quotes<br/>Add statistics]
+    Success --> NotifySuccess[Notification:<br/>'Note enhanced with<br/>7 relevant quotes']
+    NotifySuccess --> CompleteNote[✅ Complete Enhanced Note:<br/>✓ Metadata<br/>✓ User reason<br/>✓ AI quotes<br/>✓ Categories]
+    
+    Option1 --> Manual1[Manual Processing:<br/>workflow_demo.py<br/>--process-youtube-note<br/>--force]
+    Option2 --> Manual2[Manual Processing:<br/>workflow_demo.py<br/>--process-youtube-note<br/>--force]
+    
+    Manual1 --> CheckTranscript
+    Manual2 --> CheckLLM
+    
+    CompleteNote --> End([System Complete])
+    Option1 --> End
+    Option2 --> End
+    
+    style TransError fill:#FFA07A
+    style LLMError fill:#FFA07A
+    style Note1 fill:#FFE4B5
+    style Note2 fill:#FFE4B5
+    style CompleteNote fill:#90EE90
+    style Success fill:#90EE90
+    style Manual1 fill:#87CEEB
+    style Manual2 fill:#87CEEB
+```
+
+### 5. Component Interaction Timeline
+
+**Shows**: Sequence of operations from user action to completion
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Templater
+    participant Bridge as TemplaterBridge
+    participant Queue as ProcessingQueue
+    participant Processor as YouTubeProcessor
+    participant Enhancer as NoteEnhancer
+    participant File as Note File
+    participant Ollama as Ollama LLM
+    
+    User->>Templater: Enter YouTube URL
+    Templater->>Templater: Fetch metadata (oEmbed)
+    User->>Templater: Enter "Why saving this"
+    Templater->>File: Create note with metadata
+    
+    Note over Templater,File: ✅ Phase 1: Note Created (3-5 seconds)
+    
+    Templater->>Bridge: trigger_processing(note_path, url)
+    Bridge->>Queue: add_to_queue(note_path, video_id)
+    Queue-->>Bridge: job_id, position in queue
+    Bridge-->>Templater: trigger_id
+    Templater->>User: Show notification<br/>"Processing in background..."
+    
+    Note over User,Templater: User continues working
+    
+    Queue->>Processor: process_next_job()
+    Processor->>Processor: Fetch transcript (YouTube API)
+    Processor->>Ollama: Extract quotes with context
+    
+    Note over Processor,Ollama: ⏱️ Phase 2: AI Processing (30-60s)
+    
+    Ollama-->>Processor: 7 extracted quotes
+    Processor->>Enhancer: enhance_note(quotes_data)
+    Enhancer->>File: Read current content
+    File-->>Enhancer: Note structure
+    Enhancer->>Enhancer: Parse & insert quotes
+    Enhancer->>File: Write enhanced content
+    Enhancer->>File: Update frontmatter
+    
+    Note over Enhancer,File: ✅ Phase 3: Enhancement (1-2s)
+    
+    Enhancer-->>Processor: Enhancement complete
+    Processor-->>Queue: update_status(completed)
+    Queue-->>Bridge: job_completed(trigger_id)
+    Bridge->>User: Show notification<br/>"Note enhanced with 7 quotes"
+    
+    User->>File: Open enhanced note
+    File-->>User: Complete note with AI quotes
+    
+    Note over User,File: ✅ Total Time: 35-70 seconds
+```
+
+---
+
 ## 📊 Current State Analysis
 
 ### ✅ What's Working
