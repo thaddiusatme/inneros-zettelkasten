@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from src.utils.bug_reporter import BugReporter
+from src.utils.result_validator import ResultValidator
 
 
 class CoreWorkflowManager:
@@ -230,7 +231,7 @@ class CoreWorkflowManager:
             })
         
         # Validate and apply sensible defaults
-        result = self._validate_result(result)
+        result = ResultValidator.validate_workflow_result(result)
         
         # Check for total workflow failure (multiple errors)
         if len(result['errors']) >= 3:
@@ -239,32 +240,3 @@ class CoreWorkflowManager:
         
         return result
     
-    def _validate_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Validate result structure and apply sensible defaults.
-        
-        Ensures all expected keys are present with reasonable defaults.
-        
-        Args:
-            result: Result dict to validate
-            
-        Returns:
-            Validated result dict with defaults applied
-        """
-        # Ensure analytics has required fields
-        if 'analytics' in result and result['analytics']:
-            analytics = result['analytics']
-            analytics.setdefault('quality_score', 0.5)
-            analytics.setdefault('word_count', 0)
-            analytics.setdefault('tag_count', 0)
-            analytics.setdefault('link_count', 0)
-        
-        # Ensure ai_enhancement has success field
-        if 'ai_enhancement' in result and result['ai_enhancement']:
-            result['ai_enhancement'].setdefault('success', False)
-        
-        # Ensure connections is a list
-        if 'connections' not in result or result['connections'] is None:
-            result['connections'] = []
-        
-        return result
