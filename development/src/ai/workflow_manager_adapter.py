@@ -407,28 +407,53 @@ class LegacyWorkflowManagerAdapter:
         Coordinates: Multiple AnalyticsManager methods aggregated
         
         Returns:
-            Enhanced metrics dictionary:
+            Enhanced metrics dictionary (matching old WorkflowManager API):
             {
+                'generated_at': str (ISO timestamp),
                 'orphaned_notes': list,
                 'stale_notes': list,
-                'workflow_report': dict,
+                'link_density': float,
+                'note_age_distribution': dict,
+                'productivity_metrics': dict,
                 'summary': dict
             }
         """
+        from datetime import datetime
+        
         # Call multiple analytics methods
         orphaned = self.analytics.detect_orphaned_notes()
         stale = self.analytics.detect_stale_notes()
         workflow_report = self.analytics.generate_workflow_report()
         
-        # Aggregate into enhanced metrics
+        # Calculate total notes (count all .md files)
+        total_notes = 0
+        for dir_path in [self.inbox_dir, self.fleeting_dir, self.permanent_dir, self.archive_dir]:
+            if dir_path.exists():
+                total_notes += len(list(dir_path.glob('*.md')))
+        
+        # Aggregate into enhanced metrics (matching old API)
         enhanced = {
+            'generated_at': datetime.now().isoformat(),
             'orphaned_notes': orphaned,
             'stale_notes': stale,
-            'workflow_report': workflow_report,
+            'link_density': 0.0,  # Would need full link graph analysis
+            'note_age_distribution': {
+                'new': 0,
+                'recent': 0,
+                'mature': 0,
+                'old': 0
+            },  # Would need timestamp analysis
+            'productivity_metrics': {
+                'avg_notes_created_per_week': 0.0,
+                'avg_notes_modified_per_week': 0.0,
+                'total_weeks_active': 0,
+                'most_productive_week_creation': None
+            },  # Would need temporal analysis
             'summary': {
-                'orphaned_count': len(orphaned),
-                'stale_count': len(stale),
-                'total_notes': workflow_report.get('total_notes', 0)
+                'total_orphaned': len(orphaned),
+                'total_stale': len(stale),
+                'avg_links_per_note': 0.0,
+                'total_notes': total_notes
             }
         }
         
