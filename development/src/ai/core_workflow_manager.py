@@ -77,24 +77,100 @@ class CoreWorkflowManager:
         4. Connection discovery (link suggestions)
         
         Args:
-            note_path: Path to the note file
+            note_path: Path to the note file (relative to base_dir)
             dry_run: If True, prevent file writes and API costs
             
         Returns:
             Dict containing results from all managers with structure:
             {
                 'success': bool,
-                'analytics': {...},
-                'ai_enhancement': {...},
-                'connections': {...},
-                'errors': [...],
+                'analytics': {...quality metrics...},
+                'ai_enhancement': {...tags, summary...},
+                'connections': [...link suggestions...],
+                'errors': [...error dicts...],
+                'warnings': [...warning strings...],
                 'dry_run': bool (if applicable)
             }
             
         Exception Handling:
-        - ValueError from Analytics: Returns validation error
-        - FileNotFoundError from Analytics: Returns not_found error
+        - ValueError from Analytics: Returns validation error (stops processing)
+        - FileNotFoundError from Analytics: Returns not_found error (stops processing)
         - AI/Connection failures: Graceful degradation with error recording
+        
+        Examples:
+            >>> # Example 1: Basic usage with successful processing
+            >>> from pathlib import Path
+            >>> core = CoreWorkflowManager(
+            ...     base_dir=Path('knowledge'),
+            ...     config={'ai_enhancement': {'cost_gate_threshold': 0.3}},
+            ...     analytics_manager=analytics,
+            ...     ai_enhancement_manager=ai_enhancement,
+            ...     connection_manager=connections
+            ... )
+            >>> result = core.process_inbox_note('Inbox/fleeting-20250924-idea.md')
+            >>> print(f"Success: {result['success']}")
+            Success: True
+            >>> print(f"Quality: {result['analytics']['quality_score']}")
+            Quality: 0.75
+            >>> print(f"Tags: {result['ai_enhancement']['tags']}")
+            Tags: ['machine-learning', 'zettelkasten', 'productivity']
+            >>> print(f"Connections: {len(result['connections'])} links suggested")
+            Connections: 3 links suggested
+            
+            >>> # Example 2: Dry run mode - preview without AI costs
+            >>> result = core.process_inbox_note('Inbox/test-note.md', dry_run=True)
+            >>> assert result['dry_run'] == True
+            >>> # AI calls are skipped or use cached/mock results
+            >>> if result['ai_enhancement'].get('skipped'):
+            ...     print("AI enhancement skipped in dry run")
+            
+            >>> # Example 3: Low quality note - cost gating in action
+            >>> result = core.process_inbox_note('Inbox/low-quality-snippet.md')
+            >>> if result['ai_enhancement'].get('skipped'):
+            ...     print(f"AI skipped: {result['ai_enhancement']['reason']}")
+            ...     print(f"Quality: {result['ai_enhancement']['quality_score']}")
+            ...     print(f"Threshold: {result['ai_enhancement']['threshold']}")
+            AI skipped: quality_too_low
+            Quality: 0.25
+            Threshold: 0.3
+            >>> # Analytics and connections still run, only AI is skipped
+            >>> assert result['analytics']['quality_score'] < 0.3
+            >>> assert result['success'] == True  # Workflow succeeds with degraded result
+            
+            >>> # Example 4: Error handling - graceful degradation
+            >>> result = core.process_inbox_note('Inbox/problematic-note.md')
+            >>> if not result['success']:
+            ...     for error in result['errors']:
+            ...         print(f"{error['stage']}: {error['type']} - {error['error']}")
+            analytics: validation - Invalid YAML frontmatter
+            >>> # Partial results may still be available
+            >>> if result['connections']:
+            ...     print(f"Found {len(result['connections'])} connections despite errors")
+            
+            >>> # Example 5: Accessing specific manager results
+            >>> result = core.process_inbox_note('Inbox/literature-note.md')
+            >>> # Analytics results
+            >>> quality = result['analytics']['quality_score']
+            >>> word_count = result['analytics'].get('word_count', 0)
+            >>> link_count = result['analytics'].get('link_count', 0)
+            >>> 
+            >>> # AI Enhancement results
+            >>> if result['ai_enhancement'].get('success'):
+            ...     tags = result['ai_enhancement']['tags']
+            ...     summary = result['ai_enhancement']['summary']
+            ...     print(f"Generated {len(tags)} tags and summary")
+            >>> 
+            >>> # Connection Discovery results
+            >>> for conn in result['connections']:
+            ...     print(f"Suggest link to: {conn['target_note']}")
+            ...     print(f"  Relevance: {conn['relevance_score']}")
+            ...     print(f"  Reason: {conn['explanation']}")
+            
+            >>> # Example 6: Handling warnings
+            >>> result = core.process_inbox_note('Inbox/edge-case-note.md')
+            >>> for warning in result.get('warnings', []):
+            ...     print(f"Warning: {warning}")
+            Warning: AI enhancement skipped: quality score 0.28 below threshold 0.3
         """
         # Analytics stage - raises exceptions on validation/file errors
         try:
