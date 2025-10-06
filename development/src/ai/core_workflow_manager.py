@@ -15,10 +15,16 @@ Design Principles:
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import TYPE_CHECKING
 
+from src.ai.types import WorkflowResult, ConfigDict
 from src.utils.bug_reporter import BugReporter
 from src.utils.result_validator import ResultValidator
+
+if TYPE_CHECKING:
+    from src.ai.analytics_manager import AnalyticsManager
+    from src.ai.ai_enhancement_manager import AIEnhancementManager
+    from src.ai.connection_manager import ConnectionManager
 
 
 class CoreWorkflowManager:
@@ -40,11 +46,11 @@ class CoreWorkflowManager:
     def __init__(
         self,
         base_dir: Path,
-        config: Dict[str, Any],
-        analytics_manager,
-        ai_enhancement_manager,
-        connection_manager
-    ):
+        config: ConfigDict,
+        analytics_manager: 'AnalyticsManager',
+        ai_enhancement_manager: 'AIEnhancementManager',
+        connection_manager: 'ConnectionManager'
+    ) -> None:
         """
         Initialize CoreWorkflowManager with dependency injection.
         
@@ -66,7 +72,7 @@ class CoreWorkflowManager:
         self,
         note_path: str,
         dry_run: bool = False
-    ) -> Dict[str, Any]:
+    ) -> WorkflowResult:
         """
         Process a note through the complete workflow.
         

@@ -19,8 +19,10 @@ Design Principles:
 """
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from datetime import datetime
+
+from src.ai.types import ConnectionResult, ConfigDict, LinkFeedback
 
 
 class ConnectionManager:
@@ -36,9 +38,9 @@ class ConnectionManager:
     def __init__(
         self,
         base_dir: Path,
-        config: Dict[str, Any],
-        embeddings_service=None
-    ):
+        config: ConfigDict,
+        embeddings_service: Optional[Any] = None
+    ) -> None:
         """
         Initialize ConnectionManager.
         
@@ -56,7 +58,7 @@ class ConnectionManager:
         self,
         note_path: str,
         dry_run: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> ConnectionResult:
         """
         Discover potential link suggestions for a note.
         
@@ -171,8 +173,8 @@ class ConnectionManager:
     def predict_links(
         self,
         note_path: str,
-        similar_notes: List[Dict] = None
-    ) -> List[Dict[str, Any]]:
+        similar_notes: Optional[ConnectionResult] = None
+    ) -> ConnectionResult:
         """
         Predict and rank link suggestions.
         
@@ -347,7 +349,7 @@ class ConnectionManager:
         target: str,
         accepted: bool,
         similarity_score: float,
-        reason: str = None
+        reason: Optional[str] = None
     ) -> None:
         """
         Record user decision on link suggestion for learning.
@@ -467,7 +469,7 @@ class ConnectionManager:
         
         self.feedback_history.append(decision)
     
-    def get_feedback_history(self) -> List[Dict[str, Any]]:
+    def get_feedback_history(self) -> List[LinkFeedback]:
         """
         Get history of user link decisions.
         

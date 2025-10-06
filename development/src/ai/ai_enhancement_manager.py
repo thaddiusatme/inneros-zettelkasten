@@ -21,8 +21,9 @@ Design Principles:
 """
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, List, Optional
 
+from src.ai.types import AIEnhancementResult, ConfigDict
 from src.utils.bug_reporter import BugReporter
 
 
@@ -46,11 +47,11 @@ class AIEnhancementManager:
     def __init__(
         self,
         base_dir: Path,
-        config: Dict[str, Any],
-        local_llm=None,
-        ai_tagger=None,
-        ai_summarizer=None
-    ):
+        config: ConfigDict,
+        local_llm: Optional[Any] = None,
+        ai_tagger: Optional[Any] = None,
+        ai_summarizer: Optional[Any] = None
+    ) -> None:
         """
         Initialize AIEnhancementManager.
         
@@ -74,7 +75,7 @@ class AIEnhancementManager:
         note_path: str,
         fast: bool = False,
         dry_run: bool = False
-    ) -> Dict[str, Any]:
+    ) -> AIEnhancementResult:
         """
         Enhance note with AI-generated tags and summary.
         
@@ -250,7 +251,7 @@ class AIEnhancementManager:
     def assess_promotion_readiness(
         self,
         note_path: str
-    ) -> Dict[str, Any]:
+    ) -> AIEnhancementResult:
         """
         Assess if a fleeting note is ready for promotion to permanent.
         
@@ -469,7 +470,7 @@ class AIEnhancementManager:
         tags = ['ai-generated']
         return self._enforce_kebab_case(tags)
     
-    def _enhance_with_local_llm(self, note_path: str) -> Dict[str, Any]:
+    def _enhance_with_local_llm(self, note_path: str) -> AIEnhancementResult:
         """Enhance using local Ollama LLM."""
         # Use local LLM if available
         if self.local_llm and hasattr(self.local_llm, 'enhance'):
@@ -492,7 +493,7 @@ class AIEnhancementManager:
             'summary': ''
         }
     
-    def _enhance_with_external_api(self, note_path: str) -> Dict[str, Any]:
+    def _enhance_with_external_api(self, note_path: str) -> AIEnhancementResult:
         """Enhance using external API as fallback."""
         # Use external API if available
         if self.external_api and hasattr(self.external_api, 'enhance'):

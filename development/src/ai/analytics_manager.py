@@ -20,8 +20,15 @@ Design Principles:
 
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, List, Optional, Union
 import re
+
+from src.ai.types import (
+    AnalyticsResult,
+    ConfigDict,
+    WorkflowReport,
+    ReviewCandidate
+)
 
 
 class AnalyticsManager:
@@ -38,7 +45,7 @@ class AnalyticsManager:
     NO AI Dependencies - can execute in parallel with ConnectionManager.
     """
     
-    def __init__(self, base_dir: Path, config: Dict[str, Any]):
+    def __init__(self, base_dir: Path, config: ConfigDict) -> None:
         """
         Initialize AnalyticsManager.
         
@@ -49,7 +56,7 @@ class AnalyticsManager:
         self.base_dir = Path(base_dir)
         self.config = config
         
-    def assess_quality(self, note_path: str, dry_run: bool = False) -> Dict[str, Any]:
+    def assess_quality(self, note_path: str, dry_run: bool = False) -> AnalyticsResult:
         """
         Assess the quality of a note based on multiple metrics.
         
@@ -235,7 +242,7 @@ class AnalyticsManager:
             }
         }
     
-    def detect_orphaned_notes(self) -> List[Dict[str, Any]]:
+    def detect_orphaned_notes(self) -> ReviewCandidate:
         """
         Detect notes with no incoming or outgoing links.
         
@@ -317,8 +324,8 @@ class AnalyticsManager:
     
     def detect_stale_notes(
         self,
-        days_threshold: int = None
-    ) -> List[Dict[str, Any]]:
+        days_threshold: Optional[int] = None
+    ) -> ReviewCandidate:
         """
         Detect notes not modified within threshold period.
         
@@ -421,7 +428,7 @@ class AnalyticsManager:
         
         return sorted(stale_notes, key=lambda x: x['days_since_modified'], reverse=True)
     
-    def generate_workflow_report(self) -> Dict[str, Any]:
+    def generate_workflow_report(self) -> WorkflowReport:
         """
         Generate aggregated workflow metrics across the vault.
         
@@ -552,8 +559,8 @@ class AnalyticsManager:
     
     def scan_review_candidates(
         self,
-        min_quality_score: float = None
-    ) -> List[Dict[str, Any]]:
+        min_quality_score: Optional[float] = None
+    ) -> ReviewCandidate:
         """
         Identify high-quality fleeting notes ready for promotion.
         
@@ -701,7 +708,7 @@ class AnalyticsManager:
         
         return link_graph
     
-    def _extract_title(self, file_path: Path) -> str:
+    def _extract_title(self, file_path: Union[str, Path]) -> str:
         """Extract title from note file."""
         if isinstance(file_path, str):
             file_path = Path(file_path)
@@ -717,7 +724,7 @@ class AnalyticsManager:
         
         return file_path.stem
     
-    def _generate_promotion_rationale(self, quality_result: Dict[str, Any]) -> str:
+    def _generate_promotion_rationale(self, quality_result: AnalyticsResult) -> str:
         """Generate human-readable rationale for promotion recommendation."""
         reasons = []
         
