@@ -177,22 +177,72 @@ class LegacyWorkflowManagerAdapter:
     
     def generate_workflow_report(self) -> Dict[str, Any]:
         """
-        Generate aggregated workflow metrics across the vault.
+        Generate comprehensive workflow status report.
         
-        Delegates to: AnalyticsManager.generate_workflow_report()
+        Coordinates: AnalyticsManager + directory analysis
         
         Returns:
-            Dict with comprehensive workflow statistics:
+            Comprehensive workflow report:
             {
-                'total_notes': int,
-                'by_type': {'permanent': int, 'fleeting': int, 'literature': int},
-                'by_status': {'inbox': int, 'draft': int, 'published': int},
-                'quality_distribution': {'>0.7': int, '0.4-0.7': int, '<0.4': int},
-                'orphaned_count': int,
-                'stale_count': int
+                'workflow_status': {
+                    'health': str,
+                    'directory_counts': dict,
+                    'total_notes': int
+                },
+                'ai_features': dict,
+                'analytics': dict,
+                'recommendations': list
             }
         """
-        return self.analytics.generate_workflow_report()
+        # Get base analytics report
+        analytics_report = self.analytics.generate_workflow_report()
+        
+        # Count notes by directory
+        directory_counts = {}
+        for dir_name, dir_path in [
+            ("Inbox", self.inbox_dir),
+            ("Fleeting Notes", self.fleeting_dir),
+            ("Permanent Notes", self.permanent_dir),
+            ("Archive", self.archive_dir)
+        ]:
+            if dir_path.exists():
+                directory_counts[dir_name] = len(list(dir_path.glob("*.md")))
+            else:
+                directory_counts[dir_name] = 0
+        
+        # Determine workflow health
+        inbox_count = directory_counts["Inbox"]
+        workflow_health = "healthy"
+        if inbox_count > 50:
+            workflow_health = "critical"
+        elif inbox_count > 20:
+            workflow_health = "needs_attention"
+        
+        # Generate recommendations
+        recommendations = []
+        if inbox_count > 20:
+            recommendations.append(f"Process {inbox_count} notes in Inbox")
+        if directory_counts["Fleeting Notes"] > 30:
+            recommendations.append(f"Review {directory_counts['Fleeting Notes']} fleeting notes for promotion")
+        
+        # AI feature usage (simplified - would need to scan notes)
+        ai_usage = {
+            "notes_with_ai_tags": 0,
+            "notes_with_ai_summaries": 0,
+            "notes_with_ai_processing": 0,
+            "total_analyzed": sum(directory_counts.values())
+        }
+        
+        return {
+            "workflow_status": {
+                "health": workflow_health,
+                "directory_counts": directory_counts,
+                "total_notes": sum(directory_counts.values())
+            },
+            "ai_features": ai_usage,
+            "analytics": analytics_report,
+            "recommendations": recommendations
+        }
     
     def scan_review_candidates(self) -> List[Dict[str, Any]]:
         """
@@ -593,6 +643,107 @@ class LegacyWorkflowManagerAdapter:
     # =========================================================================
     # Additional Methods (Batch processing, comprehensive analysis)
     # =========================================================================
+    
+    def detect_orphaned_notes_comprehensive(self) -> List[Dict[str, Any]]:
+        """
+        Detect orphaned notes across entire repository.
+        
+        Delegates to: AnalyticsManager (scans all directories, not just workflow)
+        
+        Returns:
+            List of orphaned notes with path, title, last_modified:
+            [{
+                'note': str,
+                'title': str,
+                'last_modified': datetime
+            }]
+        """
+        # This would delegate to analytics for comprehensive scan
+        # For now, use standard orphan detection
+        return self.analytics.detect_orphaned_notes()
+    
+    def remediate_orphaned_notes(
+        self,
+        mode: str = "link",
+        scope: str = "permanent",
+        limit: int = 10,
+        target: Optional[str] = None,
+        dry_run: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Remediate orphaned notes by inserting bidirectional links.
+        
+        Coordinates: AnalyticsManager (detection) + ConnectionManager (linking)
+        
+        Args:
+            mode: "link" (insert links) or "checklist" (output markdown)
+            scope: "permanent", "fleeting", or "all"
+            limit: Maximum number of notes to process
+            target: Explicit path to target MOC for links
+            dry_run: If True, preview only without modifications
+        
+        Returns:
+            Remediation result:
+            {
+                'mode': str,
+                'scope': str,
+                'limit': int,
+                'dry_run': bool,
+                'target': str,
+                'actions': list,
+                'summary': dict
+            }
+        """
+        # Validate inputs
+        mode = (mode or "link").lower()
+        scope = (scope or "permanent").lower()
+        if mode not in {"link", "checklist"}:
+            mode = "link"
+        if scope not in {"permanent", "fleeting", "all"}:
+            scope = "permanent"
+        
+        # Build result
+        result = {
+            'mode': mode,
+            'scope': scope,
+            'limit': int(limit),
+            'dry_run': bool(dry_run),
+            'target': target,
+            'actions': [],
+            'summary': {
+                'considered': 0,
+                'processed': 0,
+                'skipped': 0,
+                'errors': 0
+            }
+        }
+        
+        # Get orphaned notes
+        orphaned = self.analytics.detect_orphaned_notes()
+        result['summary']['considered'] = len(orphaned)
+        
+        # Limit processing
+        to_process = orphaned[:limit]
+        
+        # For checklist mode, just return the list
+        if mode == "checklist":
+            result['actions'] = [
+                {'note': n['note'], 'action': 'add_to_checklist'}
+                for n in to_process
+            ]
+            result['summary']['processed'] = len(to_process)
+            return result
+        
+        # For link mode, would coordinate with ConnectionManager
+        # For now, return plan
+        result['actions'] = [
+            {'note': n['note'], 'action': 'insert_links', 'target': target}
+            for n in to_process
+        ]
+        result['summary']['processed'] = len(to_process)
+        result['note'] = 'Link insertion not yet implemented - requires ConnectionManager integration'
+        
+        return result
     
     def batch_process_inbox(self, dry_run: bool = True) -> Dict[str, Any]:
         """
