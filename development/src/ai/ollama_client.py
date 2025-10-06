@@ -85,7 +85,7 @@ class OllamaClient:
                 "stream": False,
                 "options": {
                     "temperature": 0.3,
-                    "max_tokens": max_tokens
+                    "num_predict": max_tokens  # Ollama uses num_predict, not max_tokens
                 }
             }
             

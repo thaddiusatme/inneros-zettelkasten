@@ -20,4 +20,8 @@ __all__ = [
     'workflow_manager',
     'embedding_cache',
     'auto_processor',
+    'core_workflow_manager',
+    'analytics_manager',
+    'ai_enhancement_manager',
+    'connection_manager',
 ]

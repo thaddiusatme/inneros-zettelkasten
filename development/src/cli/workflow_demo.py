@@ -13,7 +13,7 @@ from datetime import datetime
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.ai.workflow_manager import WorkflowManager
+from src.ai.workflow_manager_adapter import LegacyWorkflowManagerAdapter as WorkflowManager
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
 from src.utils.directory_organizer import DirectoryOrganizer
 from src.ai.import_manager import (

@@ -342,6 +342,24 @@ class WorkflowManager:
         except Exception as e:
             results["processing"]["connections"] = {"error": str(e)}
         
+        # TDD Iteration 10: Track image references in note
+        try:
+            from utils.image_link_manager import ImageLinkManager
+            image_manager = ImageLinkManager(base_path=Path(self.base_dir))
+            image_links = image_manager.parse_image_links(content)
+            
+            if image_links:
+                results["processing"]["images"] = {
+                    "count": len(image_links),
+                    "references": [link.get("filename", link.get("path", "")) for link in image_links],
+                    "preserved": True
+                }
+                self.logger.debug(f"Tracked {len(image_links)} image references in {note_file.name}")
+        except ImportError:
+            self.logger.debug("Image link manager not available - skipping image tracking")
+        except Exception as e:
+            self.logger.warning(f"Could not track image references: {e}")
+        
         # Update note with AI enhancements (skip when dry_run)
         # Check if we need to update the file (AI processing OR template fixes)
         needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
