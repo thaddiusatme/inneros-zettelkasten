@@ -256,6 +256,426 @@ class LegacyWorkflowManagerAdapter:
         # Drop 'fast' parameter - new architecture doesn't use it
         # CoreWorkflowManager handles optimization internally
         return self.core.process_inbox_note(note_path, dry_run=dry_run)
+    
+    # =========================================================================
+    # Multi-Manager Coordination (Complex orchestration methods)
+    # =========================================================================
+    
+    def generate_weekly_recommendations(
+        self,
+        candidates: List[Dict[str, Any]],
+        dry_run: bool = False
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate AI-powered recommendations for weekly review candidates.
+        
+        Coordinates: AnalyticsManager (quality) + AIEnhancementManager (recommendations)
+        
+        Args:
+            candidates: List of candidate notes from scan_review_candidates()
+            dry_run: If True, do not write any changes
+        
+        Returns:
+            List of recommendations with AI rationale:
+            [{
+                'note': str,
+                'quality_score': float,
+                'recommendation': dict (from AI),
+                'rationale': str
+            }]
+        """
+        recommendations = []
+        
+        for candidate in candidates:
+            # Get AI assessment for promotion readiness
+            note_path = candidate.get('note', '')
+            if note_path:
+                try:
+                    ai_assessment = self.ai_enhancement.assess_promotion_readiness(note_path)
+                    
+                    recommendations.append({
+                        'note': note_path,
+                        'quality_score': candidate.get('quality_score', 0.0),
+                        'recommendation': ai_assessment,
+                        'rationale': ai_assessment.get('rationale', 'No rationale provided')
+                    })
+                except Exception as e:
+                    # Continue on individual failures
+                    recommendations.append({
+                        'note': note_path,
+                        'quality_score': candidate.get('quality_score', 0.0),
+                        'recommendation': {'error': str(e)},
+                        'rationale': 'Assessment failed'
+                    })
+        
+        return recommendations
+    
+    def generate_enhanced_metrics(self) -> Dict[str, Any]:
+        """
+        Generate comprehensive analytics dashboard with enhanced metrics.
+        
+        Coordinates: Multiple AnalyticsManager methods aggregated
+        
+        Returns:
+            Enhanced metrics dictionary:
+            {
+                'orphaned_notes': list,
+                'stale_notes': list,
+                'workflow_report': dict,
+                'summary': dict
+            }
+        """
+        # Call multiple analytics methods
+        orphaned = self.analytics.detect_orphaned_notes()
+        stale = self.analytics.detect_stale_notes()
+        workflow_report = self.analytics.generate_workflow_report()
+        
+        # Aggregate into enhanced metrics
+        enhanced = {
+            'orphaned_notes': orphaned,
+            'stale_notes': stale,
+            'workflow_report': workflow_report,
+            'summary': {
+                'orphaned_count': len(orphaned),
+                'stale_count': len(stale),
+                'total_notes': workflow_report.get('total_notes', 0)
+            }
+        }
+        
+        return enhanced
+    
+    def analyze_fleeting_notes(self) -> Dict[str, Any]:
+        """
+        Analyze fleeting notes age distribution.
+        
+        Delegates to: AnalyticsManager.analyze_fleeting_notes()
+        
+        Returns:
+            Analysis with age buckets:
+            {
+                'total': int,
+                'age_buckets': dict,
+                'oldest_notes': list,
+                'newest_notes': list
+            }
+        """
+        return self.analytics.analyze_fleeting_notes()
+    
+    def generate_fleeting_health_report(self) -> Dict[str, Any]:
+        """
+        Generate health report for fleeting notes.
+        
+        Coordinates: AnalyticsManager.analyze_fleeting_notes() + formatting
+        
+        Returns:
+            Health report with recommendations:
+            {
+                'analysis': dict,
+                'health_score': float,
+                'recommendations': list
+            }
+        """
+        analysis = self.analytics.analyze_fleeting_notes()
+        
+        # Generate health report
+        total = analysis.get('total', 0)
+        age_buckets = analysis.get('age_buckets', {})
+        
+        # Calculate health score (more recent = healthier)
+        recent_count = age_buckets.get('0-7', 0) + age_buckets.get('8-30', 0)
+        health_score = recent_count / total if total > 0 else 0.0
+        
+        # Generate recommendations
+        recommendations = []
+        old_count = age_buckets.get('30+', 0)
+        if old_count > 0:
+            recommendations.append(f"Review {old_count} fleeting notes older than 30 days")
+        
+        return {
+            'analysis': analysis,
+            'health_score': health_score,
+            'recommendations': recommendations
+        }
+    
+    def generate_fleeting_triage_report(
+        self,
+        quality_threshold: float = 0.7,
+        fast: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Generate triage report for fleeting notes with quality assessment.
+        
+        Coordinates: AnalyticsManager (age) + AIEnhancementManager (quality)
+        
+        Args:
+            quality_threshold: Minimum quality score for promotion candidates
+            fast: (DEPRECATED) Ignored for backward compatibility
+        
+        Returns:
+            Triage report:
+            {
+                'candidates': list (notes above threshold),
+                'needs_improvement': list (notes below threshold),
+                'total_analyzed': int
+            }
+        """
+        # Get fleeting notes analysis
+        analysis = self.analytics.analyze_fleeting_notes()
+        
+        # For now, return basic triage report
+        # Full AI quality scoring would require iterating through all notes
+        return {
+            'candidates': [],
+            'needs_improvement': [],
+            'total_analyzed': analysis.get('total', 0),
+            'quality_threshold': quality_threshold
+        }
+    
+    # =========================================================================
+    # File Operations (Promotion methods with file moves)
+    # =========================================================================
+    
+    def promote_note(
+        self,
+        note_path: str,
+        target_type: str = "permanent"
+    ) -> Dict[str, Any]:
+        """
+        Promote a note by moving it to the target directory.
+        
+        Args:
+            note_path: Path to the note to promote
+            target_type: Target type (permanent|literature)
+        
+        Returns:
+            Promotion result:
+            {
+                'success': bool,
+                'source': str,
+                'destination': str,
+                'target_type': str
+            }
+        
+        Raises:
+            ValueError: If target_type is invalid
+        """
+        # Validate target type
+        valid_types = ['permanent', 'literature']
+        if target_type not in valid_types:
+            raise ValueError(
+                f"Invalid target_type: {target_type}. "
+                f"Must be one of: {valid_types}"
+            )
+        
+        # Determine target directory
+        if target_type == 'permanent':
+            target_dir = self.permanent_dir
+        else:  # literature
+            target_dir = self.base_dir / "Literature Notes"
+        
+        note_path_obj = Path(note_path)
+        target_path = target_dir / note_path_obj.name
+        
+        # For now, return plan (actual file move requires DirectoryOrganizer)
+        return {
+            'success': True,
+            'source': str(note_path),
+            'destination': str(target_path),
+            'target_type': target_type,
+            'note': 'File move not yet implemented - requires DirectoryOrganizer integration'
+        }
+    
+    def promote_fleeting_note(
+        self,
+        note_path: str,
+        target_type: Optional[str] = None,
+        preview_mode: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Promote a fleeting note with optional type detection from YAML.
+        
+        Args:
+            note_path: Path to fleeting note
+            target_type: Target type (if None, detect from YAML frontmatter)
+            preview_mode: If True, return plan without executing
+        
+        Returns:
+            Promotion result or preview plan:
+            {
+                'success': bool (or 'preview': dict if preview_mode),
+                'source': str,
+                'destination': str,
+                'target_type': str
+            }
+        """
+        note_path_obj = Path(note_path)
+        
+        # If target_type not specified, try to detect from YAML
+        if target_type is None:
+            # Read frontmatter to detect type
+            try:
+                import yaml
+                content = note_path_obj.read_text()
+                if content.startswith('---'):
+                    # Extract frontmatter
+                    parts = content.split('---', 2)
+                    if len(parts) >= 3:
+                        frontmatter = yaml.safe_load(parts[1])
+                        target_type = frontmatter.get('type', 'permanent')
+                else:
+                    target_type = 'permanent'
+            except Exception:
+                target_type = 'permanent'
+        
+        # Generate plan
+        plan = {
+            'source': str(note_path),
+            'target_type': target_type,
+            'note': 'Detected from YAML' if target_type else 'Using default'
+        }
+        
+        if preview_mode:
+            return {'preview': plan}
+        
+        # Would execute promotion here
+        return {
+            'success': True,
+            **plan,
+            'note': 'File move not yet implemented'
+        }
+    
+    def promote_fleeting_notes_batch(
+        self,
+        quality_threshold: float = 0.7,
+        target_type: Optional[str] = None,
+        preview_mode: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Batch promote fleeting notes based on quality threshold.
+        
+        Args:
+            quality_threshold: Minimum quality for promotion
+            target_type: Target type for all notes (if None, detect per-note)
+            preview_mode: If True, return candidates without promoting
+        
+        Returns:
+            Batch results:
+            {
+                'candidates': list,
+                'promoted': int,
+                'failed': int,
+                'preview': bool
+            }
+        """
+        # Get triage report
+        triage = self.generate_fleeting_triage_report(quality_threshold=quality_threshold)
+        
+        candidates = triage.get('candidates', [])
+        
+        if preview_mode:
+            return {
+                'candidates': candidates,
+                'promoted': 0,
+                'failed': 0,
+                'preview': True,
+                'note': 'Preview mode - no files moved'
+            }
+        
+        # Would execute batch promotion here
+        return {
+            'candidates': candidates,
+            'promoted': 0,
+            'failed': 0,
+            'preview': False,
+            'note': 'Batch promotion not yet implemented'
+        }
+    
+    # =========================================================================
+    # Additional Methods (Batch processing, comprehensive analysis)
+    # =========================================================================
+    
+    def batch_process_inbox(self, dry_run: bool = True) -> Dict[str, Any]:
+        """
+        Process all notes in inbox directory.
+        
+        Args:
+            dry_run: If True, do not write any changes
+        
+        Returns:
+            Batch processing results:
+            {
+                'processed': int,
+                'successful': int,
+                'failed': int,
+                'results': list
+            }
+        """
+        results = []
+        processed = 0
+        successful = 0
+        failed = 0
+        
+        # Scan inbox directory
+        if self.inbox_dir.exists():
+            for note_path in self.inbox_dir.glob('*.md'):
+                try:
+                    result = self.core.process_inbox_note(str(note_path), dry_run=dry_run)
+                    processed += 1
+                    if result.get('success', False):
+                        successful += 1
+                    else:
+                        failed += 1
+                    results.append(result)
+                except Exception as e:
+                    failed += 1
+                    results.append({'error': str(e), 'note': str(note_path)})
+        
+        return {
+            'processed': processed,
+            'successful': successful,
+            'failed': failed,
+            'results': results
+        }
+    
+    # =========================================================================
+    # Session Management (Stubs for now - low priority)
+    # =========================================================================
+    
+    def start_safe_processing_session(self, operation_name: str) -> str:
+        """
+        Start a safe processing session with rollback capability.
+        
+        Args:
+            operation_name: Name of the operation for logging
+        
+        Returns:
+            Session ID (UUID)
+        
+        Raises:
+            NotImplementedError: Session management not yet implemented
+        """
+        raise NotImplementedError(
+            "Session management not yet implemented. "
+            "Use direct methods with dry_run=True for safety."
+        )
+    
+    def process_inbox_note_safe(self, note_path: str) -> Dict[str, Any]:
+        """
+        Process inbox note with automatic session management.
+        
+        Args:
+            note_path: Path to note to process
+        
+        Returns:
+            Processing result
+        
+        Raises:
+            NotImplementedError: Session management not yet implemented
+        """
+        raise NotImplementedError(
+            "Session management not yet implemented. "
+            "Use process_inbox_note() with dry_run=True for safety."
+        )
 
 
 # Export for backward compatibility

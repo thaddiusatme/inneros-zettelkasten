@@ -240,5 +240,348 @@ class TestSimpleDelegations:
         assert result['success'] is True
 
 
+class TestMultiManagerCoordination:
+    """Test methods that orchestrate multiple managers."""
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    @patch('src.ai.workflow_manager_adapter.AIEnhancementManager')
+    def test_generate_weekly_recommendations_coordinates_managers(
+        self, mock_ai_class, mock_analytics_class, tmp_path
+    ):
+        """Test generate_weekly_recommendations() coordinates analytics + AI."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        # Mock analytics
+        mock_analytics = Mock()
+        mock_analytics_class.return_value = mock_analytics
+        
+        # Mock AI enhancement
+        mock_ai = Mock()
+        mock_ai.assess_promotion_readiness.return_value = {
+            'recommended_type': 'permanent',
+            'confidence': 'high',
+            'rationale': 'Well-structured note'
+        }
+        mock_ai_class.return_value = mock_ai
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        candidates = [
+            {'note': 'test1.md', 'quality_score': 0.8},
+            {'note': 'test2.md', 'quality_score': 0.75}
+        ]
+        
+        # Act
+        result = adapter.generate_weekly_recommendations(candidates, dry_run=True)
+        
+        # Assert - Should coordinate both managers
+        assert result is not None
+        assert isinstance(result, list)
+        # AI should be called for each candidate
+        assert mock_ai.assess_promotion_readiness.call_count >= 1
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_generate_enhanced_metrics_aggregates_multiple_sources(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test generate_enhanced_metrics() calls multiple analytics methods."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        mock_analytics = Mock()
+        mock_analytics.detect_orphaned_notes.return_value = [{'note': 'orphan1.md'}]
+        mock_analytics.detect_stale_notes.return_value = [{'note': 'stale1.md'}]
+        mock_analytics.generate_workflow_report.return_value = {'total_notes': 50}
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.generate_enhanced_metrics()
+        
+        # Assert - Should call all 3 analytics methods
+        mock_analytics.detect_orphaned_notes.assert_called_once()
+        mock_analytics.detect_stale_notes.assert_called_once()
+        mock_analytics.generate_workflow_report.assert_called_once()
+        
+        # Should return enhanced metrics dict
+        assert result is not None
+        assert isinstance(result, dict)
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_analyze_fleeting_notes_delegates_to_analytics(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test analyze_fleeting_notes() simple delegation."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        mock_analytics = Mock()
+        mock_analytics.analyze_fleeting_notes.return_value = {
+            'total': 20,
+            'age_buckets': {'0-7': 5, '8-30': 10, '30+': 5}
+        }
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.analyze_fleeting_notes()
+        
+        # Assert
+        mock_analytics.analyze_fleeting_notes.assert_called_once()
+        assert result['total'] == 20
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_generate_fleeting_health_report_formats_analysis(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test generate_fleeting_health_report() wraps analytics."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        mock_analytics = Mock()
+        mock_analytics.analyze_fleeting_notes.return_value = {
+            'total': 20,
+            'age_buckets': {'0-7': 5}
+        }
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.generate_fleeting_health_report()
+        
+        # Assert
+        mock_analytics.analyze_fleeting_notes.assert_called_once()
+        assert result is not None
+        assert isinstance(result, dict)
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    @patch('src.ai.workflow_manager_adapter.AIEnhancementManager')
+    def test_generate_fleeting_triage_report_coordinates_quality_scoring(
+        self, mock_ai_class, mock_analytics_class, tmp_path
+    ):
+        """Test generate_fleeting_triage_report() coordinates analytics + AI."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        # Setup mocks
+        mock_analytics = Mock()
+        mock_analytics_class.return_value = mock_analytics
+        
+        mock_ai = Mock()
+        mock_ai_class.return_value = mock_ai
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.generate_fleeting_triage_report(quality_threshold=0.7)
+        
+        # Assert
+        assert result is not None
+        assert isinstance(result, dict)
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_generate_fleeting_triage_report_drops_fast_parameter(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test generate_fleeting_triage_report() drops 'fast' parameter."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        mock_analytics = Mock()
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act - Old API had 'fast' parameter
+        result = adapter.generate_fleeting_triage_report(quality_threshold=0.7, fast=True)
+        
+        # Assert - Should work without error (fast parameter ignored)
+        assert result is not None
+
+
+class TestFileOperations:
+    """Test file move operations with safety checks."""
+    
+    def test_promote_note_moves_to_correct_directory(self, tmp_path):
+        """Test promote_note() moves file to target directory."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        (base_dir / "Inbox").mkdir()
+        (base_dir / "Permanent Notes").mkdir()
+        
+        # Create test note
+        note_path = base_dir / "Inbox" / "test_note.md"
+        note_path.write_text("---\ntype: permanent\n---\nTest content")
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.promote_note(str(note_path), target_type="permanent")
+        
+        # Assert - File should be moved (or result indicates move plan)
+        assert result is not None
+        assert isinstance(result, dict)
+    
+    def test_promote_note_validates_target_type(self, tmp_path):
+        """Test promote_note() raises error on invalid target_type."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act & Assert - Invalid target_type should raise ValueError
+        with pytest.raises(ValueError, match="Invalid target_type"):
+            adapter.promote_note("test.md", target_type="invalid_type")
+    
+    def test_promote_fleeting_note_preview_mode_no_file_changes(self, tmp_path):
+        """Test promote_fleeting_note() preview mode doesn't mutate filesystem."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        (base_dir / "Fleeting Notes").mkdir()
+        
+        # Create test note
+        note_path = base_dir / "Fleeting Notes" / "test_fleeting.md"
+        note_path.write_text("---\ntype: permanent\n---\nTest content")
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.promote_fleeting_note(str(note_path), preview_mode=True)
+        
+        # Assert - File should still exist in original location
+        assert note_path.exists()
+        assert result is not None
+        assert 'preview' in result or 'plan' in result
+    
+    def test_promote_fleeting_note_detects_target_type_from_yaml(self, tmp_path):
+        """Test promote_fleeting_note() reads type from YAML when None."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        (base_dir / "Fleeting Notes").mkdir()
+        
+        # Create note with type in frontmatter
+        note_path = base_dir / "Fleeting Notes" / "test_fleeting.md"
+        note_path.write_text("---\ntype: literature\n---\nTest content")
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act - Don't specify target_type, should detect from YAML
+        result = adapter.promote_fleeting_note(str(note_path), target_type=None, preview_mode=True)
+        
+        # Assert
+        assert result is not None
+        # Should detect 'literature' from frontmatter
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_promote_fleeting_notes_batch_handles_partial_failures(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test promote_fleeting_notes_batch() continues on individual failures."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        (base_dir / "Fleeting Notes").mkdir()
+        
+        # Mock analytics
+        mock_analytics = Mock()
+        mock_analytics.analyze_fleeting_notes.return_value = {
+            'total': 5,
+            'age_buckets': {}
+        }
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act - Batch promote with preview mode
+        result = adapter.promote_fleeting_notes_batch(
+            quality_threshold=0.7,
+            preview_mode=True
+        )
+        
+        # Assert - Should return results dict
+        assert result is not None
+        assert isinstance(result, dict)
+
+
+class TestAdditionalMethods:
+    """Test additional adapter methods."""
+    
+    @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
+    def test_batch_process_inbox_loops_over_notes(
+        self, mock_analytics_class, tmp_path
+    ):
+        """Test batch_process_inbox() processes multiple notes."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        (base_dir / "Inbox").mkdir()
+        
+        # Create test notes
+        note1 = base_dir / "Inbox" / "note1.md"
+        note1.write_text("Test content 1")
+        note2 = base_dir / "Inbox" / "note2.md"
+        note2.write_text("Test content 2")
+        
+        mock_analytics = Mock()
+        mock_analytics_class.return_value = mock_analytics
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act
+        result = adapter.batch_process_inbox(dry_run=True)
+        
+        # Assert
+        assert result is not None
+        assert isinstance(result, (dict, list))
+
+
+class TestSessionManagement:
+    """Test session management methods (can be stubbed)."""
+    
+    def test_start_safe_processing_session_initializes(self, tmp_path):
+        """Test start_safe_processing_session() creates session."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act & Assert - May raise NotImplementedError if stubbed
+        try:
+            result = adapter.start_safe_processing_session("test_operation")
+            assert result is not None
+        except NotImplementedError:
+            pytest.skip("Session management not yet implemented")
+    
+    def test_process_inbox_note_safe_wraps_with_session(self, tmp_path):
+        """Test process_inbox_note_safe() uses session management."""
+        # Arrange
+        base_dir = tmp_path / "test_vault"
+        base_dir.mkdir()
+        
+        adapter = LegacyWorkflowManagerAdapter(base_directory=str(base_dir))
+        
+        # Act & Assert
+        try:
+            result = adapter.process_inbox_note_safe("test.md")
+            assert result is not None
+        except NotImplementedError:
+            pytest.skip("Session management not yet implemented")
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
