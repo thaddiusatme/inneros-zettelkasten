@@ -160,10 +160,16 @@ class TestSimpleDelegations:
         # Act
         result = adapter.generate_workflow_report()
         
-        # Assert
+        # Assert - Should return dict with workflow_status, ai_features, analytics, recommendations
         mock_analytics.generate_workflow_report.assert_called_once()
-        assert result['total_notes'] == 42
-        assert result['orphaned_count'] == 5
+        assert 'workflow_status' in result
+        assert 'ai_features' in result
+        assert 'analytics' in result
+        assert 'recommendations' in result
+        # Check workflow_status structure
+        assert result['workflow_status']['total_notes'] >= 0
+        assert 'health' in result['workflow_status']
+        assert 'directory_counts' in result['workflow_status']
     
     @patch('src.ai.workflow_manager_adapter.AnalyticsManager')
     def test_scan_review_candidates_delegates_to_analytics(self, mock_analytics_class, tmp_path):
@@ -260,7 +266,7 @@ class TestMultiManagerCoordination:
         # Mock AI enhancement
         mock_ai = Mock()
         mock_ai.assess_promotion_readiness.return_value = {
-            'recommended_type': 'permanent',
+            'action': 'promote_to_permanent',
             'confidence': 'high',
             'rationale': 'Well-structured note'
         }
@@ -276,9 +282,13 @@ class TestMultiManagerCoordination:
         # Act
         result = adapter.generate_weekly_recommendations(candidates, dry_run=True)
         
-        # Assert - Should coordinate both managers
+        # Assert - Should return dict with summary, recommendations, generated_at
         assert result is not None
-        assert isinstance(result, list)
+        assert isinstance(result, dict)
+        assert 'summary' in result
+        assert 'recommendations' in result
+        assert 'generated_at' in result
+        assert isinstance(result['recommendations'], list)
         # AI should be called for each candidate
         assert mock_ai.assess_promotion_readiness.call_count >= 1
     

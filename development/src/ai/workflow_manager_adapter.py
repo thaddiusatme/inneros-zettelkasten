@@ -315,7 +315,7 @@ class LegacyWorkflowManagerAdapter:
         self,
         candidates: List[Dict[str, Any]],
         dry_run: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """
         Generate AI-powered recommendations for weekly review candidates.
         
@@ -326,15 +326,33 @@ class LegacyWorkflowManagerAdapter:
             dry_run: If True, do not write any changes
         
         Returns:
-            List of recommendations with AI rationale:
-            [{
-                'note': str,
-                'quality_score': float,
-                'recommendation': dict (from AI),
-                'rationale': str
-            }]
+            Dictionary with summary, recommendations, and generated_at:
+            {
+                'summary': {
+                    'total_notes': int,
+                    'promote_to_permanent': int,
+                    'move_to_fleeting': int,
+                    'needs_improvement': int,
+                    'processing_errors': int
+                },
+                'recommendations': list,
+                'generated_at': str (ISO timestamp)
+            }
         """
-        recommendations = []
+        from datetime import datetime
+        
+        # Initialize result structure (matching old WorkflowManager format)
+        result = {
+            "summary": {
+                "total_notes": len(candidates),
+                "promote_to_permanent": 0,
+                "move_to_fleeting": 0,
+                "needs_improvement": 0,
+                "processing_errors": 0
+            },
+            "recommendations": [],
+            "generated_at": datetime.now().isoformat()
+        }
         
         for candidate in candidates:
             # Get AI assessment for promotion readiness
@@ -343,22 +361,44 @@ class LegacyWorkflowManagerAdapter:
                 try:
                     ai_assessment = self.ai_enhancement.assess_promotion_readiness(note_path)
                     
-                    recommendations.append({
+                    # Extract action from assessment
+                    action = ai_assessment.get('action', 'improve_or_archive')
+                    
+                    recommendation = {
+                        'file_name': Path(note_path).name,
                         'note': note_path,
+                        'action': action,
+                        'reason': ai_assessment.get('rationale', 'No rationale provided'),
                         'quality_score': candidate.get('quality_score', 0.0),
-                        'recommendation': ai_assessment,
-                        'rationale': ai_assessment.get('rationale', 'No rationale provided')
-                    })
+                        'confidence': ai_assessment.get('confidence', 'medium'),
+                        'ai_tags': candidate.get('ai_tags', [])
+                    }
+                    
+                    result["recommendations"].append(recommendation)
+                    
+                    # Update summary counts
+                    if action == 'promote_to_permanent':
+                        result["summary"]["promote_to_permanent"] += 1
+                    elif action == 'move_to_fleeting':
+                        result["summary"]["move_to_fleeting"] += 1
+                    elif action == 'improve_or_archive':
+                        result["summary"]["needs_improvement"] += 1
+                        
                 except Exception as e:
                     # Continue on individual failures
-                    recommendations.append({
+                    recommendation = {
+                        'file_name': Path(note_path).name,
                         'note': note_path,
+                        'action': 'manual_review',
+                        'reason': f'Assessment failed: {str(e)}',
                         'quality_score': candidate.get('quality_score', 0.0),
-                        'recommendation': {'error': str(e)},
-                        'rationale': 'Assessment failed'
-                    })
+                        'confidence': 'low',
+                        'ai_tags': []
+                    }
+                    result["recommendations"].append(recommendation)
+                    result["summary"]["processing_errors"] += 1
         
-        return recommendations
+        return result
     
     def generate_enhanced_metrics(self) -> Dict[str, Any]:
         """
