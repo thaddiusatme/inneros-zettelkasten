@@ -16,7 +16,7 @@ import subprocess
 import sys
 import json
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -513,3 +513,81 @@ This is not a YouTube note.
             assert isinstance(data, dict)
         except json.JSONDecodeError:
             pytest.fail("Output is not valid JSON")
+
+
+# ============================================================================
+# TDD ITERATION 3: Enhanced Features - Real Data Validation Tests
+# ============================================================================
+
+class TestEnhancedYouTubeFeaturesValidation:
+    """
+    TDD Iteration 3 RED Phase: Validate real YouTube notes are ready for processing.
+    
+    These tests ensure the system is ready for P1 real data validation testing.
+    """
+    
+    def test_real_youtube_note_exists_in_inbox(self):
+        """P1.1: Validate that real YouTube notes exist in Inbox for testing."""
+        inbox_dir = Path(__file__).parent.parent.parent.parent / "knowledge" / "Inbox"
+        
+        if not inbox_dir.exists():
+            pytest.skip("Inbox directory not found - skipping real data validation")
+        
+        # Find YouTube notes in Inbox
+        youtube_notes = []
+        for note_path in inbox_dir.glob("*.md"):
+            try:
+                content = note_path.read_text()
+                if 'source: youtube' in content:
+                    youtube_notes.append(note_path)
+            except Exception:
+                pass
+        
+        # We expect at least one YouTube note for testing
+        assert len(youtube_notes) >= 1, f"Expected at least 1 YouTube note in Inbox, found {len(youtube_notes)}"
+    
+    def test_youtube_note_has_required_structure(self):
+        """P1.1: Validate YouTube notes have required metadata and sections."""
+        inbox_dir = Path(__file__).parent.parent.parent.parent / "knowledge" / "Inbox"
+        
+        if not inbox_dir.exists():
+            pytest.skip("Inbox directory not found")
+        
+        # Find first YouTube note
+        youtube_note = None
+        for note_path in inbox_dir.glob("*.md"):
+            try:
+                content = note_path.read_text()
+                if 'source: youtube' in content:
+                    youtube_note = note_path
+                    break
+            except Exception:
+                pass
+        
+        if not youtube_note:
+            pytest.skip("No YouTube notes found in Inbox")
+        
+        content = youtube_note.read_text()
+        
+        # Check required metadata fields
+        assert '---' in content, "Should have YAML frontmatter"
+        assert 'source: youtube' in content, "Should have source: youtube"
+        assert 'url' in content.lower(), "Should have YouTube URL field"
+        
+        # Check required sections exist
+        has_context = '## Why I\'m Saving This' in content or '## Key Takeaways' in content
+        assert has_context, "Should have user context sections"
+    
+    def test_performance_metrics_collection_ready(self):
+        """P1.2: Validate that performance metrics can be collected."""
+        # This test ensures we have the infrastructure for performance testing
+        # Actual performance tests will be added in GREEN/REFACTOR phase
+        
+        # Verify we can measure time
+        import time
+        start = time.time()
+        time.sleep(0.001)  # Small sleep
+        duration = time.time() - start
+        
+        assert duration > 0, "Should be able to measure processing time"
+        assert duration < 1.0, "Test sleep should be fast"
