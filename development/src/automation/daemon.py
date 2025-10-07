@@ -15,6 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from .scheduler import SchedulerManager
 from .health import HealthCheckManager
 from .file_watcher import FileWatcher
+from .event_handler import AutomationEventHandler
 from .config import DaemonConfig
 
 
@@ -64,6 +65,7 @@ class AutomationDaemon:
         self.scheduler: Optional[SchedulerManager] = None
         self.health: HealthCheckManager = HealthCheckManager(self)  # Always available
         self.file_watcher: Optional[FileWatcher] = None
+        self.event_handler: Optional[AutomationEventHandler] = None
     
     def start(self) -> None:
         """
@@ -103,6 +105,12 @@ class AutomationDaemon:
                 )
                 self.file_watcher.register_callback(self._on_file_event)
                 self.file_watcher.start()
+                
+                # Create event handler for AI processing integration
+                self.event_handler = AutomationEventHandler(
+                    vault_path=str(self._config.file_watching.watch_path),
+                    debounce_seconds=self._config.file_watching.debounce_seconds
+                )
             
             self._start_time = time.time()
             self._state = DaemonState.RUNNING
@@ -229,6 +237,6 @@ class AutomationDaemon:
             file_path: Path to file that changed
             event_type: Type of event ('created', 'modified', 'deleted')
         """
-        # Placeholder for future event processing integration
-        # Will integrate with CoreWorkflowManager in P1 enhancements
-        pass
+        # Process events through event handler if available
+        if self.event_handler:
+            self.event_handler.process_file_event(file_path, event_type)

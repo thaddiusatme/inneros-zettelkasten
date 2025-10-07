@@ -124,7 +124,8 @@ class TestEventProcessing:
         test_note = inbox / "test-note.md"
         test_note.write_text("---\ntitle: Test\n---\nContent")
         
-        handler = AutomationEventHandler(vault_path=str(vault))
+        # Use short debounce for testing
+        handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
         
         # Mock CoreWorkflowManager to verify it's called
         with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
@@ -135,6 +136,9 @@ class TestEventProcessing:
             
             # Process created event
             result = handler.process_file_event(test_note, "created")
+            
+            # Wait for debounce to complete
+            time.sleep(0.2)
             
             # Verify CoreWorkflowManager was called with correct path
             mock_process.assert_called_once()
@@ -351,18 +355,24 @@ class TestErrorHandling:
         test_note = inbox / "problematic-note.md"
         test_note.write_text("---\ntitle: Problem\n---\nContent")
         
-        handler = AutomationEventHandler(vault_path=str(vault))
+        # Use short debounce for testing
+        handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
         
         # Mock CoreWorkflowManager to raise exception
         with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
             mock_process.side_effect = Exception("AI service unavailable")
             
-            # Should handle exception gracefully
+            # Should handle exception gracefully - queues event
             result = handler.process_file_event(test_note, "created")
             
-            assert result is not None, "Should return result even on error"
-            assert result.get('success') is False, "Should indicate failure"
-            assert 'error' in result, "Should include error message"
+            # Wait for debounced processing
+            time.sleep(0.2)
+            
+            # Verify handler tracked the failure in metrics (daemon stability maintained)
+            metrics = handler.get_metrics()
+            assert metrics['total_events_processed'] == 1, "Should have processed event"
+            assert metrics['failed_events'] == 1, "Should track failure"
+            assert metrics['successful_events'] == 0, "Should have no successes"
     
     def test_handles_missing_vault_path(self, tmp_path):
         """
