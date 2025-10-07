@@ -174,7 +174,10 @@ Important content
         result = enhancer.insert_quotes_section(original, sample_quotes_markdown, insertion_line=2)
         
         assert "## Extracted Quotes" in result
-        assert result.count("##") == 3  # Original 2 + new quotes section
+        # Count level-2 headings only (## followed by space, not ###)
+        import re
+        level_2_headings = len(re.findall(r'^## [^#]', result, re.MULTILINE))
+        assert level_2_headings == 3  # Original 2 + new quotes section
 
     def test_insert_quotes_section_preserve_content(self):
         """RED: Ensure all original content preserved after insertion"""

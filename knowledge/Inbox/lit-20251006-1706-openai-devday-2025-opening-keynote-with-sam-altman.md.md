@@ -34,6 +34,10 @@ building apps within ChatGPT with distribution
 	- ChatGPT for developers within the ChatGPT UI 
 	- this is the next form of CustomGPTs, a good reaosn why i stopped focusing on customGPTs
 	- Apps SDK!
+	- -agentic checkout                   
+		-talking to apps ''
+	- learning is one of the top use-cases
+	- 
 	Building agents
 	AI writing Code
 
