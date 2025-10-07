@@ -1543,16 +1543,26 @@ Examples:
             print(f"⏳ Fetching transcript for {video_url}...")
             processor = YouTubeProcessor()
             
+            # Extract video ID from URL
+            try:
+                video_id = processor.extract_video_id(video_url)
+            except ValueError as e:
+                print(f"❌ Error: Invalid YouTube URL - {e}")
+                return 1
+            
             # Fetch transcript
-            transcript = processor.fetcher.fetch_transcript(video_url)
-            if not transcript:
+            transcript_data = processor.fetcher.fetch_transcript(video_id)
+            if not transcript_data or 'transcript' not in transcript_data:
                 print(f"❌ Error: Transcript unavailable for this video")
                 return 1
+            
+            # Format transcript for LLM processing
+            formatted_transcript = processor.fetcher.format_for_llm(transcript_data['transcript'])
             
             # Extract quotes
             print(f"⏳ Extracting quotes with AI...")
             quotes = processor.extractor.extract_quotes(
-                transcript=transcript,
+                transcript=formatted_transcript,
                 user_context=metadata.get('notes', '')
             )
             
@@ -1592,7 +1602,12 @@ Examples:
                 return 1
                 
         except Exception as e:
-            print(f"❌ Error: Transcript unavailable - {e}")
+            import sys
+            error_msg = str(e).lower()
+            if 'transcript' in error_msg or 'video id' in error_msg:
+                print(f"❌ Error: Transcript unavailable - {e}", file=sys.stderr)
+            else:
+                print(f"❌ Error: {e}", file=sys.stderr)
             return 1
     
     elif args.process_youtube_notes:
@@ -1656,15 +1671,26 @@ Examples:
                         skipped += 1
                         continue
                     
+                    # Extract video ID from URL
+                    try:
+                        video_id = processor.extract_video_id(video_url)
+                    except ValueError as e:
+                        print(f"   ❌ Failed: Invalid YouTube URL - {e}")
+                        failed += 1
+                        continue
+                    
                     # Fetch and extract
-                    transcript = processor.fetcher.fetch_transcript(video_url)
-                    if not transcript:
+                    transcript_data = processor.fetcher.fetch_transcript(video_id)
+                    if not transcript_data or 'transcript' not in transcript_data:
                         print(f"   ❌ Failed: Transcript unavailable")
                         failed += 1
                         continue
                     
+                    # Format transcript for LLM processing
+                    formatted_transcript = processor.fetcher.format_for_llm(transcript_data['transcript'])
+                    
                     quotes = processor.extractor.extract_quotes(
-                        transcript=transcript,
+                        transcript=formatted_transcript,
                         user_context=metadata.get('notes', '')
                     )
                     
@@ -1682,15 +1708,16 @@ Examples:
                     print(f"   ❌ Error: {e}")
                     failed += 1
             
-            # Summary
-            print("\n" + "=" * 60)
-            print(f"📊 Batch Processing Summary:")
-            print(f"   ✅ Successful: {successful}")
-            print(f"   ❌ Failed: {failed}")
-            print(f"   ⚠️ Skipped: {skipped}")
-            print("=" * 60)
+            # Summary (skip if JSON output requested)
+            if not (hasattr(args, 'format') and args.format == 'json'):
+                print("\n" + "=" * 60)
+                print(f"📊 Batch Processing Summary:")
+                print(f"   ✅ Successful: {successful}")
+                print(f"   ❌ Failed: {failed}")
+                print(f"   ⚠️ Skipped: {skipped}")
+                print("=" * 60)
             
-            # Export if requested
+            # Export if requested (skip print if JSON output)
             if hasattr(args, 'export') and args.export:
                 export_path = Path(args.export)
                 report = f"""# YouTube Processing Report
@@ -1703,7 +1730,8 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Total: {len(youtube_notes)}
 """
                 export_path.write_text(report)
-                print(f"\n📄 Report exported to {export_path}")
+                if not (hasattr(args, 'format') and args.format == 'json'):
+                    print(f"\n📄 Report exported to {export_path}")
             
             # JSON output if requested
             if hasattr(args, 'format') and args.format == 'json':
