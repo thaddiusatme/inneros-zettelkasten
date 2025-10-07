@@ -573,10 +573,18 @@ class TestEnhancedYouTubeFeaturesValidation:
         assert '---' in content, "Should have YAML frontmatter"
         assert 'source: youtube' in content, "Should have source: youtube"
         assert 'url' in content.lower(), "Should have YouTube URL field"
+        assert 'type: literature' in content, "Should be literature type"
         
-        # Check required sections exist
-        has_context = '## Why I\'m Saving This' in content or '## Key Takeaways' in content
-        assert has_context, "Should have user context sections"
+        # Check template sections exist (actual structure from youtube template)
+        # Real notes have: ## My Notes, ## Related Notes, ## Next Actions
+        # OR processed notes have: ## Extracted Quotes
+        has_template_sections = (
+            '## My Notes' in content or
+            '## Related Notes' in content or
+            '## Next Actions' in content or
+            '## Extracted Quotes' in content
+        )
+        assert has_template_sections, "Should have YouTube template sections"
     
     def test_performance_metrics_collection_ready(self):
         """P1.2: Validate that performance metrics can be collected."""
