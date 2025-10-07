@@ -723,6 +723,12 @@ class YouTubeFileWatcher:
 - [ ] Advanced configuration options
 - [ ] Processing analytics and reporting
 - [ ] Batch reprocessing of old notes
+- [ ] **Context-Aware Quote Extraction**: Use manually-entered "Key Takeaways" section as context input to AI
+  - Parse user's manual notes from Key Takeaways section
+  - Use as semantic hints to extract more relevant quotes from transcript
+  - Match transcript segments to user's identified topics
+  - Include timestamps for each matched quote
+  - Preserve user's manual notes while enhancing with AI-extracted quotes
 
 ---
 
