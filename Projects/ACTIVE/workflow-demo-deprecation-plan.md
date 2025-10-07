@@ -2,13 +2,17 @@
 
 **Date**: 2025-10-06  
 **Status**: 🔴 CRITICAL - Stop using workflow_demo.py immediately  
-**Priority**: P0 - Architectural debt removal
+**Priority**: P0 - Architectural debt removal  
+**Related**: ADR-001 (WorkflowManager Refactoring - COMPLETED), `workflow-demo-extraction-status.md`
+
+> **Key Insight**: You already completed WorkflowManager refactoring (2,374 LOC → 4 managers) via ADR-001.  
+> This is the SAME PATTERN applied to the CLI layer. We're 28% done (7/25 commands extracted)!
 
 ---
 
 ## 🚨 The Problem
 
-**`workflow_demo.py` is a 2074-line GOD CLASS** that violates every clean architecture principle:
+**`workflow_demo.py` is a 2,074-line GOD CLASS** that violates every clean architecture principle:
 
 - ❌ **Single Responsibility**: Handles YouTube, screenshots, fleeting notes, backups, weekly review, promotions, and more
 - ❌ **Testability**: Impossible to test individual features in isolation
@@ -23,6 +27,26 @@ During TDD Iteration 3, we discovered:
 2. Bug fixes went to the wrong file
 3. Enhanced features exist in dedicated CLIs but we didn't know
 4. Confusion about which entry point to use
+
+---
+
+## 📊 **Current Progress: 28% Complete (7/25 Commands)**
+
+**See detailed status**: `Projects/ACTIVE/workflow-demo-extraction-status.md`
+
+**Completed Extractions**:
+- ✅ YouTube Processing (2 commands) → `youtube_cli.py` 
+- ✅ Tag Enhancement (3 commands) → `advanced_tag_enhancement_cli.py`
+- ✅ Review Notes (3 commands) → `notes_cli.py`
+- ✅ Performance (1 command) → `real_data_performance_cli.py`
+
+**Remaining** (18 commands across 6 CLIs):
+- ❌ Weekly Review (2 commands) - P1 Priority
+- ❌ Fleeting Notes (3 commands) - P1 Priority
+- ❌ Safe Workflow (5 commands) - Quick Win (utils exist!)
+- ❌ Core Workflow (5 commands) - P2 Priority
+- ❌ Backup (3 commands) - Quick Win!
+- ❌ Others (reading intake, connections, screenshots)
 
 ---
 
@@ -68,6 +92,33 @@ python3 development/src/cli/fleeting_cli.py --vault knowledge triage
 
 # NOT workflow_demo ❌
 ```
+
+---
+
+---
+
+## 🎯 **Learning from ADR-001: Proven Refactoring Pattern**
+
+**You already completed** WorkflowManager refactoring (2,374 LOC → 4 managers):
+- **Timeline**: 4 weeks (Oct 6 - Nov 2, 2025)
+- **Approach**: Domain-driven split with TDD methodology
+- **Result**: ✅ COMPLETE - All 759 tests passing, <500 LOC per manager
+- **Pattern**: RED → GREEN → REFACTOR for each manager extraction
+
+**Applying Same Pattern to workflow_demo.py**:
+- **Timeline**: 4 weeks (same proven approach)
+- **Approach**: Feature-driven extraction to dedicated CLIs
+- **Current**: 28% complete (7/25 commands extracted)
+- **Pattern**: TDD for each CLI extraction + test migration
+
+**Key Lessons from ADR-001**:
+1. ✅ 4-week focused sprint prevents scope creep
+2. ✅ TDD approach ensures zero regressions
+3. ✅ Adapter pattern enables backwards compatibility
+4. ✅ Test migration is systematic, not scary
+5. ✅ Domain separation enables independent evolution
+
+**Confidence Level**: HIGH - Same team, same pattern, smaller scope (2,074 vs 2,374 LOC)
 
 ---
 
