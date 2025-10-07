@@ -180,7 +180,7 @@ This is not a YouTube note.
     # P0.2: Single Note Processing Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
     def test_process_single_youtube_note_success(self, mock_enhancer, mock_processor):
         """Test successful processing of single YouTube note."""
@@ -255,7 +255,7 @@ This is not a YouTube note.
         assert "❌" in result.stdout or "error" in result.stdout.lower()
         assert "not a youtube note" in result.stdout.lower() or "youtube" in result.stdout.lower()
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     def test_process_single_note_transcript_unavailable(self, mock_processor):
         """Test error handling when YouTube transcript is unavailable."""
         # Mock transcript fetch failure
@@ -281,7 +281,7 @@ This is not a YouTube note.
     # P0.3: Batch Processing Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
     def test_batch_process_youtube_notes(self, mock_enhancer, mock_processor):
         """Test batch processing of multiple YouTube notes."""
@@ -351,7 +351,7 @@ This is not a YouTube note.
     # P1.1: Preview Mode Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     def test_preview_mode_no_modification(self, mock_processor):
         """Test that --preview mode doesn't modify notes."""
         # Mock quote extraction
@@ -386,7 +386,7 @@ This is not a YouTube note.
     # P1.2: Quality Filtering Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     def test_quality_filtering(self, mock_processor):
         """Test that --min-quality filters low-relevance quotes."""
         # Mock quotes with varying quality
@@ -424,7 +424,7 @@ This is not a YouTube note.
     # P1.3: Category Selection Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     def test_category_selection(self, mock_processor):
         """Test that --categories filters quote categories."""
         # Mock quotes in different categories
@@ -457,7 +457,7 @@ This is not a YouTube note.
     # P0.4: Export Functionality Tests
     # ============================================================================
     
-    @patch('src.ai.youtube_processor.YouTubeProcessor')
+    @patch('src.cli.youtube_processor.YouTubeProcessor')
     @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
     def test_batch_export_to_file(self, mock_enhancer, mock_processor):
         """Test exporting batch processing results to file."""

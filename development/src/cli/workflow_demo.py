@@ -1508,14 +1508,208 @@ Examples:
             return 1
     
     elif args.process_youtube_note:
-        # TDD Iteration 2 RED Phase: Stub implementation for single YouTube note processing
-        print("🎬 Processing YouTube note...")
-        raise NotImplementedError("--process-youtube-note command not yet implemented (TDD RED phase)")
+        # TDD Iteration 2 GREEN Phase: Single YouTube note processing
+        note_path = Path(args.process_youtube_note)
+        
+        # Validate note exists
+        if not note_path.exists():
+            print(f"❌ Error: Note not found at {note_path}")
+            return 1
+        
+        # Validate it's a YouTube note
+        try:
+            from src.utils.frontmatter import parse_frontmatter
+            content = note_path.read_text()
+            metadata, _ = parse_frontmatter(content)
+            
+            if metadata.get('source') != 'youtube':
+                print(f"❌ Error: Not a YouTube note (missing source: youtube)")
+                return 1
+        except Exception as e:
+            print(f"❌ Error reading note metadata: {e}")
+            return 1
+        
+        # Process with YouTubeProcessor
+        try:
+            from src.cli.youtube_processor import YouTubeProcessor
+            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
+            
+            # Extract video URL from metadata
+            video_url = metadata.get('url', '')
+            if not video_url:
+                print(f"❌ Error: No YouTube URL found in note metadata")
+                return 1
+            
+            print(f"⏳ Fetching transcript for {video_url}...")
+            processor = YouTubeProcessor()
+            
+            # Fetch transcript
+            transcript = processor.fetcher.fetch_transcript(video_url)
+            if not transcript:
+                print(f"❌ Error: Transcript unavailable for this video")
+                return 1
+            
+            # Extract quotes
+            print(f"⏳ Extracting quotes with AI...")
+            quotes = processor.extractor.extract_quotes(
+                transcript=transcript,
+                user_context=metadata.get('notes', '')
+            )
+            
+            # Filter by quality if specified
+            if hasattr(args, 'min_quality') and args.min_quality:
+                min_quality = float(args.min_quality)
+                for category in quotes:
+                    quotes[category] = [q for q in quotes[category] if q.get('relevance', 0) >= min_quality]
+            
+            # Filter by categories if specified
+            if hasattr(args, 'categories') and args.categories:
+                selected_categories = [c.strip() for c in args.categories.split(',')]
+                quotes = {k: v for k, v in quotes.items() if k in selected_categories}
+            
+            # Preview mode - just show quotes without modifying
+            if hasattr(args, 'preview') and args.preview:
+                print("\n📋 Preview of quotes to be inserted:")
+                for category, category_quotes in quotes.items():
+                    if category_quotes:
+                        print(f"\n### {category.replace('_', ' ').title()}")
+                        for q in category_quotes:
+                            print(f"  - [{q['timestamp']}] {q['quote'][:60]}...")
+                print("\n✅ Preview complete (no modifications made)")
+                return 0
+            
+            # Enhance note with quotes
+            print(f"⏳ Enhancing note...")
+            enhancer = YouTubeNoteEnhancer()
+            result = enhancer.enhance_note(note_path, quotes)
+            
+            if result.success:
+                print(f"✅ Successfully enhanced note")
+                print(f"   📝 {len([q for cat in quotes.values() for q in cat])} quotes inserted")
+                print(f"   💾 Backup: {result.backup_path}")
+            else:
+                print(f"❌ Enhancement failed: {result.message}")
+                return 1
+                
+        except Exception as e:
+            print(f"❌ Error: Transcript unavailable - {e}")
+            return 1
     
     elif args.process_youtube_notes:
-        # TDD Iteration 2 RED Phase: Stub implementation for batch YouTube note processing
-        print("🎬 Batch processing YouTube notes...")
-        raise NotImplementedError("--process-youtube-notes command not yet implemented (TDD RED phase)")
+        # TDD Iteration 2 GREEN Phase: Batch YouTube note processing
+        print("🔄 Scanning for YouTube notes in Inbox...")
+        
+        try:
+            from src.utils.frontmatter import parse_frontmatter
+            from src.cli.youtube_processor import YouTubeProcessor
+            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
+            
+            inbox_dir = base_dir / "Inbox"
+            if not inbox_dir.exists():
+                print(f"❌ Error: Inbox directory not found at {inbox_dir}")
+                return 1
+            
+            # Find YouTube notes
+            youtube_notes = []
+            for note_path in inbox_dir.glob("*.md"):
+                try:
+                    content = note_path.read_text()
+                    metadata, _ = parse_frontmatter(content)
+                    
+                    if metadata.get('source') == 'youtube' and not metadata.get('ai_processed', False):
+                        youtube_notes.append((note_path, metadata))
+                except Exception as e:
+                    print(f"   ⚠️ Skipping {note_path.name}: {e}")
+            
+            print(f"📊 Found {len(youtube_notes)} unprocessed YouTube notes")
+            
+            if not youtube_notes:
+                print("✅ No YouTube notes to process")
+                return 0
+            
+            # Process each note
+            processor = YouTubeProcessor()
+            enhancer = YouTubeNoteEnhancer()
+            
+            successful = 0
+            failed = 0
+            skipped = 0
+            
+            for i, (note_path, metadata) in enumerate(youtube_notes, 1):
+                print(f"\n🔄 Processing {i}/{len(youtube_notes)}: {note_path.name}")
+                
+                try:
+                    video_url = metadata.get('url', '')
+                    if not video_url:
+                        print(f"   ⚠️ Skipped: No URL found")
+                        skipped += 1
+                        continue
+                    
+                    # Fetch and extract
+                    transcript = processor.fetcher.fetch_transcript(video_url)
+                    if not transcript:
+                        print(f"   ❌ Failed: Transcript unavailable")
+                        failed += 1
+                        continue
+                    
+                    quotes = processor.extractor.extract_quotes(
+                        transcript=transcript,
+                        user_context=metadata.get('notes', '')
+                    )
+                    
+                    # Enhance note
+                    result = enhancer.enhance_note(note_path, quotes)
+                    
+                    if result.success:
+                        print(f"   ✅ Enhanced with {len([q for cat in quotes.values() for q in cat])} quotes")
+                        successful += 1
+                    else:
+                        print(f"   ❌ Failed: {result.message}")
+                        failed += 1
+                        
+                except Exception as e:
+                    print(f"   ❌ Error: {e}")
+                    failed += 1
+            
+            # Summary
+            print("\n" + "=" * 60)
+            print(f"📊 Batch Processing Summary:")
+            print(f"   ✅ Successful: {successful}")
+            print(f"   ❌ Failed: {failed}")
+            print(f"   ⚠️ Skipped: {skipped}")
+            print("=" * 60)
+            
+            # Export if requested
+            if hasattr(args, 'export') and args.export:
+                export_path = Path(args.export)
+                report = f"""# YouTube Processing Report
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## Summary
+- Successful: {successful}
+- Failed: {failed}
+- Skipped: {skipped}
+- Total: {len(youtube_notes)}
+"""
+                export_path.write_text(report)
+                print(f"\n📄 Report exported to {export_path}")
+            
+            # JSON output if requested
+            if hasattr(args, 'format') and args.format == 'json':
+                import json
+                json_output = {
+                    'successful': successful,
+                    'failed': failed,
+                    'skipped': skipped,
+                    'total': len(youtube_notes)
+                }
+                print(json.dumps(json_output))
+            
+            return 0
+            
+        except Exception as e:
+            print(f"❌ Batch processing error: {e}")
+            return 1
     
     elif args.backup:
         # Create a timestamped backup
