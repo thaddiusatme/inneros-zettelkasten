@@ -138,19 +138,62 @@ class YouTubeCLIProcessor:
             # Initialize processor (doesn't take video_url in __init__)
             processor = YouTubeProcessor(knowledge_dir=self.vault_path)
             
-            # Fetch transcript
-            transcript = processor.fetcher.fetch_transcript(video_url)
+            # Extract video ID from URL
+            video_id = processor.extract_video_id(video_url)
+            logger.debug(f"Extracted video ID: {video_id}")
+            
+            # Fetch transcript using video ID
+            transcript_result = processor.fetcher.fetch_transcript(video_id)
+            logger.info(f"Transcript fetched: {len(transcript_result['transcript'])} segments")
+            
+            # Format transcript for LLM
+            llm_transcript = processor.fetcher.format_for_llm(transcript_result["transcript"])
             
             # Extract quotes from transcript
-            # Note: extractor methods may vary, using safe approach
-            quotes_dict = processor.extractor.extract_quotes(transcript)
+            quotes_result = processor.extractor.extract_quotes(llm_transcript)
+            
+            # Categorize quotes by their category field
+            quotes_by_category = {
+                'key_insights': [],
+                'actionable': [],
+                'notable': [],
+                'definitions': []
+            }
+            
+            for quote in quotes_result.get('quotes', []):
+                category = quote.get('category', 'notable')
+                
+                # Transform extractor format to enhancer format
+                # Extractor: {text, timestamp, relevance_score, context, category}
+                # Enhancer: {quote, timestamp, relevance, context}
+                transformed_quote = {
+                    'quote': quote.get('text', ''),
+                    'timestamp': quote.get('timestamp', '00:00'),
+                    'context': quote.get('context', ''),
+                    'relevance': quote.get('relevance_score', 0.0)
+                }
+                
+                # Map category names to QuotesData fields
+                if category == 'key-insight':
+                    quotes_by_category['key_insights'].append(transformed_quote)
+                elif category == 'actionable':
+                    quotes_by_category['actionable'].append(transformed_quote)
+                elif category == 'definition':
+                    quotes_by_category['definitions'].append(transformed_quote)
+                else:  # 'quote' or any other
+                    quotes_by_category['notable'].append(transformed_quote)
+            
+            logger.info(f"Categorized quotes: {len(quotes_by_category['key_insights'])} key insights, "
+                       f"{len(quotes_by_category['actionable'])} actionable, "
+                       f"{len(quotes_by_category['notable'])} notable, "
+                       f"{len(quotes_by_category['definitions'])} definitions")
             
             # Convert to QuotesData format
             quotes_data = QuotesData(
-                key_insights=quotes_dict.get('key_insights', []),
-                actionable=quotes_dict.get('actionable', []),
-                notable=quotes_dict.get('notable', []),
-                definitions=quotes_dict.get('definitions', [])
+                key_insights=quotes_by_category['key_insights'],
+                actionable=quotes_by_category['actionable'],
+                notable=quotes_by_category['notable'],
+                definitions=quotes_by_category['definitions']
             )
             
             # Count total quotes
