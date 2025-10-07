@@ -1,12 +1,7 @@
----
-trigger: model_decision
----
-
-
 # Development Workflow & Guidelines
 
-> **Purpose**: TDD methodology, integration guidelines, Git standards  
-> **Updated**: 2025-10-05 (Added architectural safeguards)
+> **Purpose**: TDD methodology, integration guidelines, Git standards, automation requirements  
+> **Updated**: 2025-10-06 (Added Phase 3 & 4 mandatory requirements)
 
 ## 🏗️ Development Guidelines
 
@@ -17,6 +12,7 @@ trigger: model_decision
 - Phase extensions preferred over standalone replacements
 - Project Organization: Maintain clean ACTIVE/REFERENCE/COMPLETED/DEPRECATED structure
 - **Architectural Health**: Check class sizes before adding features (see Architectural Constraints)
+- **Automation-First**: All features must include Phase 3 (Automation) and Phase 4 (Monitoring)
 
 ### TDD Methodology
 
@@ -27,6 +23,8 @@ trigger: model_decision
 - Performance benchmarking against established targets
 - Integration testing with existing AI workflows
 - **Architectural testing**: Prevent god classes through size constraints
+- **Phase 3 & 4 Mandatory**: All features must include Automation (Phase 3) and Monitoring (Phase 4)
+- **Reference Workflow**: See `.windsurf/workflows/complete-feature-development.md` for 4-phase methodology
 
 #### TDD with Architectural Safeguards
 
@@ -160,6 +158,50 @@ If any answer is NO:
 - [ ] Add to architectural review queue
 - [ ] Schedule fix within 2 iterations
 
+### 4-Phase Feature Development (MANDATORY)
+
+**All new features must complete 4 phases to be production-ready:**
+
+#### Phase 1: Core Engine (AI/Processing Logic)
+- TDD implementation with RED → GREEN → REFACTOR
+- Integration with existing AI infrastructure
+- Performance benchmarks met
+- Architectural constraints maintained (<500 LOC, <20 methods)
+
+#### Phase 2: CLI Integration (Manual Trigger)
+- CLI command added with rich interactive interface
+- Export functionality (JSON/CSV/Markdown)
+- Integration tests with real data
+- Usage documentation
+
+#### Phase 3: Automation Layer (Self-Running) **← MANDATORY**
+- **Event-driven** OR **scheduled** automation implemented
+- No manual trigger required for typical usage
+- Background daemon integration
+- User notification system
+- Tests validate automatic execution
+
+**Automation Options**:
+- File watchers (OneDrive, Inbox) for event-driven processing
+- APScheduler for cron-like scheduling
+- Progressive chains (note created → enhance → tag → link)
+
+#### Phase 4: Monitoring & Alerts (Observability) **← MANDATORY**
+- Performance metrics collected (time, throughput, success rate)
+- Error tracking with structured logging
+- Health checks detect failures
+- Alert system notifies user of issues
+- Recovery strategies implemented
+
+**Monitoring Requirements**:
+- Processing time (p50, p95, p99)
+- Success/error rates
+- Health check endpoints
+- macOS notifications for critical failures
+- Dashboard or reports
+
+**See**: `.windsurf/workflows/complete-feature-development.md` for detailed TDD patterns per phase
+
 ### Integration-First Development
 - Extend vs. Replace: Build on existing Phase 5 AI capabilities
 - Schema Compatibility: New metadata fields extend existing ones
@@ -173,6 +215,7 @@ If any answer is NO:
 - Tests: `development/tests/` - Comprehensive unit and integration tests
 - Templates: `knowledge/Templates/` - Dynamic content generation (Production Ready)
 - Project Docs: `Projects/ACTIVE/` - Current manifests and specifications
+- **Automation**: `development/src/automation/` - Daemon, watchers, orchestration
 
 ### Project Lifecycle Integration
 - New Projects: Start manifests in Projects/ACTIVE/
@@ -186,6 +229,7 @@ If any answer is NO:
 - `feat/intelligent-tag-management-tdd-iteration-X` - For tag management system development
 - `feat/visual-knowledge-capture-mvp` - For mobile workflow implementation
 - `feat/workflow-manager-refactor-tdd-X` - For architectural refactoring work
+- `feat/automation-daemon-core-tdd-X` - For automation system development
 - `bug-fix/image-linking-system` - For critical image linking investigation
 - `integration/phase-5-extension` - For Phase extension work
 
@@ -196,6 +240,7 @@ If any answer is NO:
 - Document bug fixes with clear before/after
 - Include integration impact assessment
 - **Note architectural decisions** made during development
+- **Document automation integration** for Phase 3 & 4 work
 
 ## 🚨 Error Handling & Recovery
 
@@ -214,12 +259,22 @@ If any answer is NO:
 
 ## 🎯 Current Development Patterns (October 2025)
 
-### TDD Success Patterns
-- **4-Iteration Methodology**: Proven through Smart Link Management and Advanced Tag Enhancement
+### TDD Success Patterns (Updated October 2025)
+
+- **4-Phase Methodology**: ALL features must include Engine, CLI, Automation, and Monitoring
+- **Automation-First**: Phase 3 (Automation) is non-negotiable for production readiness
+- **Observability Built-In**: Phase 4 (Monitoring) prevents silent failures and debugging mysteries
 - **Utility Extraction**: Modular architecture enables rapid development and reusability
 - **Real Data Validation**: Testing with production data proves immediate user value
 - **Integration Excellence**: Building on existing infrastructure delivers 80% faster development
 - **Architectural Testing**: Prevent god classes through size constraints and regular reviews
+
+**New Feature Checklist**:
+1. Review `.windsurf/workflows/complete-feature-development.md` BEFORE starting
+2. Plan all 4 phases in project manifest
+3. Identify automation trigger (event OR schedule)
+4. Define monitoring metrics to collect
+5. Confirm architectural constraints won't be violated
 
 ### Performance Excellence
 - **Smart Link Management**: TDD Iteration 4 complete with link insertion system
@@ -242,6 +297,10 @@ If any answer is NO:
 - [ ] Confirm integration opportunities with existing systems
 - [ ] Validate performance benchmarks are maintained
 - [ ] **Check target class size** (use Pre-Development Checklist from Architectural Constraints)
+- [ ] **Review complete-feature-development workflow** (all 4 phases planned)
+- [ ] **Identify automation trigger** (event-driven or scheduled)
+- [ ] **Define monitoring metrics** (what will be tracked)
+- [ ] **Confirm daemon integration plan** (how feature registers with automation system)
 
 ### Development Validation
 - [ ] TDD methodology followed (RED → GREEN → REFACTOR)
@@ -258,6 +317,11 @@ If any answer is NO:
 - [ ] Git commit includes comprehensive change description
 - [ ] Next development priorities updated in ACTIVE/
 - [ ] **ADR created** if architectural decisions were made
+- [ ] **Phase 3 complete**: Feature runs automatically without manual trigger
+- [ ] **Phase 4 complete**: Monitoring, alerts, and health checks operational
+- [ ] **Daemon integrated**: Feature registered with automation daemon
+- [ ] **Automation tested**: Event/schedule triggers validated
+- [ ] **Monitoring validated**: Metrics collection and alerting working
 
 ## 🔄 Maintenance Guidelines
 
@@ -276,6 +340,77 @@ If any answer is NO:
 - **Documentation**: REFERENCE/ contains up-to-date essential docs
 - **Integration**: New features build on existing infrastructure
 - **Architecture**: Zero classes >500 LOC, zero classes >20 methods
+- **Automation Coverage**: 100% of features have Phase 3 (event or scheduled automation)
+- **Monitoring Coverage**: 100% of features have Phase 4 (metrics, alerts, health checks)
+- **Daemon Uptime**: >99% (automatic restart on crash)
+- **Event Response**: <5 seconds from trigger to processing start
+
+## 🤖 Automation & Monitoring Standards
+
+### Automation Requirements (Phase 3)
+Every feature MUST have at least ONE automation method:
+
+**Event-Driven** (preferred for real-time needs):
+- File watchers for OneDrive screenshots
+- File watchers for Inbox note creation
+- File move triggers for link updates
+
+**Scheduled** (preferred for batch processing):
+- Nightly: Fleeting note triage, screenshot processing
+- Weekly: Review generation, analytics
+- Daily: Inbox enhancement, connection discovery
+
+**Progressive Chains** (for workflow automation):
+- Note created → Auto-enhance → Auto-tag → Suggest links
+- Screenshot added → OCR → Note creation → Enhancement
+
+### Monitoring Requirements (Phase 4)
+Every feature MUST collect:
+
+**Performance Metrics**:
+- Processing time per operation
+- Throughput (items/hour)
+- Success rate percentage
+- Memory usage
+
+**Error Tracking**:
+- Structured logging with context
+- Error rate per hour
+- Failure categorization
+- Automatic retry attempts
+
+**Health Checks**:
+- Feature availability status
+- Dependency health (AI service, file system)
+- Queue depth monitoring
+- Last successful run timestamp
+
+**Alerting**:
+- Critical: 3+ consecutive failures
+- Warning: Error rate >5% last hour
+- Info: Daily/weekly summary reports
+
+### Daemon Integration Pattern
+
+```python
+# Every feature must provide this interface:
+class FeatureAutomation:
+    @property
+    def event_triggers(self) -> List[EventTrigger]:
+        """Define when feature auto-executes."""
+        pass
+    
+    @property
+    def schedule(self) -> Optional[str]:
+        """Cron schedule if scheduled."""
+        pass
+    
+    def execute(self, context: dict) -> dict:
+        """Execute with monitoring."""
+        pass
+```
+
+**See**: `Projects/ACTIVE/automation-completion-retrofit-manifest.md` for retrofit roadmap
 
 ## 🏗️ Architectural Health
 
@@ -295,5 +430,7 @@ If any answer is NO:
 
 **See Also**:
 - `.windsurf/rules/architectural-constraints.md` - Detailed architectural limits and enforcement
+- `.windsurf/workflows/complete-feature-development.md` - Mandatory 4-phase methodology
 - `Projects/COMPLETED-2025-10/god-class-prevention-lessons-learned.md` - Lessons from WorkflowManager god class
 - `Projects/ACTIVE/workflow-manager-refactor-tdd-manifest.md` - Example refactoring project
+- `Projects/ACTIVE/automation-completion-retrofit-manifest.md` - Retrofit plan for existing features

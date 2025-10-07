@@ -1,92 +1,123 @@
-# The Prompt for Next Chat Session
+# Next Session: Automation System Implementation - Sprint 1
 
-## Objective
-Continue TDD development of Safety-First Directory Organization system OR pivot to P0 templater bug fix. We want to perform TDD framework with red, green, refactor phases, then git commit and create lessons learned. This equals one iteration.
+**Context**: Transform InnerOS from manually-triggered toolbox → self-running knowledge pipeline
 
-## Current Achievement Summary
-**MAJOR SUCCESS**: Completed foundational Safety-First Directory Organization system using strict TDD methodology.
+## 🎯 Session Goal
+Begin Automation Completion System - Apply rules update, start Sprint 1 → Background Daemon Core
 
-### ✅ **What's Production-Ready:**
-- **P0-1 Backup System**: 10/10 tests passing - Timestamped backups, rollback capability, production logging
-- **P0-2 Dry Run System**: 10/10 tests passing - Type-based planning, comprehensive reporting, zero mutations
-- **P0-3 Link Preservation**: Core architecture established - Data structures, regex patterns, planning framework
+## 📋 Discovery Complete (Oct 6, 2025)
 
-### 📁 **Current Branch:** 
-`feat/directory-organization-p0-backup-system` 
+### ✅ Problem Identified
+**You were 100% correct**: We built exceptional AI features but incomplete automation workflows.
 
-### 🎯 **Real Problem Being Solved:**
-Critical workflow issue where notes in `Inbox/` have mismatched type fields (`type: permanent` but still in `Inbox/` instead of `Permanent Notes/`). Our system provides the safe, validated solution.
+**Gap Analysis**:
+- 8 AI features built with TDD rigor (Phase 1 & 2 complete)
+- Only **15% automation coverage** (Phase 3 missing)
+- Only **12.5% monitoring coverage** (Phase 4 missing)
+- Design pattern: TDD stops at CLI instead of completing full workflows
 
-## Next Iteration Options
+### ✅ Deliverables Created
+1. **Comprehensive Audit**: `Projects/ACTIVE/automation-completion-retrofit-manifest.md`
+   - Phase completion matrix for 8 features
+   - Gap analysis (what's missing: event watchers, daemon, monitoring)
+   - 5-week implementation roadmap (4 sprints)
 
-### **Option A: Complete Directory Organization (Recommended)**
-**Branch:** Continue on `feat/directory-organization-p0-backup-system` 
-**TDD Target:** P1-1 Actual File Moves with Safety-First execution
-- **RED**: Write failing tests for safe file execution with backup verification
-- **GREEN**: Implement minimal file move execution using existing P0-1/P0-2/P0-3 infrastructure  
-- **REFACTOR**: Add progress reporting, batch operations, comprehensive validation
-- **COMMIT**: Complete end-to-end directory organization system
-- **LESSONS**: Document production-ready Zettelkasten organization solution
+2. **Mandatory Workflow**: `.windsurf/workflows/complete-feature-development.md`
+   - 4-phase methodology (Engine, CLI, **Automation**, **Monitoring**)
+   - TDD patterns for Phase 3 & 4 with code examples
+   - Daemon integration templates
 
-### **Option B: Pivot to Templater Bug Fix (Critical Path Priority)**  
-**Branch:** Create new `fix/templater-created-placeholder` 
-**TDD Target:** Fix `created: {{date:YYYY-MM-DD HH:mm}}` templater processing failure
-- **RED**: Write failing tests for templater placeholder detection and replacement
-- **GREEN**: Implement minimal fix in `WorkflowManager.process_inbox_note()` write path
-- **REFACTOR**: Add bulk repair script, comprehensive templater token handling
-- **COMMIT**: Resolve critical template automation blocking issue  
-- **LESSONS**: Document templater integration and metadata reliability patterns
+3. **Rules Update Guide**: `Projects/ACTIVE/rules-update-phase-3-4.md`
+   - 8 sections to add to `.windsurf/rules/updated-development-workflow.md`
+   - Enforces Phase 3 & 4 requirements for all future features
 
-## Current Development Context
+4. **Implementation Summary**: `Projects/ACTIVE/automation-system-implementation-summary.md`
 
-### **Established Infrastructure:**
-- `DirectoryOrganizer` class with backup/rollback/dry-run capabilities
-- **20+ passing tests** across P0-1, P0-2, P0-3 phases
-- Safety-first principles proven and validated
-- Production-grade error handling and logging
+5. **Project Todo Updated**: Automation System now Priority 1 (P0)
 
-### **Key Files Ready:**
-- `development/src/utils/directory_organizer.py` - Core functionality (282 lines)
-- `development/tests/unit/utils/test_directory_organizer.py` - Test suite
-- `Projects/p0-1-backup-system-lessons-learned.md` - Documented learnings
-- `Projects/p0-2-dry-run-system-lessons-learned.md` - TDD insights
+## 🚀 Next Session Actions
 
-### **Quick Verification Commands:**
+### Step 1: Apply Rules Update (5 minutes) ⚠️ MANUAL
 ```bash
-# Verify current test status
-cd development && PYTHONPATH=src python3 -m pytest tests/unit/utils/test_directory_organizer.py -v
+# Open rules file
+open .windsurf/rules/updated-development-workflow.md
 
-# Check git status
-git status
+# Follow instructions in:
+cat Projects/ACTIVE/rules-update-phase-3-4.md
 
-# View current branch
-git branch
+# Add all 8 sections to enforce Phase 3 & 4 requirements
+### Phase 2: Batch Processing (25 min)
+**Target**: 11/16 tests passing (+2 tests)
+
+Replace stub at `workflow_demo.py:1515` with:
+1. Scan `knowledge/Inbox/` for YouTube notes
+2. Filter by `source: youtube` and `ai_processed: false`
+3. Process with progress reporting
+4. Generate summary (processed/skipped/failed)
+
+### Phase 3-6: Enhanced Features (30 min)
+**Target**: 16/16 tests passing ✅
+
+- Preview mode (1 test)
+- Quality filtering (1 test)
+- Category selection (1 test)
+- Export functionality (2 tests)
+
+## 📚 Reference Materials
+
+**Key Documentation**:
+- **Detailed Guide**: `Projects/ACTIVE/youtube-cli-tdd-iteration-2-green-phase-prompt.md`
+- **Status Tracker**: `Projects/ACTIVE/youtube-cli-integration-status.md`
+- **RED Phase Summary**: `Projects/ACTIVE/youtube-cli-integration-red-phase-summary.md`
+
+**Study These Implementations**:
+- `workflow_demo.py:1405-1433` - Fleeting triage (batch pattern)
+- `workflow_demo.py:1435-1489` - Note promotion (validation pattern)
+- `demos/test_youtube_note_enhancer_real_data.py` - YouTubeNoteEnhancer usage
+
+## 🎯 Success Criteria
+
+**GREEN Phase Complete When**:
+- ✅ All 16 tests passing (100%)
+- ✅ Single note processing working with real YouTube notes
+- ✅ Batch processing scanning Inbox correctly
+- ✅ Preview mode functional
+- ✅ Export generating valid files
+- ✅ Clean commit with descriptive message
+
+## 📊 Timeline Estimate
+
+| Phase | Duration | Cumulative Tests |
+|-------|----------|------------------|
+| Setup & Check | 5 min | 5/16 |
+| Phase 1: Single Note | 30 min | 9/16 |
+| Phase 2: Batch | 25 min | 11/16 |
+| Phase 3-6: Enhanced | 30 min | 16/16 ✅ |
+| Commit & Document | 10 min | - |
+| **Total** | **100 min** | **Complete** |
+
+## 📝 Prompt for Next AI Session
+
+```
+I'm ready to implement YouTube CLI Integration GREEN Phase (TDD Iteration 2).
+
+Current status:
+- Branch: feat/youtube-cli-integration-tdd-iteration-2
+- RED Phase complete: 5/16 tests passing (argument parsing)
+- 11 tests failing, awaiting implementation
+
+Please help me:
+1. Check if YouTubeProcessor exists in the codebase
+2. Implement Phase 1: Single note processing (replace stub at line 1510)
+3. Run tests after each phase to track progress
+4. Target: 16/16 tests passing
+
+Detailed implementation guide: Projects/ACTIVE/youtube-cli-tdd-iteration-2-green-phase-prompt.md
+
+Let's start with Phase 1. Can you check if YouTubeProcessor exists first?
 ```
 
-### **InnerOS Rules Compliance:**
-- Following v4.0 guidelines for safety-first development
-- TDD methodology successfully applied (RED→GREEN→REFACTOR cycles)
-- Integration-first approach leveraging existing AI workflows
-- Critical path management with comprehensive testing
+---
 
-## Recommended Next Action
-
-**CONTINUE Option A** - Complete the directory organization system to provide immediate value solving the real workflow issue, then tackle templater bugs in subsequent iteration.
-
-**Rationale:** 
-- We have momentum and solid foundations established
-- Addresses documented user workflow problem with production-ready solution
-- Demonstrates complete TDD cycle success from foundation to execution
-- Provides immediate value for organizing misplaced notes safely
-
-**Alternative:** If templater bug is blocking daily workflow, pivot to Option B for critical path resolution.
-
-## Success Metrics for Next Iteration
-- [ ] All existing tests continue passing (20+ tests)
-- [ ] New P1-1 tests written and passing
-- [ ] Zero file mutations during development (TDD safety)
-- [ ] Production-ready file move execution
-- [ ] Comprehensive lessons learned documentation
-- [ ] Clean git commit with detailed message
-
-Which option would you like to pursue for the next TDD iteration?
+**Status**: 🟢 Ready for GREEN Phase Implementation  
+**Last Updated**: 2025-10-06 17:42 PDT

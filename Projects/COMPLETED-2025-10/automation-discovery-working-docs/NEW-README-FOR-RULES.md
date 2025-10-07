@@ -1,7 +1,3 @@
----
-trigger: always_on
----
-
 # Windsurf Rules - InnerOS Zettelkasten
 
 > **Purpose**: Modular AI assistant behavior guidelines  

@@ -111,8 +111,8 @@ development/tmp/
 # Tag cleanup backup directories (created during Enhanced AI Tag Cleanup)
 tag-cleanup-backup-*/
 
-# Knowledge capture policy (Option B)
-knowledge/Inbox/
-knowledge/Fleeting Notes/
-knowledge/Literature Notes/
-knowledge/Archive/
+# Knowledge capture policy (Option B) - TEMPORARILY DISABLED FOR DEBUGGING
+# knowledge/Inbox/
+# knowledge/Fleeting Notes/
+# knowledge/Literature Notes/
+# knowledge/Archive/
