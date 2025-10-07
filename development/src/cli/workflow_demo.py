@@ -733,6 +733,18 @@ Examples:
     )
     
     action_group.add_argument(
+        "--process-youtube-note",
+        metavar="NOTE_PATH",
+        help="Process single YouTube note with AI quote extraction and enhancement"
+    )
+    
+    action_group.add_argument(
+        "--process-youtube-notes",
+        action="store_true",
+        help="Batch process YouTube notes in Inbox with AI enhancement"
+    )
+    
+    action_group.add_argument(
         "--comprehensive-orphaned",
         action="store_true", 
         help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
@@ -797,7 +809,14 @@ Examples:
         help="Preview promotion plan without executing (dry-run mode)"
     )
     
-    # Orphan remediation options
+    # YouTube processing specific options
+    parser.add_argument(
+        "--categories",
+        metavar="LIST",
+        help="Comma-separated list of quote categories to extract (key-insights,actionable,notable,definitions)"
+    )
+    
+    # Import options remediation options
     parser.add_argument(
         "--remediate-mode",
         choices=["link", "checklist"],
@@ -1487,6 +1506,16 @@ Examples:
         except Exception as e:
             print(f"❌ Error during promotion: {e}")
             return 1
+    
+    elif args.process_youtube_note:
+        # TDD Iteration 2 RED Phase: Stub implementation for single YouTube note processing
+        print("🎬 Processing YouTube note...")
+        raise NotImplementedError("--process-youtube-note command not yet implemented (TDD RED phase)")
+    
+    elif args.process_youtube_notes:
+        # TDD Iteration 2 RED Phase: Stub implementation for batch YouTube note processing
+        print("🎬 Batch processing YouTube notes...")
+        raise NotImplementedError("--process-youtube-notes command not yet implemented (TDD RED phase)")
     
     elif args.backup:
         # Create a timestamped backup
