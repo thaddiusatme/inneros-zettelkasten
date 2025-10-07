@@ -60,6 +60,11 @@ class HealthCheckManager:
             self._daemon._scheduler.running
         )
         
+        # Check file watcher (if configured)
+        watcher_healthy = True
+        if self._daemon.file_watcher:
+            watcher_healthy = self._daemon.file_watcher.is_running()
+        
         # Overall health
         is_healthy = daemon_running and scheduler_healthy
         status_code = 200 if is_healthy else 503
@@ -67,6 +72,7 @@ class HealthCheckManager:
         checks = {
             "scheduler": scheduler_healthy,
             "daemon": daemon_running,
+            "file_watcher": watcher_healthy,
         }
         
         return HealthReport(

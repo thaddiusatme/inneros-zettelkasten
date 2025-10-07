@@ -23,11 +23,22 @@ class JobConfig:
 
 
 @dataclass
+class FileWatchConfig:
+    """File watching configuration"""
+    enabled: bool = False
+    watch_path: str = ""
+    patterns: List[str] = field(default_factory=lambda: ["*.md"])
+    ignore_patterns: List[str] = field(default_factory=list)
+    debounce_seconds: float = 2.0
+
+
+@dataclass
 class DaemonConfig:
     """Daemon configuration"""
     check_interval: int = 60
     log_level: str = "INFO"
     jobs: List[JobConfig] = field(default_factory=list)
+    file_watching: Optional[FileWatchConfig] = None
 
 
 class ConfigurationLoader:
