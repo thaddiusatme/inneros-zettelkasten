@@ -1,8 +1,3 @@
----
-trigger: model_decision
----
-
-
 # Development Workflow & Guidelines
 
 > **Purpose**: TDD methodology, integration guidelines, Git standards  
