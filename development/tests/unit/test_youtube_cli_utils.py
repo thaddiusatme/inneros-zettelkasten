@@ -65,17 +65,31 @@ ai_processed: false
 Interesting AI content
 """)
         
-        # Execute: Process note
-        processor = YouTubeCLIProcessor(str(tmp_path))
-        result = processor.process_single_note(note_path)
-        
-        # Assert: Success with valid result
-        assert result.success is True
-        assert result.note_path == note_path
-        assert result.quotes_inserted > 0
-        assert result.backup_path is not None
-        assert result.error_message is None
-        assert result.processing_time >= 0
+        # Mock YouTube components since test uses fake video ID
+        with patch('src.cli.youtube_processor.YouTubeProcessor') as MockProcessor, \
+             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer:
+            
+            # Setup mocks
+            mock_processor_instance = MockProcessor.return_value
+            mock_processor_instance.fetcher.fetch_transcript.return_value = "Test transcript"
+            mock_processor_instance.extractor.extract_quotes.return_value = {
+                'key_insights': [{'quote': 'Test quote', 'timestamp': '0:00', 'context': 'Test'}]
+            }
+            
+            mock_enhance_result = Mock(success=True, backup_path=tmp_path / "backup.md", error_message=None)
+            MockEnhancer.return_value.enhance_note.return_value = mock_enhance_result
+            
+            # Execute: Process note
+            processor = YouTubeCLIProcessor(str(tmp_path))
+            result = processor.process_single_note(note_path)
+            
+            # Assert: Success with valid result
+            assert result.success is True
+            assert result.note_path == note_path
+            assert result.quotes_inserted > 0
+            assert result.backup_path is not None
+            assert result.error_message is None
+            assert result.processing_time >= 0
     
     def test_cli_processor_file_not_found(self, tmp_path):
         """Test error handling when note file doesn't exist"""
@@ -159,9 +173,9 @@ ai_processed: false
 Test content
 """)
         
-        # Mock YouTubeProcessor and YouTubeNoteEnhancer
-        with patch('src.cli.youtube_cli_utils.YouTubeProcessor') as mock_processor, \
-             patch('src.cli.youtube_cli_utils.YouTubeNoteEnhancer') as mock_enhancer:
+        # Mock YouTubeProcessor and YouTubeNoteEnhancer at their source modules
+        with patch('src.cli.youtube_processor.YouTubeProcessor') as mock_processor, \
+             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as mock_enhancer:
             
             # Setup mocks
             mock_processor.return_value.fetcher.fetch_transcript.return_value = "Test transcript"
@@ -500,8 +514,8 @@ Test content {i}
         processor = YouTubeCLIProcessor(str(tmp_path))
         formatter = CLIOutputFormatter()
         
-        with patch('src.cli.youtube_cli_utils.YouTubeProcessor'), \
-             patch('src.cli.youtube_cli_utils.YouTubeNoteEnhancer'):
+        with patch('src.cli.youtube_processor.YouTubeProcessor'), \
+             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer'):
             stats = processor.process_batch()
             summary = formatter.format_batch_summary(stats)
         
