@@ -537,23 +537,211 @@ daemon:
 # Test Execution Summary
 # ============================================================================
 
+# ============================================================================
+# TDD Iteration 2 P1.1: File Watcher Integration Tests (5 tests)
+# ============================================================================
+
+class TestDaemonFileWatcherIntegration:
+    """Test FileWatcher lifecycle integration with AutomationDaemon."""
+    
+    @pytest.fixture
+    def temp_watch_dir(self, tmp_path):
+        """Create temporary watch directory."""
+        watch_dir = tmp_path / "inbox"
+        watch_dir.mkdir()
+        return watch_dir
+    
+    @pytest.fixture
+    def config_with_file_watching(self, temp_watch_dir):
+        """
+        Create config with file watching enabled.
+        
+        Will fail: AttributeError - DaemonConfig has no attribute 'file_watching'
+        """
+        from src.automation.config import FileWatchConfig
+        
+        return DaemonConfig(
+            check_interval=60,
+            log_level="INFO",
+            file_watching=FileWatchConfig(
+                enabled=True,
+                watch_path=str(temp_watch_dir),
+                patterns=["*.md"],
+                ignore_patterns=[".obsidian/*", "*.tmp"],
+                debounce_seconds=2
+            )
+        )
+    
+    def test_daemon_starts_file_watcher_when_enabled(self, config_with_file_watching):
+        """
+        P0.1.1: Daemon initializes and starts FileWatcher on start().
+        
+        Expected behavior:
+        - Daemon creates FileWatcher instance when config.file_watching.enabled=True
+        - FileWatcher started after scheduler initialization
+        - Watcher actively monitoring the configured path
+        - Watcher callback registered for event handling
+        
+        Will fail: AttributeError - AutomationDaemon has no attribute 'file_watcher'
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon(config=config_with_file_watching)
+        daemon.start()
+        
+        # Verify file watcher created and started
+        assert daemon.file_watcher is not None, "Should create file_watcher when enabled"
+        assert daemon.file_watcher.is_running() is True, "Watcher should be running"
+        assert daemon.file_watcher.watch_path == Path(config_with_file_watching.file_watching.watch_path)
+        
+        daemon.stop()
+    
+    def test_daemon_stops_file_watcher_gracefully(self, config_with_file_watching):
+        """
+        P0.1.2: Daemon stops FileWatcher on stop().
+        
+        Expected behavior:
+        - FileWatcher stopped BEFORE scheduler shutdown (reverse start order)
+        - Observer threads cleaned up gracefully
+        - No orphaned watchdog threads
+        - Watcher state reflects stopped status
+        
+        Will fail: AttributeError - daemon.file_watcher not yet defined
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon(config=config_with_file_watching)
+        daemon.start()
+        
+        # Verify watcher running
+        assert daemon.file_watcher.is_running() is True
+        
+        # Stop daemon
+        daemon.stop()
+        
+        # Verify watcher stopped
+        assert daemon.file_watcher.is_running() is False, "Watcher should be stopped"
+    
+    def test_daemon_status_includes_watcher_state(self, config_with_file_watching):
+        """
+        P0.1.3: status() reports watcher running/stopped in DaemonStatus.
+        
+        Expected behavior:
+        - DaemonStatus includes watcher_active field
+        - watcher_active=True when watcher running
+        - watcher_active=False when watcher stopped
+        - watcher_active=False when file watching disabled
+        
+        Will fail: AttributeError - DaemonStatus missing 'watcher_active' field
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon(config=config_with_file_watching)
+        daemon.start()
+        
+        # Check status reports watcher active
+        status = daemon.status()
+        assert hasattr(status, 'watcher_active'), "DaemonStatus should have watcher_active field"
+        assert status.watcher_active is True, "Should report watcher as active when running"
+        
+        # Stop and verify status updated
+        daemon.stop()
+        status = daemon.status()
+        assert status.watcher_active is False, "Should report watcher as inactive when stopped"
+    
+    def test_daemon_respects_config_file_watching_disabled(self, temp_watch_dir):
+        """
+        P0.1.4: Watcher not started when config.file_watching.enabled=False.
+        
+        Expected behavior:
+        - No FileWatcher created when enabled=False
+        - Daemon starts normally without watcher
+        - Status reports watcher_active=False
+        - No watchdog threads created
+        
+        Will fail: AttributeError - DaemonConfig has no 'file_watching' attribute
+        """
+        from src.automation.daemon import AutomationDaemon
+        from src.automation.config import FileWatchConfig
+        
+        # Config with file watching disabled
+        config = DaemonConfig(
+            check_interval=60,
+            log_level="INFO",
+            file_watching=FileWatchConfig(
+                enabled=False,
+                watch_path=str(temp_watch_dir),
+                patterns=["*.md"],
+                ignore_patterns=[],
+                debounce_seconds=2
+            )
+        )
+        
+        daemon = AutomationDaemon(config=config)
+        daemon.start()
+        
+        # Verify no watcher created
+        assert daemon.file_watcher is None or not daemon.file_watcher.is_running(), \
+            "Should not start watcher when disabled"
+        
+        # Status should reflect no watcher
+        status = daemon.status()
+        assert status.watcher_active is False, "Status should show watcher inactive"
+        
+        daemon.stop()
+    
+    def test_health_check_includes_watcher_status(self, config_with_file_watching):
+        """
+        P0.1.5: Health report includes watcher health check.
+        
+        Expected behavior:
+        - HealthReport.checks includes 'file_watcher' key
+        - file_watcher check shows status when watcher enabled
+        - file_watcher check handles watcher disabled gracefully
+        - Health check validates watcher thread is alive
+        
+        Will fail: KeyError - HealthReport.checks missing 'file_watcher' key
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon(config=config_with_file_watching)
+        daemon.start()
+        
+        health = daemon.health.get_health_status()
+        
+        # Verify file_watcher in checks
+        assert "file_watcher" in health.checks, "Health report should include file_watcher check"
+        assert health.checks["file_watcher"] is True, "Watcher should report healthy when running"
+        
+        daemon.stop()
+
+
+# ============================================================================
+# Test Execution Summary
+# ============================================================================
+
 """
 RED Phase Test Summary:
 
-Expected Failures: 15/15 tests
-Failure Reason: ImportError (modules not yet created)
+TDD Iteration 1 (COMPLETED): 15/15 tests passing
+- P0.1 Daemon Lifecycle: 5 tests ✅
+- P0.2 Scheduler Integration: 5 tests ✅
+- P0.3 Health Checks: 3 tests ✅
+- P0.4 Configuration: 2 tests ✅
 
-Test Breakdown:
-- P0.1 Daemon Lifecycle: 5 tests
-- P0.2 Scheduler Integration: 5 tests  
-- P0.3 Health Checks: 3 tests
-- P0.4 Configuration: 2 tests
+TDD Iteration 2 P1.1 (RED PHASE): 5/5 tests WILL FAIL
+- File Watcher Integration: 5 tests ❌
 
-All tests will fail with clear import errors until GREEN phase implements:
-- src/automation/daemon.py (AutomationDaemon class)
-- src/automation/scheduler.py (SchedulerManager class)
-- src/automation/health.py (HealthCheckManager class)
-- src/automation/config.py (ConfigurationLoader class)
+Expected Failures:
+1. test_daemon_starts_file_watcher_when_enabled - AttributeError: daemon.file_watcher not defined
+2. test_daemon_stops_file_watcher_gracefully - AttributeError: daemon.file_watcher not defined
+3. test_daemon_status_includes_watcher_state - AttributeError: DaemonStatus missing watcher_active
+4. test_daemon_respects_config_file_watching_disabled - AttributeError: DaemonConfig missing file_watching
+5. test_health_check_includes_watcher_status - KeyError: 'file_watcher' not in health.checks
 
-Next Phase: GREEN - Minimal APScheduler integration (~400 LOC)
+Next Phase: GREEN - Implement daemon-watcher integration (~30 LOC)
+Required changes:
+- src/automation/config.py: Add FileWatchConfig dataclass
+- src/automation/daemon.py: Add file_watcher lifecycle management
+- src/automation/health.py: Add watcher health check
 """
