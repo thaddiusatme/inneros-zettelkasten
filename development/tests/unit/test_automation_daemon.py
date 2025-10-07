@@ -26,49 +26,11 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any, Callable
 from enum import Enum
 
-
-# Type hints for expected classes (will be implemented in GREEN phase)
-class DaemonState(Enum):
-    """Daemon operational states"""
-    STOPPED = "stopped"
-    STARTING = "starting"
-    RUNNING = "running"
-    STOPPING = "stopping"
-    ERROR = "error"
-
-
-class DaemonStatus:
-    """Daemon status information"""
-    state: DaemonState
-    scheduler_active: bool
-    active_jobs: int
-    uptime_seconds: float
-
-
-class HealthReport:
-    """Health check report"""
-    is_healthy: bool
-    status_code: int
-    checks: Dict[str, bool]
-
-
-class JobInfo:
-    """Scheduled job information"""
-    id: str
-    schedule: str
-    next_run: Optional[datetime]
-
-
-class DaemonConfig:
-    """Daemon configuration"""
-    check_interval: int
-    log_level: str
-    jobs: List[Any]
-
-
-class DaemonError(Exception):
-    """Daemon-specific errors"""
-    pass
+# Import real implementation classes (GREEN phase completed)
+from src.automation.daemon import DaemonState, DaemonStatus, DaemonError
+from src.automation.health import HealthReport
+from src.automation.scheduler import JobInfo
+from src.automation.config import DaemonConfig
 
 
 # ============================================================================
