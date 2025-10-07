@@ -1624,7 +1624,18 @@ Examples:
             print(f"📊 Found {len(youtube_notes)} unprocessed YouTube notes")
             
             if not youtube_notes:
-                print("✅ No YouTube notes to process")
+                # Output JSON if requested even when no notes
+                if hasattr(args, 'format') and args.format == 'json':
+                    import json
+                    json_output = {
+                        'successful': 0,
+                        'failed': 0,
+                        'skipped': 0,
+                        'total': 0
+                    }
+                    print(json.dumps(json_output))
+                else:
+                    print("✅ No YouTube notes to process")
                 return 0
             
             # Process each note
