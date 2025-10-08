@@ -1,0 +1,29 @@
+# InnerOS Automation Daemon Configuration
+
+daemon:
+  check_interval: 60
+  log_level: INFO
+
+# File watching configuration
+file_watching:
+  enabled: true  # Enable to watch YouTube notes
+  watch_path: ./knowledge/Inbox
+  debounce_seconds: 2.0
+  ignore_patterns:
+    - "*.tmp"
+    - ".git/*"
+    - ".obsidian/*"
+
+# Screenshot handler
+screenshot_handler:
+  enabled: false  # Disable for initial test
+  onedrive_path: ~/OneDrive/Screenshots
+  knowledge_path: ./knowledge/Media/Pasted Images
+  ocr_enabled: false
+
+# Smart link handler  
+smart_link_handler:
+  enabled: false  # Disable for initial test
+  vault_path: ./knowledge
+  similarity_threshold: 0.75
+  max_suggestions: 5
