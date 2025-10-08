@@ -1,0 +1,312 @@
+"""
+Feature Handler Utilities - REFACTOR Phase
+
+Extracted utility classes for feature handler processing:
+- ScreenshotProcessorIntegrator: Manages ScreenshotProcessor integration
+- SmartLinkEngineIntegrator: Manages LinkSuggestionEngine + AIConnections integration
+- ProcessingMetricsTracker: Enhanced metrics tracking for real processing
+- ErrorHandlingStrategy: Graceful degradation and fallback strategies
+
+Following ADR-001: Keep utilities modular and focused (each <200 LOC)
+"""
+
+from pathlib import Path
+from typing import Dict, Any, Optional
+import logging
+
+try:
+    from src.cli.screenshot_processor import ScreenshotProcessor
+except ImportError:
+    ScreenshotProcessor = None
+
+try:
+    from src.ai.link_suggestion_engine import LinkSuggestionEngine
+    from src.ai.connections import AIConnections
+except ImportError:
+    LinkSuggestionEngine = None
+    AIConnections = None
+
+
+class ScreenshotProcessorIntegrator:
+    """
+    Manages integration between ScreenshotEventHandler and ScreenshotProcessor.
+    
+    Responsibilities:
+    - Initialize ScreenshotProcessor with correct paths
+    - Process screenshots with OCR
+    - Handle OCR service unavailability gracefully
+    - Track processing metrics
+    
+    Size: ~60 LOC (ADR-001 compliant)
+    """
+    
+    def __init__(self, onedrive_path: Path, logger: logging.Logger):
+        """
+        Initialize screenshot processor integrator.
+        
+        Args:
+            onedrive_path: Path to OneDrive screenshot directory
+            logger: Logger instance for processing events
+        """
+        self.onedrive_path = onedrive_path
+        self.logger = logger
+        self.processor = None
+    
+    def process_screenshot(self, file_path: Path) -> Dict[str, Any]:
+        """
+        Process screenshot with OCR integration.
+        
+        Args:
+            file_path: Path to screenshot file
+            
+        Returns:
+            Dictionary with processing results:
+            - success: bool
+            - ocr_results: dict (if available)
+            - error: str (if failed)
+        """
+        if not ScreenshotProcessor:
+            self.logger.warning("ScreenshotProcessor not available - graceful fallback")
+            return {
+                'success': False,
+                'error': 'ScreenshotProcessor not available',
+                'fallback': True
+            }
+        
+        try:
+            # Initialize processor (lazy initialization for performance)
+            if not self.processor:
+                knowledge_path = self.onedrive_path.parent if self.onedrive_path.parent else Path.cwd()
+                self.processor = ScreenshotProcessor(
+                    onedrive_path=str(self.onedrive_path),
+                    knowledge_path=str(knowledge_path)
+                )
+            
+            # Process with OCR
+            ocr_results = self.processor.process_screenshots_with_ocr([file_path])
+            
+            if ocr_results:
+                self.logger.info(f"Screenshot processed with OCR: {file_path.name}")
+                return {
+                    'success': True,
+                    'ocr_results': ocr_results,
+                    'screenshot_count': len(ocr_results)
+                }
+            else:
+                self.logger.warning(f"Screenshot processed but no OCR results: {file_path.name}")
+                return {
+                    'success': True,
+                    'ocr_results': {},
+                    'screenshot_count': 0
+                }
+                
+        except Exception as e:
+            self.logger.error(f"OCR processing failed for {file_path.name}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+
+class SmartLinkEngineIntegrator:
+    """
+    Manages integration between SmartLinkEventHandler and AI link engines.
+    
+    Responsibilities:
+    - Initialize AIConnections for semantic analysis
+    - Find similar notes and generate suggestions
+    - Handle AI service unavailability gracefully
+    - Track suggestion metrics
+    
+    Size: ~80 LOC (ADR-001 compliant)
+    """
+    
+    def __init__(self, vault_path: Path, logger: logging.Logger, 
+                 similarity_threshold: float = 0.75, max_suggestions: int = 5):
+        """
+        Initialize smart link engine integrator.
+        
+        Args:
+            vault_path: Path to knowledge vault root
+            logger: Logger instance for processing events
+            similarity_threshold: Minimum similarity score for suggestions
+            max_suggestions: Maximum number of suggestions to return
+        """
+        self.vault_path = vault_path
+        self.logger = logger
+        self.similarity_threshold = similarity_threshold
+        self.max_suggestions = max_suggestions
+        self.ai_connections = None
+    
+    def process_note_for_links(self, file_path: Path) -> Dict[str, Any]:
+        """
+        Process note file for smart link suggestions.
+        
+        Args:
+            file_path: Path to note file
+            
+        Returns:
+            Dictionary with processing results:
+            - success: bool
+            - suggestions_count: int
+            - similar_notes: list (if available)
+            - error: str (if failed)
+        """
+        if not AIConnections:
+            self.logger.warning("AIConnections not available - graceful fallback")
+            return {
+                'success': False,
+                'error': 'AIConnections not available',
+                'fallback': True,
+                'suggestions_count': 0
+            }
+        
+        if not file_path.exists():
+            self.logger.error(f"Note file does not exist: {file_path}")
+            return {
+                'success': False,
+                'error': 'File does not exist',
+                'suggestions_count': 0
+            }
+        
+        try:
+            # Initialize AI connections (lazy initialization)
+            if not self.ai_connections:
+                self.ai_connections = AIConnections(
+                    similarity_threshold=self.similarity_threshold,
+                    max_suggestions=self.max_suggestions
+                )
+            
+            # Read note content
+            note_content = file_path.read_text(encoding='utf-8')
+            
+            # Find similar notes
+            # Note: In GREEN phase, we use empty corpus for minimal implementation
+            # P1 enhancement: Build full vault corpus for real similarity analysis
+            similar_notes = self.ai_connections.find_similar_notes(
+                target_note=note_content,
+                note_corpus={}  # Empty corpus for minimal GREEN implementation
+            )
+            
+            suggestions_count = len(similar_notes)
+            
+            self.logger.info(f"Smart link analysis complete: {file_path.name} ({suggestions_count} suggestions)")
+            return {
+                'success': True,
+                'suggestions_count': suggestions_count,
+                'similar_notes': similar_notes
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Smart link processing failed for {file_path.name}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'error': str(e),
+                'suggestions_count': 0
+            }
+
+
+class ProcessingMetricsTracker:
+    """
+    Enhanced metrics tracking for real processing integration.
+    
+    Tracks:
+    - Processing success/failure rates
+    - OCR-specific metrics (for screenshot handler)
+    - Link suggestion metrics (for smart link handler)
+    - Performance timing (P1 enhancement)
+    
+    Size: ~40 LOC (ADR-001 compliant)
+    """
+    
+    def __init__(self):
+        """Initialize metrics tracker."""
+        self.metrics = {
+            'events_processed': 0,
+            'events_failed': 0,
+            'last_processed': None,
+            # Handler-specific metrics
+            'ocr_success': 0,
+            'ocr_failed': 0,
+            'links_suggested': 0,
+            'links_inserted': 0
+        }
+    
+    def record_success(self, filename: str, handler_type: str = 'generic', **kwargs):
+        """
+        Record successful processing event.
+        
+        Args:
+            filename: Name of processed file
+            handler_type: Type of handler ('screenshot', 'smart_link')
+            **kwargs: Additional metrics to record
+        """
+        self.metrics['events_processed'] += 1
+        self.metrics['last_processed'] = filename
+        
+        # Handler-specific tracking
+        if handler_type == 'screenshot' and kwargs.get('ocr_success'):
+            self.metrics['ocr_success'] += 1
+        elif handler_type == 'smart_link' and 'suggestions_count' in kwargs:
+            self.metrics['links_suggested'] += kwargs['suggestions_count']
+    
+    def record_failure(self):
+        """Record failed processing event."""
+        self.metrics['events_failed'] += 1
+    
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get current metrics."""
+        return self.metrics.copy()
+    
+    def get_error_rate(self) -> float:
+        """Calculate error rate."""
+        total = self.metrics['events_processed'] + self.metrics['events_failed']
+        return self.metrics['events_failed'] / total if total > 0 else 0.0
+
+
+class ErrorHandlingStrategy:
+    """
+    Graceful degradation and fallback strategies for handler errors.
+    
+    Strategies:
+    - Service unavailable: Log warning, continue without processing
+    - Processing error: Log error, increment failure metrics
+    - Configuration error: Provide user-friendly guidance
+    
+    Size: ~30 LOC (ADR-001 compliant)
+    """
+    
+    @staticmethod
+    def handle_service_unavailable(logger: logging.Logger, service_name: str, filename: str) -> None:
+        """
+        Handle service unavailability gracefully.
+        
+        Args:
+            logger: Logger instance
+            service_name: Name of unavailable service
+            filename: File being processed
+        """
+        logger.warning(
+            f"{service_name} unavailable for {filename} - continuing without processing. "
+            f"Ensure {service_name} is installed and configured."
+        )
+    
+    @staticmethod
+    def handle_processing_error(logger: logging.Logger, error: Exception, filename: str) -> None:
+        """
+        Handle processing errors with detailed logging.
+        
+        Args:
+            logger: Logger instance
+            error: Exception that occurred
+            filename: File being processed
+        """
+        logger.error(
+            f"Processing failed for {filename}: {error}",
+            exc_info=True,
+            extra={
+                'target_file': filename,
+                'error_type': type(error).__name__,
+                'error_message': str(error)
+            }
+        )

@@ -14,6 +14,18 @@ Size: ~180 LOC (ADR-001 compliant: <500 LOC)
 import logging
 import time
 from pathlib import Path
+import sys
+
+# Add development directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Import utility classes for REFACTOR phase
+from .feature_handler_utils import (
+    ScreenshotProcessorIntegrator,
+    SmartLinkEngineIntegrator,
+    ProcessingMetricsTracker,
+    ErrorHandlingStrategy
+)
 
 
 class ScreenshotEventHandler:
@@ -37,10 +49,9 @@ class ScreenshotEventHandler:
         self._setup_logging()
         self.logger.info(f"Initialized ScreenshotEventHandler: {onedrive_path}")
         
-        # Initialize metrics tracking
-        self._events_processed = 0
-        self._events_failed = 0
-        self._last_processed = None
+        # Initialize REFACTOR: Use utility classes
+        self.processor_integrator = ScreenshotProcessorIntegrator(self.onedrive_path, self.logger)
+        self.metrics_tracker = ProcessingMetricsTracker()
     
     def process(self, file_path: Path, event_type: str) -> None:
         """
@@ -63,15 +74,32 @@ class ScreenshotEventHandler:
         self.logger.info(f"Processing screenshot: {file_path.name}")
         
         try:
-            # TODO: Integrate with EveningScreenshotProcessor
-            # For now, just log the event
-            self.logger.info(f"Screenshot processed: {file_path.name}")
-            self._events_processed += 1
-            self._last_processed = file_path.name
+            # REFACTOR: Use ScreenshotProcessorIntegrator utility
+            result = self.processor_integrator.process_screenshot(file_path)
+            
+            if result['success']:
+                self.metrics_tracker.record_success(
+                    filename=file_path.name,
+                    handler_type='screenshot',
+                    ocr_success=bool(result.get('ocr_results'))
+                )
+            elif result.get('fallback'):
+                # Service unavailable - graceful degradation
+                ErrorHandlingStrategy.handle_service_unavailable(
+                    self.logger, 'ScreenshotProcessor', file_path.name
+                )
+                self.metrics_tracker.record_success(file_path.name, 'screenshot')
+            else:
+                # Processing error
+                error_msg = result.get('error', 'Unknown error')
+                ErrorHandlingStrategy.handle_processing_error(
+                    self.logger, Exception(error_msg), file_path.name
+                )
+                self.metrics_tracker.record_failure()
             
         except Exception as e:
-            self._events_failed += 1
-            self.logger.error(f"Failed to process screenshot {file_path.name}: {e}", exc_info=True)
+            ErrorHandlingStrategy.handle_processing_error(self.logger, e, file_path.name)
+            self.metrics_tracker.record_failure()
     
     def _is_screenshot(self, file_path: Path) -> bool:
         """
@@ -111,11 +139,8 @@ class ScreenshotEventHandler:
         Returns:
             Dictionary with processing metrics
         """
-        return {
-            'events_processed': self._events_processed,
-            'events_failed': self._events_failed,
-            'last_processed': self._last_processed
-        }
+        # REFACTOR: Use ProcessingMetricsTracker
+        return self.metrics_tracker.get_metrics()
     
     def get_health(self) -> dict:
         """
@@ -124,21 +149,24 @@ class ScreenshotEventHandler:
         Returns:
             Dictionary with health status information
         """
+        # REFACTOR: Use ProcessingMetricsTracker for error rate calculation
+        metrics = self.metrics_tracker.get_metrics()
+        error_rate = self.metrics_tracker.get_error_rate()
+        
         # Determine health status based on error rate
-        total_events = self._events_processed + self._events_failed
-        if total_events == 0:
+        if metrics['events_processed'] + metrics['events_failed'] == 0:
             status = 'healthy'
-        elif self._events_failed / total_events > 0.5:
+        elif error_rate > 0.5:
             status = 'unhealthy'
-        elif self._events_failed / total_events > 0.2:
+        elif error_rate > 0.2:
             status = 'degraded'
         else:
             status = 'healthy'
         
         return {
             'status': status,
-            'last_processed': self._last_processed,
-            'error_rate': self._events_failed / total_events if total_events > 0 else 0.0
+            'last_processed': metrics['last_processed'],
+            'error_rate': error_rate
         }
 
 
@@ -163,12 +191,9 @@ class SmartLinkEventHandler:
         self._setup_logging()
         self.logger.info(f"Initialized SmartLinkEventHandler: {vault_path}")
         
-        # Initialize metrics tracking
-        self._events_processed = 0
-        self._events_failed = 0
-        self._links_suggested = 0
-        self._links_inserted = 0
-        self._last_processed = None
+        # Initialize REFACTOR: Use utility classes
+        self.link_integrator = SmartLinkEngineIntegrator(self.vault_path, self.logger)
+        self.metrics_tracker = ProcessingMetricsTracker()
     
     def process(self, file_path: Path, event_type: str) -> None:
         """
@@ -191,15 +216,32 @@ class SmartLinkEventHandler:
         self.logger.info(f"Processing smart links for: {file_path.name}")
         
         try:
-            # TODO: Integrate with LinkSuggestionEngine and LinkInsertionEngine
-            # For now, just log the event
-            self.logger.info(f"Smart link analysis complete: {file_path.name}")
-            self._events_processed += 1
-            self._last_processed = file_path.name
+            # REFACTOR: Use SmartLinkEngineIntegrator utility
+            result = self.link_integrator.process_note_for_links(file_path)
+            
+            if result['success']:
+                self.metrics_tracker.record_success(
+                    filename=file_path.name,
+                    handler_type='smart_link',
+                    suggestions_count=result['suggestions_count']
+                )
+            elif result.get('fallback'):
+                # Service unavailable - graceful degradation
+                ErrorHandlingStrategy.handle_service_unavailable(
+                    self.logger, 'AIConnections', file_path.name
+                )
+                self.metrics_tracker.record_success(file_path.name, 'smart_link', suggestions_count=0)
+            else:
+                # Processing error
+                error_msg = result.get('error', 'Unknown error')
+                ErrorHandlingStrategy.handle_processing_error(
+                    self.logger, Exception(error_msg), file_path.name
+                )
+                self.metrics_tracker.record_failure()
             
         except Exception as e:
-            self._events_failed += 1
-            self.logger.error(f"Failed smart link processing for {file_path.name}: {e}", exc_info=True)
+            ErrorHandlingStrategy.handle_processing_error(self.logger, e, file_path.name)
+            self.metrics_tracker.record_failure()
     
     def _setup_logging(self) -> None:
         """Setup logging for smart link handler."""
@@ -225,13 +267,8 @@ class SmartLinkEventHandler:
         Returns:
             Dictionary with link processing metrics
         """
-        return {
-            'events_processed': self._events_processed,
-            'events_failed': self._events_failed,
-            'links_suggested': self._links_suggested,
-            'links_inserted': self._links_inserted,
-            'last_processed': self._last_processed
-        }
+        # REFACTOR: Use ProcessingMetricsTracker
+        return self.metrics_tracker.get_metrics()
     
     def get_health(self) -> dict:
         """
@@ -240,19 +277,22 @@ class SmartLinkEventHandler:
         Returns:
             Dictionary with health status information
         """
+        # REFACTOR: Use ProcessingMetricsTracker for error rate calculation
+        metrics = self.metrics_tracker.get_metrics()
+        error_rate = self.metrics_tracker.get_error_rate()
+        
         # Determine health status based on error rate
-        total_events = self._events_processed + self._events_failed
-        if total_events == 0:
+        if metrics['events_processed'] + metrics['events_failed'] == 0:
             status = 'healthy'
-        elif self._events_failed / total_events > 0.5:
+        elif error_rate > 0.5:
             status = 'unhealthy'
-        elif self._events_failed / total_events > 0.2:
+        elif error_rate > 0.2:
             status = 'degraded'
         else:
             status = 'healthy'
         
         return {
             'status': status,
-            'last_processed': self._last_processed,
-            'error_rate': self._events_failed / total_events if total_events > 0 else 0.0
+            'last_processed': metrics['last_processed'],
+            'error_rate': error_rate
         }
