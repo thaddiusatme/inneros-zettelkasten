@@ -1,14 +1,3 @@
----
-type: literature
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: inbox
-tags: [youtube, video-content]
-visibility: private
-source: youtube
-author: 
-video_id: 
-channel: 
----
 <%*
 /*------------------------------------------------------------------
   YOUTUBE VIDEO CAPTURE TEMPLATE - API POWERED
@@ -90,17 +79,25 @@ const allTags = ["youtube", "video-content"];
 try {
   await tp.file.rename(fname);
   await tp.file.move(target);
-  
-  // Update frontmatter with extracted metadata
-  await tp.file.update_frontmatter({
-    author: channelName,
-    video_id: videoId,
-    channel: channelName
-  });
 } catch (e) {
   await tp.system.alert("Rename/Move failed – " + e.message);
   return;
 }
+
+// 7. Output frontmatter with populated fields
+tR += `---
+type: literature
+created: ${tp.date.now("YYYY-MM-DD HH:mm")}
+status: inbox
+tags: [youtube, video-content]
+visibility: private
+source: youtube
+author: ${channelName}
+video_id: ${videoId}
+channel: ${channelName}
+---
+
+`;
 %>
 
 # <% videoTitle %>
