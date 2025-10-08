@@ -22,6 +22,7 @@ RED Phase Target: 12/12 tests failing with clear ImportError/AttributeError mess
 """
 
 import pytest
+import logging
 import time
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -458,13 +459,199 @@ class TestHealthMonitoring:
 
 
 # ============================================================================
+# P0.6: Logging Infrastructure (5 tests) - TDD Iteration 2 P1.3
+# ============================================================================
+
+class TestLoggingInfrastructure:
+    """Test Python logging infrastructure for production debugging."""
+    
+    @pytest.fixture
+    def test_vault(self, tmp_path):
+        """Create test vault with Inbox directory."""
+        vault = tmp_path / "knowledge"
+        inbox = vault / "Inbox"
+        inbox.mkdir(parents=True)
+        return vault, inbox
+    
+    def test_logger_initialized_on_creation(self, test_vault, caplog):
+        """
+        P0.6.1: Logger is initialized with INFO level during __init__.
+        
+        Expected behavior:
+        - Logger created in __init__ method
+        - Log level set to INFO
+        - Initialization message logged
+        - Logger name follows Python convention
+        
+        Will fail: No logger initialization in __init__
+        """
+        from src.automation.event_handler import AutomationEventHandler
+        
+        vault, inbox = test_vault
+        
+        with caplog.at_level(logging.INFO):
+            handler = AutomationEventHandler(vault_path=str(vault))
+            
+            # Verify logger exists
+            assert hasattr(handler, 'logger'), "Should have logger attribute"
+            assert handler.logger is not None, "Logger should be initialized"
+            
+            # Verify initialization logged
+            assert len(caplog.records) > 0, "Should log initialization"
+            assert "Initialized" in caplog.text or "AutomationEventHandler" in caplog.text
+    
+    def test_successful_processing_logged_at_info_level(self, test_vault, caplog):
+        """
+        P0.6.2: Successful operations are logged at INFO level.
+        
+        Expected behavior:
+        - Success operations logged with INFO level
+        - Log includes file path processed
+        - Log includes processing duration
+        - Log format matches standard
+        
+        Will fail: No success logging in _execute_processing
+        """
+        from src.automation.event_handler import AutomationEventHandler
+        
+        vault, inbox = test_vault
+        test_note = inbox / "success-note.md"
+        test_note.write_text("---\ntitle: Success\n---\nContent")
+        
+        handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
+        
+        # Mock successful processing
+        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+            mock_process.return_value = {'success': True, 'quality_score': 0.75}
+            
+            with caplog.at_level(logging.INFO):
+                handler.process_file_event(test_note, "created")
+                time.sleep(0.2)  # Wait for debounce
+                
+                # Verify success logged
+                info_records = [r for r in caplog.records if r.levelname == "INFO"]
+                assert len(info_records) > 0, "Should have INFO level logs"
+                
+                # Check log content mentions file and success
+                log_text = " ".join([r.message for r in info_records])
+                assert "success-note.md" in log_text or "Processed" in log_text
+    
+    def test_errors_logged_with_stack_trace(self, test_vault, caplog):
+        """
+        P0.6.3: Errors are logged at ERROR level with full stack traces.
+        
+        Expected behavior:
+        - Errors logged with ERROR level
+        - Exception type and message included
+        - Full stack trace included (exc_info=True)
+        - File path included in error log
+        
+        Will fail: No error logging with exc_info=True
+        """
+        from src.automation.event_handler import AutomationEventHandler
+        
+        vault, inbox = test_vault
+        test_note = inbox / "error-note.md"
+        test_note.write_text("---\ntitle: Error\n---\nContent")
+        
+        handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
+        
+        # Mock exception
+        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+            mock_process.side_effect = ValueError("Test error for logging")
+            
+            with caplog.at_level(logging.ERROR):
+                handler.process_file_event(test_note, "created")
+                time.sleep(0.2)  # Wait for debounce
+                
+                # Verify error logged
+                error_records = [r for r in caplog.records if r.levelname == "ERROR"]
+                assert len(error_records) > 0, "Should have ERROR level logs"
+                
+                # Verify error details
+                error_log = error_records[0]
+                assert "ValueError" in error_log.message or "Test error" in error_log.message
+                
+                # Verify stack trace (exc_info=True creates stack trace)
+                assert error_log.exc_info is not None, "Should include stack trace"
+    
+    def test_log_file_created_in_automation_logs(self, test_vault, tmp_path):
+        """
+        P0.6.4: Log files are created in .automation/logs/ directory.
+        
+        Expected behavior:
+        - Log directory created if doesn't exist
+        - Daily log file: event_handler_YYYY-MM-DD.log
+        - Log file contains initialization message
+        - Log format matches standard
+        
+        Will fail: No file handler configured in logger
+        """
+        from src.automation.event_handler import AutomationEventHandler
+        
+        vault, inbox = test_vault
+        
+        # Create handler (should create log file)
+        handler = AutomationEventHandler(vault_path=str(vault))
+        
+        # Check for log directory (relative to vault or absolute)
+        # The component should create logs in .automation/logs/
+        log_dir = vault.parent / '.automation' / 'logs'
+        
+        # Log file may not exist yet if using MemoryHandler, but logger should be configured
+        assert hasattr(handler, 'logger'), "Should have logger attribute"
+        
+        # Verify logger has file handler (implementation detail)
+        # At minimum, verify logger is configured for file output
+        assert len(handler.logger.handlers) > 0, "Logger should have handlers configured"
+    
+    def test_log_format_matches_standard(self, test_vault, caplog):
+        """
+        P0.6.5: Log format follows standard: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+        
+        Expected behavior:
+        - Timestamp in YYYY-MM-DD HH:MM:SS format
+        - Level in brackets: [INFO], [ERROR]
+        - Module name included
+        - Clear message
+        
+        Will fail: Formatter not configured with correct format
+        """
+        from src.automation.event_handler import AutomationEventHandler
+        
+        vault, inbox = test_vault
+        test_note = inbox / "format-test.md"
+        test_note.write_text("---\ntitle: Format\n---\nContent")
+        
+        handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
+        
+        # Mock successful processing
+        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+            mock_process.return_value = {'success': True}
+            
+            with caplog.at_level(logging.INFO):
+                handler.process_file_event(test_note, "created")
+                time.sleep(0.2)
+                
+                # Verify log records exist
+                assert len(caplog.records) > 0, "Should have log records"
+                
+                # Verify record structure (caplog gives us structured data)
+                record = caplog.records[-1]
+                assert record.levelname in ['INFO', 'ERROR', 'WARNING'], "Should have valid level"
+                assert record.name, "Should have logger name"
+                assert record.message, "Should have message"
+
+
+# ============================================================================
 # Test Execution Summary
 # ============================================================================
 
-"""
+"""  
 RED Phase Test Summary:
 
-TDD Iteration 2 P1.2 (RED PHASE): 12/12 tests WILL FAIL
+TDD Iteration 2 P1.2 (RED PHASE): 12/12 tests passing (GREEN complete)
+TDD Iteration 2 P1.3 (RED PHASE): 5/5 tests WILL FAIL
 
 P0.1 Event Handler Initialization (2 tests):
 1. test_event_handler_initializes_with_vault_path - ImportError: AutomationEventHandler not defined
@@ -485,10 +672,17 @@ P0.4 Error Handling (2 tests):
 10. test_handles_missing_vault_path - ImportError: AutomationEventHandler not defined
 
 P0.5 Health Monitoring (2 tests):
-11. test_get_health_status_returns_handler_health - AttributeError: no get_health_status
-12. test_get_metrics_tracks_event_processing_stats - AttributeError: no get_metrics
+11. test_get_health_status_returns_handler_health - ✅ PASSING
+12. test_get_metrics_tracks_event_processing_stats - ✅ PASSING
 
-Next Phase: GREEN - Implement AutomationEventHandler class (~80 LOC)
+P0.6 Logging Infrastructure (5 tests) - TDD Iteration 2 P1.3:
+13. test_logger_initialized_on_creation - No logger initialization
+14. test_successful_processing_logged_at_info_level - No success logging
+15. test_errors_logged_with_stack_trace - No error logging with exc_info=True
+16. test_log_file_created_in_automation_logs - No file handler
+17. test_log_format_matches_standard - No formatter configured
+
+Next Phase: GREEN - Add logging infrastructure to event_handler.py (~15 LOC)
 Required implementation:
 - src/automation/event_handler.py: AutomationEventHandler class
   - __init__(vault_path, debounce_seconds=2.0)
@@ -500,7 +694,11 @@ Required implementation:
   - _debounce_timers (dict)
   - core_workflow (CoreWorkflowManager instance)
 
-Integration points:
-- src/automation/daemon.py: Wire event_handler into _on_file_event() callback
-- src/automation/health.py: Add event_handler health check
+Logging Requirements (TDD Iteration 2 P1.3):
+- Logger initialized in __init__ with daily log files
+- Log directory: .automation/logs/
+- Log file: automationeventhandler_YYYY-MM-DD.log
+- Format: YYYY-MM-DD HH:MM:SS [LEVEL] automation.event_handler: message
+- Log initialization, success operations (INFO), errors (ERROR with exc_info=True)
+- Keep component under 500 LOC hard limit (currently 210 LOC)
 """

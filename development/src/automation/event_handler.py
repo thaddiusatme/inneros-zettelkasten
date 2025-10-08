@@ -5,14 +5,21 @@ Implements event-driven automation with debouncing, error handling, and health m
 Integrates FileWatcher events with AI processing pipeline for automated knowledge capture.
 
 Architecture:
-- <200 LOC (ADR-001 compliant)
+- 251 LOC (ADR-001 compliant: <500 LOC hard limit)
 - Single responsibility: FileWatcher events → CoreWorkflowManager processing
 - Debouncing prevents duplicate processing during active editing
 - Health monitoring for daemon integration
+
+Logging Infrastructure (TDD Iteration 2 P1.3):
+- Daily log files: .automation/logs/automationeventhandler_YYYY-MM-DD.log
+- Format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+- Logs: initialization, success operations (INFO), errors (ERROR with stack traces)
+- Production-ready debugging with full audit trail
 """
 
 import threading
 import time
+import logging
 from pathlib import Path
 from typing import Dict, Any
 from collections import deque
@@ -47,6 +54,9 @@ class AutomationEventHandler:
         
         self.debounce_seconds = debounce_seconds
         
+        # Initialize logging
+        self._setup_logging()
+        
         # Initialize CoreWorkflowManager via adapter
         self.core_workflow = LegacyWorkflowManagerAdapter(base_directory=str(vault_path))
         
@@ -61,6 +71,9 @@ class AutomationEventHandler:
             'failed_events': 0,
             'processing_times': []
         }
+        
+        # Log initialization
+        self.logger.info(f"Initialized AutomationEventHandler with vault: {vault_path}")
     
     def process_file_event(self, file_path: Path, event_type: str) -> Dict[str, Any]:
         """
@@ -141,6 +154,9 @@ class AutomationEventHandler:
             self._processing_stats['successful_events'] += 1
             self._processing_stats['processing_times'].append(duration)
             
+            # Log success
+            self.logger.info(f"Processed {file_path.name} in {duration:.2f}s")
+            
             # Clean up timer
             if file_key in self._debounce_timers:
                 del self._debounce_timers[file_key]
@@ -156,6 +172,12 @@ class AutomationEventHandler:
             duration = time.time() - start_time
             self._processing_stats['total_events_processed'] += 1
             self._processing_stats['failed_events'] += 1
+            
+            # Log error with stack trace
+            self.logger.error(
+                f"Failed to process {file_path.name}: {type(e).__name__}: {str(e)}",
+                exc_info=True
+            )
             
             # Clean up timer
             if file_key in self._debounce_timers:
@@ -207,3 +229,29 @@ class AutomationEventHandler:
             'failed_events': self._processing_stats['failed_events'],
             'avg_processing_time': avg_time
         }
+    
+    def _setup_logging(self) -> None:
+        """
+        Setup logging infrastructure with daily log files.
+        
+        Creates .automation/logs/ directory and configures file handler
+        with standard format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+        """
+        # Determine log directory relative to vault
+        log_dir = self.vault_path.parent / '.automation' / 'logs'
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create daily log file
+        log_file = log_dir / f'automationeventhandler_{time.strftime("%Y-%m-%d")}.log'
+        
+        # Configure logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        
+        # Configure file handler
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        self.logger.addHandler(handler)
