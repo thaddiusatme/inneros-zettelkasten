@@ -168,6 +168,43 @@ def test_metrics_tracking(handler: YouTubeFeatureHandler):
     return metrics, health
 
 
+def test_specific_note(handler: YouTubeFeatureHandler, note_path: str):
+    """Test processing a specific note."""
+    print("\n📋 Test: Processing Specific Note")
+    print("-" * 50)
+    
+    note_file = Path(note_path)
+    if not note_file.exists():
+        print(f"❌ Note not found: {note_path}")
+        return None
+    
+    print(f"Processing: {note_file.name}")
+    
+    mock_event = Mock()
+    mock_event.src_path = str(note_file)
+    
+    # Check if handler can detect it
+    can_handle = handler.can_handle(mock_event)
+    print(f"   Can handle: {can_handle}")
+    
+    if not can_handle:
+        print("   ⚠️ Handler cannot process this note")
+        return None
+    
+    print("\n🔄 Processing...")
+    result = handler.handle(mock_event)
+    
+    print(f"\n📊 Results:")
+    print(f"   Success: {result.get('success', False)}")
+    print(f"   Quotes added: {result.get('quotes_added', 0)}")
+    print(f"   Processing time: {result.get('processing_time', 0):.2f}s")
+    
+    if result.get('error'):
+        print(f"   Error: {result['error']}")
+    
+    return result
+
+
 def main():
     """Run all integration tests."""
     print("=" * 50)

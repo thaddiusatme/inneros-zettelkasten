@@ -1,30 +1,28 @@
 ---
 type: literature
-created: 2025-10-03 09:53
+created: 2025-10-08 11:23
 status: inbox
-tags:
-  - youtube
-  - video-content
+tags: [youtube, video-content]
 visibility: private
 source: youtube
-author:
-video_id:
-channel:
+author: Bellular Warcraft
+video_id: amY90H02qGk
+channel: Bellular Warcraft 
 ---
 
 
-# AI Channels Are Taking Over Warhammer 40k Lore On YouTube
+# The Largest Change In Warcraft History
 
 ## Video Information
-- **Channel**: Majorkill
-- **Video URL**: https://www.youtube.com/watch?v=rYCQZ2osLq4
-- **Video ID**: `rYCQZ2osLq4`
-- **Date Saved**: 2025-10-03
+- **Channel**: Bellular Warcraft
+- **Video URL**: https://www.youtube.com/watch?v=amY90H02qGk
+- **Video ID**: `amY90H02qGk`
+- **Date Saved**: 2025-10-08
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/rYCQZ2osLq4/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/amY90H02qGk/hqdefault.jpg)
 
 ## Why I'm Saving This
-This is important in the fight against AI slop and finding hte line of what is acceptable within the ai creative space
+Future World of Warcraft news
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -50,9 +48,9 @@ This is important in the fight against AI slop and finding hte line of what is a
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-03 09:54
+- **Captured**: 2025-10-08 11:24
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Majorkill*
+*YouTube video saved from: Bellular Warcraft*

@@ -27,3 +27,11 @@ smart_link_handler:
   vault_path: ./knowledge
   similarity_threshold: 0.75
   max_suggestions: 5
+
+# YouTube handler (TDD Iteration 9)
+youtube_handler:
+  enabled: true
+  vault_path: ./knowledge
+  max_quotes: 7
+  min_quality: 0.7
+  processing_timeout: 300
