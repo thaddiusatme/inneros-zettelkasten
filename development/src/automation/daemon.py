@@ -59,7 +59,7 @@ class AutomationDaemon:
     
     Logging: Daily log files with lifecycle events and error tracking.
     
-    Size: 289 LOC (ADR-001 compliant: <500 LOC)
+    Size: 290 LOC (ADR-001 compliant: <500 LOC)
     """
     
     def __init__(self, config: Optional[DaemonConfig] = None):
