@@ -245,6 +245,95 @@ class AutomationDaemon:
             return self.health.get_health_status().is_healthy
         return False
     
+    def get_daemon_health(self) -> dict:
+        """
+        Aggregate daemon and handler health for monitoring endpoints.
+        
+        Returns:
+            Dictionary including daemon checks and handler-specific health
+        """
+        report = self.health.get_health_status() if self.health else None
+        daemon_info = {
+            'is_healthy': bool(report.is_healthy) if report else False,
+            'status_code': int(report.status_code) if report else 503,
+            'checks': dict(report.checks) if report else {}
+        }
+        
+        handlers: dict = {}
+        if self.screenshot_handler is not None:
+            if hasattr(self.screenshot_handler, 'get_health_status'):
+                handlers['screenshot'] = self.screenshot_handler.get_health_status()
+            elif hasattr(self.screenshot_handler, 'get_health'):
+                handlers['screenshot'] = self.screenshot_handler.get_health()
+        
+        if self.smart_link_handler is not None:
+            if hasattr(self.smart_link_handler, 'get_health_status'):
+                handlers['smart_link'] = self.smart_link_handler.get_health_status()
+            elif hasattr(self.smart_link_handler, 'get_health'):
+                handlers['smart_link'] = self.smart_link_handler.get_health()
+        
+        return {
+            'daemon': daemon_info,
+            'handlers': handlers
+        }
+    
+    def export_handler_metrics(self) -> dict:
+        """
+        Export metrics for each configured handler as structured dictionaries.
+        
+        Returns:
+            Dictionary keyed by handler type with metrics content
+        """
+        import json
+        metrics: dict = {}
+        
+        if self.screenshot_handler is not None and hasattr(self.screenshot_handler, 'export_metrics'):
+            try:
+                ss_json = self.screenshot_handler.export_metrics()
+                metrics['screenshot'] = json.loads(ss_json)
+            except Exception:
+                metrics['screenshot'] = {}
+        
+        if self.smart_link_handler is not None and hasattr(self.smart_link_handler, 'export_metrics'):
+            try:
+                sl_json = self.smart_link_handler.export_metrics()
+                metrics['smart_link'] = json.loads(sl_json)
+            except Exception:
+                metrics['smart_link'] = {}
+        
+        return metrics
+    
+    def export_prometheus_metrics(self) -> str:
+        """
+        Export aggregated Prometheus metrics from all handlers.
+        
+        Returns:
+            String in Prometheus exposition format with metrics from all enabled handlers
+        """
+        sections = []
+        
+        # Aggregate metrics from screenshot handler
+        if self.screenshot_handler is not None:
+            if hasattr(self.screenshot_handler, 'metrics_tracker'):
+                tracker = self.screenshot_handler.metrics_tracker
+                if hasattr(tracker, 'export_prometheus_format'):
+                    prom_text = tracker.export_prometheus_format()
+                    if prom_text:
+                        sections.append("# Screenshot Handler Metrics")
+                        sections.append(prom_text)
+        
+        # Aggregate metrics from smart link handler
+        if self.smart_link_handler is not None:
+            if hasattr(self.smart_link_handler, 'metrics_tracker'):
+                tracker = self.smart_link_handler.metrics_tracker
+                if hasattr(tracker, 'export_prometheus_format'):
+                    prom_text = tracker.export_prometheus_format()
+                    if prom_text:
+                        sections.append("# Smart Link Handler Metrics")
+                        sections.append(prom_text)
+        
+        return "\n\n".join(sections) if sections else ""
+    
     def _on_job_executed(self, job_id: str, success: bool, duration: float) -> None:
         """
         Callback for job execution tracking.
@@ -257,7 +346,50 @@ class AutomationDaemon:
         if self.health:
             self.health.record_job_execution(job_id, success, duration)
     
-    def _setup_feature_handlers(self, vault_path: Path) -> None:
+    def _build_handler_config_dict(self, handler_type: str, vault_path: Optional[Path] = None) -> Optional[dict]:
+        """
+        Build configuration dictionary for a handler from DaemonConfig.
+        
+        Args:
+            handler_type: 'screenshot' or 'smart_link'
+            vault_path: Optional vault path for smart link handler
+            
+        Returns:
+            Config dict if handler is enabled, None otherwise
+        """
+        if handler_type == 'screenshot':
+            sh_cfg = self._config.screenshot_handler
+            if sh_cfg and sh_cfg.enabled and sh_cfg.onedrive_path:
+                return {
+                    'onedrive_path': sh_cfg.onedrive_path,
+                    'knowledge_path': sh_cfg.knowledge_path,
+                    'ocr_enabled': sh_cfg.ocr_enabled,
+                    'processing_timeout': sh_cfg.processing_timeout,
+                }
+        
+        elif handler_type == 'smart_link':
+            sl_cfg = self._config.smart_link_handler
+            if sl_cfg and sl_cfg.enabled:
+                # Resolve vault path with fallback chain
+                resolved_vault = vault_path
+                if resolved_vault is None:
+                    if sl_cfg.vault_path:
+                        resolved_vault = Path(sl_cfg.vault_path)
+                    elif self._config.file_watching and self._config.file_watching.watch_path:
+                        resolved_vault = Path(self._config.file_watching.watch_path)
+                    else:
+                        resolved_vault = Path.cwd()
+                
+                return {
+                    'vault_path': sl_cfg.vault_path or str(resolved_vault),
+                    'similarity_threshold': sl_cfg.similarity_threshold,
+                    'max_suggestions': sl_cfg.max_suggestions,
+                    'auto_insert': sl_cfg.auto_insert,
+                }
+        
+        return None
+    
+    def _setup_feature_handlers(self, vault_path: Optional[Path] = None) -> None:
         """
         Initialize and register feature-specific handlers.
         
@@ -270,18 +402,18 @@ class AutomationDaemon:
             return
         
         # Initialize screenshot handler if configured
-        if self._config.screenshot_handler and self._config.screenshot_handler.enabled:
-            onedrive_path = self._config.screenshot_handler.onedrive_path
-            if onedrive_path:
-                self.logger.info(f"Initializing screenshot handler: {onedrive_path}")
-                self.screenshot_handler = ScreenshotEventHandler(onedrive_path)
-                self.file_watcher.register_callback(self.screenshot_handler.process)
-                self.logger.info("Screenshot handler registered successfully")
+        sh_config = self._build_handler_config_dict('screenshot')
+        if sh_config:
+            self.logger.info(f"Initializing screenshot handler: {sh_config['onedrive_path']}")
+            self.screenshot_handler = ScreenshotEventHandler(config=sh_config)
+            self.file_watcher.register_callback(self.screenshot_handler.process)
+            self.logger.info("Screenshot handler registered successfully")
         
         # Initialize smart link handler if configured
-        if self._config.smart_link_handler and self._config.smart_link_handler.enabled:
-            self.logger.info(f"Initializing smart link handler: {vault_path}")
-            self.smart_link_handler = SmartLinkEventHandler(str(vault_path))
+        sl_config = self._build_handler_config_dict('smart_link', vault_path)
+        if sl_config:
+            self.logger.info(f"Initializing smart link handler: {sl_config['vault_path']}")
+            self.smart_link_handler = SmartLinkEventHandler(config=sl_config)
             self.file_watcher.register_callback(self.smart_link_handler.process)
             self.logger.info("Smart link handler registered successfully")
     
