@@ -53,6 +53,16 @@ class SmartLinkHandlerConfig:
 
 
 @dataclass
+class YouTubeHandlerConfig:
+    """YouTube handler configuration"""
+    enabled: bool = False
+    vault_path: str = ""
+    max_quotes: int = 7
+    min_quality: float = 0.7
+    processing_timeout: int = 300
+
+
+@dataclass
 class DaemonConfig:
     """Daemon configuration"""
     check_interval: int = 60
@@ -61,6 +71,7 @@ class DaemonConfig:
     file_watching: Optional[FileWatchConfig] = None
     screenshot_handler: Optional[ScreenshotHandlerConfig] = None
     smart_link_handler: Optional[SmartLinkHandlerConfig] = None
+    youtube_handler: Optional[YouTubeHandlerConfig] = None
 
 
 class ConfigurationLoader:

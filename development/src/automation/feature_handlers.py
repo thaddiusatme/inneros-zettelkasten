@@ -444,3 +444,272 @@ class SmartLinkEventHandler:
         metrics_dict['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
         
         return json.dumps(metrics_dict, indent=2)
+
+
+class YouTubeFeatureHandler:
+    """
+    Handles automatic quote extraction for YouTube video notes.
+    
+    Monitors for YouTube notes (source: youtube) and triggers AI-powered
+    quote extraction using YouTubeNoteEnhancer while preserving user content.
+    
+    Size: ~150 LOC (ADR-001 compliant)
+    """
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """
+        Initialize YouTube handler.
+        
+        Args:
+            config: Configuration dictionary
+                Required keys: vault_path
+                Optional keys: max_quotes, min_quality, processing_timeout
+        
+        Raises:
+            ValueError: If vault_path is missing from config
+        """
+        if not config:
+            raise ValueError("Configuration dictionary is required")
+        
+        if 'vault_path' not in config:
+            raise ValueError("vault_path is required in configuration")
+        
+        self.vault_path = Path(config['vault_path'])
+        self.max_quotes = config.get('max_quotes', 7)
+        self.min_quality = config.get('min_quality', 0.7)
+        self.processing_timeout = config.get('processing_timeout', 300)
+        
+        self._setup_logging()
+        self.logger.info(f"Initialized YouTubeFeatureHandler: {self.vault_path}")
+        
+        # Initialize metrics tracker
+        self.metrics_tracker = ProcessingMetricsTracker()
+    
+    def can_handle(self, event) -> bool:
+        """
+        Check if this handler can process the given event.
+        
+        Criteria:
+        - File must have 'source: youtube' in frontmatter
+        - File must NOT have 'ai_processed: true'
+        - Frontmatter must be valid YAML
+        
+        Args:
+            event: File system event with src_path attribute
+        
+        Returns:
+            True if handler should process this event, False otherwise
+        """
+        try:
+            file_path = Path(event.src_path)
+            
+            # Only process markdown files
+            if not str(file_path).endswith('.md'):
+                return False
+            
+            # Check if file exists
+            if not file_path.exists():
+                return False
+            
+            # Read and parse frontmatter
+            content = file_path.read_text(encoding='utf-8')
+            
+            # Import parse_frontmatter for YAML parsing
+            from src.utils.frontmatter import parse_frontmatter
+            
+            try:
+                frontmatter, _ = parse_frontmatter(content)
+            except Exception as e:
+                self.logger.debug(f"Failed to parse frontmatter for {file_path.name}: {e}")
+                return False
+            
+            # Check for source: youtube
+            if frontmatter.get('source') != 'youtube':
+                return False
+            
+            # Check if already processed
+            if frontmatter.get('ai_processed') is True:
+                self.logger.debug(f"Skipping already processed note: {file_path.name}")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error in can_handle for {event.src_path}: {e}")
+            return False
+    
+    def handle(self, event) -> Dict[str, Any]:
+        """
+        Process YouTube note with AI quote extraction.
+        
+        Workflow:
+        1. Read video_id from frontmatter
+        2. Fetch transcript using YouTubeTranscriptFetcher
+        3. Extract quotes using ContextAwareQuoteExtractor
+        4. Use YouTubeNoteEnhancer to insert quotes (preserving user content)
+        5. Update frontmatter with ai_processed flag
+        
+        Args:
+            event: File system event
+        
+        Returns:
+            Dict with processing results:
+                - success: bool
+                - quotes_added: int (if successful)
+                - processing_time: float
+                - error: str (if failed)
+        """
+        file_path = Path(event.src_path)
+        self.logger.info(f"Processing YouTube note: {file_path.name}")
+        
+        start_time = time.time()
+        
+        try:
+            # Read note to get video_id
+            content = file_path.read_text(encoding='utf-8')
+            from src.utils.frontmatter import parse_frontmatter
+            frontmatter, _ = parse_frontmatter(content)
+            
+            video_id = frontmatter.get('video_id')
+            if not video_id:
+                raise ValueError("video_id not found in frontmatter")
+            
+            # 1. Fetch transcript
+            from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
+            fetcher = YouTubeTranscriptFetcher()
+            transcript_result = fetcher.fetch_transcript(video_id)
+            llm_transcript = fetcher.format_for_llm(transcript_result["transcript"])
+            
+            # 2. Extract quotes with AI
+            from src.ai.youtube_quote_extractor import ContextAwareQuoteExtractor
+            extractor = ContextAwareQuoteExtractor()
+            quotes_result = extractor.extract_quotes(
+                transcript=llm_transcript,
+                user_context=None,  # No user context for daemon processing
+                max_quotes=self.max_quotes,
+                min_quality=self.min_quality
+            )
+            
+            # 3. Convert to QuotesData format
+            from src.ai.youtube_note_enhancer import QuotesData
+            quotes_data = QuotesData(
+                key_insights=quotes_result.get('quotes', []),
+                actionable=[],
+                notable=[],
+                definitions=[]
+            )
+            
+            # 4. Use YouTubeNoteEnhancer to insert quotes
+            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
+            enhancer = YouTubeNoteEnhancer()
+            
+            result = enhancer.enhance_note(
+                note_path=file_path,
+                quotes_data=quotes_data,
+                force=False
+            )
+            
+            processing_time = time.time() - start_time
+            
+            if result.success:
+                # Record success metrics
+                self.metrics_tracker.record_success(
+                    filename=file_path.name,
+                    handler_type='youtube',
+                    quotes_added=result.quote_count
+                )
+                self.metrics_tracker.record_processing_time(processing_time, threshold=self.processing_timeout)
+                
+                self.logger.info(f"Successfully processed {file_path.name}: {result.quote_count} quotes added in {processing_time:.2f}s")
+                
+                return {
+                    'success': True,
+                    'quotes_added': result.quote_count,
+                    'processing_time': processing_time
+                }
+            else:
+                # Record failure
+                self.metrics_tracker.record_failure()
+                self.metrics_tracker.record_processing_time(processing_time, threshold=self.processing_timeout)
+                
+                error_msg = result.error_message or "Unknown error"
+                self.logger.error(f"Failed to process {file_path.name}: {error_msg}")
+                
+                return {
+                    'success': False,
+                    'error': error_msg,
+                    'processing_time': processing_time
+                }
+        
+        except Exception as e:
+            processing_time = time.time() - start_time
+            
+            # Record failure
+            self.metrics_tracker.record_failure()
+            self.metrics_tracker.record_processing_time(processing_time, threshold=self.processing_timeout)
+            
+            error_msg = str(e)
+            self.logger.error(f"Exception processing {file_path.name}: {error_msg}")
+            
+            return {
+                'success': False,
+                'error': error_msg,
+                'processing_time': processing_time
+            }
+    
+    def _setup_logging(self) -> None:
+        """Setup logging for YouTube handler."""
+        log_dir = Path('.automation/logs')
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        log_file = log_dir / f'youtube_handler_{time.strftime("%Y-%m-%d")}.log'
+        
+        self.logger = logging.getLogger(f"{__name__}.YouTubeFeatureHandler")
+        self.logger.setLevel(logging.INFO)
+        
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        self.logger.addHandler(handler)
+    
+    def get_metrics(self) -> dict:
+        """
+        Get handler metrics for monitoring.
+        
+        Returns:
+            Dictionary with YouTube processing metrics
+        """
+        return self.metrics_tracker.get_metrics()
+    
+    def get_health(self) -> dict:
+        """
+        Get handler health status for daemon monitoring.
+        
+        Returns:
+            Dictionary with health status information
+        """
+        metrics = self.metrics_tracker.get_metrics()
+        error_rate = self.metrics_tracker.get_error_rate()
+        
+        # Calculate success rate
+        total = metrics['events_processed'] + metrics['events_failed']
+        success_rate = metrics['events_processed'] / total if total > 0 else 0
+        
+        # Determine health status based on success rate
+        if total == 0:
+            status = 'healthy'
+        elif success_rate > 0.9:
+            status = 'healthy'
+        elif success_rate > 0.7:
+            status = 'degraded'
+        else:
+            status = 'unhealthy'
+        
+        return {
+            'status': status,
+            'success_rate': success_rate,
+            'last_processed': metrics['last_processed'],
+            'error_rate': error_rate
+        }
