@@ -24,7 +24,7 @@ from .health import HealthCheckManager
 from .file_watcher import FileWatcher
 from .event_handler import AutomationEventHandler
 from .config import DaemonConfig
-from .feature_handlers import ScreenshotEventHandler, SmartLinkEventHandler
+from .feature_handlers import ScreenshotEventHandler, SmartLinkEventHandler, YouTubeFeatureHandler
 
 
 class DaemonState(Enum):
@@ -83,6 +83,7 @@ class AutomationDaemon:
         # Feature-specific handlers
         self.screenshot_handler: Optional[ScreenshotEventHandler] = None
         self.smart_link_handler: Optional[SmartLinkEventHandler] = None
+        self.youtube_handler: Optional[YouTubeFeatureHandler] = None
     
     def start(self) -> None:
         """
@@ -272,6 +273,12 @@ class AutomationDaemon:
             elif hasattr(self.smart_link_handler, 'get_health'):
                 handlers['smart_link'] = self.smart_link_handler.get_health()
         
+        if self.youtube_handler is not None:
+            if hasattr(self.youtube_handler, 'get_health_status'):
+                handlers['youtube'] = self.youtube_handler.get_health_status()
+            elif hasattr(self.youtube_handler, 'get_health'):
+                handlers['youtube'] = self.youtube_handler.get_health()
+        
         return {
             'daemon': daemon_info,
             'handlers': handlers
@@ -300,6 +307,13 @@ class AutomationDaemon:
                 metrics['smart_link'] = json.loads(sl_json)
             except Exception:
                 metrics['smart_link'] = {}
+        
+        if self.youtube_handler is not None and hasattr(self.youtube_handler, 'export_metrics'):
+            try:
+                yt_json = self.youtube_handler.export_metrics()
+                metrics['youtube'] = json.loads(yt_json)
+            except Exception:
+                metrics['youtube'] = {}
         
         return metrics
     
@@ -332,6 +346,16 @@ class AutomationDaemon:
                         sections.append("# Smart Link Handler Metrics")
                         sections.append(prom_text)
         
+        # Aggregate metrics from YouTube handler
+        if self.youtube_handler is not None:
+            if hasattr(self.youtube_handler, 'metrics_tracker'):
+                tracker = self.youtube_handler.metrics_tracker
+                if hasattr(tracker, 'export_prometheus_format'):
+                    prom_text = tracker.export_prometheus_format()
+                    if prom_text:
+                        sections.append("# YouTube Handler Metrics")
+                        sections.append(prom_text)
+        
         return "\n\n".join(sections) if sections else ""
     
     def _on_job_executed(self, job_id: str, success: bool, duration: float) -> None:
@@ -351,8 +375,8 @@ class AutomationDaemon:
         Build configuration dictionary for a handler from DaemonConfig.
         
         Args:
-            handler_type: 'screenshot' or 'smart_link'
-            vault_path: Optional vault path for smart link handler
+            handler_type: 'screenshot', 'smart_link', or 'youtube'
+            vault_path: Optional vault path for smart link/youtube handlers
             
         Returns:
             Config dict if handler is enabled, None otherwise
@@ -387,6 +411,26 @@ class AutomationDaemon:
                     'auto_insert': sl_cfg.auto_insert,
                 }
         
+        elif handler_type == 'youtube':
+            yt_cfg = self._config.youtube_handler
+            if yt_cfg and yt_cfg.enabled:
+                # Resolve vault path with fallback chain
+                resolved_vault = vault_path
+                if resolved_vault is None:
+                    if yt_cfg.vault_path:
+                        resolved_vault = Path(yt_cfg.vault_path)
+                    elif self._config.file_watching and self._config.file_watching.watch_path:
+                        resolved_vault = Path(self._config.file_watching.watch_path)
+                    else:
+                        resolved_vault = Path.cwd()
+                
+                return {
+                    'vault_path': yt_cfg.vault_path or str(resolved_vault),
+                    'max_quotes': yt_cfg.max_quotes,
+                    'min_quality': yt_cfg.min_quality,
+                    'processing_timeout': yt_cfg.processing_timeout,
+                }
+        
         return None
     
     def _setup_feature_handlers(self, vault_path: Optional[Path] = None) -> None:
@@ -416,6 +460,14 @@ class AutomationDaemon:
             self.smart_link_handler = SmartLinkEventHandler(config=sl_config)
             self.file_watcher.register_callback(self.smart_link_handler.process)
             self.logger.info("Smart link handler registered successfully")
+        
+        # Initialize YouTube handler if configured
+        yt_config = self._build_handler_config_dict('youtube', vault_path)
+        if yt_config:
+            self.logger.info(f"Initializing YouTube handler: {yt_config['vault_path']}")
+            self.youtube_handler = YouTubeFeatureHandler(config=yt_config)
+            self.file_watcher.register_callback(self.youtube_handler.process)
+            self.logger.info("YouTube handler registered successfully")
     
     def _on_file_event(self, file_path: Path, event_type: str) -> None:
         """

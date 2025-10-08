@@ -725,3 +725,47 @@ class YouTubeFeatureHandler:
             'last_processed': metrics['last_processed'],
             'error_rate': error_rate
         }
+    
+    def export_metrics(self) -> str:
+        """
+        Export handler metrics in JSON format.
+        
+        Returns:
+            JSON string with metrics data
+        """
+        import json
+        metrics = self.get_metrics()
+        return json.dumps(metrics, indent=2)
+    
+    def process(self, file_path: Path, event_type: str) -> None:
+        """
+        Process file events (FileWatcher callback signature).
+        
+        Adapter method that converts FileWatcher (file_path, event_type) signature
+        to internal (event) signature expected by can_handle() and handle().
+        
+        Args:
+            file_path: Path to file that changed
+            event_type: Event type ('created', 'modified', 'deleted')
+        """
+        # Only process markdown files
+        if not str(file_path).endswith('.md'):
+            return
+        
+        # Only process creation and modification events
+        if event_type not in ['created', 'modified']:
+            return
+        
+        # Create mock event object for internal methods
+        class FileEvent:
+            def __init__(self, path):
+                self.src_path = path
+        
+        event = FileEvent(file_path)
+        
+        # Check if handler should process this file
+        if not self.can_handle(event):
+            return
+        
+        # Process the file
+        self.handle(event)

@@ -229,11 +229,24 @@ class ConfigurationLoader:
                 auto_insert=sl_data.get("auto_insert", False)
             )
         
+        # Parse youtube_handler section
+        youtube_handler = None
+        if "youtube_handler" in raw_config:
+            yt_data = raw_config["youtube_handler"]
+            youtube_handler = YouTubeHandlerConfig(
+                enabled=yt_data.get("enabled", False),
+                vault_path=yt_data.get("vault_path", ""),
+                max_quotes=yt_data.get("max_quotes", 7),
+                min_quality=yt_data.get("min_quality", 0.7),
+                processing_timeout=yt_data.get("processing_timeout", 300)
+            )
+        
         return DaemonConfig(
             check_interval=check_interval,
             log_level=log_level,
             jobs=jobs,
             file_watching=file_watching,
             screenshot_handler=screenshot_handler,
-            smart_link_handler=smart_link_handler
+            smart_link_handler=smart_link_handler,
+            youtube_handler=youtube_handler
         )
