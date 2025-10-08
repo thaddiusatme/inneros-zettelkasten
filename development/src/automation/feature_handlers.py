@@ -14,6 +14,7 @@ Size: ~180 LOC (ADR-001 compliant: <500 LOC)
 import logging
 import time
 from pathlib import Path
+from typing import Optional, Dict, Any
 import sys
 
 # Add development directory to path for imports
@@ -38,19 +39,44 @@ class ScreenshotEventHandler:
     Size: ~80 LOC (ADR-001 compliant)
     """
     
-    def __init__(self, onedrive_path: str):
+    def __init__(self, onedrive_path: Optional[str] = None, config: Optional[Dict[str, Any]] = None):
         """
         Initialize screenshot handler.
         
         Args:
-            onedrive_path: Path to OneDrive screenshot directory
+            onedrive_path: Path to OneDrive screenshot directory (backward compatibility)
+            config: Configuration dictionary (priority: config > positional > defaults)
+                Keys: onedrive_path, knowledge_path, ocr_enabled, processing_timeout
         """
-        self.onedrive_path = Path(onedrive_path)
+        # Configuration priority: config dict > positional arg > defaults
+        if config:
+            # Validate required config key
+            if 'onedrive_path' not in config:
+                raise ValueError("onedrive_path is required in configuration")
+            
+            self.onedrive_path = Path(config['onedrive_path'])
+            self.knowledge_path = Path(config.get('knowledge_path', Path.cwd() / 'knowledge'))
+            self.ocr_enabled = config.get('ocr_enabled', True)
+            self.processing_timeout = config.get('processing_timeout', 600)
+        elif onedrive_path:
+            # Backward compatibility: positional argument
+            self.onedrive_path = Path(onedrive_path)
+            self.knowledge_path = Path.cwd() / 'knowledge'
+            self.ocr_enabled = True
+            self.processing_timeout = 600
+        else:
+            raise ValueError("Must provide either onedrive_path or config dictionary")
+        
         self._setup_logging()
-        self.logger.info(f"Initialized ScreenshotEventHandler: {onedrive_path}")
+        self.logger.info(f"Initialized ScreenshotEventHandler: {self.onedrive_path}")
         
         # Initialize REFACTOR: Use utility classes
-        self.processor_integrator = ScreenshotProcessorIntegrator(self.onedrive_path, self.logger)
+        self.processor_integrator = ScreenshotProcessorIntegrator(
+            self.onedrive_path, 
+            self.logger,
+            ocr_enabled=self.ocr_enabled,
+            processing_timeout=self.processing_timeout
+        )
         self.metrics_tracker = ProcessingMetricsTracker()
     
     def process(self, file_path: Path, event_type: str) -> None:
@@ -72,6 +98,9 @@ class ScreenshotEventHandler:
             return
         
         self.logger.info(f"Processing screenshot: {file_path.name}")
+        
+        # Track processing time
+        start_time = time.time()
         
         try:
             # REFACTOR: Use ScreenshotProcessorIntegrator utility
@@ -100,6 +129,10 @@ class ScreenshotEventHandler:
         except Exception as e:
             ErrorHandlingStrategy.handle_processing_error(self.logger, e, file_path.name)
             self.metrics_tracker.record_failure()
+        finally:
+            # Record processing time regardless of success/failure
+            duration = time.time() - start_time
+            self.metrics_tracker.record_processing_time(duration)
     
     def _is_screenshot(self, file_path: Path) -> bool:
         """
@@ -180,16 +213,40 @@ class SmartLinkEventHandler:
     Size: ~80 LOC (ADR-001 compliant)
     """
     
-    def __init__(self, vault_path: str):
+    def __init__(self, vault_path: Optional[str] = None, config: Optional[Dict[str, Any]] = None):
         """
         Initialize smart link handler.
         
         Args:
-            vault_path: Path to Zettelkasten vault root
+            vault_path: Path to Zettelkasten vault root (backward compatibility)
+            config: Configuration dictionary (priority: config > positional > defaults)
+                Keys: vault_path, similarity_threshold, max_suggestions, auto_insert
         """
-        self.vault_path = Path(vault_path)
+        # Configuration priority: config dict > positional arg > defaults
+        if config:
+            self.vault_path = Path(config.get('vault_path', Path.cwd()))
+            self.similarity_threshold = config.get('similarity_threshold', 0.75)
+            self.max_suggestions = config.get('max_suggestions', 5)
+            self.auto_insert = config.get('auto_insert', False)
+            
+            # Validate similarity_threshold range
+            if not (0.0 <= self.similarity_threshold <= 1.0):
+                raise ValueError(f"similarity_threshold must be between 0.0 and 1.0, got {self.similarity_threshold}")
+        elif vault_path:
+            # Backward compatibility: positional argument
+            self.vault_path = Path(vault_path)
+            self.similarity_threshold = 0.75
+            self.max_suggestions = 5
+            self.auto_insert = False
+        else:
+            # Default to current working directory
+            self.vault_path = Path.cwd()
+            self.similarity_threshold = 0.75
+            self.max_suggestions = 5
+            self.auto_insert = False
+        
         self._setup_logging()
-        self.logger.info(f"Initialized SmartLinkEventHandler: {vault_path}")
+        self.logger.info(f"Initialized SmartLinkEventHandler: {self.vault_path}")
         
         # Initialize REFACTOR: Use utility classes
         self.link_integrator = SmartLinkEngineIntegrator(self.vault_path, self.logger)
@@ -214,6 +271,9 @@ class SmartLinkEventHandler:
             return
         
         self.logger.info(f"Processing smart links for: {file_path.name}")
+        
+        # Track processing time
+        start_time = time.time()
         
         try:
             # REFACTOR: Use SmartLinkEngineIntegrator utility
@@ -242,6 +302,10 @@ class SmartLinkEventHandler:
         except Exception as e:
             ErrorHandlingStrategy.handle_processing_error(self.logger, e, file_path.name)
             self.metrics_tracker.record_failure()
+        finally:
+            # Record processing time regardless of success/failure
+            duration = time.time() - start_time
+            self.metrics_tracker.record_processing_time(duration)
     
     def _setup_logging(self) -> None:
         """Setup logging for smart link handler."""

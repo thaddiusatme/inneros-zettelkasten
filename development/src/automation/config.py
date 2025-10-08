@@ -37,12 +37,19 @@ class ScreenshotHandlerConfig:
     """Screenshot handler configuration"""
     enabled: bool = False
     onedrive_path: str = ""
+    knowledge_path: str = ""
+    ocr_enabled: bool = True
+    processing_timeout: int = 600
 
 
 @dataclass
 class SmartLinkHandlerConfig:
     """Smart link handler configuration"""
     enabled: bool = False
+    vault_path: str = ""
+    similarity_threshold: float = 0.75
+    max_suggestions: int = 5
+    auto_insert: bool = False
 
 
 @dataclass
@@ -175,8 +182,47 @@ class ConfigurationLoader:
             )
             jobs.append(job)
         
+        # Parse file_watching section
+        file_watching = None
+        if "file_watching" in raw_config:
+            fw_data = raw_config["file_watching"]
+            file_watching = FileWatchConfig(
+                enabled=fw_data.get("enabled", False),
+                watch_path=fw_data.get("watch_path", ""),
+                patterns=fw_data.get("patterns", ["*.md"]),
+                ignore_patterns=fw_data.get("ignore_patterns", []),
+                debounce_seconds=fw_data.get("debounce_seconds", 2.0)
+            )
+        
+        # Parse screenshot_handler section
+        screenshot_handler = None
+        if "screenshot_handler" in raw_config:
+            sh_data = raw_config["screenshot_handler"]
+            screenshot_handler = ScreenshotHandlerConfig(
+                enabled=sh_data.get("enabled", False),
+                onedrive_path=sh_data.get("onedrive_path", ""),
+                knowledge_path=sh_data.get("knowledge_path", ""),
+                ocr_enabled=sh_data.get("ocr_enabled", True),
+                processing_timeout=sh_data.get("processing_timeout", 600)
+            )
+        
+        # Parse smart_link_handler section
+        smart_link_handler = None
+        if "smart_link_handler" in raw_config:
+            sl_data = raw_config["smart_link_handler"]
+            smart_link_handler = SmartLinkHandlerConfig(
+                enabled=sl_data.get("enabled", False),
+                vault_path=sl_data.get("vault_path", ""),
+                similarity_threshold=sl_data.get("similarity_threshold", 0.75),
+                max_suggestions=sl_data.get("max_suggestions", 5),
+                auto_insert=sl_data.get("auto_insert", False)
+            )
+        
         return DaemonConfig(
             check_interval=check_interval,
             log_level=log_level,
-            jobs=jobs
+            jobs=jobs,
+            file_watching=file_watching,
+            screenshot_handler=screenshot_handler,
+            smart_link_handler=smart_link_handler
         )

@@ -40,16 +40,21 @@ class ScreenshotProcessorIntegrator:
     Size: ~60 LOC (ADR-001 compliant)
     """
     
-    def __init__(self, onedrive_path: Path, logger: logging.Logger):
+    def __init__(self, onedrive_path: Path, logger: logging.Logger, 
+                 ocr_enabled: bool = True, processing_timeout: int = 600):
         """
         Initialize screenshot processor integrator.
         
         Args:
             onedrive_path: Path to OneDrive screenshot directory
             logger: Logger instance for processing events
+            ocr_enabled: Whether OCR processing is enabled
+            processing_timeout: Maximum processing time in seconds
         """
         self.onedrive_path = onedrive_path
         self.logger = logger
+        self.ocr_enabled = ocr_enabled
+        self.processing_timeout = processing_timeout
         self.processor = None
     
     def process_screenshot(self, file_path: Path) -> Dict[str, Any]:
@@ -229,7 +234,10 @@ class ProcessingMetricsTracker:
             'ocr_success': 0,
             'ocr_failed': 0,
             'links_suggested': 0,
-            'links_inserted': 0
+            'links_inserted': 0,
+            # Performance timing metrics
+            'processing_times': [],
+            'total_processing_time': 0.0
         }
     
     def record_success(self, filename: str, handler_type: str = 'generic', **kwargs):
@@ -262,6 +270,39 @@ class ProcessingMetricsTracker:
         """Calculate error rate."""
         total = self.metrics['events_processed'] + self.metrics['events_failed']
         return self.metrics['events_failed'] / total if total > 0 else 0.0
+    
+    def record_processing_time(self, duration: float) -> None:
+        """
+        Record processing time for performance monitoring.
+        
+        Args:
+            duration: Processing duration in seconds
+        """
+        self.metrics['processing_times'].append(duration)
+        self.metrics['total_processing_time'] += duration
+    
+    def get_average_processing_time(self) -> float:
+        """
+        Calculate average processing time.
+        
+        Returns:
+            Average processing time in seconds (0.0 if no data)
+        """
+        if not self.metrics['processing_times']:
+            return 0.0
+        return sum(self.metrics['processing_times']) / len(self.metrics['processing_times'])
+    
+    def export_metrics_json(self) -> str:
+        """
+        Export metrics as JSON string for reporting.
+        
+        Returns:
+            JSON string representation of metrics
+        """
+        import json
+        export_data = self.metrics.copy()
+        export_data['average_processing_time'] = self.get_average_processing_time()
+        return json.dumps(export_data, indent=2)
 
 
 class ErrorHandlingStrategy:
