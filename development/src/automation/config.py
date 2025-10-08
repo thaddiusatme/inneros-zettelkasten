@@ -33,12 +33,27 @@ class FileWatchConfig:
 
 
 @dataclass
+class ScreenshotHandlerConfig:
+    """Screenshot handler configuration"""
+    enabled: bool = False
+    onedrive_path: str = ""
+
+
+@dataclass
+class SmartLinkHandlerConfig:
+    """Smart link handler configuration"""
+    enabled: bool = False
+
+
+@dataclass
 class DaemonConfig:
     """Daemon configuration"""
     check_interval: int = 60
     log_level: str = "INFO"
     jobs: List[JobConfig] = field(default_factory=list)
     file_watching: Optional[FileWatchConfig] = None
+    screenshot_handler: Optional[ScreenshotHandlerConfig] = None
+    smart_link_handler: Optional[SmartLinkHandlerConfig] = None
 
 
 class ConfigurationLoader:

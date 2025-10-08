@@ -24,6 +24,7 @@ from .health import HealthCheckManager
 from .file_watcher import FileWatcher
 from .event_handler import AutomationEventHandler
 from .config import DaemonConfig
+from .feature_handlers import ScreenshotEventHandler, SmartLinkEventHandler
 
 
 class DaemonState(Enum):
@@ -78,6 +79,10 @@ class AutomationDaemon:
         self.health: HealthCheckManager = HealthCheckManager(self)  # Always available
         self.file_watcher: Optional[FileWatcher] = None
         self.event_handler: Optional[AutomationEventHandler] = None
+        
+        # Feature-specific handlers
+        self.screenshot_handler: Optional[ScreenshotEventHandler] = None
+        self.smart_link_handler: Optional[SmartLinkEventHandler] = None
     
     def start(self) -> None:
         """
@@ -126,6 +131,9 @@ class AutomationDaemon:
                     vault_path=str(watch_path),
                     debounce_seconds=self._config.file_watching.debounce_seconds
                 )
+                
+                # Initialize and register feature-specific handlers
+                self._setup_feature_handlers(Path(watch_path))
             
             self._start_time = time.time()
             self._state = DaemonState.RUNNING
@@ -248,6 +256,34 @@ class AutomationDaemon:
         """
         if self.health:
             self.health.record_job_execution(job_id, success, duration)
+    
+    def _setup_feature_handlers(self, vault_path: Path) -> None:
+        """
+        Initialize and register feature-specific handlers.
+        
+        Args:
+            vault_path: Path to vault for handler initialization
+        """
+        # Ensure file_watcher is initialized
+        if not self.file_watcher:
+            self.logger.warning("File watcher not initialized, skipping feature handlers")
+            return
+        
+        # Initialize screenshot handler if configured
+        if self._config.screenshot_handler and self._config.screenshot_handler.enabled:
+            onedrive_path = self._config.screenshot_handler.onedrive_path
+            if onedrive_path:
+                self.logger.info(f"Initializing screenshot handler: {onedrive_path}")
+                self.screenshot_handler = ScreenshotEventHandler(onedrive_path)
+                self.file_watcher.register_callback(self.screenshot_handler.process)
+                self.logger.info("Screenshot handler registered successfully")
+        
+        # Initialize smart link handler if configured
+        if self._config.smart_link_handler and self._config.smart_link_handler.enabled:
+            self.logger.info(f"Initializing smart link handler: {vault_path}")
+            self.smart_link_handler = SmartLinkEventHandler(str(vault_path))
+            self.file_watcher.register_callback(self.smart_link_handler.process)
+            self.logger.info("Smart link handler registered successfully")
     
     def _on_file_event(self, file_path: Path, event_type: str) -> None:
         """
