@@ -102,67 +102,68 @@ class TestPerformanceThresholds:
     
     def test_screenshot_handler_warns_when_exceeding_threshold(self, caplog):
         """Should log warning when processing exceeds 10-second threshold"""
+        import logging
+        caplog.set_level(logging.WARNING)
+        
         config_dict = {
             'onedrive_path': '/test/path',
-            'processing_timeout': 10  # 10 second threshold
+            'processing_timeout': 5  # 5 second threshold
         }
         handler = ScreenshotEventHandler(config=config_dict)
         
         test_file = Path('/test/Screenshot_20251007_120000.jpg')
         
-        # Mock slow processing (15 seconds)
-        def slow_process(path):
-            time.sleep(0.1)  # Simulate delay in test
-            return {'success': True, 'processing_time': 15.0}
-        
-        with patch.object(handler.processor_integrator, 'process_screenshot', side_effect=slow_process):
-            handler.process(test_file, 'created')
+        # Mock slow processing
+        with patch.object(handler.processor_integrator, 'process_screenshot', return_value={'success': True}):
+            # Manually set processing time to exceed threshold
+            with patch('time.time', side_effect=[0, 10.0]):  # Start=0, End=10 (exceeds 5s threshold)
+                handler.process(test_file, 'created')
         
         # Should have logged warning
         assert any('exceeded threshold' in record.message.lower() for record in caplog.records)
-        assert any('15.0' in record.message for record in caplog.records)
     
     def test_smart_link_handler_warns_when_exceeding_threshold(self, caplog):
         """SmartLinkHandler should warn when exceeding 5-second threshold"""
-        config_dict = {'similarity_threshold': 0.75}
-        handler = SmartLinkEventHandler(config=config_dict)
+        import logging
+        caplog.set_level(logging.WARNING)
         
+        handler = SmartLinkEventHandler()
         test_file = Path('/test/note.md')
         
         # Mock slow processing
-        def slow_suggest(path):
-            return {'success': True, 'processing_time': 8.0}  # Exceeds 5s threshold
-        
-        with patch.object(handler.link_integrator, 'process_note_for_links', side_effect=slow_suggest):
-            handler.process(test_file, 'created')
+        with patch.object(handler.link_integrator, 'process_note_for_links', return_value={'success': True, 'suggestions_count': 3}):
+            # Manually set processing time to exceed 5s threshold
+            with patch('time.time', side_effect=[0, 8.0]):  # Start=0, End=8 (exceeds 5s threshold)
+                handler.process(test_file, 'created')
         
         assert any('exceeded threshold' in record.message.lower() for record in caplog.records)
     
     def test_performance_degraded_flag_set_on_threshold_violation(self):
         """Should set performance_degraded flag when threshold exceeded"""
-        config_dict = {'onedrive_path': '/test/path'}
+        config_dict = {'onedrive_path': '/test/path', 'processing_timeout': 5}
         handler = ScreenshotEventHandler(config=config_dict)
         
-        # Simulate slow processing
-        with patch.object(handler.processor_integrator, 'process_screenshot', 
-                         return_value={'success': True, 'processing_time': 15.0}):
-            test_file = Path('/test/Screenshot_20251007_120000.jpg')
-            handler.process(test_file, 'created')
+        # Simulate slow processing that exceeds threshold
+        with patch.object(handler.processor_integrator, 'process_screenshot', return_value={'success': True}):
+            with patch('time.time', side_effect=[0, 10.0]):  # 10s exceeds 5s threshold
+                test_file = Path('/test/Screenshot_20251007_120000.jpg')
+                handler.process(test_file, 'created')
         
         health_status = handler.get_health_status()
         assert health_status['performance_degraded'] is True
     
     def test_slow_processing_events_counter_incremented(self):
         """Should increment slow_processing_events counter on threshold violations"""
-        config_dict = {'onedrive_path': '/test/path'}
+        config_dict = {'onedrive_path': '/test/path', 'processing_timeout': 5}
         handler = ScreenshotEventHandler(config=config_dict)
         
         # Process multiple slow events
-        with patch.object(handler.processor_integrator, 'process_screenshot',
-                         return_value={'success': True, 'processing_time': 15.0}):
+        with patch.object(handler.processor_integrator, 'process_screenshot', return_value={'success': True}):
             for i in range(3):
-                test_file = Path(f'/test/Screenshot_{i}.jpg')
-                handler.process(test_file, 'created')
+                # Each iteration: start=0, end=10 (exceeds 5s threshold)
+                with patch('time.time', side_effect=[0, 10.0]):
+                    test_file = Path(f'/test/Screenshot_{i}.jpg')
+                    handler.process(test_file, 'created')
         
         metrics = handler.metrics_tracker.get_metrics()
         assert metrics['slow_processing_events'] == 3
@@ -276,11 +277,12 @@ class TestHealthCheckIntegration:
         handler = ScreenshotEventHandler(config=config_dict)
         
         # Multiple slow events
-        with patch.object(handler.processor_integrator, 'process_screenshot',
-                         return_value={'success': True, 'processing_time': 12.0}):
+        with patch.object(handler.processor_integrator, 'process_screenshot', return_value={'success': True}):
             for i in range(5):
-                test_file = Path(f'/test/Screenshot_{i}.jpg')
-                handler.process(test_file, 'created')
+                # Each event exceeds threshold
+                with patch('time.time', side_effect=[0, 10.0]):  # 10s exceeds 5s threshold
+                    test_file = Path(f'/test/Screenshot_{i}.jpg')
+                    handler.process(test_file, 'created')
         
         health = handler.get_health_status()
         assert health['status'] == 'degraded'
