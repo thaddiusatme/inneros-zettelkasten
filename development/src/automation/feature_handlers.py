@@ -487,6 +487,14 @@ class YouTubeFeatureHandler:
         
         # Initialize metrics tracker
         self.metrics_tracker = ProcessingMetricsTracker()
+        
+        # Initialize rate limit handler if configured
+        if 'rate_limit' in config:
+            from automation.youtube_rate_limit_handler import YouTubeRateLimitHandler
+            self.rate_limit_handler = YouTubeRateLimitHandler(config['rate_limit'])
+            self.logger.info("Rate limit handler initialized with exponential backoff")
+        else:
+            self.rate_limit_handler = None
     
     def can_handle(self, event) -> bool:
         """
@@ -583,9 +591,11 @@ class YouTubeFeatureHandler:
                     raise ValueError("video_id not found in frontmatter or body")
             
             # 1. Fetch transcript
+            transcript_result = self._fetch_transcript(video_id)
+            
+            # Format for LLM
             from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
             fetcher = YouTubeTranscriptFetcher()
-            transcript_result = fetcher.fetch_transcript(video_id)
             llm_transcript = fetcher.format_for_llm(transcript_result["transcript"])
             
             # 2. Extract quotes with AI
@@ -714,6 +724,31 @@ class YouTubeFeatureHandler:
         if match:
             return match.group(1)
         return None
+    
+    def _fetch_transcript(self, video_id: str) -> Dict[str, Any]:
+        """
+        Fetch transcript with optional rate limit retry logic.
+        
+        Uses rate_limit_handler if configured, otherwise calls fetcher directly.
+        
+        Args:
+            video_id: YouTube video ID
+        
+        Returns:
+            Transcript result from fetcher
+        """
+        from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
+        fetcher = YouTubeTranscriptFetcher()
+        
+        if self.rate_limit_handler:
+            # Use rate limit handler with exponential backoff retry
+            return self.rate_limit_handler.fetch_with_retry(
+                video_id, 
+                lambda vid: fetcher.fetch_transcript(vid)
+            )
+        else:
+            # Direct fetch without retry logic
+            return fetcher.fetch_transcript(video_id)
     
     def get_metrics(self) -> dict:
         """
