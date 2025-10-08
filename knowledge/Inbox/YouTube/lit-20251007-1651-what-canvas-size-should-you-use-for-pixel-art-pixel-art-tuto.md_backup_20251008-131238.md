@@ -1,17 +1,13 @@
 ---
-created: 2025-10-07 16:50
 type: literature
+created: 2025-10-07 16:50
 status: inbox
-visibility: private
 tags: [youtube, video-content]
+visibility: private
 source: youtube
-author: null
+author: 
 video_id: Z8earctNBxg
-channel: null
-ai_processed: true
-processed_at: 2025-10-08 13:12
-quote_count: 2
-processing_time_seconds: 0.0
+channel: 
 ---
 
 
@@ -27,19 +23,6 @@ processing_time_seconds: 0.0
 
 ## Why I'm Saving This
 I enjoyed how tobuild a pixel art characther theory wise
-
-## Extracted Quotes
-
-### 🎯 Key Insights
-
-> [01:21] "For realistic games, usually the character will be fairly small compared to their surroundings, so a character design smaller than a tile would make sense."
-> - **Context**: Why character size matters in game design
-> - **Relevance**: 0.8
-
-> [02:40] "At this scale it becomes easier to give your sprite more detail, however if you are developing a game, it will take much longer to complete all the assets you need."
-> - **Context**: The trade-off between detail and development time in pixel art
-> - **Relevance**: 0.7
-
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->

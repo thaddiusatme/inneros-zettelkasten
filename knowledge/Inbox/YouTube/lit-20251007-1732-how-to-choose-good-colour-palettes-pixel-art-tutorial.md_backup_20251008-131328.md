@@ -1,17 +1,13 @@
 ---
-created: 2025-10-07 17:32
 type: literature
+created: 2025-10-07 17:32
 status: inbox
-visibility: private
 tags: [youtube, video-content]
+visibility: private
 source: youtube
-author: null
+author: 
 video_id: uUdMb8Bb2II
-channel: null
-ai_processed: true
-processed_at: 2025-10-08 13:13
-quote_count: 3
-processing_time_seconds: 0.0
+channel: 
 ---
 
 
@@ -27,23 +23,6 @@ processing_time_seconds: 0.0
 
 ## Why I'm Saving This
 pixel art and learning more about colors makes  me reconsider my brands color scheme
-
-## Extracted Quotes
-
-### 🎯 Key Insights
-
-> [00:12] "a really great way to make your artwork more cohesive is to use a color palette"
-> - **Context**: Key takeaway for creating consistent art style
-> - **Relevance**: 0.9
-
-> [02:04] "by hue shifting your selected colors will look more vibrant as they get darker"
-> - **Context**: Practical tip for creating visually appealing color palettes
-> - **Relevance**: 0.8
-
-> [02:56] "setting a mood i think one of the biggest factors in setting a mood isn't the colors but the lighting"
-> - **Context**: Important consideration for creating immersive art experiences
-> - **Relevance**: 0.7
-
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
