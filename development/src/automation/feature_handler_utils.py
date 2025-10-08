@@ -11,8 +11,10 @@ Following ADR-001: Keep utilities modular and focused (each <200 LOC)
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from collections import deque
 import logging
+import time
 
 try:
     from src.cli.screenshot_processor import ScreenshotProcessor
@@ -224,8 +226,16 @@ class ProcessingMetricsTracker:
     Size: ~40 LOC (ADR-001 compliant)
     """
     
-    def __init__(self):
-        """Initialize metrics tracker."""
+    def __init__(self, window_size: int = 100):
+        """
+        Initialize metrics tracker.
+        
+        Args:
+            window_size: Number of recent processing times to retain (rolling window)
+        """
+        self.window_size = window_size
+        self.processing_times_deque = deque(maxlen=window_size)
+        
         self.metrics = {
             'events_processed': 0,
             'events_failed': 0,
@@ -236,8 +246,9 @@ class ProcessingMetricsTracker:
             'links_suggested': 0,
             'links_inserted': 0,
             # Performance timing metrics
-            'processing_times': [],
-            'total_processing_time': 0.0
+            'processing_times': [],  # Kept for backward compatibility
+            'total_processing_time': 0.0,
+            'slow_processing_events': 0
         }
     
     def record_success(self, filename: str, handler_type: str = 'generic', **kwargs):
@@ -271,15 +282,21 @@ class ProcessingMetricsTracker:
         total = self.metrics['events_processed'] + self.metrics['events_failed']
         return self.metrics['events_failed'] / total if total > 0 else 0.0
     
-    def record_processing_time(self, duration: float) -> None:
+    def record_processing_time(self, duration: float, threshold: Optional[float] = None) -> None:
         """
         Record processing time for performance monitoring.
         
         Args:
             duration: Processing duration in seconds
+            threshold: Optional performance threshold for slow event detection
         """
-        self.metrics['processing_times'].append(duration)
+        self.processing_times_deque.append(duration)
+        self.metrics['processing_times'] = list(self.processing_times_deque)
         self.metrics['total_processing_time'] += duration
+        
+        # Track slow processing events if threshold provided
+        if threshold and duration > threshold:
+            self.metrics['slow_processing_events'] += 1
     
     def get_average_processing_time(self) -> float:
         """
@@ -288,9 +305,29 @@ class ProcessingMetricsTracker:
         Returns:
             Average processing time in seconds (0.0 if no data)
         """
-        if not self.metrics['processing_times']:
+        if not self.processing_times_deque:
             return 0.0
-        return sum(self.metrics['processing_times']) / len(self.metrics['processing_times'])
+        return sum(self.processing_times_deque) / len(self.processing_times_deque)
+    
+    def get_max_processing_time(self) -> float:
+        """
+        Get maximum processing time from rolling window.
+        
+        Returns:
+            Maximum processing time in seconds (0.0 if no data)
+        """
+        if not self.processing_times_deque:
+            return 0.0
+        return max(self.processing_times_deque)
+    
+    def get_processing_times(self) -> List[float]:
+        """
+        Get list of processing times in rolling window.
+        
+        Returns:
+            List of processing times (oldest to newest)
+        """
+        return list(self.processing_times_deque)
     
     def export_metrics_json(self) -> str:
         """
@@ -301,8 +338,55 @@ class ProcessingMetricsTracker:
         """
         import json
         export_data = self.metrics.copy()
-        export_data['average_processing_time'] = self.get_average_processing_time()
+        
+        # Use 'avg_processing_time' key for consistency with other metrics systems
+        export_data['avg_processing_time'] = self.get_average_processing_time()
+        export_data['max_processing_time'] = self.get_max_processing_time()
+        export_data['total_events'] = self.metrics['events_processed'] + self.metrics['events_failed']
+        
+        # Calculate success rate
+        total = export_data['total_events']
+        export_data['success_rate'] = (self.metrics['events_processed'] / total) if total > 0 else 0.0
+        
         return json.dumps(export_data, indent=2)
+    
+    def export_prometheus_format(self) -> str:
+        """
+        Export metrics in Prometheus-compatible format.
+        
+        Returns:
+            String in Prometheus exposition format
+        """
+        lines = []
+        
+        # Processing time metrics
+        avg_time = self.get_average_processing_time()
+        max_time = self.get_max_processing_time()
+        
+        lines.append(f"# HELP inneros_handler_processing_seconds Average processing time in seconds")
+        lines.append(f"# TYPE inneros_handler_processing_seconds gauge")
+        lines.append(f"inneros_handler_processing_seconds {avg_time:.4f}")
+        lines.append("")
+        
+        lines.append(f"# HELP inneros_handler_processing_seconds_max Maximum processing time in seconds")
+        lines.append(f"# TYPE inneros_handler_processing_seconds_max gauge")
+        lines.append(f"inneros_handler_processing_seconds_max {max_time:.4f}")
+        lines.append("")
+        
+        # Event counters
+        total_events = self.metrics['events_processed'] + self.metrics['events_failed']
+        lines.append(f"# HELP inneros_handler_events_total Total number of events processed")
+        lines.append(f"# TYPE inneros_handler_events_total counter")
+        lines.append(f"inneros_handler_events_total {total_events}")
+        lines.append("")
+        
+        # Success rate
+        success_rate = (self.metrics['events_processed'] / total_events) if total_events > 0 else 0.0
+        lines.append(f"# HELP inneros_handler_success_rate Ratio of successful events")
+        lines.append(f"# TYPE inneros_handler_success_rate gauge")
+        lines.append(f"inneros_handler_success_rate {success_rate:.4f}")
+        
+        return "\n".join(lines)
 
 
 class ErrorHandlingStrategy:

@@ -132,7 +132,13 @@ class ScreenshotEventHandler:
         finally:
             # Record processing time regardless of success/failure
             duration = time.time() - start_time
-            self.metrics_tracker.record_processing_time(duration)
+            self.metrics_tracker.record_processing_time(duration, threshold=self.processing_timeout)
+            
+            # Log warning if processing exceeded threshold
+            if duration > self.processing_timeout:
+                self.logger.warning(
+                    f"Processing time {duration:.1f}s exceeded threshold {self.processing_timeout}s for {file_path.name}"
+                )
     
     def _is_screenshot(self, file_path: Path) -> bool:
         """
@@ -200,6 +206,60 @@ class ScreenshotEventHandler:
             'status': status,
             'last_processed': metrics['last_processed'],
             'error_rate': error_rate
+        }
+    
+    def export_metrics(self) -> str:
+        """
+        Export handler metrics in JSON format.
+        
+        Returns:
+            JSON string with handler metrics including performance data
+        """
+        import json
+        metrics = self.metrics_tracker.export_metrics_json()
+        metrics_dict = json.loads(metrics)
+        
+        # Add handler-specific context
+        metrics_dict['handler_type'] = 'screenshot'
+        metrics_dict['performance_threshold'] = self.processing_timeout
+        metrics_dict['threshold_violations'] = metrics_dict.get('slow_processing_events', 0)
+        metrics_dict['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        return json.dumps(metrics_dict, indent=2)
+    
+    def get_health_status(self) -> dict:
+        """
+        Get comprehensive health status including performance metrics.
+        
+        Returns:
+            Dictionary with health status and performance information
+        """
+        metrics = self.metrics_tracker.get_metrics()
+        error_rate = self.metrics_tracker.get_error_rate()
+        avg_time = self.metrics_tracker.get_average_processing_time()
+        
+        # Check for performance degradation
+        performance_degraded = (
+            metrics.get('slow_processing_events', 0) > 0 or
+            avg_time > self.processing_timeout
+        )
+        
+        # Determine overall status
+        if metrics['events_processed'] + metrics['events_failed'] == 0:
+            status = 'healthy'
+        elif error_rate > 0.5 or performance_degraded:
+            status = 'degraded'
+        elif error_rate > 0.2:
+            status = 'degraded'
+        else:
+            status = 'healthy'
+        
+        return {
+            'status': status,
+            'last_processed': metrics['last_processed'],
+            'error_rate': error_rate,
+            'avg_processing_time': avg_time,
+            'performance_degraded': performance_degraded
         }
 
 
@@ -305,7 +365,14 @@ class SmartLinkEventHandler:
         finally:
             # Record processing time regardless of success/failure
             duration = time.time() - start_time
-            self.metrics_tracker.record_processing_time(duration)
+            threshold = 5.0  # 5 second threshold for link suggestions
+            self.metrics_tracker.record_processing_time(duration, threshold=threshold)
+            
+            # Log warning if processing exceeded threshold
+            if duration > threshold:
+                self.logger.warning(
+                    f"Processing time {duration:.1f}s exceeded threshold {threshold}s for {file_path.name}"
+                )
     
     def _setup_logging(self) -> None:
         """Setup logging for smart link handler."""
@@ -360,3 +427,20 @@ class SmartLinkEventHandler:
             'last_processed': metrics['last_processed'],
             'error_rate': error_rate
         }
+    
+    def export_metrics(self) -> str:
+        """
+        Export handler metrics in JSON format.
+        
+        Returns:
+            JSON string with handler metrics including performance data
+        """
+        import json
+        metrics = self.metrics_tracker.export_metrics_json()
+        metrics_dict = json.loads(metrics)
+        
+        # Add handler-specific context
+        metrics_dict['handler_type'] = 'smart_link'
+        metrics_dict['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        return json.dumps(metrics_dict, indent=2)
