@@ -1,13 +1,17 @@
 ---
-type: literature
 created: 2025-10-03 10:44
+type: literature
 status: inbox
-tags: [youtube, video-content]
 visibility: private
+tags: [youtube, video-content]
 source: youtube
-author: 
-video_id: 
-channel: 
+author: null
+video_id: QX1Xwzm9yHY
+channel: null
+ai_processed: true
+processed_at: 2025-10-08 13:12
+quote_count: 3
+processing_time_seconds: 0.0
 ---
 
 
@@ -24,6 +28,23 @@ channel:
 
 ## Why I'm Saving This
 This was an engaging watch of what is going wrong with automation cases in the real world as AI becomes more integrated. 
+
+## Extracted Quotes
+
+### 🎯 Key Insights
+
+> [12:44] "Number one, business executives and business owners will get frustrated with hallucinations."
+> - **Context**: AI's limitations and potential for misuse
+> - **Relevance**: 0.8
+
+> [14:02] "Once again, a different neural network architecture could be discovered, one that fixes hallucinations."
+> - **Context**: AI's potential for future innovation
+> - **Relevance**: 0.9
+
+> [14:12] "So, what do you guys think? Do you think we're in a bubble and a crash is imminent, or do you think the next AI innovation is just around the corner?"
+> - **Context**: AI's uncertain future and potential for disruption
+> - **Relevance**: 0.7
+
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->

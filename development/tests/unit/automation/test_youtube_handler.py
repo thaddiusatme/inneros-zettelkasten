@@ -352,6 +352,135 @@ User notes"""
         assert isinstance(result['quotes_added'], int)
 
 
+class TestYouTubeFallbackParser:
+    """Test YouTubeFeatureHandler fallback parser for empty frontmatter"""
+    
+    def test_handle_with_empty_frontmatter_extracts_from_body(self):
+        """Handler should extract video_id from body content when frontmatter is empty"""
+        config_dict = {'vault_path': '/test/vault'}
+        
+        from src.automation.feature_handlers import YouTubeFeatureHandler
+        handler = YouTubeFeatureHandler(config=config_dict)
+        
+        note_path = Path('/test/vault/Inbox/YouTube/youtube-note.md')
+        mock_event = Mock()
+        mock_event.src_path = str(note_path)
+        
+        # Note with EMPTY video_id in frontmatter but present in body
+        note_content = """---
+type: literature
+created: 2025-10-08 11:48
+status: inbox
+tags: [youtube, video-content]
+visibility: private
+source: youtube
+author: Test Channel
+video_id: 
+channel: Test Channel
+---
+
+# The Must-Follow Roadmap for All Solo Developers
+
+## Metadata
+- **Video ID**: `IeVxir50Q2Q`
+- **Channel**: Test Channel
+- **URL**: https://www.youtube.com/watch?v=IeVxir50Q2Q
+
+## My Notes
+
+User content here...
+"""
+        
+        mock_enhance_result = Mock()
+        mock_enhance_result.success = True
+        mock_enhance_result.quote_count = 3
+        
+        with patch('pathlib.Path.read_text', return_value=note_content), \
+             patch('src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher'), \
+             patch('src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor'), \
+             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer:
+            
+            mock_enhancer = MockEnhancer.return_value
+            mock_enhancer.enhance_note.return_value = mock_enhance_result
+            
+            result = handler.handle(mock_event)
+        
+        # Should succeed by extracting video_id from body
+        assert result['success'] is True
+        assert result['quotes_added'] == 3
+    
+    def test_handle_logs_fallback_extraction(self):
+        """Handler should log when video_id is extracted from body content"""
+        config_dict = {'vault_path': '/test/vault'}
+        
+        from src.automation.feature_handlers import YouTubeFeatureHandler
+        handler = YouTubeFeatureHandler(config=config_dict)
+        
+        note_path = Path('/test/vault/Inbox/YouTube/youtube-note.md')
+        mock_event = Mock()
+        mock_event.src_path = str(note_path)
+        
+        note_content = """---
+source: youtube
+video_id: 
+---
+
+- **Video ID**: `test123`
+
+User notes
+"""
+        
+        mock_enhance_result = Mock()
+        mock_enhance_result.success = True
+        mock_enhance_result.quote_count = 2
+        
+        with patch('pathlib.Path.read_text', return_value=note_content), \
+             patch('src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher'), \
+             patch('src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor'), \
+             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer:
+            
+            mock_enhancer = MockEnhancer.return_value
+            mock_enhancer.enhance_note.return_value = mock_enhance_result
+            
+            # Capture logs
+            with patch.object(handler.logger, 'info') as mock_log:
+                result = handler.handle(mock_event)
+                
+                # Verify fallback extraction was logged
+                log_calls = [str(call) for call in mock_log.call_args_list]
+                assert any('body content' in str(call).lower() for call in log_calls), \
+                    "Should log fallback extraction from body content"
+        
+        assert result['success'] is True
+    
+    def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(self):
+        """Handler should fail gracefully when video_id is missing from both sources"""
+        config_dict = {'vault_path': '/test/vault'}
+        
+        from src.automation.feature_handlers import YouTubeFeatureHandler
+        handler = YouTubeFeatureHandler(config=config_dict)
+        
+        note_path = Path('/test/vault/Inbox/YouTube/youtube-note.md')
+        mock_event = Mock()
+        mock_event.src_path = str(note_path)
+        
+        # No video_id in frontmatter OR body
+        note_content = """---
+source: youtube
+video_id: 
+---
+
+User notes without video ID metadata
+"""
+        
+        with patch('pathlib.Path.read_text', return_value=note_content):
+            result = handler.handle(mock_event)
+        
+        # Should fail with clear error message
+        assert result['success'] is False
+        assert 'video_id' in result.get('error', '').lower()
+
+
 class TestYouTubeErrorHandling:
     """Test YouTubeFeatureHandler error handling"""
     

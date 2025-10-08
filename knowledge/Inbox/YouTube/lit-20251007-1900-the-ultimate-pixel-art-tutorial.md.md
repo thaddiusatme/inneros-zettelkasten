@@ -1,32 +1,33 @@
 ---
 type: literature
-created: 2025-10-07 21:57
+created: 2025-10-07 19:00
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: lfR7Qj04-UA
 channel: 
 ---
 
 
-# 20 Programming Projects That Will Make You A God At Coding
+# The Ultimate Pixel Art Tutorial
 
 ## Video Information
-- **Channel**: The Coding Sloth
-- **Video URL**: https://www.youtube.com/watch?v=jTJvyKZDFsY
-- **Video ID**: `jTJvyKZDFsY`
+- **Channel**: Saultoons
+- **Video URL**: https://www.youtube.com/watch?v=lfR7Qj04-UA
+- **Video ID**: `lfR7Qj04-UA`
 - **Date Saved**: 2025-10-07
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/jTJvyKZDFsY/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/lfR7Qj04-UA/hqdefault.jpg)
 
 ## Why I'm Saving This
-This video is a great, tier list of projects that are put together. i want to explore the audeince here
-Great content ideas
+Great introductory video to pixel art
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
+color and art basics were great, i want to know their references. 
+light too
 
 ### Main Insight
 > 
@@ -49,9 +50,9 @@ Great content ideas
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-07 21:57
+- **Captured**: 2025-10-07 19:00
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: The Coding Sloth*
+*YouTube video saved from: Saultoons*

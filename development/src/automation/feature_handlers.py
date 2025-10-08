@@ -456,6 +456,9 @@ class YouTubeFeatureHandler:
     Size: ~150 LOC (ADR-001 compliant)
     """
     
+    # Regex pattern for extracting video_id from body content
+    VIDEO_ID_BODY_PATTERN = r'Video ID[*:\s]+`?([a-zA-Z0-9_-]+)`?'
+    
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize YouTube handler.
@@ -571,8 +574,13 @@ class YouTubeFeatureHandler:
             frontmatter, _ = parse_frontmatter(content)
             
             video_id = frontmatter.get('video_id')
-            if not video_id:
-                raise ValueError("video_id not found in frontmatter")
+            if not video_id or video_id.strip() == '':
+                # Fallback: Extract from body content
+                video_id = self._extract_video_id_from_body(content)
+                if video_id:
+                    self.logger.info(f"Extracted video_id from body content: {video_id}")
+                else:
+                    raise ValueError("video_id not found in frontmatter or body")
             
             # 1. Fetch transcript
             from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
@@ -685,6 +693,27 @@ class YouTubeFeatureHandler:
             datefmt='%Y-%m-%d %H:%M:%S'
         ))
         self.logger.addHandler(handler)
+    
+    def _extract_video_id_from_body(self, content: str) -> Optional[str]:
+        """
+        Extract video_id from note body content using regex pattern.
+        
+        Looks for patterns like:
+        - **Video ID**: `IeVxir50Q2Q`
+        - Video ID: IeVxir50Q2Q
+        - **Video ID**: IeVxir50Q2Q
+        
+        Args:
+            content: Full note content including frontmatter and body
+        
+        Returns:
+            Extracted video_id or None if not found
+        """
+        import re
+        match = re.search(self.VIDEO_ID_BODY_PATTERN, content)
+        if match:
+            return match.group(1)
+        return None
     
     def get_metrics(self) -> dict:
         """

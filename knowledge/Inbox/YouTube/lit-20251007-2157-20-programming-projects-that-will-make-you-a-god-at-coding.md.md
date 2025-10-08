@@ -1,28 +1,29 @@
 ---
 type: literature
-created: 2025-10-07 17:32
+created: 2025-10-07 21:57
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: jTJvyKZDFsY
 channel: 
 ---
 
 
-# How to choose good Colour Palettes (Pixel Art Tutorial)
+# 20 Programming Projects That Will Make You A God At Coding
 
 ## Video Information
-- **Channel**: Pixel Overload
-- **Video URL**: https://www.youtube.com/watch?v=uUdMb8Bb2II
-- **Video ID**: `uUdMb8Bb2II`
+- **Channel**: The Coding Sloth
+- **Video URL**: https://www.youtube.com/watch?v=jTJvyKZDFsY
+- **Video ID**: `jTJvyKZDFsY`
 - **Date Saved**: 2025-10-07
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/uUdMb8Bb2II/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/jTJvyKZDFsY/hqdefault.jpg)
 
 ## Why I'm Saving This
-pixel art and learning more about colors makes  me reconsider my brands color scheme
+This video is a great, tier list of projects that are put together. i want to explore the audeince here
+Great content ideas
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -48,9 +49,9 @@ pixel art and learning more about colors makes  me reconsider my brands color sc
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-07 17:32
+- **Captured**: 2025-10-07 21:57
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Pixel Overload*
+*YouTube video saved from: The Coding Sloth*

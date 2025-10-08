@@ -82,7 +82,7 @@ const slug = videoTitle.toLowerCase()
 
 const stamp = tp.date.now("YYYYMMDD-HHmm");
 const fname = `lit-${stamp}-${slug}.md`;
-const target = `Inbox/${fname}`;
+const target = `Inbox/YouTube/${fname}`;
 
 // 6. Default tags
 const allTags = ["youtube", "video-content"];
@@ -90,6 +90,13 @@ const allTags = ["youtube", "video-content"];
 try {
   await tp.file.rename(fname);
   await tp.file.move(target);
+  
+  // Update frontmatter with extracted metadata
+  await tp.file.update_frontmatter({
+    author: channelName,
+    video_id: videoId,
+    channel: channelName
+  });
 } catch (e) {
   await tp.system.alert("Rename/Move failed – " + e.message);
   return;

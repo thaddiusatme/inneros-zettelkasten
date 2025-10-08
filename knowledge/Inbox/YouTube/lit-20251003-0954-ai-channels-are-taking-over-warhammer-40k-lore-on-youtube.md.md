@@ -1,37 +1,36 @@
 ---
 type: literature
-created: 2025-10-07 21:48
+created: 2025-10-03 09:53
 status: inbox
-tags: [youtube, video-content]
+tags:
+  - youtube
+  - video-content
 visibility: private
 source: youtube
-author: 
-video_id: 
-channel: 
+author:
+video_id: rYCQZ2osLq4
+channel:
 ---
 
 
-# How I Code Profitable Apps SOLO (no wasted time / beginner friendly / with AI)
+# AI Channels Are Taking Over Warhammer 40k Lore On YouTube
 
 ## Video Information
-- **Channel**: Edmund Yong
-- **Video URL**: https://www.youtube.com/watch?v=CNsvts6pVzo
-- **Video ID**: `CNsvts6pVzo`
-- **Date Saved**: 2025-10-07
+- **Channel**: Majorkill
+- **Video URL**: https://www.youtube.com/watch?v=rYCQZ2osLq4
+- **Video ID**: `rYCQZ2osLq4`
+- **Date Saved**: 2025-10-03
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/CNsvts6pVzo/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/rYCQZ2osLq4/hqdefault.jpg)
 
 ## Why I'm Saving This
-This sounds like a route to vibe coding to profit
+This is important in the fight against AI slop and finding hte line of what is acceptable within the ai creative space
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
-Day in the life of example i ca n follow. 
-Great roadmap
-How to secure customers
-roadmap.sh resource
+
 ### Main Insight
-> roadmap.sh
+> 
 
 **Timestamp**: 
 
@@ -51,9 +50,9 @@ roadmap.sh resource
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-07 21:48
+- **Captured**: 2025-10-03 09:54
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Edmund Yong*
+*YouTube video saved from: Majorkill*

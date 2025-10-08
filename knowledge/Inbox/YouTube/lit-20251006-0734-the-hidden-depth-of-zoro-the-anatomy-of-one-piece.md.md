@@ -1,28 +1,28 @@
 ---
 type: literature
-created: 2025-10-07 16:50
+created: 2025-10-06 07:34
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: LD0b5u-q9KU
 channel: 
 ---
 
 
-# What Canvas Size Should you use for Pixel Art? (Pixel Art Tutorial)
+# The Hidden Depth of ZORO | The Anatomy of One Piece
 
 ## Video Information
-- **Channel**: Pixel Overload
-- **Video URL**: https://www.youtube.com/watch?v=Z8earctNBxg
-- **Video ID**: `Z8earctNBxg`
-- **Date Saved**: 2025-10-07
+- **Channel**: Totally Not Mark
+- **Video URL**: https://www.youtube.com/watch?v=LD0b5u-q9KU
+- **Video ID**: `LD0b5u-q9KU`
+- **Date Saved**: 2025-10-06
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/Z8earctNBxg/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/LD0b5u-q9KU/hqdefault.jpg)
 
 ## Why I'm Saving This
-I enjoyed how tobuild a pixel art characther theory wise
+BEcause I like ONe Piece
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -48,9 +48,9 @@ I enjoyed how tobuild a pixel art characther theory wise
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-07 16:51
+- **Captured**: 2025-10-06 07:34
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Pixel Overload*
+*YouTube video saved from: Totally Not Mark*

@@ -1,30 +1,28 @@
 ---
 type: literature
-created: 2025-10-03 09:53
+created: 2025-10-07 17:32
 status: inbox
-tags:
-  - youtube
-  - video-content
+tags: [youtube, video-content]
 visibility: private
 source: youtube
-author:
-video_id:
-channel:
+author: 
+video_id: uUdMb8Bb2II
+channel: 
 ---
 
 
-# AI Channels Are Taking Over Warhammer 40k Lore On YouTube
+# How to choose good Colour Palettes (Pixel Art Tutorial)
 
 ## Video Information
-- **Channel**: Majorkill
-- **Video URL**: https://www.youtube.com/watch?v=rYCQZ2osLq4
-- **Video ID**: `rYCQZ2osLq4`
-- **Date Saved**: 2025-10-03
+- **Channel**: Pixel Overload
+- **Video URL**: https://www.youtube.com/watch?v=uUdMb8Bb2II
+- **Video ID**: `uUdMb8Bb2II`
+- **Date Saved**: 2025-10-07
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/rYCQZ2osLq4/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/uUdMb8Bb2II/hqdefault.jpg)
 
 ## Why I'm Saving This
-This is important in the fight against AI slop and finding hte line of what is acceptable within the ai creative space
+pixel art and learning more about colors makes  me reconsider my brands color scheme
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -50,9 +48,9 @@ This is important in the fight against AI slop and finding hte line of what is a
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-03 09:54
+- **Captured**: 2025-10-07 17:32
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Majorkill*
+*YouTube video saved from: Pixel Overload*

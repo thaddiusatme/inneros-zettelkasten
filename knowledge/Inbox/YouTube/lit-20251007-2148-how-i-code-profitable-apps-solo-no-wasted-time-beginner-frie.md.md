@@ -1,36 +1,37 @@
 ---
 type: literature
-created: 2025-10-07 19:00
+created: 2025-10-07 21:48
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: CNsvts6pVzo
 channel: 
 ---
 
 
-# The Ultimate Pixel Art Tutorial
+# How I Code Profitable Apps SOLO (no wasted time / beginner friendly / with AI)
 
 ## Video Information
-- **Channel**: Saultoons
-- **Video URL**: https://www.youtube.com/watch?v=lfR7Qj04-UA
-- **Video ID**: `lfR7Qj04-UA`
+- **Channel**: Edmund Yong
+- **Video URL**: https://www.youtube.com/watch?v=CNsvts6pVzo
+- **Video ID**: `CNsvts6pVzo`
 - **Date Saved**: 2025-10-07
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/lfR7Qj04-UA/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/CNsvts6pVzo/hqdefault.jpg)
 
 ## Why I'm Saving This
-Great introductory video to pixel art
+This sounds like a route to vibe coding to profit
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
-color and art basics were great, i want to know their references. 
-light too
-
+Day in the life of example i ca n follow. 
+Great roadmap
+How to secure customers
+roadmap.sh resource
 ### Main Insight
-> 
+> roadmap.sh
 
 **Timestamp**: 
 
@@ -50,9 +51,9 @@ light too
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-07 19:00
+- **Captured**: 2025-10-07 21:48
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Saultoons*
+*YouTube video saved from: Edmund Yong*
