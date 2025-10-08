@@ -66,6 +66,9 @@ class AutomationEventHandler:
         """
         Process file event with filtering and debouncing.
         
+        Implements two-stage filtering (deleted events, non-markdown files) followed by
+        debounced processing to prevent duplicate work during active file editing.
+        
         Args:
             file_path: Path to the file that triggered event
             event_type: Event type ('created', 'modified', 'deleted')
@@ -79,20 +82,22 @@ class AutomationEventHandler:
                 'result': dict (CoreWorkflowManager result if processed)
             }
         """
-        # Filter 1: Ignore deleted events
+        # Filter 1: Ignore deleted events (no processing needed)
         if event_type == 'deleted':
             return {'skipped': True, 'reason': 'deleted_event'}
         
-        # Filter 2: Only process markdown files
+        # Filter 2: Only process markdown files (AI pipeline expects .md)
         if not str(file_path).endswith('.md'):
             return {'skipped': True, 'reason': 'not_markdown'}
         
-        # Cancel existing timer for this file (last event wins)
+        # Debouncing: Cancel existing timer for this file (last event wins strategy)
+        # This prevents processing during rapid editing sessions (e.g., typing, auto-save)
         file_key = str(file_path)
         if file_key in self._debounce_timers:
             self._debounce_timers[file_key].cancel()
         
-        # Create new debounce timer
+        # Create new debounce timer for delayed execution
+        # After debounce_seconds of quiet time, _execute_processing will run
         timer = threading.Timer(
             self.debounce_seconds,
             self._execute_processing,
@@ -105,13 +110,23 @@ class AutomationEventHandler:
     
     def _execute_processing(self, file_path: Path) -> Dict[str, Any]:
         """
-        Execute CoreWorkflowManager processing after debounce.
+        Execute CoreWorkflowManager processing after debounce period.
+        
+        Called by threading.Timer after debounce_seconds of quiet time. Integrates
+        with AI processing pipeline via CoreWorkflowManager.process_inbox_note().
+        Tracks success/failure metrics for health monitoring.
         
         Args:
             file_path: Path to note file to process
             
         Returns:
-            Processing result with metrics
+            Processing result with metrics:
+            {
+                'success': bool,
+                'result': dict (if successful),
+                'error': str (if failed),
+                'processing_time': float (seconds)
+            }
         """
         file_key = str(file_path)
         start_time = time.time()
