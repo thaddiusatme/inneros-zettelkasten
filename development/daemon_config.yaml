@@ -28,10 +28,16 @@ smart_link_handler:
   similarity_threshold: 0.75
   max_suggestions: 5
 
-# YouTube handler (TDD Iteration 9)
+# YouTube handler (TDD Iteration 9 + Rate Limit Mitigation)
 youtube_handler:
   enabled: true
   vault_path: ./knowledge
   max_quotes: 7
   min_quality: 0.7
   processing_timeout: 300
+  # Rate limit mitigation with exponential backoff (TDD Iteration 1)
+  rate_limit:
+    max_retries: 3           # Maximum retry attempts (0-10)
+    base_delay: 5            # Initial delay in seconds (1-30)
+    max_delay: 60            # Maximum delay cap in seconds (10-300)
+    backoff_multiplier: 2    # Exponential multiplier (1.5-5)
