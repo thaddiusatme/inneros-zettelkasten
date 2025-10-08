@@ -590,10 +590,22 @@ class YouTubeFeatureHandler:
                 min_quality=self.min_quality
             )
             
-            # 3. Convert to QuotesData format
+            # 3. Convert to QuotesData format (map 'text' -> 'quote' field)
             from src.ai.youtube_note_enhancer import QuotesData
+            
+            # Transform quote structure from extractor format to enhancer format
+            transformed_quotes = [
+                {
+                    'quote': q.get('text', ''),
+                    'timestamp': q.get('timestamp', '00:00'),
+                    'context': q.get('context', ''),
+                    'relevance': q.get('relevance_score', 0.0)
+                }
+                for q in quotes_result.get('quotes', [])
+            ]
+            
             quotes_data = QuotesData(
-                key_insights=quotes_result.get('quotes', []),
+                key_insights=transformed_quotes,
                 actionable=[],
                 notable=[],
                 definitions=[]

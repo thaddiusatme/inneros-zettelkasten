@@ -13,14 +13,11 @@ Following established patterns from ScreenshotEventHandler and SmartLinkEventHan
 
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import sys
-from datetime import datetime
 
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from src.automation.config import DaemonConfig
 
 
 class TestYouTubeHandlerInitialization:
@@ -51,7 +48,7 @@ class TestYouTubeHandlerInitialization:
         from src.automation.feature_handlers import YouTubeFeatureHandler
         
         with pytest.raises(ValueError, match="vault_path.*required"):
-            handler = YouTubeFeatureHandler(config=config_dict)
+            _ = YouTubeFeatureHandler(config=config_dict)
     
     def test_handler_uses_defaults_for_optional_config(self):
         """Handler should use sensible defaults when optional keys missing"""
