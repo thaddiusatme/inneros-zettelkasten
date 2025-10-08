@@ -3,9 +3,16 @@ Automation Daemon - Main daemon lifecycle management
 
 Manages daemon start/stop/restart operations with APScheduler integration.
 Follows ADR-001: <500 LOC, single responsibility, domain separation.
+
+Logging Infrastructure (TDD Iteration 2 P1.4):
+- Daily log files: .automation/logs/daemon_YYYY-MM-DD.log
+- Format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+- Logs: lifecycle events (INFO), errors (ERROR with stack traces)
+- Production-ready debugging with full audit trail
 """
 
 import time
+import logging
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,7 +57,9 @@ class AutomationDaemon:
     Manages daemon lifecycle with APScheduler integration for 24/7 operation.
     Provides health monitoring and graceful shutdown capabilities.
     
-    Size: ~300 LOC (ADR-001 compliant)
+    Logging: Daily log files with lifecycle events and error tracking.
+    
+    Size: 289 LOC (ADR-001 compliant: <500 LOC)
     """
     
     def __init__(self, config: Optional[DaemonConfig] = None):
@@ -60,6 +69,9 @@ class AutomationDaemon:
         self._start_time: Optional[float] = None
         self._job_definitions = []  # Store job definitions for restart
         self._config = config or DaemonConfig()
+        
+        # Initialize logging first
+        self._setup_logging()
         
         # Initialize manager components
         self.scheduler: Optional[SchedulerManager] = None
@@ -78,6 +90,7 @@ class AutomationDaemon:
             raise DaemonError("Daemon is already running")
         
         self._state = DaemonState.STARTING
+        self.logger.info("Starting AutomationDaemon...")
         
         try:
             # Create and start BackgroundScheduler
@@ -98,8 +111,10 @@ class AutomationDaemon:
             
             # Start file watcher if configured and enabled
             if self._config.file_watching and self._config.file_watching.enabled:
+                watch_path = self._config.file_watching.watch_path
+                self.logger.info(f"Starting file watcher: {watch_path}")
                 self.file_watcher = FileWatcher(
-                    watch_path=Path(self._config.file_watching.watch_path),
+                    watch_path=Path(watch_path),
                     debounce_seconds=self._config.file_watching.debounce_seconds,
                     ignore_patterns=self._config.file_watching.ignore_patterns
                 )
@@ -108,15 +123,17 @@ class AutomationDaemon:
                 
                 # Create event handler for AI processing integration
                 self.event_handler = AutomationEventHandler(
-                    vault_path=str(self._config.file_watching.watch_path),
+                    vault_path=str(watch_path),
                     debounce_seconds=self._config.file_watching.debounce_seconds
                 )
             
             self._start_time = time.time()
             self._state = DaemonState.RUNNING
+            self.logger.info("Daemon started successfully")
             
         except Exception as e:
             self._state = DaemonState.ERROR
+            self.logger.error(f"Failed to start daemon: {e}", exc_info=True)
             raise DaemonError(f"Failed to start daemon: {e}")
     
     def stop(self) -> None:
@@ -129,6 +146,7 @@ class AutomationDaemon:
             return
         
         self._state = DaemonState.STOPPING
+        self.logger.info("Stopping AutomationDaemon...")
         
         try:
             # Stop file watcher BEFORE scheduler (reverse start order)
@@ -156,9 +174,11 @@ class AutomationDaemon:
             self.scheduler = None
             # Health manager stays available for status checks even when stopped
             self._state = DaemonState.STOPPED
+            self.logger.info("Daemon stopped successfully")
             
         except Exception as e:
             self._state = DaemonState.ERROR
+            self.logger.error(f"Failed to stop daemon: {e}", exc_info=True)
             raise DaemonError(f"Failed to stop daemon: {e}")
     
     def restart(self) -> None:
@@ -240,3 +260,31 @@ class AutomationDaemon:
         # Process events through event handler if available
         if self.event_handler:
             self.event_handler.process_file_event(file_path, event_type)
+    
+    def _setup_logging(self) -> None:
+        """
+        Setup logging infrastructure with daily log files.
+        
+        Creates .automation/logs/ directory and configures file handler
+        with standard format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+        
+        Following proven pattern from EventHandler logging (TDD Iteration 2 P1.3).
+        """
+        # Create log directory
+        log_dir = Path('.automation/logs')
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create daily log file
+        log_file = log_dir / f'daemon_{time.strftime("%Y-%m-%d")}.log'
+        
+        # Configure logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        
+        # Configure file handler
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        ))
+        self.logger.addHandler(handler)

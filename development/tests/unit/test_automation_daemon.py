@@ -21,6 +21,7 @@ RED Phase Target: 15/15 tests failing with clear import/attribute errors
 
 import pytest
 import time
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Callable
@@ -717,6 +718,182 @@ class TestDaemonFileWatcherIntegration:
 
 
 # ============================================================================
+# TDD Iteration 2 P1.4: Daemon Logging Infrastructure Tests (RED Phase)
+# ============================================================================
+
+class TestDaemonLoggingInfrastructure:
+    """
+    Test logging infrastructure for AutomationDaemon.
+    
+    Following proven pattern from EventHandler logging (TDD Iteration 2 P1.3):
+    - Daily log files: .automation/logs/daemon_YYYY-MM-DD.log
+    - Format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
+    - INFO level for lifecycle events (start, stop, watcher registration)
+    - ERROR level with exc_info=True for all exceptions
+    """
+    
+    def test_logger_initialized_on_daemon_creation(self):
+        """
+        P1.4.1: Logger initialized in daemon __init__.
+        
+        Expected behavior:
+        - self.logger exists after __init__
+        - Logger is a logging.Logger instance
+        - Logger configured with appropriate level
+        - _setup_logging() called during initialization
+        
+        Will fail: AttributeError - AutomationDaemon has no attribute 'logger'
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon()
+        
+        assert hasattr(daemon, 'logger'), "Daemon should have logger attribute"
+        assert isinstance(daemon.logger, logging.Logger), "logger should be Logger instance"
+    
+    def test_daemon_start_stop_logged_at_info_level(self, caplog):
+        """
+        P1.4.2: Daemon lifecycle events logged at INFO level.
+        
+        Expected behavior:
+        - "Starting AutomationDaemon..." logged in start()
+        - "Daemon started successfully" logged after scheduler init
+        - "Stopping AutomationDaemon..." logged in stop()
+        - "Daemon stopped successfully" logged after cleanup
+        - All at INFO level
+        
+        Will fail: No log messages captured (logging not implemented)
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        with caplog.at_level(logging.INFO):
+            daemon = AutomationDaemon()
+            daemon.start()
+            daemon.stop()
+        
+        # Check for start messages
+        log_messages = [record.message for record in caplog.records]
+        assert any("Starting AutomationDaemon" in msg for msg in log_messages), \
+            "Should log daemon start"
+        assert any("Daemon started successfully" in msg for msg in log_messages), \
+            "Should log successful start"
+        
+        # Check for stop messages
+        assert any("Stopping AutomationDaemon" in msg for msg in log_messages), \
+            "Should log daemon stop"
+        assert any("Daemon stopped successfully" in msg for msg in log_messages), \
+            "Should log successful stop"
+    
+    def test_file_watcher_registration_logged(self, caplog, temp_watch_dir):
+        """
+        P1.4.3: File watcher startup logged when enabled.
+        
+        Expected behavior:
+        - "Starting file watcher: {path}" logged when watcher enabled
+        - Logged at INFO level
+        - Includes watch path in message
+        
+        Will fail: No log messages for file watcher (logging not implemented)
+        """
+        from src.automation.daemon import AutomationDaemon
+        from src.automation.config import FileWatchConfig
+        
+        config = DaemonConfig(
+            check_interval=60,
+            log_level="INFO",
+            file_watching=FileWatchConfig(
+                enabled=True,
+                watch_path=str(temp_watch_dir),
+                patterns=["*.md"],
+                ignore_patterns=[],
+                debounce_seconds=2
+            )
+        )
+        
+        with caplog.at_level(logging.INFO):
+            daemon = AutomationDaemon(config=config)
+            daemon.start()
+            daemon.stop()
+        
+        log_messages = [record.message for record in caplog.records]
+        assert any("Starting file watcher" in msg for msg in log_messages), \
+            "Should log file watcher start"
+    
+    @pytest.fixture
+    def temp_watch_dir(self, tmp_path):
+        """Create temporary watch directory."""
+        watch_dir = tmp_path / "inbox"
+        watch_dir.mkdir()
+        return watch_dir
+    
+    def test_daemon_errors_logged_with_stack_trace(self, caplog, monkeypatch):
+        """
+        P1.4.4: Daemon errors logged with exc_info=True.
+        
+        Expected behavior:
+        - Exceptions in start() logged with "Failed to start daemon: {error}"
+        - Exceptions in stop() logged with "Failed to stop daemon: {error}"
+        - All errors logged at ERROR level with exc_info=True for stack traces
+        
+        Will fail: No error log messages captured (logging not implemented)
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        # Force start() to raise an exception
+        def failing_scheduler_start():
+            raise RuntimeError("Simulated scheduler failure")
+        
+        daemon = AutomationDaemon()
+        
+        # Monkeypatch to make scheduler fail
+        monkeypatch.setattr(
+            'apscheduler.schedulers.background.BackgroundScheduler.start',
+            failing_scheduler_start
+        )
+        
+        with caplog.at_level(logging.ERROR):
+            try:
+                daemon.start()
+            except Exception:
+                pass  # Expected failure
+        
+        # Check error was logged
+        error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
+        assert len(error_records) > 0, "Should log errors"
+        assert any("Failed to start daemon" in r.message for r in error_records), \
+            "Should log start failure"
+        
+        # Check stack trace included (exc_info=True)
+        assert any(r.exc_info is not None for r in error_records), \
+            "Should log with exc_info=True for stack traces"
+    
+    def test_log_file_created_in_automation_logs(self):
+        """
+        P1.4.5: Log file created in .automation/logs/ directory.
+        
+        Expected behavior:
+        - Log file created at .automation/logs/daemon_YYYY-MM-DD.log
+        - Directory created if doesn't exist
+        - Daily log rotation (one file per day)
+        - Follows same pattern as EventHandler logging
+        
+        Will fail: Log file not created (logging not implemented)
+        """
+        from src.automation.daemon import AutomationDaemon
+        
+        daemon = AutomationDaemon()
+        daemon.start()
+        daemon.stop()
+        
+        # Check log file exists
+        log_dir = Path('.automation/logs')
+        today = time.strftime("%Y-%m-%d")
+        log_file = log_dir / f'daemon_{today}.log'
+        
+        assert log_file.exists(), f"Log file should exist at {log_file}"
+
+
+# ============================================================================
 # Test Execution Summary
 # ============================================================================
 
@@ -729,19 +906,25 @@ TDD Iteration 1 (COMPLETED): 15/15 tests passing
 - P0.3 Health Checks: 3 tests ✅
 - P0.4 Configuration: 2 tests ✅
 
-TDD Iteration 2 P1.1 (RED PHASE): 5/5 tests WILL FAIL
-- File Watcher Integration: 5 tests ❌
+TDD Iteration 2 P1.1 (COMPLETED): 5/5 tests passing ✅
+- File Watcher Integration: 5 tests ✅
+
+TDD Iteration 2 P1.3 (COMPLETED): 37/37 tests passing ✅
+- EventHandler Logging Infrastructure: Complete logging pattern validated
+
+TDD Iteration 2 P1.4 (RED PHASE): 5/5 tests WILL FAIL ❌
+- Daemon Logging Infrastructure: 5 tests
 
 Expected Failures:
-1. test_daemon_starts_file_watcher_when_enabled - AttributeError: daemon.file_watcher not defined
-2. test_daemon_stops_file_watcher_gracefully - AttributeError: daemon.file_watcher not defined
-3. test_daemon_status_includes_watcher_state - AttributeError: DaemonStatus missing watcher_active
-4. test_daemon_respects_config_file_watching_disabled - AttributeError: DaemonConfig missing file_watching
-5. test_health_check_includes_watcher_status - KeyError: 'file_watcher' not in health.checks
+1. test_logger_initialized_on_daemon_creation - AttributeError: 'logger' not defined
+2. test_daemon_start_stop_logged_at_info_level - No log messages captured
+3. test_file_watcher_registration_logged - No watcher log messages
+4. test_daemon_errors_logged_with_stack_trace - No error log messages
+5. test_log_file_created_in_automation_logs - Log file not created
 
-Next Phase: GREEN - Implement daemon-watcher integration (~30 LOC)
+Next Phase: GREEN - Implement daemon logging (~40 LOC)
 Required changes:
-- src/automation/config.py: Add FileWatchConfig dataclass
-- src/automation/daemon.py: Add file_watcher lifecycle management
-- src/automation/health.py: Add watcher health check
+- src/automation/daemon.py: Add _setup_logging() method (copy from EventHandler)
+- src/automation/daemon.py: Add self.logger.info() calls for lifecycle events
+- src/automation/daemon.py: Add self.logger.error(..., exc_info=True) in exception handlers
 """
