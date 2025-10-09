@@ -1,0 +1,27 @@
+# InnerOS Zettelkasten - Python Dependencies
+
+# Core AI & LLM
+anthropic==0.39.0
+openai==1.57.4
+
+# YouTube transcript fetching
+youtube-transcript-api==0.6.2
+
+# YouTube Data API v3 (Official API)
+google-api-python-client==2.108.0
+google-auth-httplib2==0.1.1
+google-auth-oauthlib==1.1.0
+
+# Data processing
+pyyaml==6.0.2
+markdown==3.7
+
+# Testing
+pytest==8.3.3
+pytest-cov==6.0.0
+
+# Web UI
+flask==3.1.0
+
+# Utilities
+python-dateutil==2.9.0
