@@ -494,9 +494,16 @@ class YouTubeFeatureHandler:
         # CATASTROPHIC INCIDENT FIX: Transcript caching to prevent redundant API calls
         from src.automation.transcript_cache import TranscriptCache
         cache_dir = Path.cwd() / '.automation' / 'cache'
-        self.transcript_cache = TranscriptCache(cache_dir=cache_dir, ttl_days=7)
+        
+        # Get TTL from config (default: 7 days for safety in distribution)
+        # Personal use: Set to 36500 (100 years) in daemon_config.yaml
+        ttl_days = config.get('transcript_cache', {}).get('ttl_days', 7)
+        self.transcript_cache = TranscriptCache(cache_dir=cache_dir, ttl_days=ttl_days)
         cache_stats = self.transcript_cache.get_stats()
-        self.logger.info(f"Transcript cache initialized: {cache_stats['entries']} cached transcripts")
+        self.logger.info(
+            f"Transcript cache initialized: {cache_stats['entries']} cached transcripts "
+            f"(TTL: {ttl_days} days)"
+        )
         
         # Initialize metrics tracker
         self.metrics_tracker = ProcessingMetricsTracker()

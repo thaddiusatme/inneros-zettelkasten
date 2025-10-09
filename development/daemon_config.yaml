@@ -35,6 +35,12 @@ youtube_handler:
   max_quotes: 7
   min_quality: 0.7
   processing_timeout: 300
+  cooldown_seconds: 60       # Prevent file watching loops (catastrophic incident fix)
+  # Transcript caching (catastrophic incident fix - prevents redundant API calls)
+  transcript_cache:
+    ttl_days: 36500          # 100 years = permanent for personal use
+                             # DISTRIBUTION: Change to 7 for new users
+                             # This prevents re-fetching same videos and rate limits
   # Rate limit mitigation with exponential backoff (TDD Iteration 1)
   # AGGRESSIVE CONFIG: Testing if IP is completely blocked or just heavily throttled
   rate_limit:
