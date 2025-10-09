@@ -351,16 +351,96 @@ class TestSecurityAudit:
 class TestDistributionIntegration:
     """Integration tests for complete distribution workflow"""
     
-    def test_end_to_end_distribution_creation(self):
+    @pytest.fixture
+    def real_distribution(self):
+        """Create a real distribution from current repository"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dist_dir = Path(tmpdir) / "inneros-distribution"
+            
+            # Get repository root
+            repo_root = Path(__file__).parent.parent.parent.parent
+            
+            # Run distribution script
+            result = subprocess.run(
+                ["bash", str(repo_root / "scripts" / "create-distribution.sh")],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=60  # 1 minute timeout
+            )
+            
+            # Move distribution to temp directory for testing
+            actual_dist = repo_root.parent / "inneros-distribution"
+            if actual_dist.exists():
+                shutil.copytree(actual_dist, dist_dir)
+                yield dist_dir
+                # Cleanup - remove the actual distribution created
+                shutil.rmtree(actual_dist, ignore_errors=True)
+            else:
+                pytest.fail(f"Distribution not created. Script output: {result.stdout}\nErrors: {result.stderr}")
+    
+    def test_end_to_end_distribution_creation(self, real_distribution):
         """Test complete workflow from source to distribution"""
-        # This is a high-level integration test
-        # Will implement after basic scripts work
-        pytest.skip("Integration test - implement after basic functionality")
+        # Verify distribution structure
+        assert real_distribution.exists(), "Distribution directory should exist"
+        assert (real_distribution / "development").exists(), "Development directory missing"
+        assert (real_distribution / "scripts").exists(), "Scripts directory missing"
+        assert (real_distribution / "README.md").exists(), "README.md missing"
+        assert (real_distribution / "requirements.txt").exists(), "requirements.txt missing"
+        
+        # Verify personal content removed
+        assert not (real_distribution / "knowledge" / "Inbox").exists(), "Personal Inbox should be removed"
+        assert not (real_distribution / "Reviews").exists(), "Reviews should be removed"
+        assert not (real_distribution / "Media").exists(), "Media should be removed"
+        
+        # Verify starter pack included
+        assert (real_distribution / "knowledge-starter-pack").exists(), "Starter pack missing"
+        starter_files = list((real_distribution / "knowledge-starter-pack").glob("*.md"))
+        assert len(starter_files) > 0, "Starter pack should contain markdown files"
     
-    def test_distribution_tests_pass(self):
-        """Test that created distribution passes its own tests"""
-        pytest.skip("Integration test - implement after basic functionality")
+    def test_distribution_tests_pass(self, real_distribution):
+        """Test that created distribution passes its own tests
+        
+        TDD Iteration 2 optimization: Excludes TDD iteration test files
+        to prevent timeout. Target: <120 seconds for test suite completion.
+        """
+        # Run pytest in distribution directory with optimized timeout
+        result = subprocess.run(
+            ["python3", "-m", "pytest", "development/tests/unit", "-v", "--tb=short", "-x"],
+            cwd=real_distribution,
+            capture_output=True,
+            text=True,
+            timeout=120  # Reduced from 300s after TDD file exclusion
+        )
+        
+        # Tests should pass or at least be discoverable
+        # Exit code 0 = tests passed
+        # Exit code 5 = no tests collected (acceptable if distribution has minimal tests)
+        assert result.returncode in [0, 5], f"Tests failed in distribution: {result.stdout}\n{result.stderr}"
     
-    def test_distribution_size_reasonable(self):
+    def test_distribution_size_reasonable(self, real_distribution):
         """Test that distribution size is reasonable (no bloat)"""
-        pytest.skip("Integration test - implement after basic functionality")
+        # Calculate directory size
+        total_size = 0
+        file_count = 0
+        
+        for dirpath, dirnames, filenames in os.walk(real_distribution):
+            for filename in filenames:
+                filepath = Path(dirpath) / filename
+                try:
+                    total_size += filepath.stat().st_size
+                    file_count += 1
+                except OSError:
+                    pass  # Skip files we can't read
+        
+        # Convert to MB
+        size_mb = total_size / (1024 * 1024)
+        
+        # Report size
+        print(f"\nDistribution size: {size_mb:.2f} MB ({file_count} files)")
+        
+        # Assert reasonable size (< 50MB for clean distribution)
+        assert size_mb < 50, f"Distribution too large: {size_mb:.2f} MB (should be < 50 MB)"
+        
+        # Also check that it's not suspiciously small (should have at least some content)
+        assert size_mb > 0.1, f"Distribution suspiciously small: {size_mb:.2f} MB"

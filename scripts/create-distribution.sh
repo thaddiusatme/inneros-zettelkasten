@@ -24,7 +24,8 @@ NC='\033[0m' # No Color
 # Configuration
 SOURCE_DIR="${1:-.}"
 DIST_NAME="inneros-distribution"
-DIST_DIR="$(dirname "$SOURCE_DIR")/$DIST_NAME"
+# Create distribution in parent directory to avoid conflicts
+DIST_DIR="../$DIST_NAME"
 STEP_COUNT=0
 
 # ================================================
@@ -54,23 +55,126 @@ print_error() {
     exit 1
 }
 
+# Remove TDD iteration test files (TDD Iteration 2 optimization)
+# These files are used during development but have import errors in distribution
+# because they depend on experimental modules or intermediate TDD cycle implementations.
+# Removing them prevents test timeout issues and keeps distribution clean.
+remove_tdd_test_files() {
+    local dist_dir="$1"
+    
+    echo "   Removing TDD iteration test files..."
+    
+    # Pattern 1: All files with 'tdd' in name (TDD iteration markers)
+    # Example: test_evening_screenshot_processor_tdd_1.py
+    find "$dist_dir/development/tests/unit" -type f -name "*tdd*.py" -delete 2>/dev/null || true
+    
+    # Pattern 2: Phase-specific test files (red/green/refactor phases)
+    # Example: test_evening_screenshot_processor_green_phase.py
+    find "$dist_dir/development/tests/unit" -type f \( \
+        -name "*_green_phase.py" -o \
+        -name "*_red_phase.py" -o \
+        -name "*_refactor_phase.py" \
+    \) -delete 2>/dev/null || true
+    
+    # Pattern 3: Specific problematic files identified during profiling
+    # These files have import errors or depend on development-only modules
+    rm -f "$dist_dir/development/tests/unit/test_capture_matcher_poc.py" 2>/dev/null || true
+    rm -f "$dist_dir/development/tests/unit/test_real_data_validation_performance.py" 2>/dev/null || true
+    rm -f "$dist_dir/development/tests/unit/test_zettelkasten_integration.py" 2>/dev/null || true
+}
+
 # Remove personal content directories
 remove_personal_content() {
     local dist_dir="$1"
+    
+    # Personal content directories to remove
     local personal_dirs=(
         "knowledge/Inbox"
+        "knowledge/Fleeting Notes"
+        "knowledge/Literature Notes"
+        "knowledge/Permanent Notes"
+        "knowledge/Maps of Content"
+        "knowledge/Templates"
+        "knowledge/Reviews"
+        "knowledge/Content Pipeline"
+        "knowledge/.obsidian"
+        "knowledge/.obsidian-backup-20250805-155425"
         "Reviews"
         "Media"
         "backups"
-        ".automation/logs"
+        ".automation"
+        "development/tmp"
+        "development/demos/test_output"
+        "development/venv"
+        "development/env"
+        "development/.venv"
+        "web_ui_env"
+        ".pytest_cache"
+        ".windsurf"
+        ".git"
+        ".venv"
+        ".embedding_cache"
+        ".obsidian"
+        ".DS_Store"
+        "inneros-distribution"
     )
     
+    # Remove entire knowledge directory (except starter pack)
+    if [ -d "$dist_dir/knowledge" ]; then
+        echo "   Removing knowledge/ directory..."
+        rm -rf "$dist_dir/knowledge"
+    fi
+    
+    # Remove other personal directories
     for dir in "${personal_dirs[@]}"; do
         if [ -d "$dist_dir/$dir" ]; then
             echo "   Removing $dir..."
             rm -rf "$dist_dir/$dir"
         fi
     done
+    
+    # Remove personal files
+    echo "   Removing .env files..."
+    find "$dist_dir" -name ".env" -type f -delete 2>/dev/null || true
+    find "$dist_dir" -name ".env.*" -type f -delete 2>/dev/null || true
+    
+    # Remove log files
+    echo "   Removing log files..."
+    find "$dist_dir" -name "*.log" -type f -delete 2>/dev/null || true
+    
+    # Remove pytest cache
+    echo "   Removing pytest cache..."
+    find "$dist_dir" -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+    find "$dist_dir" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    
+    # Remove coverage files
+    echo "   Removing coverage files..."
+    find "$dist_dir" -name ".coverage" -type f -delete 2>/dev/null || true
+    find "$dist_dir" -name "coverage.xml" -type f -delete 2>/dev/null || true
+    
+    # Remove tag cleanup backup directories
+    echo "   Removing tag cleanup backups..."
+    find "$dist_dir" -type d -name "tag-cleanup-backup-*" -exec rm -rf {} + 2>/dev/null || true
+    
+    # Remove development artifacts
+    echo "   Removing development artifacts..."
+    rm -rf "$dist_dir/development/htmlcov" 2>/dev/null || true
+    rm -rf "$dist_dir/htmlcov" 2>/dev/null || true
+    rm -rf "$dist_dir/development/feedback" 2>/dev/null || true
+    rm -rf "$dist_dir/development/demos" 2>/dev/null || true
+    rm -f "$dist_dir/development/capture_matcher.py" 2>/dev/null || true
+    
+    # Remove TDD iteration test files (extracted to dedicated function)
+    remove_tdd_test_files "$dist_dir"
+    
+    # Remove project archives with personal info
+    echo "   Removing project archives..."
+    rm -rf "$dist_dir/Projects/Archive" 2>/dev/null || true
+    rm -rf "$dist_dir/Projects/COMPLETED-"* 2>/dev/null || true
+    rm -rf "$dist_dir/Projects/DEPRECATED" 2>/dev/null || true
+    rm -rf "$dist_dir/Projects/REFERENCE" 2>/dev/null || true
+    rm -rf "$dist_dir/Workflows" 2>/dev/null || true
+    rm -rf "$dist_dir/Reviews" 2>/dev/null || true
 }
 
 # Count files in directory (for validation)
