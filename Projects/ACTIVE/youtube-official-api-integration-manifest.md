@@ -9,7 +9,9 @@
 
 ## 🎯 Objective
 
-Replace unofficial transcript scraping with **YouTube Data API v3** to avoid IP-based rate limiting while maintaining full YouTube Handler functionality.
+**Add YouTube Data API v3 as an alternative fetcher** to avoid IP-based rate limiting while maintaining full backward compatibility with existing YouTube Handler functionality.
+
+**Scope**: Create ONE new file (`youtube_official_api_fetcher.py`) + minor config changes. All existing YouTube code remains unchanged.
 
 ---
 

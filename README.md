@@ -215,6 +215,58 @@ python3 test_real_analytics.py
 - **100% success rate** in inbox processing
 - **Graceful fallbacks** when AI services unavailable
 
+### 🎬 **YouTube Knowledge Capture** (TDD Iteration 9 + Official API)
+
+**Automated YouTube video → Zettelkasten notes workflow**
+
+```bash
+# Process YouTube notes with AI-extracted quotes and insights
+# Daemon automatically watches for new YouTube notes
+inneros daemon start
+
+# Or manual processing
+python3 src/cli/workflow_demo.py knowledge/ --process-youtube
+```
+
+**Features**:
+- **Dual Transcript Fetching**:
+  - Official YouTube Data API v3 (quota-based, reliable) ✅ **NEW**
+  - Unofficial scraping (fallback for rate-limited networks)
+  - Automatic retry with exponential backoff
+- **AI Quote Extraction**: 5-7 highest-quality quotes with timestamps
+- **Note Enhancement**: Auto-generate tags, summaries, connections
+- **Template Integration**: Works with Obsidian Templater templates
+- **Daemon Integration**: Automatic processing on file creation
+
+**Configuration** (`daemon_config.yaml`):
+```yaml
+youtube_handler:
+  enabled: true
+  fetcher_type: official_api  # or 'unofficial_scraping'
+  
+  # Official API (recommended for rate-limited networks)
+  official_api:
+    api_key: ${YOUTUBE_API_KEY}  # Set in environment
+    quota_limit: 10000  # Free tier: ~40 videos/day
+  
+  # Retry logic for both fetchers
+  rate_limit:
+    max_retries: 3
+    base_delay: 5
+    max_delay: 60
+```
+
+**Setup**:
+1. **Get API Key** (optional, for official API):
+   - Create Google Cloud project
+   - Enable YouTube Data API v3
+   - Generate API key
+   - Set: `export YOUTUBE_API_KEY='your-key'`
+2. **Works out-of-box** with unofficial scraping (no setup)
+3. **Fallback enabled**: Auto-switches if quota exhausted
+
+**Status**: Production ready (TDD Iterations 1-9 complete)
+
     ## Privacy & Collaboration
     - All notes default to private. Future-proofed for multi-user and compliance needs.
     - Manifest and Changelog document all conventions and changes.
