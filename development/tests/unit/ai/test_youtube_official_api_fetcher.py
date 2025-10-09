@@ -65,8 +65,8 @@ class TestYouTubeOfficialAPIFetcherInitialization:
         with pytest.raises(ValueError) as exc_info:
             YouTubeOfficialAPIFetcher(api_key=None)
         
-        assert "API key" in str(exc_info.value).lower()
-        assert "YOUTUBE_API_KEY" in str(exc_info.value)
+        assert "api key" in str(exc_info.value).lower()
+        assert "youtube_api_key" in str(exc_info.value).lower()
     
     def test_initialization_with_empty_api_key_raises_error(self):
         """Test that empty API key raises clear error"""
@@ -76,7 +76,7 @@ class TestYouTubeOfficialAPIFetcherInitialization:
         with pytest.raises(ValueError) as exc_info:
             YouTubeOfficialAPIFetcher(api_key="")
         
-        assert "API key" in str(exc_info.value).lower()
+        assert "api key" in str(exc_info.value).lower()
 
 
 class TestYouTubeOfficialAPIFetcherBasicFetching:
@@ -211,6 +211,14 @@ class TestYouTubeOfficialAPIFetcherQuotaTracking:
         if YouTubeOfficialAPIFetcher is None:
             pytest.skip("YouTubeOfficialAPIFetcher not implemented yet")
         return YouTubeOfficialAPIFetcher(api_key="test_api_key_12345")
+    
+    @pytest.fixture
+    def mock_youtube_service(self):
+        """Create mock YouTube API service"""
+        service = MagicMock()
+        captions = MagicMock()
+        service.captions.return_value = captions
+        return service, captions
     
     def test_quota_tracking_single_video(self, fetcher, mock_youtube_service):
         """Verify 250 units charged per video (50 list + 200 download)"""
