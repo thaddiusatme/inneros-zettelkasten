@@ -1,6 +1,6 @@
 # ACTIVE Projects Directory
 
-**Last Updated**: 2025-10-03  
+**Last Updated**: 2025-10-08  
 **Purpose**: Current active projects and immediate priorities
 
 ---
@@ -8,50 +8,41 @@
 ## 📁 Directory Contents
 
 ### **Master Tracking**
-1. **`project-todo-v3.md`** - Master TODO list (UPDATED 2025-10-03)
+1. **`project-todo-v3.md`** - Master TODO list
    - All active tasks and priorities
    - Cross-project task tracking
    - Recently completed systems summary
 
-### **Current Priorities**
-2. **`current-priorities-post-automation-2025-09-28.md`** - Active priority list with weekly focus
-   - Updated: 2025-09-29 with Visual Capture as P0 priority
-   - Weekly goals and success metrics
-   - NOTE: Needs update to include YouTube Transcript system
+2. **`daemon-automation-system-current-state-roadmap.md`** - Automation system progress tracker
+   - Status: 9 iterations complete, YouTube Handler integrated ✅
+   - 170 passing tests, production-ready
+   - Next: Iteration 10 (Directory Organization Handler)
 
-### **Active Projects - YouTube Transcript AI Processing (P0 - IN PROGRESS)**
-3. **`youtube-transcript-tdd-2-quote-extraction-planning.md`** - TDD Iteration 2 planning (NEW)
-   - Status: ✅ Planning complete → Ready for RED phase
-   - 11 tests planned with prompt engineering strategy
-   - Few-shot examples and edge case handling integrated
-   - Estimated: 90 minutes (15 RED + 60 GREEN + 15 REFACTOR)
+### **Architecture & Decisions**
+3. **`adr-001-workflow-manager-refactoring.md`** - Architecture Decision Record
+   - Status: ✅ IMPLEMENTED (October 2025)
+   - Documents WorkflowManager god class → 4 focused managers refactor
+   - 52 passing tests, backward-compatible adapter pattern
 
-4. **`youtube-transcript-tdd-1-green-phase-complete.md`** - TDD Iteration 1 documentation
-   - Status: ✅ COMPLETE (10/10 tests passing)
-   - Real video validated: 412 entries in 2.4s
-   - Production-ready with comprehensive logging
+### **Active Bugs & Solutions**
+4. **`bug-empty-video-id-frontmatter-templater-2025-10-08.md`**
+   - **Severity**: HIGH - YouTube template doesn't populate video_id in frontmatter
+   - **Impact**: Automation fails for template-created YouTube notes
+   - **Status**: Documented, needs fix
 
-### **Active Projects (P1)**
-5. **`visual-capture-system-manifest-v2.md`** - Core visual knowledge capture system
-   - Status: Ready for POC implementation
-   - Replaces Reading Intake Pipeline based on actual workflow
-   - 70% infrastructure complete (Samsung Screenshot TDD Iterations 1-6)
-
-6. **`visual-capture-poc-tdd-iteration-1-plan.md`** - Week 1 POC implementation plan
-   - Complete TDD methodology (RED → GREEN → REFACTOR)
-   - 18 comprehensive failing tests
-   - Go/No-Go decision criteria (>90% pairing accuracy)
-
-7. **`image-linking-system-bug-fix-manifest.md`** - Critical bug fix for image persistence
-   - Issue: Images disappear during AI automation
-   - Priority: Critical (system integrity issue)
-   - Status: Documented, awaiting prioritization
+5. **`youtube-official-api-integration-manifest.md`** - **MIGRATION IN PROGRESS** 🚀
+   - **Project**: Replace unofficial scraping with YouTube Data API v3
+   - **Status**: Phase 1 COMPLETE (API key validated ✅), Phase 2 ready (TDD implementation)
+   - **Deprecation**: Unofficial transcript scraping being removed (hard migration)
+   - **Rationale**: Current network 100% rate-limited, quota-based API solves this
+   - **Timeline**: ~3.5 hours implementation (TDD Iteration 1)
+   - **Breaking Change**: Will require API key for YouTube features going forward
 
 ### **Strategic/Future Projects**
-6. **`inneros-gamification-discovery-manifest.md`** - "Mind Garden" concept
-   - Vision: First addictive knowledge management game
-   - Status: Strategic opportunity, post-MVP
-   - Timeline: Q1 2026 consideration
+6. **`distribution-productionization-manifest.md`** - Distribution planning
+   - Vision: Two-repo model (personal + public distribution)
+   - Status: Planning complete, implementation pending
+   - Timeline: 2-3 weeks when prioritized
 
 ---
 
@@ -80,29 +71,33 @@
 
 ---
 
-## 📊 Current Project Status (2025-10-03)
+## 📊 Current Project Status (2025-10-08)
 
 | Project | Status | Priority | Timeline |
 |---------|--------|----------|----------|
-| YouTube Transcript Iteration 2 | 🟢 Planning Complete | P0 | Oct 3-4 (90 min) |
-| YouTube Transcript Iteration 3 | 🟡 Next | P0 | Oct 4-5 |
-| YouTube Transcript Iteration 4 | 🟡 Future | P0 | Oct 5-6 |
-| Visual Capture POC | 🔵 Ready | P1 | TBD |
-| Image Linking Bug | 🟡 Documented | P1 | TBD |
-| Gamification | 🔵 Strategic | Future | Q1 2026 |
+| YouTube Handler (Iteration 9) | ✅ COMPLETE | P0 | Oct 8 |
+| **YouTube Official API Migration** | 🚀 **IN PROGRESS** | **P0** | **3.5 hours** |
+| Bug: Empty video_id Template | 🐛 Active | HIGH | TBD |
+| Directory Org Handler (Iter 10) | 🟡 Next | P1 | After API migration |
+| Fleeting Triage Handler (Iter 11) | 🔵 Future | P2 | TBD |
+| Distribution/Productionization | 🔵 Planning | Strategic | 2-3 weeks |
 
 ---
 
 ## 🎯 Next Actions
 
-1. **Oct 3 (NOW)**: Start YouTube Transcript TDD Iteration 2 RED Phase
-2. **Oct 3-4**: Complete TDD Iteration 2 (Quote Extraction, 90 min)
-3. **Oct 4-5**: TDD Iteration 3 (Template Integration)
-4. **Oct 5-6**: TDD Iteration 4 (CLI + Automation)
-5. **Oct 7+**: Evaluate Visual Capture POC vs other priorities
+1. **Oct 8 (IMMEDIATE)**: Complete YouTube Official API v3 Migration (TDD)
+   - Phase 2: RED phase (write failing tests for YouTubeOfficialAPIFetcher)
+   - Phase 2: GREEN phase (implement captions.download functionality)
+   - Phase 2: REFACTOR phase (extract utilities, polish)
+   - Phase 2: COMMIT phase (git commit + lessons learned)
+2. **Oct 8-9**: Fix bug-empty-video-id-frontmatter-templater (HIGH priority)
+3. **Oct 9+**: Plan Iteration 10 - Directory Organization Handler (P1)
+4. **Future**: Evaluate Distribution/Productionization timeline
+5. **Strategic**: Consider Fleeting Triage Handler (Iteration 11)
 
 ---
 
-**Directory Health**: ✅ Clean and organized  
-**Active Files**: 7 core files + planning documents  
-**Status**: YouTube Transcript system actively in progress
+**Directory Health**: ✅ Clean and organized (85% reduction on Oct 8)  
+**Active Files**: 7 core files (down from 39)  
+**Status**: YouTube Handler complete, bug fixes needed before next iteration
