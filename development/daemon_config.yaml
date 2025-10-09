@@ -36,8 +36,9 @@ youtube_handler:
   min_quality: 0.7
   processing_timeout: 300
   # Rate limit mitigation with exponential backoff (TDD Iteration 1)
+  # AGGRESSIVE CONFIG: Testing if IP is completely blocked or just heavily throttled
   rate_limit:
-    max_retries: 3           # Maximum retry attempts (0-10)
-    base_delay: 5            # Initial delay in seconds (1-30)
-    max_delay: 60            # Maximum delay cap in seconds (10-300)
-    backoff_multiplier: 2    # Exponential multiplier (1.5-5)
+    max_retries: 2           # Fewer retries but MUCH longer delays
+    base_delay: 30           # 30 seconds initial (was 5)
+    max_delay: 180           # 3 minutes max (was 60)
+    backoff_multiplier: 3    # More aggressive (was 2)

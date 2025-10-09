@@ -253,7 +253,7 @@ class YouTubeAPIErrorHandler:
         status = error.resp.status
         
         if status == 404:
-            from development.src.ai.youtube_official_api_fetcher import InvalidVideoIdError
+            from src.ai.youtube_official_api_fetcher import InvalidVideoIdError
             return InvalidVideoIdError(
                 f"Video not found: {video_id}\n"
                 f"Possible reasons:\n"
@@ -264,7 +264,7 @@ class YouTubeAPIErrorHandler:
         elif status == 403:
             # Check if it's quota or API key issue
             if 'quota' in error_content.lower():
-                from development.src.ai.youtube_official_api_fetcher import QuotaExceededError
+                from src.ai.youtube_official_api_fetcher import QuotaExceededError
                 return QuotaExceededError(
                     f"YouTube API quota exceeded!\n"
                     f"Session used: {quota_used} units\n"
@@ -287,7 +287,7 @@ class YouTubeAPIErrorHandler:
                     f"  4. Generate new key at: https://console.cloud.google.com/apis/credentials"
                 )
         elif status == 400:
-            from development.src.ai.youtube_official_api_fetcher import InvalidVideoIdError
+            from src.ai.youtube_official_api_fetcher import InvalidVideoIdError
             return InvalidVideoIdError(
                 f"Invalid request: {error_content}\n"
                 f"Video ID: {video_id}\n"

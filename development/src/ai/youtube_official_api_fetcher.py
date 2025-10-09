@@ -33,7 +33,7 @@ from typing import Dict, List, Any, Optional
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from development.src.ai.youtube_api_utils import QuotaTracker, SRTParser, YouTubeAPIErrorHandler
+from src.ai.youtube_api_utils import QuotaTracker, SRTParser, YouTubeAPIErrorHandler
 
 logger = logging.getLogger(__name__)
 

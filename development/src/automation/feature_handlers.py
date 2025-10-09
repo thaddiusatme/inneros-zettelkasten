@@ -466,10 +466,10 @@ class YouTubeFeatureHandler:
         Args:
             config: Configuration dictionary
                 Required keys: vault_path
-                Optional keys: max_quotes, min_quality, processing_timeout
+                Optional keys: max_quotes, min_quality, processing_timeout, cooldown_seconds
         
         Raises:
-            ValueError: If vault_path is missing from config
+            ValueError: If vault_path is missing
         """
         if not config:
             raise ValueError("Configuration dictionary is required")
@@ -482,8 +482,21 @@ class YouTubeFeatureHandler:
         self.min_quality = config.get('min_quality', 0.7)
         self.processing_timeout = config.get('processing_timeout', 300)
         
+        # CATASTROPHIC INCIDENT FIX: Cooldown to prevent file watching loops
+        self.cooldown_seconds = config.get('cooldown_seconds', 60)  # Default: 60 seconds
+        self._last_processed = {}  # Track last processing time per file
+        self._processing_files = set()  # Track currently processing files
+        
         self._setup_logging()
         self.logger.info(f"Initialized YouTubeFeatureHandler: {self.vault_path}")
+        self.logger.info(f"Cooldown enabled: {self.cooldown_seconds}s (prevents file watching loops)")
+        
+        # CATASTROPHIC INCIDENT FIX: Transcript caching to prevent redundant API calls
+        from src.automation.transcript_cache import TranscriptCache
+        cache_dir = Path.cwd() / '.automation' / 'cache'
+        self.transcript_cache = TranscriptCache(cache_dir=cache_dir, ttl_days=7)
+        cache_stats = self.transcript_cache.get_stats()
+        self.logger.info(f"Transcript cache initialized: {cache_stats['entries']} cached transcripts")
         
         # Initialize metrics tracker
         self.metrics_tracker = ProcessingMetricsTracker()
@@ -727,28 +740,48 @@ class YouTubeFeatureHandler:
     
     def _fetch_transcript(self, video_id: str) -> Dict[str, Any]:
         """
-        Fetch transcript with optional rate limit retry logic.
+        Fetch transcript with caching to prevent redundant API calls.
         
-        Uses rate_limit_handler if configured, otherwise calls fetcher directly.
+        CATASTROPHIC INCIDENT FIX: Checks cache first, only fetches from API if needed.
+        This prevents the 2,165 redundant requests that caused the rate limit ban.
         
         Args:
             video_id: YouTube video ID
         
         Returns:
-            Transcript result from fetcher
+            Transcript result (from cache or fetcher)
+        
+        Raises:
+            RateLimitError: If API rate limit exceeded
+            TranscriptNotAvailableError: If video has no captions
         """
+        # CACHE CHECK: Return cached transcript if available
+        cached = self.transcript_cache.get(video_id)
+        if cached:
+            self.logger.info(f"Cache HIT: {video_id} - no API call needed!")
+            return cached
+        
+        # CACHE MISS: Fetch from API
+        self.logger.info(f"Cache MISS: {video_id} - fetching from YouTube API")
+        
         from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
         fetcher = YouTubeTranscriptFetcher()
         
         if self.rate_limit_handler:
             # Use rate limit handler with exponential backoff retry
-            return self.rate_limit_handler.fetch_with_retry(
+            result = self.rate_limit_handler.fetch_with_retry(
                 video_id, 
                 lambda vid: fetcher.fetch_transcript(vid)
             )
         else:
             # Direct fetch without retry logic
-            return fetcher.fetch_transcript(video_id)
+            result = fetcher.fetch_transcript(video_id)
+        
+        # CACHE RESULT: Store for future use
+        self.transcript_cache.set(video_id, result)
+        self.logger.info(f"Transcript cached: {video_id} (valid for 7 days)")
+        
+        return result
     
     def get_metrics(self) -> dict:
         """
@@ -803,10 +836,11 @@ class YouTubeFeatureHandler:
     
     def process(self, file_path: Path, event_type: str) -> None:
         """
-        Process file events (FileWatcher callback signature).
+        Process file events with cooldown to prevent file watching loops.
         
-        Adapter method that converts FileWatcher (file_path, event_type) signature
-        to internal (event) signature expected by can_handle() and handle().
+        CATASTROPHIC INCIDENT FIX: Implements 60-second cooldown between processing
+        the same file. This prevents the infinite loop that caused 2,165 processing
+        events and resulted in YouTube IP ban.
         
         Args:
             file_path: Path to file that changed
@@ -820,16 +854,42 @@ class YouTubeFeatureHandler:
         if event_type not in ['created', 'modified']:
             return
         
-        # Create mock event object for internal methods
-        class FileEvent:
-            def __init__(self, path):
-                self.src_path = path
+        # COOLDOWN CHECK: Prevent processing same file too frequently
+        if file_path in self._last_processed:
+            elapsed = time.time() - self._last_processed[file_path]
+            if elapsed < self.cooldown_seconds:
+                self.logger.debug(
+                    f"COOLDOWN: Skipping {file_path.name} - processed {int(elapsed)}s ago "
+                    f"(cooldown: {self.cooldown_seconds}s)"
+                )
+                return
         
-        event = FileEvent(file_path)
-        
-        # Check if handler should process this file
-        if not self.can_handle(event):
+        # CONCURRENT PROCESSING CHECK: Prevent multiple simultaneous processing
+        if file_path in self._processing_files:
+            self.logger.debug(f"CONCURRENT: Skipping {file_path.name} - already processing")
             return
         
-        # Process the file
-        self.handle(event)
+        # Mark as processing
+        self._processing_files.add(file_path)
+        
+        try:
+            # Create mock event object for internal methods
+            class FileEvent:
+                def __init__(self, path):
+                    self.src_path = path
+            
+            event = FileEvent(file_path)
+            
+            # Check if handler should process this file
+            if not self.can_handle(event):
+                return
+            
+            # Process the file
+            self.handle(event)
+            
+            # Record processing time (success)
+            self._last_processed[file_path] = time.time()
+            
+        finally:
+            # Always remove from processing set
+            self._processing_files.discard(file_path)
