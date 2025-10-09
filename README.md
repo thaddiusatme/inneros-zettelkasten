@@ -1,18 +1,133 @@
-    # innerOS — Zettelkasten + AI Workflow
+# 🧠 InnerOS Zettelkasten
 
-    Welcome to the `innerOS` workspace! This vault is designed for frictionless idea capture, structured Zettelkasten note-taking, and AI-assisted workflows, with privacy and future collaboration in mind.
+> **A powerful personal knowledge management system combining the Zettelkasten method with AI assistance**
 
-## 🚀 Getting Started
-- **[GETTING-STARTED.md](GETTING-STARTED.md)** — Complete starter guide for all features
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() 
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)]() 
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
+[![Python](https://img.shields.io/badge/python-3.9+-blue)]()
+[![Obsidian](https://img.shields.io/badge/obsidian-1.0+-purple)]()
+
+---
+
+## ✨ What is InnerOS Zettelkasten?
+
+InnerOS is a **ready-to-use Zettelkasten system** that helps you:
+- 📝 **Capture ideas** quickly and process them systematically
+- 🔗 **Build connections** between concepts naturally
+- 🤖 **Enhance with AI** for auto-tagging, quality assessment, and connection discovery
+- 🌱 **Grow your knowledge** organically over time
+
+Perfect for researchers, writers, developers, students, and lifelong learners.
+
+---
+
+## 🚀 Quick Start
+
+### **15-Minute Setup**
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/inneros-zettelkasten.git
+cd inneros-zettelkasten
+
+# 2. Open in Obsidian
+# File → Open folder as vault → Select inneros-zettelkasten directory
+
+# 3. Explore the starter pack
+# Open knowledge-starter-pack/README.md in Obsidian
+```
+
+**→ See [INSTALLATION.md](INSTALLATION.md) for detailed setup instructions**
+
+---
+
+## 📚 Documentation
+
+- **[INSTALLATION.md](INSTALLATION.md)** — Step-by-step setup guide (~15 minutes)
+- **[knowledge-starter-pack/README.md](knowledge-starter-pack/README.md)** — Learn the Zettelkasten workflow
 - **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** — Essential commands and shortcuts
-- **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — Detailed command documentation
+- **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — AI features and automation (optional)
 
-## Key Documents
-- **Projects/REFERENCE/inneros-manifest-v3.md** — Comprehensive project overview, architecture, AI features, and roadmap
-- **Projects/REFERENCE/windsurf-project-changelog.md** — Detailed change history and development milestones  
-- **Projects/ACTIVE/project-todo-v3.md** — Current priorities and next development steps
+---
 
-## 🏗️ Project Structure
+## 🎯 Key Features
+
+### **📝 Systematic Knowledge Capture**
+- **Fleeting Notes** → Quick captures in `Inbox/`
+- **Permanent Notes** → Processed, atomic ideas
+- **Literature Notes** → Source material summaries
+- **MOCs** → Maps of Content for navigation
+
+### **🔗 Natural Connection Building**
+- Wiki-style `[[linking]]` between notes
+- Bidirectional backlinks automatically
+- Graph view visualization in Obsidian
+- Organic structure emerges from connections
+
+### **🤖 Optional AI Enhancement**
+```bash
+# AI-powered features (requires Python setup)
+python3 development/src/cli/workflow_demo.py knowledge/ --process-inbox
+python3 development/src/cli/connections_demo.py knowledge/
+python3 development/src/cli/workflow_demo.py knowledge/ --weekly-review
+```
+
+- **Auto-tagging** based on content
+- **Connection discovery** using semantic similarity
+- **Quality assessment** for note completeness
+- **Weekly review automation** with metrics
+
+### **📦 Ready-to-Use Starter Pack**
+Includes 6 example notes demonstrating:
+- Zettelkasten methodology principles
+- Permanent note structure
+- MOC navigation patterns
+- Literature note format
+
+---
+
+## 📖 The Zettelkasten Workflow
+
+```
+1. CAPTURE → Quick ideas in Inbox
+2. PROCESS → Review and refine weekly
+3. CONNECT → Link to existing knowledge
+4. DISCOVER → Explore your knowledge graph
+```
+
+**Example Note Structure**:
+```markdown
+---
+type: permanent
+created: 2025-10-09 10:00
+status: published
+tags: [topic, concept]
+---
+
+# Your Atomic Idea
+
+One clear concept explained in your own words.
+
+## Related Notes
+- [[another-related-note]]
+- [[foundational-concept]]
+```
+
+---
+
+## 🎨 What Makes InnerOS Different?
+
+| Feature | InnerOS | Traditional Notes |
+|---------|---------|-------------------|
+| **Structure** | Emerges from connections | Rigid folders/hierarchy |
+| **Capture** | Quick fleeting → process later | Perfect note required upfront |
+| **Discovery** | Graph-based exploration | Manual search/browse |
+| **AI** | Optional enhancement | Usually absent |
+| **Privacy** | Local-first (optional cloud AI) | Often cloud-only |
+
+---
+
+## 📂 Project Structure
 
 ### **Clean Separation Architecture**
 ```
