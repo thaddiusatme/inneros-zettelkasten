@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - Migration Guide
 
-> **For existing users migrating to the reorganized project structure**  
-> **Updated**: 2025-08-05
+> **For existing users migrating to dedicated CLIs (ADR-004) and reorganized project structure**  
+> **Updated**: 2025-10-11 (ADR-004 CLI Layer Extraction Complete)
 
 ## 🎯 **What Changed?**
 
@@ -77,7 +77,88 @@ inneros enhance knowledge/Inbox/note.md
 - [ ] **Update automation** - replace Python script calls with `inneros` commands
 - [ ] **Custom integrations** - update paths if you built custom tools
 
-## 🛠️ **Command Migration Reference**
+## 🚨 **ADR-004: Dedicated CLI Migration** (October 2025)
+
+### **What Changed?**
+
+The monolithic `workflow_demo.py` (2,074 LOC) has been deprecated and replaced with **10 dedicated CLIs** for better maintainability and clarity.
+
+**Transition Period**: 1 month (October 11 - November 11, 2025)
+- `workflow_demo.py` will show deprecation warnings but continue working
+- After November 11, 2025: `workflow_demo.py` moves to `development/legacy/`
+
+### **Migration Path: workflow_demo.py → Dedicated CLIs**
+
+#### **Weekly Review Commands**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --weekly-review` | `python3 development/src/cli/weekly_review_cli.py weekly-review` |
+| `python3 development/src/cli/workflow_demo.py . --enhanced-metrics` | `python3 development/src/cli/weekly_review_cli.py enhanced-metrics` |
+| `python3 development/src/cli/workflow_demo.py . --weekly-review --export-checklist review.md` | `python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md` |
+
+#### **Fleeting Notes Commands**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --fleeting-health` | `python3 development/src/cli/fleeting_cli.py fleeting-health` |
+| `python3 development/src/cli/workflow_demo.py . --fleeting-triage` | `python3 development/src/cli/fleeting_cli.py fleeting-triage` |
+
+#### **Safe Workflow Commands**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --process-inbox-safe` | `python3 development/src/cli/safe_workflow_cli.py process-inbox-safe` |
+| `python3 development/src/cli/workflow_demo.py . --batch-process-safe` | `python3 development/src/cli/safe_workflow_cli.py batch-process-safe` |
+| `python3 development/src/cli/workflow_demo.py . --performance-report` | `python3 development/src/cli/safe_workflow_cli.py performance-report` |
+| `python3 development/src/cli/workflow_demo.py . --backup` | `python3 development/src/cli/safe_workflow_cli.py backup` |
+| `python3 development/src/cli/workflow_demo.py . --list-backups` | `python3 development/src/cli/safe_workflow_cli.py list-backups` |
+| `python3 development/src/cli/workflow_demo.py . --start-safe-session NAME` | `python3 development/src/cli/safe_workflow_cli.py start-safe-session --session-name NAME` |
+
+#### **Core Workflow Commands**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --status` | `python3 development/src/cli/core_workflow_cli.py status` |
+| `python3 development/src/cli/workflow_demo.py . --process-inbox` | `python3 development/src/cli/core_workflow_cli.py process-inbox` |
+| `python3 development/src/cli/workflow_demo.py . --promote note.md permanent` | `python3 development/src/cli/core_workflow_cli.py promote note.md permanent` |
+| `python3 development/src/cli/workflow_demo.py . --report` | `python3 development/src/cli/core_workflow_cli.py report` |
+
+#### **Backup Management Commands**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --prune-backups --keep 5` | `python3 development/src/cli/backup_cli.py prune-backups --keep 5` |
+
+#### **Interactive Mode**
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --interactive` | `python3 development/src/cli/interactive_cli.py interactive` |
+
+### **Why Migrate?**
+
+✅ **Focused CLIs**: Each CLI handles one domain (weekly review, fleeting notes, etc.)  
+✅ **Faster Development**: Bugs found in correct architectural layer  
+✅ **Clear Documentation**: Each CLI has specific usage examples  
+✅ **Better Testing**: Isolated test suites per CLI  
+✅ **Maintainable**: 250-500 LOC per CLI vs 2,074 LOC monolith
+
+### **Automation Script Migration**
+
+If you have automation scripts using `workflow_demo.py`, update them:
+
+**Before:**
+```bash
+#!/bin/bash
+python3 development/src/cli/workflow_demo.py . --weekly-review --export-checklist review.md
+python3 development/src/cli/workflow_demo.py . --process-inbox --dry-run
+```
+
+**After:**
+```bash
+#!/bin/bash
+python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md
+python3 development/src/cli/core_workflow_cli.py process-inbox --dry-run
+```
+
+---
+
+## 🛠️ **Command Migration Reference** (Legacy Structure)
 
 ### **Analytics & Reports**
 | **Before** | **After (Recommended)** |
@@ -85,14 +166,6 @@ inneros enhance knowledge/Inbox/note.md
 | `python3 src/cli/analytics_demo.py . --interactive` | `inneros analytics --interactive` |
 | `python3 src/cli/analytics_demo.py . --section quality` | `inneros analytics --section quality` |
 | `python3 src/cli/analytics_demo.py . --export report.json` | `inneros analytics --export report.json` |
-
-### **Workflow Management**
-| **Before** | **After (Recommended)** |
-|------------|-------------------------|
-| `python3 src/cli/workflow_demo.py . --status` | `inneros workflow --status` |
-| `python3 src/cli/workflow_demo.py . --process-inbox` | `inneros workflow --process-inbox` |
-| `python3 src/cli/workflow_demo.py . --weekly-review` | `inneros workflow --weekly-review` |
-| `python3 src/cli/workflow_demo.py . --enhanced-metrics` | `inneros workflow --enhanced-metrics` |
 
 ### **Note Enhancement**
 | **Before** | **After (Recommended)** |

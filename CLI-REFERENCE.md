@@ -1,21 +1,311 @@
 # InnerOS Zettelkasten - CLI Command Reference
 
-> **Complete reference for the unified `inneros` CLI wrapper**  
-> **Updated**: 2025-08-05
+> **Complete reference for dedicated CLI tools and the unified `inneros` wrapper**  
+> **Updated**: 2025-10-11 (ADR-004 CLI Layer Extraction Complete)
 
 ## 🚀 **Overview**
 
-The `inneros` CLI provides unified access to all AI-powered knowledge management features through simple, memorable commands.
+InnerOS provides two ways to interact with the knowledge management system:
 
+### **Dedicated CLIs** (Recommended)
+Focused, single-purpose command-line tools extracted per ADR-004:
+- `weekly_review_cli.py` - Weekly review generation and metrics
+- `fleeting_cli.py` - Fleeting note health and triage
+- `safe_workflow_cli.py` - Safe processing with image preservation
+- `core_workflow_cli.py` - Core workflow operations (status, inbox, promote)
+- `backup_cli.py` - Backup management and pruning
+- `interactive_cli.py` - Interactive workflow mode
+- Plus 4 specialized CLIs (YouTube, tags, notes, performance)
+
+### **Unified Wrapper** (Legacy)
+The `inneros` wrapper provides backward compatibility:
 ```bash
 # General usage
 ./inneros <command> [options]
 
-# Available commands
+# Available commands  
 inneros analytics    # Analyze knowledge collection
-inneros workflow     # Manage knowledge workflows  
+inneros workflow     # Manage knowledge workflows (⚠️ see migration guide)
 inneros enhance      # AI-enhance specific notes
 inneros notes        # Create review notes from templates
+```
+
+> **Migration Note**: The monolithic `workflow_demo.py` is deprecated. See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for transition to dedicated CLIs.
+
+---
+
+## 📋 **Dedicated CLIs** (ADR-004 Extraction)
+
+### **Weekly Review CLI** (`weekly_review_cli.py`)
+
+Generate weekly review checklists and enhanced metrics.
+
+**Commands:**
+```bash
+# Generate weekly review checklist
+python3 development/src/cli/weekly_review_cli.py weekly-review
+
+# Enhanced metrics with orphaned/stale note detection
+python3 development/src/cli/weekly_review_cli.py enhanced-metrics
+
+# Export checklist to file
+python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md
+
+# JSON output for automation
+python3 development/src/cli/weekly_review_cli.py weekly-review --format json
+```
+
+**Options:**
+- `--export-checklist PATH` - Export markdown checklist to file
+- `--format {text,json}` - Output format (default: text)
+- `--dry-run` - Preview without processing
+
+**Use Cases:**
+- Weekly knowledge work review
+- Identify promotion candidates
+- Find orphaned/stale notes
+- Generate action items
+
+---
+
+### **Fleeting Notes CLI** (`fleeting_cli.py`)
+
+Health monitoring and AI-powered triage for fleeting notes.
+
+**Commands:**
+```bash
+# Health report with age analysis
+python3 development/src/cli/fleeting_cli.py fleeting-health
+
+# AI-powered quality triage
+python3 development/src/cli/fleeting_cli.py fleeting-triage
+
+# Export triage results
+python3 development/src/cli/fleeting_cli.py fleeting-triage --export triage-report.md
+```
+
+**Options:**
+- `--vault PATH` - Vault path (default: current directory)
+- `--export PATH` - Export report to file
+- `--format {text,json}` - Output format
+
+**Use Cases:**
+- Monitor fleeting note aging
+- AI quality assessment
+- Identify promotion candidates
+- Track fleeting→permanent conversion rate
+
+---
+
+### **Safe Workflow CLI** (`safe_workflow_cli.py`)
+
+Safe processing operations with image preservation and backup guarantees.
+
+**Commands:**
+```bash
+# Process inbox with image preservation
+python3 development/src/cli/safe_workflow_cli.py process-inbox-safe
+
+# Batch processing with safety guarantees
+python3 development/src/cli/safe_workflow_cli.py batch-process-safe
+
+# Performance metrics
+python3 development/src/cli/safe_workflow_cli.py performance-report
+
+# Image integrity monitoring
+python3 development/src/cli/safe_workflow_cli.py integrity-report
+
+# Create timestamped backup
+python3 development/src/cli/safe_workflow_cli.py backup
+
+# List available backups
+python3 development/src/cli/safe_workflow_cli.py list-backups
+
+# Start concurrent safe session
+python3 development/src/cli/safe_workflow_cli.py start-safe-session --session-name evening-batch
+```
+
+**Options:**
+- `--vault PATH` - Vault root path
+- `--dry-run` - Preview changes without executing
+- `--format {text,json}` - Output format
+- `--session-name NAME` - Session identifier for concurrent processing
+
+**Use Cases:**
+- Process notes without breaking image links
+- Batch operations with rollback capability
+- Performance monitoring
+- Concurrent processing sessions
+
+---
+
+### **Core Workflow CLI** (`core_workflow_cli.py`)
+
+Core workflow operations for inbox processing and note promotion.
+
+**Commands:**
+```bash
+# Workflow status report
+python3 development/src/cli/core_workflow_cli.py status
+
+# Batch process inbox notes
+python3 development/src/cli/core_workflow_cli.py process-inbox
+
+# Promote note to permanent/literature
+python3 development/src/cli/core_workflow_cli.py promote path/to/note.md permanent
+
+# Comprehensive workflow report
+python3 development/src/cli/core_workflow_cli.py report --export report.json
+```
+
+**Options:**
+- `--vault PATH` - Vault root path (default: current directory)
+- `--format {text,json}` - Output format
+- `--export PATH` - Export report to file
+- `--dry-run` - Preview operations
+
+**Use Cases:**
+- Daily inbox processing
+- Note promotion workflows
+- Workflow health monitoring
+- Comprehensive reporting
+
+---
+
+### **Backup CLI** (`backup_cli.py`)
+
+Backup management and pruning operations.
+
+**Commands:**
+```bash
+# Prune old backups (keep 5 most recent)
+python3 development/src/cli/backup_cli.py prune-backups --keep 5
+
+# Dry-run mode
+python3 development/src/cli/backup_cli.py prune-backups --keep 3 --dry-run
+
+# JSON output
+python3 development/src/cli/backup_cli.py prune-backups --keep 5 --format json
+```
+
+**Options:**
+- `--keep N` - Number of recent backups to keep (default: 5)
+- `--dry-run` - Preview deletions without removing
+- `--format {text,json}` - Output format
+
+**Use Cases:**
+- Regular backup cleanup
+- Storage management
+- Backup inventory
+
+---
+
+### **Interactive CLI** (`interactive_cli.py`)
+
+Interactive workflow management with command loop.
+
+**Commands:**
+```bash
+# Start interactive mode
+python3 development/src/cli/interactive_cli.py interactive
+
+# With specific vault
+python3 development/src/cli/interactive_cli.py interactive --vault /path/to/vault
+```
+
+**Interactive Commands:**
+- `status` - Show workflow status
+- `inbox` - Process inbox notes
+- `promote <file> [type]` - Promote note to permanent/fleeting
+- `report` - Generate full workflow report
+- `list <directory>` - List notes (inbox|fleeting|permanent)
+- `help` - Show help
+- `quit` - Exit
+
+**Use Cases:**
+- Exploratory workflow management
+- Quick status checks
+- Interactive note promotion
+
+---
+
+### **YouTube CLI** (`youtube_cli.py`)
+
+YouTube transcript processing and note generation.
+
+**Commands:**
+```bash
+# Process YouTube video
+python3 development/src/cli/youtube_cli.py process VIDEO_URL
+
+# Batch process from file
+python3 development/src/cli/youtube_cli.py batch urls.txt
+```
+
+**Options:**
+- `--output DIR` - Output directory for notes
+- `--format {text,json}` - Output format
+
+---
+
+### **Advanced Tag Enhancement CLI** (`advanced_tag_enhancement_cli.py`)
+
+AI-powered tag quality enhancement and suggestions.
+
+**Commands:**
+```bash
+# Analyze tag quality
+python3 development/src/cli/advanced_tag_enhancement_cli.py analyze-tags
+
+# Generate tag suggestions
+python3 development/src/cli/advanced_tag_enhancement_cli.py suggest-improvements
+
+# Batch enhancement
+python3 development/src/cli/advanced_tag_enhancement_cli.py batch-enhance
+```
+
+**Use Cases:**
+- Tag quality improvement
+- Semantic tag organization
+- Bulk tag enhancement
+
+---
+
+### **Notes CLI** (`notes_cli.py`)
+
+Review note creation from templates.
+
+**Commands:**
+```bash
+# Create daily review note
+python3 development/src/cli/notes_cli.py new --daily
+
+# Create weekly review note
+python3 development/src/cli/notes_cli.py new --weekly
+
+# Create sprint review
+python3 development/src/cli/notes_cli.py new --sprint-review --sprint-id 012
+
+# Open in editor
+python3 development/src/cli/notes_cli.py new --daily --open
+
+# Auto-commit
+python3 development/src/cli/notes_cli.py new --weekly --git
+```
+
+---
+
+### **Performance CLI** (`real_data_performance_cli.py`)
+
+System performance benchmarking and validation.
+
+**Commands:**
+```bash
+# Run performance benchmarks
+python3 development/src/cli/real_data_performance_cli.py benchmark
+
+# Validate real data processing
+python3 development/src/cli/real_data_performance_cli.py validate
 ```
 
 ---

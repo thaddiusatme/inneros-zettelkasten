@@ -643,10 +643,32 @@ def interactive_mode(workflow):
             print(f"Error: {e}")
 
 
+def print_deprecation_warning():
+    """Print deprecation warning for workflow_demo.py (ADR-004)."""
+    print("\n" + "="*70)
+    print("⚠️  DEPRECATION WARNING: workflow_demo.py")
+    print("="*70)
+    print("\n📢 This monolithic CLI is being phased out per ADR-004.")
+    print("\n🎯 Please migrate to dedicated CLIs:")
+    print("   • Weekly Review:  python3 development/src/cli/weekly_review_cli.py")
+    print("   • Fleeting Notes: python3 development/src/cli/fleeting_cli.py")
+    print("   • Safe Workflow:  python3 development/src/cli/safe_workflow_cli.py")
+    print("   • Core Workflow:  python3 development/src/cli/core_workflow_cli.py")
+    print("   • Backup:         python3 development/src/cli/backup_cli.py")
+    print("   • Interactive:    python3 development/src/cli/interactive_cli.py")
+    print("\n📖 See MIGRATION-GUIDE.md for full command mappings.")
+    print("\n⏰ Transition Period: Until November 11, 2025")
+    print("   After this date, workflow_demo.py moves to development/legacy/")
+    print("="*70 + "\n")
+
+
 def main():
     """Main CLI entry point."""
+    # Print deprecation warning (ADR-004)
+    print_deprecation_warning()
+    
     parser = argparse.ArgumentParser(
-        description="Workflow Demo for InnerOS Zettelkasten",
+        description="Workflow Demo for InnerOS Zettelkasten (DEPRECATED - see ADR-004)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
