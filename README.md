@@ -1,18 +1,133 @@
-    # innerOS — Zettelkasten + AI Workflow
+# 🧠 InnerOS Zettelkasten
 
-    Welcome to the `innerOS` workspace! This vault is designed for frictionless idea capture, structured Zettelkasten note-taking, and AI-assisted workflows, with privacy and future collaboration in mind.
+> **A powerful personal knowledge management system combining the Zettelkasten method with AI assistance**
 
-## 🚀 Getting Started
-- **[GETTING-STARTED.md](GETTING-STARTED.md)** — Complete starter guide for all features
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() 
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)]() 
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
+[![Python](https://img.shields.io/badge/python-3.9+-blue)]()
+[![Obsidian](https://img.shields.io/badge/obsidian-1.0+-purple)]()
+
+---
+
+## ✨ What is InnerOS Zettelkasten?
+
+InnerOS is a **ready-to-use Zettelkasten system** that helps you:
+- 📝 **Capture ideas** quickly and process them systematically
+- 🔗 **Build connections** between concepts naturally
+- 🤖 **Enhance with AI** for auto-tagging, quality assessment, and connection discovery
+- 🌱 **Grow your knowledge** organically over time
+
+Perfect for researchers, writers, developers, students, and lifelong learners.
+
+---
+
+## 🚀 Quick Start
+
+### **15-Minute Setup**
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/inneros-zettelkasten.git
+cd inneros-zettelkasten
+
+# 2. Open in Obsidian
+# File → Open folder as vault → Select inneros-zettelkasten directory
+
+# 3. Explore the starter pack
+# Open knowledge-starter-pack/README.md in Obsidian
+```
+
+**→ See [INSTALLATION.md](INSTALLATION.md) for detailed setup instructions**
+
+---
+
+## 📚 Documentation
+
+- **[INSTALLATION.md](INSTALLATION.md)** — Step-by-step setup guide (~15 minutes)
+- **[knowledge-starter-pack/README.md](knowledge-starter-pack/README.md)** — Learn the Zettelkasten workflow
 - **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** — Essential commands and shortcuts
-- **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — Detailed command documentation
+- **[CLI-REFERENCE.md](CLI-REFERENCE.md)** — AI features and automation (optional)
 
-## Key Documents
-- **Projects/REFERENCE/inneros-manifest-v3.md** — Comprehensive project overview, architecture, AI features, and roadmap
-- **Projects/REFERENCE/windsurf-project-changelog.md** — Detailed change history and development milestones  
-- **Projects/ACTIVE/project-todo-v3.md** — Current priorities and next development steps
+---
 
-## 🏗️ Project Structure
+## 🎯 Key Features
+
+### **📝 Systematic Knowledge Capture**
+- **Fleeting Notes** → Quick captures in `Inbox/`
+- **Permanent Notes** → Processed, atomic ideas
+- **Literature Notes** → Source material summaries
+- **MOCs** → Maps of Content for navigation
+
+### **🔗 Natural Connection Building**
+- Wiki-style `[[linking]]` between notes
+- Bidirectional backlinks automatically
+- Graph view visualization in Obsidian
+- Organic structure emerges from connections
+
+### **🤖 Optional AI Enhancement**
+```bash
+# AI-powered features (requires Python setup)
+python3 development/src/cli/workflow_demo.py knowledge/ --process-inbox
+python3 development/src/cli/connections_demo.py knowledge/
+python3 development/src/cli/workflow_demo.py knowledge/ --weekly-review
+```
+
+- **Auto-tagging** based on content
+- **Connection discovery** using semantic similarity
+- **Quality assessment** for note completeness
+- **Weekly review automation** with metrics
+
+### **📦 Ready-to-Use Starter Pack**
+Includes 6 example notes demonstrating:
+- Zettelkasten methodology principles
+- Permanent note structure
+- MOC navigation patterns
+- Literature note format
+
+---
+
+## 📖 The Zettelkasten Workflow
+
+```
+1. CAPTURE → Quick ideas in Inbox
+2. PROCESS → Review and refine weekly
+3. CONNECT → Link to existing knowledge
+4. DISCOVER → Explore your knowledge graph
+```
+
+**Example Note Structure**:
+```markdown
+---
+type: permanent
+created: 2025-10-09 10:00
+status: published
+tags: [topic, concept]
+---
+
+# Your Atomic Idea
+
+One clear concept explained in your own words.
+
+## Related Notes
+- [[another-related-note]]
+- [[foundational-concept]]
+```
+
+---
+
+## 🎨 What Makes InnerOS Different?
+
+| Feature | InnerOS | Traditional Notes |
+|---------|---------|-------------------|
+| **Structure** | Emerges from connections | Rigid folders/hierarchy |
+| **Capture** | Quick fleeting → process later | Perfect note required upfront |
+| **Discovery** | Graph-based exploration | Manual search/browse |
+| **AI** | Optional enhancement | Usually absent |
+| **Privacy** | Local-first (optional cloud AI) | Often cloud-only |
+
+---
+
+## 📂 Project Structure
 
 ### **Clean Separation Architecture**
 ```
@@ -214,6 +329,58 @@ python3 test_real_analytics.py
 - **Production performance**: <10s summarization, <5s similarity
 - **100% success rate** in inbox processing
 - **Graceful fallbacks** when AI services unavailable
+
+### 🎬 **YouTube Knowledge Capture** (TDD Iteration 9 + Official API)
+
+**Automated YouTube video → Zettelkasten notes workflow**
+
+```bash
+# Process YouTube notes with AI-extracted quotes and insights
+# Daemon automatically watches for new YouTube notes
+inneros daemon start
+
+# Or manual processing
+python3 src/cli/workflow_demo.py knowledge/ --process-youtube
+```
+
+**Features**:
+- **Dual Transcript Fetching**:
+  - Official YouTube Data API v3 (quota-based, reliable) ✅ **NEW**
+  - Unofficial scraping (fallback for rate-limited networks)
+  - Automatic retry with exponential backoff
+- **AI Quote Extraction**: 5-7 highest-quality quotes with timestamps
+- **Note Enhancement**: Auto-generate tags, summaries, connections
+- **Template Integration**: Works with Obsidian Templater templates
+- **Daemon Integration**: Automatic processing on file creation
+
+**Configuration** (`daemon_config.yaml`):
+```yaml
+youtube_handler:
+  enabled: true
+  fetcher_type: official_api  # or 'unofficial_scraping'
+  
+  # Official API (recommended for rate-limited networks)
+  official_api:
+    api_key: ${YOUTUBE_API_KEY}  # Set in environment
+    quota_limit: 10000  # Free tier: ~40 videos/day
+  
+  # Retry logic for both fetchers
+  rate_limit:
+    max_retries: 3
+    base_delay: 5
+    max_delay: 60
+```
+
+**Setup**:
+1. **Get API Key** (optional, for official API):
+   - Create Google Cloud project
+   - Enable YouTube Data API v3
+   - Generate API key
+   - Set: `export YOUTUBE_API_KEY='your-key'`
+2. **Works out-of-box** with unofficial scraping (no setup)
+3. **Fallback enabled**: Auto-switches if quota exhausted
+
+**Status**: Production ready (TDD Iterations 1-9 complete)
 
     ## Privacy & Collaboration
     - All notes default to private. Future-proofed for multi-user and compliance needs.

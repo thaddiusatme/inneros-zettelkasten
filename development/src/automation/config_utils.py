@@ -159,3 +159,44 @@ class ConfigValidator:
             True if valid (positive integer), False otherwise
         """
         return isinstance(interval, int) and interval > 0
+    
+    @staticmethod
+    def validate_handler_config(config: Dict[str, Any]) -> List[str]:
+        """
+        Validate all feature handler configurations in config dict.
+        
+        Args:
+            config: Full configuration dictionary with handler sections
+            
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        from pathlib import Path
+        errors = []
+        
+        # Validate screenshot_handler section
+        if 'screenshot_handler' in config:
+            sh_config = config['screenshot_handler']
+            
+            # Check if handler is enabled
+            if sh_config.get('enabled', False):
+                # Validate required onedrive_path
+                if 'onedrive_path' not in sh_config or not sh_config['onedrive_path']:
+                    errors.append("screenshot_handler: onedrive_path is required when handler is enabled")
+                # Validate path exists if provided
+                elif sh_config['onedrive_path']:
+                    path = Path(sh_config['onedrive_path']).expanduser()
+                    if not path.exists():
+                        errors.append(f"screenshot_handler.onedrive_path does not exist: {sh_config['onedrive_path']}")
+        
+        # Validate smart_link_handler section
+        if 'smart_link_handler' in config:
+            sl_config = config['smart_link_handler']
+            
+            # Validate similarity_threshold range if provided
+            if 'similarity_threshold' in sl_config:
+                threshold = sl_config['similarity_threshold']
+                if not isinstance(threshold, (int, float)) or not (0.0 <= threshold <= 1.0):
+                    errors.append(f"smart_link_handler: similarity_threshold must be between 0.0 and 1.0, got {threshold}")
+        
+        return errors

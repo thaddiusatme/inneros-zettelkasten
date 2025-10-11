@@ -1,0 +1,87 @@
+# InnerOS Distribution .gitignore
+# Excludes personal content, preserves development and sample content
+
+# Personal content directories (never distribute)
+knowledge/Inbox/
+knowledge/Fleeting Notes/
+knowledge/Permanent Notes/
+knowledge/Literature Notes/
+Reviews/
+Media/
+backups/
+
+# Allow sample starter pack
+!knowledge-starter-pack/
+
+# Automation logs (keep config)
+.automation/logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+web_ui_env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Obsidian
+.obsidian/
+.trash/
+
+# Caches
+.embedding_cache/
+*.cache
+
+# Backup directories
+*-backup-*/
+tag-cleanup-backup-*/
+
+# Local configuration
+.env
+*.local.yaml
+*.local.json
+
+# Temporary files
+*.tmp
+*.temp
+watcher.log

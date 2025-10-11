@@ -1,29 +1,28 @@
 ---
 type: literature
-created: 2025-10-03 10:44
+created: 2025-10-06 07:34
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: LD0b5u-q9KU
 channel: 
 ---
 
 
-
-# Replacing Humans with AI is Going Horribly Wrong
+# The Hidden Depth of ZORO | The Anatomy of One Piece
 
 ## Video Information
-- **Channel**: ColdFusion
-- **Video URL**: https://www.youtube.com/watch?v=QX1Xwzm9yHY
-- **Video ID**: `QX1Xwzm9yHY`
-- **Date Saved**: 2025-10-03
+- **Channel**: Totally Not Mark
+- **Video URL**: https://www.youtube.com/watch?v=LD0b5u-q9KU
+- **Video ID**: `LD0b5u-q9KU`
+- **Date Saved**: 2025-10-06
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/QX1Xwzm9yHY/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/LD0b5u-q9KU/hqdefault.jpg)
 
 ## Why I'm Saving This
-This was an engaging watch of what is going wrong with automation cases in the real world as AI becomes more integrated. 
+BEcause I like ONe Piece
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -49,9 +48,9 @@ This was an engaging watch of what is going wrong with automation cases in the r
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-03 10:44
+- **Captured**: 2025-10-06 07:34
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: ColdFusion*
+*YouTube video saved from: Totally Not Mark*

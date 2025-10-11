@@ -310,7 +310,7 @@ class WeeklyReviewFormatter:
                 ""
             ])
             for note in orphaned_notes:
-                lines.append(f"- **{note['title']}** ({note['directory']}) - Last modified: {note.get('last_modified', 'Unknown')[:10]}")
+                lines.append(f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - Last modified: {note.get('last_modified', 'Unknown')[:10]}")
             lines.append("")
         
         # Stale notes section
@@ -324,7 +324,7 @@ class WeeklyReviewFormatter:
             ])
             # Show top 10 most stale
             for note in stale_notes[:10]:
-                lines.append(f"- **{note['title']}** ({note['directory']}) - {note['days_since_modified']} days old")
+                lines.append(f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - {note.get('days_since_modified', '?')} days old")
             if len(stale_notes) > 10:
                 lines.append(f"- ... and {len(stale_notes) - 10} more")
             lines.append("")

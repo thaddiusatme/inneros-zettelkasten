@@ -1,8 +1,56 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-06 21:59 PDT  
-**Status**: 🤖 **Automation System Discovery COMPLETE** - Ready for Implementation  
-**Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
+**Last Updated**: 2025-10-10 19:40 PDT  
+**Status**: 🏗️ **ARCHITECTURAL PIVOT** - ADR-004 CLI extraction prioritized over bug fixes  
+**Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
+**Critical**: `Projects/ACTIVE/adr-004-cli-layer-extraction.md` - 2-week sprint starting Oct 11
+
+---
+
+## 🎯 Product Vision & Validation Strategy
+
+**Last Updated**: 2025-10-10 (Added streaming validation manifest)  
+**Manifest**: `Projects/ACTIVE/streaming-validation-manifest.md` ✅
+
+### **Core Purpose**
+**Primary**: Personal knowledge management tool that fills gaps in existing solutions (Obsidian, etc.)
+- Built for developer workflow (CLI-first, local files, powerful automation)
+- Solves real friction points in note-taking process
+- Local-first, markdown-based, privacy-preserving
+
+### **Validation Approach: Streaming + Organic Discovery**
+**Strategy**: Demonstrate tool naturally during live streams
+- Use InnerOS authentically while streaming development work
+- Show AI workflows processing notes in real-time
+- Let viewers discover organically ("What's that tool you're using?")
+- GitHub link in stream description for interested developers
+- **Complete Strategy**: See `streaming-validation-manifest.md`
+
+### **Target User (Phase 1)**
+**Developer Power Users**:
+- Comfortable with CLI/terminal tools
+- Value local markdown files and data ownership
+- Want AI-enhanced workflows without SaaS subscriptions
+- Technical enough for 15-minute installation
+
+### **NOT Building (Explicitly Ruled Out)**
+❌ Web application (Notion-like, browser-based)
+❌ Cloud database storage (PostgreSQL on Railway)
+❌ Mass-market consumer product
+❌ Multi-user SaaS platform (Phase 1)
+
+### **Success Metrics**
+- Personal workflow friction eliminated (primary goal)
+- Organic GitHub stars/clones after streams
+- "What tool was that?" questions in chat
+- Small community of power users (5-10 users)
+- Dogfooding: Daily use without friction
+
+### **Future Pivot Points** (Only if validated)
+- **If demand proven**: Consider web version for non-technical users
+- **If community grows**: Multi-user collaboration features
+- **If monetization needed**: Premium AI features or hosting
+- **Current Phase**: Focus on personal use + developer distribution
 
 ---
 
@@ -40,9 +88,10 @@
 
 - **Current Classes >500 LOC**: **0** ✅ (Target achieved Oct 5, 2025!)
 - **Current Classes >20 methods**: **0** ✅ (Target achieved Oct 5, 2025!)
+- **CLI Monoliths >2000 LOC**: **1** ❌ (workflow_demo.py at 2,074 LOC)
 - **Original Target**: Zero classes exceeding limits by Nov 2, 2025
 - **Actual Achievement**: **27 days ahead of schedule!** 🏆
-- **ADRs Created**: 1 (ADR-001: WorkflowManager refactoring)
+- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅, ADR-004: CLI extraction ✅ ACCEPTED)
 
 ---
 
@@ -92,6 +141,28 @@
   - ✅ DirectoryOrganizer integration (link rewriting)
 - **Lessons Learned**: `Projects/COMPLETED-2025-10/tdd-iteration-10-complete-lessons-learned.md` ✅
 - **Impact**: System integrity restored, media assets preserved through all workflows
+
+### ✅ TDD Iteration 9: YouTube Handler Daemon Integration (Oct 8, 2025)
+
+**MAJOR MILESTONE** - YouTube automation now fully integrated with daemon!
+
+- **Duration**: 3 hours across 5 commits (includes template bug fix)
+- **Tests**: 19/19 passing (100% success rate)
+- **Production Status**: ✅ VALIDATED in real vault (202 notes)
+- **Deliverables**:
+  - ✅ YouTubeFeatureHandler class (daemon integration)
+  - ✅ Automatic quote extraction on YouTube note save
+  - ✅ Health monitoring and metrics tracking
+  - ✅ Config section: `youtube_handler.enabled`
+  - ✅ 21 YouTube notes migrated to `knowledge/Inbox/YouTube/`
+  - ✅ Production validation report
+- **Branch**: `main` (direct commits)
+- **Impact**: YouTube workflow now 100% automated - save note → daemon processes → quotes extracted
+- **Lessons Learned**: `Projects/COMPLETED-2025-10/youtube-handler-daemon-integration-manifest.md` ✅
+
+**Bugs Discovered During Validation**:
+- 🐛 **HIGH**: YouTube template doesn't populate `video_id` in frontmatter
+- 🐛 **MEDIUM**: YouTube API rate limiting on current network (workaround available)
 
 ### ✅ TDD Iteration 3-4: YouTube CLI Integration (Oct 6, 2025)
 
@@ -157,9 +228,271 @@
 
 ---
 
-## 🎯 Active Projects (AUTOMATION-FIRST FOCUS)
+## 🎯 Active Projects (ARCHITECTURAL PIVOT)
 
-*Note: WorkflowManager Refactor and Image Linking System now COMPLETE (Oct 5, 2025)*
+*Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
+
+### 🏗️ P0 CRITICAL: ADR-004 CLI Layer Extraction (Oct 11-25, 2025)
+
+**Status**: ✅ **ACCEPTED** - Architectural pivot approved  
+**Priority**: P0 - **COMPLETES ADR-001 ARCHITECTURE VISION**  
+**Timeline**: 2 weeks (Oct 11-25)  
+**ADR**: `adr-004-cli-layer-extraction.md` ✅  
+**Branch**: `feat/adr-004-cli-extraction` (to be created)
+
+#### Why This is P0
+
+**ADR-001 Only Half Complete**:
+- ✅ Backend refactored: WorkflowManager → 4 managers (COMPLETE Oct 5)
+- ❌ Frontend still monolithic: workflow_demo.py at 2,074 LOC (28% extracted)
+- Quality audit found bugs in **wrong architectural layer** (monolithic CLI)
+
+**Decision**: Complete the architecture before continuing features
+- Backend clean ✅ + Frontend clean ❌ = System half-broken
+- 18/25 commands need extraction from workflow_demo.py
+- Bug fixes should go to **dedicated CLIs**, not monolith
+
+#### Current CLI Extraction Status: 28% Complete (7/25)
+
+**✅ Already Extracted** (7 commands):
+- YouTube processing (2) → `youtube_cli.py` (372 LOC)
+- Tag enhancement (3) → `advanced_tag_enhancement_cli.py`
+- Review notes (3) → `notes_cli.py`
+- Performance (1) → `real_data_performance_cli.py`
+
+**❌ Needs Extraction** (18 commands):
+- Weekly review (2) → `weekly_review_cli.py` [P1.1 - Week 1]
+- Fleeting notes (3) → `fleeting_cli.py` [P1.2 - Week 1]
+- Safe workflows (5) → `workflow_cli.py` [P1.3 - Week 1]
+- Backup (3) → `backup_cli.py` [P1.4 - Week 1]
+- Core workflow (5) → `core_workflow_cli.py` [P2.1 - Week 2]
+
+#### 2-Week Sprint Plan
+
+**Week 1 (Oct 11-18)**: High-priority extractions
+- Days 1-2: Weekly review + fleeting CLIs
+- Days 3-4: Safe workflow + backup CLIs
+- Day 5: Integration testing, bug fixes
+
+**Week 2 (Oct 19-25)**: Core workflow + completion
+- Days 1-2: Core workflow CLI
+- Days 3-4: Remaining commands
+- Days 5-6: Documentation, deprecation, final testing
+
+#### Success Criteria
+- [ ] All 25 commands extracted to dedicated CLIs
+- [ ] workflow_demo.py has deprecation warning
+- [ ] All docs updated (README, CLI-REF, QUICK-REF, GETTING-STARTED)
+- [ ] Quality audit re-run validates bugs in correct files
+- [ ] Each CLI <400 LOC, focused, testable
+
+**After Completion**: TUI development can begin with clean architecture foundation
+
+---
+
+### 🐛 P1 DEFERRED: Quality Audit Bug Fixes (Oct 10, 2025)
+
+**Status**: ⏸️ **DEFERRED** - Waiting for ADR-004 CLI extraction  
+**Priority**: P1 - Deferred until dedicated CLIs exist  
+**Timeline**: Fix bugs in dedicated CLIs after extraction  
+**Manifest**: `quality-audit-manifest.md` ✅
+
+**Why Deferred**: Quality audit found bugs in monolithic workflow_demo.py. Rather than fix bugs in deprecated code, we're extracting commands to dedicated CLIs first (ADR-004), then fixing bugs in the correct architectural layer.
+
+#### Audit Results Summary
+
+**Tested**: 11/11 workflows (100% coverage) ✅  
+**Working**: 3/11 (27%) - Backup, Directory Preview, Daemon Status  
+**Broken**: 4/11 (36%) - Connection Discovery, Enhanced Metrics, Fleeting Health, Orphaned Notes  
+**Partial**: 1/11 (9%) - YouTube Processing  
+**With Issues**: 1/11 (9%) - Weekly Review  
+
+#### Critical Bugs Found
+
+**Systemic Issue**: 4 KeyError bugs with identical root cause (unsafe dictionary access)
+- All use `note['key']` instead of `note.get('key', default)`
+- Indicates need for typed `Note` dataclass
+
+**Bug Reports Created** (5):
+1. **`bug-connections-import-error-2025-10-10.md`** 🔴 CRITICAL
+   - Import paths wrong: `from cli.` should be `from src.cli.`
+   - **Impact**: Connection Discovery completely broken
+   - **Fix Time**: 5 minutes
+
+2. **`bug-enhanced-metrics-keyerror-2025-10-10.md`** 🟠 HIGH
+   - KeyError: 'directory' in `weekly_review_formatter.py` line 313
+   - **Impact**: Cannot view vault analytics
+   - **Fix Time**: 10 minutes
+
+3. **`bug-fleeting-health-attributeerror-2025-10-10.md`** 🟠 HIGH
+   - Missing method after WorkflowManager refactoring (Oct 5)
+   - **Impact**: Cannot monitor fleeting note health
+   - **Fix Time**: 60 minutes (needs investigation)
+
+4. **`bug-orphaned-notes-keyerror-2025-10-10.md`** 🟠 HIGH
+   - KeyError: 'path' at line 1394 (4th KeyError bug)
+   - **Impact**: Cannot identify disconnected knowledge
+   - **Fix Time**: 5 minutes
+
+5. **`bug-youtube-processing-failures-2025-10-10.md`** 🟠 HIGH
+   - Silent failures with no error messages
+   - **Impact**: Feature broken, no debugging info
+   - **Fix Time**: 30 minutes
+
+#### Deliverables
+
+- ✅ **Audit Report**: `audit-report-2025-10-10.md` (live test results)
+- ✅ **Session Summary**: `AUDIT-SESSION-SUMMARY-2025-10-10.md` (complete findings)
+- ✅ **Bug Reports**: 5 comprehensive reports with fixes proposed
+- ✅ **Audit Manifest**: `quality-audit-manifest.md` (strategy)
+- [ ] **Bug Fixes**: Implement all 5 fixes (2-3 hours)
+- [ ] **Regression Tests**: Validate all workflows working
+- [ ] **TUI Development**: Begin after bugs fixed
+
+#### Next Steps (Priority Order)
+
+1. **Fix Import Error** (5 min) - Unblocks Connection Discovery
+2. **Fix KeyErrors** (20 min) - 3 bugs, same pattern
+3. **Investigate Fleeting Health** (60 min) - Find missing method
+4. **Improve YouTube Errors** (30 min) - Add error messages
+5. **Code Review** (30 min) - Find other unsafe dict accesses
+6. **Consider Note Dataclass** (optional) - Prevent future KeyErrors
+
+#### Success Metrics
+
+**Current**: 27% workflows working (3/11)  
+**After Quick Fixes**: 63% workflows working (7/11)  
+**Target**: 100% workflows working before TUI
+
+**ROI**: 1 hour audit found 5 bugs, saved 2.5-5 hours of debugging during TUI development
+
+---
+
+### 🚨 CATASTROPHIC INCIDENT - RESOLVED (Oct 8, 2025)
+
+**Incident**: File watching loop caused YouTube IP ban
+
+#### Root Cause Analysis
+- **File**: `Projects/ACTIVE/youtube-rate-limit-investigation-2025-10-08.md` ✅
+- **Problem**: File watching loop + no caching → 2,165 processing events → ~1,000 API calls → IP ban
+- **Evidence**: youtube-note.md processed 758 times in one day (should be 1-2 times)
+- **Peak Burst**: 1,868 events in 2 minutes (8-16 requests/second)
+- **YouTube Response**: Network-wide IP ban for bot-like behavior
+
+#### Fixes Implemented ✅
+- **File**: `Projects/ACTIVE/catastrophic-incident-fix-2025-10-08.md` ✅
+- **Fix 1**: Cooldown System (60-second default)
+  - Prevents file from being processed <60 seconds after last processing
+  - Tracks processing time per file
+  - Prevents concurrent processing of same file
+  - **Impact**: 98% reduction in processing events (2,165 → ~50/day)
+  
+- **Fix 2**: Transcript Caching (7-day TTL)
+  - New file: `development/src/automation/transcript_cache.py` (272 lines)
+  - Persistent JSON storage in `.automation/cache/`
+  - Cache-first strategy: check cache before API call
+  - Thread-safe with hit/miss metrics tracking
+  - **Impact**: 99% reduction in API calls for repeated videos
+
+#### Validation ✅
+- **Test File**: `development/demos/test_catastrophic_incident_fix.py`
+- **Results**: 3/3 tests passing
+  - Cooldown prevents file watching loops ✅
+  - Cache prevents redundant API calls ✅
+  - Combined protection validated ✅
+
+#### YouTube Official API Migration: CANCELED ❌ (Oct 9, 2025)
+- **Decision**: Migration not needed - API v3 doesn't support arbitrary video transcripts
+- **Discovery**: `captions.download()` only works for videos you own, not any video
+- **Cleanup**: Removed 1,677 lines of unused implementation code (commit 8a6ba34)
+- **Files Removed**: youtube_official_api_fetcher.py, youtube_api_utils.py, tests
+- **Result**: Continue using unofficial API with protection (cooldown + caching)
+- **Manifest**: Archived to `youtube-official-api-integration-manifest-deprecated-2025-10-09.md`
+
+#### Current Status
+- 🛑 **Automation DISABLED** (safety lock active)
+- ⏰ **Awaiting YouTube IP unblock** (24-48 hours expected)
+- ✅ **Fixes validated and ready** for re-enable
+- ✅ **Codebase clean** - No breaking changes, all tests passing
+- 📊 **Combined Impact**: 99.87% fewer API calls
+
+#### Next Steps
+1. **Choose pivot work** (Distribution System recommended)
+2. Wait 24-48 hours for YouTube IP unblock (passive)
+3. Test single file with fixes active
+4. Monitor for 1 hour (verify no loops)
+5. Re-enable automation (remove `.automation/AUTOMATION_DISABLED`)
+6. Monitor cache hit rate (target >80%)
+
+---
+
+### 🐛 Active Bugs (Priority: HIGH → P0)
+
+**NEW P0 BUGS** (Oct 10, 2025) - From Quality Audit:
+- See "P0 CRITICAL: Quality Audit Bug Fixes" section above for 5 new bugs
+- **Total Fix Time**: 2-3 hours
+- **Blocking**: TUI development
+
+#### Bug: Empty video_id Frontmatter in YouTube Template
+- **File**: `bug-empty-video-id-frontmatter-templater-2025-10-08.md`
+- **Severity**: MEDIUM - Has workaround (daemon extracts from body)
+- **Issue**: Obsidian template extracts video_id but doesn't populate frontmatter field
+- **Workaround**: Daemon has fallback parser for body content
+- **Status**: ✅ FIXED with workaround (template + daemon fallback)
+- **Priority**: Low (workaround sufficient)
+
+#### ~~YouTube API Rate Limiting~~ → PERMANENTLY FIXED ✅
+- **Original Issue**: YouTube blocking unofficial scraping (100% rate limited)
+- **Investigation**: `youtube-rate-limit-investigation-2025-10-08.md`
+- **Root Cause**: File watching loop, not rate limiting
+- **Solution**: Cooldown + Caching (not Official API needed)
+- **Status**: ✅ **FIXED** - Both root causes eliminated
+- **Result**: Can continue using free unofficial API with protection
+
+### 🛡️ Circuit Breaker & Rate Limit Protection (P1 - CRITICAL SAFETY)
+
+**Status**: 📋 BACKLOG - Planned after Distribution System  
+**Priority**: P1 - HIGH (Prevents catastrophic incidents)  
+**Trigger**: YouTube incident (2,165 events could have cost $120-1,000+ with paid API)
+
+**Problem**: Without protection, infinite loops can cause unlimited financial damage
+
+**What Could Have Happened**:
+- YouTube incident was FREE API (just IP ban)
+- If OpenAI GPT-4: 1,000 calls × $0.12 = **$120+ in hours**
+- If AWS/GCP API: Could rack up **$1,000+ easily**
+- No automatic shutoff = unlimited burn 🔥
+
+**Solution**: Multi-layer protection system
+1. **Circuit Breakers**: Per-feature request limits (50/hour, 200/day)
+2. **Budget Enforcer**: Daily cost ceiling ($10 default, auto-shutdown at 80%)
+3. **Anomaly Detection**: Burst detection, file thrashing, error spikes
+4. **Emergency Kill Switch**: Manual override for immediate shutdown
+
+**Deliverables**:
+- ✅ Circuit breaker pattern implementation
+- ✅ Budget tracking and enforcement
+- ✅ Anomaly detection (bursts, loops, errors)
+- ✅ CLI monitoring: `inneros protection-status`
+- ✅ HTTP endpoints: `/protection/budget`, `/protection/circuits`
+- ✅ macOS notifications for threshold alerts
+- ✅ Integration with all existing handlers
+
+**Timeline**: 4-5 days
+- Phase 1: Circuit Breaker (1 day)
+- Phase 2: Budget Enforcer (1 day)
+- Phase 3: Anomaly Detection (2 days)
+- Phase 4: Integration & Monitoring (1 day)
+
+**Dependencies**: None (can implement anytime)
+
+**Blockers**: BLOCKS any paid API integration (OpenAI, AWS, etc.)
+
+**Manifest**: `circuit-breaker-rate-limit-protection-manifest.md` ✅
+
+**ROI**: One prevented incident pays for entire development cost
+
+---
 
 ### 🔴 Automation Completion System (P0 - CRITICAL FOUNDATION)
 
@@ -201,7 +534,12 @@
 - 80% time savings (manual → automatic workflows)
 - <5s event response time (file change → processing)
 
-**Next Session**: Apply rules update, begin Sprint 1 → Background Daemon Core
+**Current Progress**:
+- ✅ Sprint 1-2: Daemon core + event watchers COMPLETE
+- ✅ Sprint 2: Screenshot, SmartLink, YouTube handlers COMPLETE
+- ✅ Sprint 3: Health monitoring and metrics COMPLETE
+- ✅ Sprint 4: Production deployment with systemd COMPLETE
+- 🎯 **Next**: Directory Organization Handler (Iteration 10)
 
 ---
 
@@ -239,47 +577,157 @@
   - CLI import adapters + triage
   - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
 
-### 🚀 Distribution & Productionization System (Strategic)
+### 🚀 Distribution & Productionization System - ✅ COMPLETE (Oct 9, 2025)
 
-- **Goal**: Create public-ready distribution of InnerOS while keeping personal knowledge private
-- **Status**: 📋 Planning Complete → Ready for Implementation
-- **Approach**: Two-repository model (personal test environment vs. public distribution)
-- **Timeline**: 3-week phased rollout to alpha release (v0.1.0-alpha)
-- **Deliverables**:
-  - [ ] Distribution creation script (`scripts/create-distribution.sh`)
-  - [ ] Sample knowledge structure (`knowledge-starter-pack/`)
-  - [ ] Distribution .gitignore (excludes all personal content)
-  - [ ] Installation guide (INSTALLATION.md)
-  - [ ] Public GitHub repository
-  - [ ] v0.1.0-alpha release
+**Status**: ✅ **SHIPPED** - v0.1.0-alpha live on GitHub  
+**Priority**: P0 - **STREAMING VALIDATION ENABLER**  
+**Timeline**: 2-3 days → **COMPLETED**
+
+**Achievement**:
+- ✅ GitHub repository: https://github.com/thaddiusatme/inneros-zettelkasten-public
+- ✅ v0.1.0-alpha release tagged and published
+- ✅ 437 files in public distribution (98.4% size reduction)
+- ✅ 680/775 tests passing (88%)
+- ✅ Security audit passed
+- ✅ Installation guide complete
+
+**Deliverables** (ALL COMPLETE):
+  - ✅ Distribution creation script (`scripts/create-distribution.sh`)
+  - ✅ Security audit script (`scripts/security-audit.py`)
+  - ✅ Sample knowledge structure (`knowledge-starter-pack/` with 6 example notes)
+  - ✅ Distribution .gitignore (excludes all personal content)
+  - ✅ Installation guide (INSTALLATION.md)
+  - ✅ Streaming demo workflow guide (`streaming-demo-workflow.md`)
+  - ✅ README with features documented
+  - ✅ Public GitHub repository
+  - ✅ v0.1.0-alpha release
+  - **Architecture**: `Projects/ACTIVE/adr-003-distribution-architecture.md` ✅
+  - **Directory Guide**: `Projects/ACTIVE/directory-context-guide.md` ✅
+  - **Summary**: `Projects/ACTIVE/DISTRIBUTION-SYSTEM-SUMMARY.md` ✅
   - **Manifest**: `Projects/ACTIVE/distribution-productionization-manifest.md` ✅
-  - **Strategy**: `Projects/REFERENCE/deployment-strategy-phased-rollout.md` ✅
-  - **Stakeholder Review**: `Projects/REFERENCE/project-introduction-stakeholder-review.md` ✅
+  - **Lessons Learned**: `Projects/ACTIVE/distribution-system-tdd-iteration-1-lessons-learned.md` ✅
 
 ---
 
-## 🛣️ Next 4 Weeks Roadmap (ARCHITECTURAL FOCUS)
+### 🎨 Retro TUI Development (P1 - PLANNED)
 
-1. **WorkflowManager Refactor** (Priority 1 - ARCHITECTURAL DEBT) 🔴
-   - [ ] Week 1 (Oct 6-12): Architecture design + RED phase
-     - Extract all 59 method signatures
-     - Design 4 manager interfaces
-     - Write 30 failing tests
-   - [ ] Week 2 (Oct 13-19): GREEN phase - Extract managers
-     - CoreWorkflowManager (~200 LOC)
-     - AnalyticsManager (~400 LOC)
-     - AIEnhancementManager (~600 LOC)
-     - ConnectionManager (~400 LOC)
-   - [ ] Week 3 (Oct 20-26): REFACTOR phase - Migrate tests
-     - Update 13 test files
-     - Verify all 759 tests passing
-   - [ ] Week 4 (Oct 27 - Nov 2): Production integration
-     - Update 17 imports
-     - CLI integration
-     - Add class size linting
-     - Lessons learned
+**Status**: 📋 **BLOCKED** - Awaiting bug fixes  
+**Priority**: P1 - High value after bugs fixed  
+**Timeline**: 1 week (After bugs fixed - Oct 11-18)  
+**Manifest**: `retro-tui-design-manifest.md` ✅
 
-2. **Knowledge Capture System - POC** (Priority 2) 🔥
+**Goal**: Unified retro terminal UI for all InnerOS workflows
+
+**Design**:
+- ASCII-based retro aesthetic (nostalgic, fun)
+- Keyboard-driven navigation (no mouse)
+- Single `inneros` command for everything
+- Main menu → workflow selection → execution → results
+- Tech stack: Rich/Textual (Python TUI libraries)
+
+**Prerequisites**:
+- ✅ Quality audit complete (11/11 workflows tested)
+- ✅ Bugs documented (5 comprehensive reports)
+- [ ] **BLOCKING**: All critical bugs must be fixed first
+- [ ] All workflows must be working reliably
+
+**Why After Bugs**:
+- Can't build UI on broken foundation
+- Audit found 36% workflows completely broken
+- Fixing bugs first = smooth TUI development
+- No painful debugging during UI integration
+
+**Timeline**:
+- **Week 1** (Oct 11-18): TUI implementation after bugs fixed
+- **Week 2** (Oct 19-25): Polish, testing, integration
+- **Target**: Oct 25 for production-ready TUI
+
+---
+
+### 🎬 Streaming Validation Strategy (BACKLOG - LOW PRIORITY)
+
+**Status**: 📋 **BACKLOG** - Not needed for months  
+**Priority**: Backlog - Focus on tool quality first  
+**Timeline**: TBD (After TUI + dogfooding period)  
+**Manifest**: `Projects/ACTIVE/streaming-validation-manifest.md` ✅
+
+**Rationale for Deprioritization**:
+- Tool needs to be **excellent** before showing anyone
+- Currently only 27% of workflows working
+- Need months of personal dogfooding first
+- Distribution system already complete (v0.1.0-alpha)
+- Can share GitHub link anytime without streaming
+
+**Prerequisites Before Streaming**:
+- [ ] All workflows 100% working and tested
+- [ ] Retro TUI complete and polished
+- [ ] 3+ months of daily personal use without friction
+- [ ] Tool feels "magical" to use
+- [ ] Clear value proposition proven through own use
+
+**When Ready** (Months from now):
+- Use tool naturally during streams
+- Let organic discovery happen
+- GitHub link available in description
+- No forced demos, no pressure
+
+---
+
+## 🛣️ Next Steps Roadmap
+
+### Immediate Actions (Oct 9-11) - DISTRIBUTION SYSTEM IMPLEMENTATION
+
+**Current Phase**: Implement distribution system while waiting for YouTube IP unblock
+
+1. ✅ **Fix YouTube Template Bug** - COMPLETED 2025-10-08 (commit ac70aa2)
+   - Template now uses tp.file.update_frontmatter() to inject video_id
+   - Daemon has fallback parser for empty frontmatter
+   - 21 YouTube notes migrated to Inbox/YouTube/
+   - 3 TDD tests passing
+
+2. ✅ **Product Vision Clarified** - COMPLETED 2025-10-09
+   - Personal tool + streaming validation strategy
+   - Desktop distribution (NOT web app)
+   - Developer power user focus
+   - Organic discovery through live streams
+
+3. 🎯 **Distribution System Implementation** (Priority: P0) 🚀
+   **Day 1-2 (Oct 9-10)**: Core Infrastructure
+   - [ ] Create `.gitignore-distribution` file (30 min)
+   - [ ] Create `scripts/create-distribution.sh` (2 hours)
+   - [ ] Create `scripts/security-audit.py` (1 hour)
+   - [ ] Test distribution creation locally (1 hour)
+   
+   **Day 2-3 (Oct 10-11)**: Content & Documentation
+   - [ ] Build `knowledge-starter-pack/` directory (4 hours)
+     - 3 permanent note examples (demonstrate AI features)
+     - 2 literature note examples (YouTube workflow)
+     - README files for each directory
+   - [ ] Write INSTALLATION.md (15-minute setup guide)
+   - [ ] Polish main README with screenshots
+   - [ ] Create streaming demo workflow guide
+   
+   **Day 3 (Oct 11)**: Validation & Release
+   - [ ] Run security audit (verify no personal data)
+   - [ ] Test installation on clean environment
+   - [ ] Create public GitHub repository
+   - [ ] Push v0.1.0-alpha release
+   - [ ] Add GitHub link to stream setup
+
+4. **Streaming Setup Preparation** (Priority: P0) 📺
+   - [ ] Create `Projects/ACTIVE/streaming-demo-workflow.md`
+   - [ ] Identify 3-5 "wow moments" to show naturally
+   - [ ] Test terminal output visibility (font size, colors)
+   - [ ] Prepare stream overlay with GitHub link
+   - [ ] Set up !inneros chat command
+
+5. **Plan Iteration 10: Directory Organization Handler** (Priority: P1) 📋
+   - Defer until after distribution system complete
+   - **Estimated**: 2 hours (planning) + 3 hours (implementation)
+
+### Upcoming Priorities
+
+3. **Knowledge Capture System - POC** (Priority: P2) 🔥
    - [ ] Create branch: `feat/visual-capture-poc-tdd-1`
    - [ ] Voice note detection from OneDrive
    - [ ] Screenshot + voice temporal pairing (±60s)

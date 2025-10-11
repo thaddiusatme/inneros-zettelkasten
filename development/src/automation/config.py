@@ -23,11 +23,55 @@ class JobConfig:
 
 
 @dataclass
+class FileWatchConfig:
+    """File watching configuration"""
+    enabled: bool = False
+    watch_path: str = ""
+    patterns: List[str] = field(default_factory=lambda: ["*.md"])
+    ignore_patterns: List[str] = field(default_factory=list)
+    debounce_seconds: float = 2.0
+
+
+@dataclass
+class ScreenshotHandlerConfig:
+    """Screenshot handler configuration"""
+    enabled: bool = False
+    onedrive_path: str = ""
+    knowledge_path: str = ""
+    ocr_enabled: bool = True
+    processing_timeout: int = 600
+
+
+@dataclass
+class SmartLinkHandlerConfig:
+    """Smart link handler configuration"""
+    enabled: bool = False
+    vault_path: str = ""
+    similarity_threshold: float = 0.75
+    max_suggestions: int = 5
+    auto_insert: bool = False
+
+
+@dataclass
+class YouTubeHandlerConfig:
+    """YouTube handler configuration"""
+    enabled: bool = False
+    vault_path: str = ""
+    max_quotes: int = 7
+    min_quality: float = 0.7
+    processing_timeout: int = 300
+
+
+@dataclass
 class DaemonConfig:
     """Daemon configuration"""
     check_interval: int = 60
     log_level: str = "INFO"
     jobs: List[JobConfig] = field(default_factory=list)
+    file_watching: Optional[FileWatchConfig] = None
+    screenshot_handler: Optional[ScreenshotHandlerConfig] = None
+    smart_link_handler: Optional[SmartLinkHandlerConfig] = None
+    youtube_handler: Optional[YouTubeHandlerConfig] = None
 
 
 class ConfigurationLoader:
@@ -149,8 +193,60 @@ class ConfigurationLoader:
             )
             jobs.append(job)
         
+        # Parse file_watching section
+        file_watching = None
+        if "file_watching" in raw_config:
+            fw_data = raw_config["file_watching"]
+            file_watching = FileWatchConfig(
+                enabled=fw_data.get("enabled", False),
+                watch_path=fw_data.get("watch_path", ""),
+                patterns=fw_data.get("patterns", ["*.md"]),
+                ignore_patterns=fw_data.get("ignore_patterns", []),
+                debounce_seconds=fw_data.get("debounce_seconds", 2.0)
+            )
+        
+        # Parse screenshot_handler section
+        screenshot_handler = None
+        if "screenshot_handler" in raw_config:
+            sh_data = raw_config["screenshot_handler"]
+            screenshot_handler = ScreenshotHandlerConfig(
+                enabled=sh_data.get("enabled", False),
+                onedrive_path=sh_data.get("onedrive_path", ""),
+                knowledge_path=sh_data.get("knowledge_path", ""),
+                ocr_enabled=sh_data.get("ocr_enabled", True),
+                processing_timeout=sh_data.get("processing_timeout", 600)
+            )
+        
+        # Parse smart_link_handler section
+        smart_link_handler = None
+        if "smart_link_handler" in raw_config:
+            sl_data = raw_config["smart_link_handler"]
+            smart_link_handler = SmartLinkHandlerConfig(
+                enabled=sl_data.get("enabled", False),
+                vault_path=sl_data.get("vault_path", ""),
+                similarity_threshold=sl_data.get("similarity_threshold", 0.75),
+                max_suggestions=sl_data.get("max_suggestions", 5),
+                auto_insert=sl_data.get("auto_insert", False)
+            )
+        
+        # Parse youtube_handler section
+        youtube_handler = None
+        if "youtube_handler" in raw_config:
+            yt_data = raw_config["youtube_handler"]
+            youtube_handler = YouTubeHandlerConfig(
+                enabled=yt_data.get("enabled", False),
+                vault_path=yt_data.get("vault_path", ""),
+                max_quotes=yt_data.get("max_quotes", 7),
+                min_quality=yt_data.get("min_quality", 0.7),
+                processing_timeout=yt_data.get("processing_timeout", 300)
+            )
+        
         return DaemonConfig(
             check_interval=check_interval,
             log_level=log_level,
-            jobs=jobs
+            jobs=jobs,
+            file_watching=file_watching,
+            screenshot_handler=screenshot_handler,
+            smart_link_handler=smart_link_handler,
+            youtube_handler=youtube_handler
         )

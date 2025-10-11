@@ -1,0 +1,50 @@
+# InnerOS Automation Daemon Configuration - DISTRIBUTION TEMPLATE
+# Copy this file to daemon_config.yaml and customize for your environment
+
+daemon:
+  check_interval: 60
+  log_level: INFO
+
+# File watching configuration
+file_watching:
+  enabled: true  # Enable to watch YouTube notes
+  watch_path: ./knowledge/Inbox
+  debounce_seconds: 2.0
+  ignore_patterns:
+    - "*.tmp"
+    - ".git/*"
+    - ".obsidian/*"
+
+# Screenshot handler
+screenshot_handler:
+  enabled: false  # Enable after OneDrive setup
+  onedrive_path: ~/OneDrive/Screenshots
+  knowledge_path: ./knowledge/Media/Pasted Images
+  ocr_enabled: false
+
+# Smart link handler  
+smart_link_handler:
+  enabled: false  # Enable after configuration
+  vault_path: ./knowledge
+  similarity_threshold: 0.75
+  max_suggestions: 5
+
+# YouTube handler
+youtube_handler:
+  enabled: true
+  vault_path: ./knowledge
+  max_quotes: 7
+  min_quality: 0.7
+  processing_timeout: 300
+  cooldown_seconds: 60       # Prevent file watching loops
+  # Transcript caching - prevents redundant API calls and rate limiting
+  transcript_cache:
+    ttl_days: 7              # Cache transcripts for 7 days (recommended for new users)
+                             # For personal use: Increase to 36500 (100 years) to keep permanently
+                             # This saves API calls and prevents rate limit issues
+  # Rate limit mitigation with exponential backoff
+  rate_limit:
+    max_retries: 2           # Number of retry attempts
+    base_delay: 30           # Initial delay in seconds
+    max_delay: 180           # Maximum delay in seconds
+    backoff_multiplier: 3    # Exponential backoff multiplier

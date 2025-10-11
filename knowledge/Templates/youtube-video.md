@@ -1,14 +1,3 @@
----
-type: literature
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: inbox
-tags: [youtube, video-content]
-visibility: private
-source: youtube
-author: 
-video_id: 
-channel: 
----
 <%*
 /*------------------------------------------------------------------
   YOUTUBE VIDEO CAPTURE TEMPLATE - API POWERED
@@ -82,7 +71,7 @@ const slug = videoTitle.toLowerCase()
 
 const stamp = tp.date.now("YYYYMMDD-HHmm");
 const fname = `lit-${stamp}-${slug}.md`;
-const target = `Inbox/${fname}`;
+const target = `Inbox/YouTube/${fname}`;
 
 // 6. Default tags
 const allTags = ["youtube", "video-content"];
@@ -94,6 +83,21 @@ try {
   await tp.system.alert("Rename/Move failed – " + e.message);
   return;
 }
+
+// 7. Output frontmatter with populated fields
+tR += `---
+type: literature
+created: ${tp.date.now("YYYY-MM-DD HH:mm")}
+status: inbox
+tags: [youtube, video-content]
+visibility: private
+source: youtube
+author: ${channelName}
+video_id: ${videoId}
+channel: ${channelName}
+---
+
+`;
 %>
 
 # <% videoTitle %>

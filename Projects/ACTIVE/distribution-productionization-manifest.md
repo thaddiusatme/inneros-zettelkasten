@@ -1,10 +1,24 @@
 # Distribution & Productionization Manifest
 
 **Created**: 2025-10-05  
+**Updated**: 2025-10-09 (Added ADR-003, directory context)  
 **Status**: 📋 Planning Complete - Ready for Implementation  
 **Priority**: 🟢 Medium (Strategic/Infrastructure)  
 **Type**: Infrastructure & Distribution  
-**Estimated Effort**: 2-3 weeks (phased rollout)
+**Estimated Effort**: 2-3 weeks (phased rollout)  
+**Architecture Decision**: See `adr-003-distribution-architecture.md` ✅
+
+---
+
+## 🏛️ **Architecture Decision Record**
+
+**See**: [`adr-003-distribution-architecture.md`](./adr-003-distribution-architecture.md)
+
+This manifest implements the architecture defined in ADR-003:
+- **Two-Repository Pattern**: Source (private) + Distribution (public)
+- **Automated Pipeline**: Script-based distribution generation
+- **Security-First**: Multi-layer validation and sanitization
+- **Directory Context Awareness**: AI agents adapt behavior based on repository type
 
 ---
 
@@ -69,6 +83,8 @@ Create a two-repository model that separates:
 
 ### **What Gets Distributed** ✅
 
+**Complete structure defined in ADR-003**
+
 ```
 inneros-distribution/
 ├── development/              ✅ All code & tests
@@ -79,19 +95,34 @@ inneros-distribution/
 │
 ├── Projects/                 ✅ Documentation
 │   ├── REFERENCE/            ✅ Manifests, guides, architecture
-│   ├── COMPLETED-2025-XX/    ✅ Lessons learned (28+ docs)
-│   └── ACTIVE/               ✅ Sanitized (no personal project details)
+│   │   ├── inneros-manifest-v3.md
+│   │   ├── FEATURE-STATUS.md
+│   │   └── GETTING-STARTED.md
+│   ├── COMPLETED-2025-XX/    ✅ Lessons learned (sanitized)
+│   └── ACTIVE/               ✅ ADRs only (no personal projects)
+│       ├── adr-001-workflow-manager-refactoring.md
+│       ├── adr-002-circuit-breaker-rate-limit-protection.md
+│       └── adr-003-distribution-architecture.md
 │
 ├── knowledge/                ⚠️  SANITIZED ONLY
 │   ├── Templates/            ✅ All templates
-│   ├── Inbox/                ✅ Empty + README
-│   ├── Permanent Notes/      ✅ 3-5 examples
-│   └── Literature Notes/     ✅ 1-2 examples
+│   ├── Inbox/                ✅ Empty + README + 1 example
+│   ├── Fleeting Notes/       ✅ 1-2 examples + README
+│   ├── Permanent Notes/      ✅ 3-5 examples + README
+│   └── Literature Notes/     ✅ 1-2 examples + README
 │
-├── .windsurf/                ✅ AI rules & workflows
+├── .windsurf/                ✅ AI rules & workflows (enhanced)
+│   ├── rules/                ✅ Development guidelines + context rules
+│   └── workflows/            ✅ TDD workflows
+│
+├── scripts/                  ✅ NEW: Distribution automation
+│   ├── create-distribution.sh
+│   └── security-audit.py
+│
 ├── Workflows/                ✅ Process docs
 ├── README.md                 ✅ Distribution version
 ├── INSTALLATION.md           ✅ Setup guide
+├── DISTRIBUTION-NOTES.md     ✅ What's included/excluded
 └── inneros (CLI)             ✅ CLI wrapper
 ```
 
@@ -182,12 +213,15 @@ Personal Content (NEVER DISTRIBUTED):
 **Goal**: Create distribution infrastructure
 
 **Tasks**:
-1. Create `.gitignore-distribution` (excludes personal content)
-2. Create `scripts/create-distribution.sh` (automation)
-3. Build `knowledge-starter-pack/` directory
-4. Write sample permanent notes (3-5 examples)
-5. Write sample literature note (YouTube example)
-6. Create README files for each directory
+1. ✅ **ADR-003 Complete**: Architecture decision documented
+2. Create `.gitignore-distribution` (excludes personal content)
+3. Create `scripts/create-distribution.sh` (automation - see ADR-003)
+4. Create `scripts/security-audit.py` (validation - see ADR-003)
+5. Build `knowledge-starter-pack/` directory (structure in ADR-003)
+6. Write sample permanent notes (3-5 examples)
+7. Write sample literature note (YouTube example)
+8. Create README files for each directory
+9. Update `.windsurf/rules/` with directory context awareness
 
 **Deliverables**:
 - ✅ `.gitignore-distribution` (comprehensive exclusions)

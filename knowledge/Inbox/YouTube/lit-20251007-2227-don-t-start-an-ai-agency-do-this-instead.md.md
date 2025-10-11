@@ -1,28 +1,29 @@
 ---
 type: literature
-created: 2025-10-06 07:34
+created: 2025-10-07 22:26
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
-author: 
-video_id: 
-channel: 
+url: https://www.youtube.com/watch?v=SDYm5bpqKt8
+author: Stephen G. Pope
+video_id: SDYm5bpqKt8
+channel: Stephen G. Pope
 ---
 
 
-# The Hidden Depth of ZORO | The Anatomy of One Piece
+# Don't Start An AI Agency (Do This Instead)
 
 ## Video Information
-- **Channel**: Totally Not Mark
-- **Video URL**: https://www.youtube.com/watch?v=LD0b5u-q9KU
-- **Video ID**: `LD0b5u-q9KU`
-- **Date Saved**: 2025-10-06
+- **Channel**: Stephen G. Pope
+- **Video URL**: https://www.youtube.com/watch?v=SDYm5bpqKt8
+- **Video ID**: `SDYm5bpqKt8`
+- **Date Saved**: 2025-10-07
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/LD0b5u-q9KU/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/SDYm5bpqKt8/hqdefault.jpg)
 
 ## Why I'm Saving This
-BEcause I like ONe Piece
+Stephen is a G and has been in the game for awhile
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -48,9 +49,9 @@ BEcause I like ONe Piece
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-06 07:34
+- **Captured**: 2025-10-07 22:27
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Totally Not Mark*
+*YouTube video saved from: Stephen G. Pope*

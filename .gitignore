@@ -111,8 +111,20 @@ development/tmp/
 # Tag cleanup backup directories (created during Enhanced AI Tag Cleanup)
 tag-cleanup-backup-*/
 
-# Knowledge capture policy (Option B) - TEMPORARILY DISABLED FOR DEBUGGING
-# knowledge/Inbox/
-# knowledge/Fleeting Notes/
-# knowledge/Literature Notes/
-# knowledge/Archive/
+# CRITICAL: Protect personal knowledge from public release
+# Exclude entire personal knowledge directory
+knowledge/
+# Exception: Keep starter pack for public distribution
+!knowledge-starter-pack/
+
+# Test artifacts and output
+development/demos/**/test_output/
+
+# Secrets and environment
+.env
+.env.*
+
+# Automation cache and temporary files
+.automation/cache/
+.automation/logs/
+.automation/tmp/

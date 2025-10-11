@@ -1,28 +1,29 @@
 ---
 type: literature
-created: 2025-10-03 09:53
+created: 2025-10-03 10:44
 status: inbox
 tags: [youtube, video-content]
 visibility: private
 source: youtube
 author: 
-video_id: 
+video_id: QX1Xwzm9yHY
 channel: 
 ---
 
 
-# AI Channels Are Taking Over Warhammer 40k Lore On YouTube
+
+# Replacing Humans with AI is Going Horribly Wrong
 
 ## Video Information
-- **Channel**: Majorkill
-- **Video URL**: https://www.youtube.com/watch?v=rYCQZ2osLq4
-- **Video ID**: `rYCQZ2osLq4`
+- **Channel**: ColdFusion
+- **Video URL**: https://www.youtube.com/watch?v=QX1Xwzm9yHY
+- **Video ID**: `QX1Xwzm9yHY`
 - **Date Saved**: 2025-10-03
 - **Tags**: #youtube #video-content
-- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/rYCQZ2osLq4/hqdefault.jpg)
+- **Thumbnail**: ![Video Thumbnail](https://i.ytimg.com/vi/QX1Xwzm9yHY/hqdefault.jpg)
 
 ## Why I'm Saving This
-This is important in the fight against AI slop and finding hte line of what is acceptable within the ai creative space
+This was an engaging watch of what is going wrong with automation cases in the real world as AI becomes more integrated. 
 
 ## Key Takeaways
 <!-- As you watch, capture key points here -->
@@ -48,9 +49,9 @@ This is important in the fight against AI slop and finding hte line of what is a
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
-- **Captured**: 2025-10-03 09:54
+- **Captured**: 2025-10-03 10:44
 - **Source Type**: YouTube Video
 - **Processing Status**: `status: inbox`
 
 ---
-*YouTube video saved from: Majorkill*
+*YouTube video saved from: ColdFusion*

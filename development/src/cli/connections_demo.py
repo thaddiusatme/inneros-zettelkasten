@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.ai.connections import AIConnections
 from src.ai.link_suggestion_engine import LinkSuggestionEngine
 from src.ai.link_insertion_engine import LinkInsertionEngine, UndoManager
-from cli.smart_link_cli_utils import (
+from src.cli.smart_link_cli_utils import (
     display_suggestion_interactively,
     display_suggestions_summary,
     display_dry_run_results,
@@ -24,7 +24,7 @@ from cli.smart_link_cli_utils import (
     process_suggestions_batch,
     filter_suggestions_by_quality
 )
-from cli.smart_link_cli_enhanced import (
+from src.cli.smart_link_cli_enhanced import (
     SmartLinkCLIOrchestrator,
     BatchProcessingReporter,
 )

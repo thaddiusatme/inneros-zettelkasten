@@ -1,0 +1,50 @@
+# InnerOS Automation Daemon Configuration
+
+daemon:
+  check_interval: 60
+  log_level: INFO
+
+# File watching configuration
+file_watching:
+  enabled: true  # Enable to watch YouTube notes
+  watch_path: ./knowledge/Inbox
+  debounce_seconds: 2.0
+  ignore_patterns:
+    - "*.tmp"
+    - ".git/*"
+    - ".obsidian/*"
+
+# Screenshot handler
+screenshot_handler:
+  enabled: false  # Disable for initial test
+  onedrive_path: ~/OneDrive/Screenshots
+  knowledge_path: ./knowledge/Media/Pasted Images
+  ocr_enabled: false
+
+# Smart link handler  
+smart_link_handler:
+  enabled: false  # Disable for initial test
+  vault_path: ./knowledge
+  similarity_threshold: 0.75
+  max_suggestions: 5
+
+# YouTube handler (TDD Iteration 9 + Rate Limit Mitigation)
+youtube_handler:
+  enabled: true
+  vault_path: ./knowledge
+  max_quotes: 7
+  min_quality: 0.7
+  processing_timeout: 300
+  cooldown_seconds: 60       # Prevent file watching loops (catastrophic incident fix)
+  # Transcript caching (catastrophic incident fix - prevents redundant API calls)
+  transcript_cache:
+    ttl_days: 36500          # 100 years = permanent for personal use
+                             # DISTRIBUTION: Change to 7 for new users
+                             # This prevents re-fetching same videos and rate limits
+  # Rate limit mitigation with exponential backoff (TDD Iteration 1)
+  # AGGRESSIVE CONFIG: Testing if IP is completely blocked or just heavily throttled
+  rate_limit:
+    max_retries: 2           # Fewer retries but MUCH longer delays
+    base_delay: 30           # 30 seconds initial (was 5)
+    max_delay: 180           # 3 minutes max (was 60)
+    backoff_multiplier: 3    # More aggressive (was 2)

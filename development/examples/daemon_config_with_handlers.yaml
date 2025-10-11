@@ -1,0 +1,45 @@
+# Example Daemon Configuration with Feature-Specific Handlers
+#
+# This configuration demonstrates how to enable screenshot and smart link handlers
+# alongside the standard file watching and AI processing.
+
+daemon:
+  check_interval: 60
+  log_level: "INFO"
+
+# Standard file watching for AI processing
+file_watching:
+  enabled: true
+  watch_path: "knowledge/Inbox"
+  patterns:
+    - "*.md"
+  ignore_patterns:
+    - ".obsidian/*"
+    - "*.tmp"
+    - "*.swp"
+    - ".git/*"
+  debounce_seconds: 2.0
+
+# Screenshot handler for OneDrive Samsung screenshots
+screenshot_handler:
+  enabled: true
+  # Default OneDrive path for Samsung Galaxy S23 screenshots
+  # Adjust this path to match your OneDrive configuration
+  onedrive_path: "/Users/USERNAME/OneDrive/Pictures/Screenshots"
+
+# Smart link handler for automatic link suggestions
+smart_link_handler:
+  enabled: true
+  # Uses the same vault_path as file_watching.watch_path
+
+# Scheduled jobs (optional)
+jobs:
+  - name: "evening_screenshot_batch"
+    schedule: "0 21 * * *"  # 9 PM daily
+    enabled: true
+    description: "Batch process accumulated screenshots"
+  
+  - name: "weekly_link_analysis"
+    schedule: "0 9 * * 1"  # 9 AM Mondays
+    enabled: true
+    description: "Comprehensive smart link analysis"

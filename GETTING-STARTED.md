@@ -9,7 +9,7 @@
 ### 1. **Check System Health**
 ```bash
 # Verify everything is working
-python3 src/cli/workflow_demo.py . --status
+python3 development/src/cli/core_workflow_cli.py status
 ```
 
 ### 2. **Run Your First AI Analysis**
@@ -21,7 +21,7 @@ python3 src/cli/analytics_demo.py . --interactive
 ### 3. **Process Your Inbox**
 ```bash
 # Let AI help organize your notes
-python3 src/cli/workflow_demo.py . --process-inbox
+python3 development/src/cli/core_workflow_cli.py process-inbox
 ```
 
 **✅ If these work, you're ready to explore!**
@@ -38,7 +38,7 @@ python3 src/cli/workflow_demo.py . --process-inbox
 ### 🤖 **AI-Powered Workflow Management**
 - **What it does**: Automatically processes notes, suggests connections, scores quality
 - **Why you need it**: Transforms manual Zettelkasten into AI-enhanced knowledge system
-- **Quick test**: `python3 src/cli/workflow_demo.py . --weekly-review`
+- **Quick test**: `python3 development/src/cli/weekly_review_cli.py weekly-review`
 
 ### 📊 **Note Analytics & Insights**
 - **What it does**: Analyzes your note collection for patterns, orphans, quality
@@ -57,16 +57,16 @@ python3 src/cli/workflow_demo.py . --process-inbox
 ### **Daily Use Commands**
 ```bash
 # Process new notes in Inbox/
-python3 src/cli/workflow_demo.py . --process-inbox
+python3 development/src/cli/core_workflow_cli.py process-inbox
 
 # Get system health check
-python3 src/cli/workflow_demo.py . --status
+python3 development/src/cli/core_workflow_cli.py status
 
 # Interactive analytics exploration
-python3 src/cli/analytics_demo.py . --interactive
+python3 development/src/cli/analytics_demo.py . --interactive
 
 # Weekly review (promotion candidates)
-python3 src/cli/workflow_demo.py . --weekly-review
+python3 development/src/cli/weekly_review_cli.py weekly-review
 ```
 
 ### **Tag Management Commands**
@@ -77,20 +77,20 @@ python3 development/src/ai/enhanced_ai_tag_cleanup_deployment.py --dry-run
 # Live tag cleanup (after testing)
 python3 development/src/ai/enhanced_ai_tag_cleanup_deployment.py --live --max-tags 10
 
-# Advanced tag enhancement
-python3 src/cli/workflow_demo.py . --enhance-tags
+# Advanced tag enhancement (uses WorkflowManager)
+python3 development/src/cli/core_workflow_cli.py process-inbox
 ```
 
 ### **Analysis & Discovery Commands**
 ```bash
 # Find note connections
-python3 src/cli/connections_demo.py .
+python3 development/src/cli/connections_demo.py .
 
 # Enhanced metrics (orphans, stale notes)
-python3 src/cli/workflow_demo.py . --enhanced-metrics
+python3 development/src/cli/weekly_review_cli.py enhanced-metrics
 
-# Fleeting note triage
-python3 src/cli/workflow_demo.py . --fleeting-triage
+# Fleeting note health and triage
+python3 development/src/cli/fleeting_cli.py fleeting-triage
 ```
 
 ---
@@ -174,11 +174,11 @@ python3 development/src/ai/enhanced_ai_tag_cleanup_deployment.py --live --max-ta
 
 ### **Batch Processing**
 ```bash
-# Process multiple notes efficiently
-python3 src/cli/workflow_demo.py . --batch-process --min-quality 0.5
+# Process multiple notes safely with image preservation
+python3 development/src/cli/safe_workflow_cli.py batch-process-safe
 
 # Enhanced metrics for entire collection
-python3 src/cli/workflow_demo.py . --enhanced-metrics
+python3 development/src/cli/weekly_review_cli.py enhanced-metrics
 ```
 
 ### **Custom Analytics**
@@ -208,10 +208,10 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)/development"
 #### **AI Processing Slow or Failing**
 ```bash
 # Check system status first
-python3 src/cli/workflow_demo.py . --status
+python3 development/src/cli/core_workflow_cli.py status
 
-# Try smaller batch sizes
-python3 src/cli/workflow_demo.py . --process-inbox --batch-size 5
+# Use safe workflow with monitoring
+python3 development/src/cli/safe_workflow_cli.py process-inbox-safe
 ```
 
 #### **Tags Not Getting Cleaned Up**
@@ -237,18 +237,19 @@ python3 development/src/ai/enhanced_ai_tag_cleanup_deployment.py --dry-run --max
 ## 🎯 Recommended Workflows
 
 ### **Daily (5 minutes)**
-1. Process inbox: `python3 src/cli/workflow_demo.py . --process-inbox`
-2. Check status: `python3 src/cli/workflow_demo.py . --status`
+1. Process inbox: `python3 development/src/cli/core_workflow_cli.py process-inbox`
+2. Check status: `python3 development/src/cli/core_workflow_cli.py status`
 
 ### **Weekly (15 minutes)**
-1. Weekly review: `python3 src/cli/workflow_demo.py . --weekly-review`
+1. Weekly review: `python3 development/src/cli/weekly_review_cli.py weekly-review`
 2. Clean tags: `python3 development/src/ai/enhanced_ai_tag_cleanup_deployment.py --live --max-tags 20`
-3. Analytics check: `python3 src/cli/analytics_demo.py . --interactive`
+3. Analytics check: `python3 development/src/cli/analytics_demo.py . --interactive`
 
 ### **Monthly (30 minutes)**
-1. Enhanced metrics: `python3 src/cli/workflow_demo.py . --enhanced-metrics`
-2. Connection discovery: `python3 src/cli/connections_demo.py .`
-3. System optimization review
+1. Enhanced metrics: `python3 development/src/cli/weekly_review_cli.py enhanced-metrics`
+2. Connection discovery: `python3 development/src/cli/connections_demo.py .`
+3. Fleeting note health: `python3 development/src/cli/fleeting_cli.py fleeting-health`
+4. System optimization review
 
 ---
 
