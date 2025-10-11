@@ -342,7 +342,7 @@ inneros (wrapper) → routes to dedicated CLIs
 
 ## Implementation Progress
 
-### Extraction Status: 32% Complete (8/25 commands)
+### Extraction Status: 44% Complete (11/25 commands)
 
 **✅ Phase 1 Complete (Pre-ADR)**:
 - YouTube CLI (2 commands) → `youtube_cli.py`
@@ -359,12 +359,22 @@ inneros (wrapper) → routes to dedicated CLIs
   - Commit: `600672d`
   - Lessons: `adr-004-iteration-1-weekly-review-lessons-learned.md`
 
-**🔄 Next: Iteration 2 (2025-10-11)**:
-- Fleeting Notes CLI (3 commands) → `fleeting_cli.py`
-  - Command: `fleeting-health`
-  - Command: `fleeting-triage`
-  - Command: fleeting note processing
-  - **Includes**: Bug #3 fix (AttributeError)
+**✅ Iteration 2 Complete (2025-10-10)**:
+- Fleeting Notes CLI (3 commands) → `fleeting_cli.py` + `fleeting_formatter.py`
+  - Command: `fleeting-health` (health report with age analysis)
+  - Command: `fleeting-triage` (AI-powered quality assessment)
+  - LOC: 350 (CLI) + 227 (formatter) = 577 total
+  - Tests: 4/4 passing (includes Bug #3 validation)
+  - Commit: `1522ed2`
+  - Lessons: `adr-004-iteration-2-fleeting-lessons-learned.md`
+  - **Bug #3 FIXED**: AttributeError in fleeting_health (bypassed buggy adapter)
+
+**🔄 Next: Iteration 3 (2025-10-11+)**:
+- Safe Workflow CLI (5 commands) → `safe_workflow_cli.py`
+  - Command: `safe-process-inbox`
+  - Command: `safe-promote`
+  - Command: `safe-batch-process`
+  - Plus backup/rollback operations
 
 **📋 Remaining Work**:
 - Safe Workflow CLI (5 commands) → `workflow_cli.py`
@@ -375,6 +385,17 @@ inneros (wrapper) → routes to dedicated CLIs
 ---
 
 ## Updates
+
+### [2025-10-10] - Iteration 2 Complete: Fleeting Notes CLI + Bug #3 Fix
+**Extracted**: `fleeting-health` and `fleeting-triage` commands  
+**Files**: `development/src/cli/fleeting_cli.py` (350 LOC) + `fleeting_formatter.py` (227 LOC)  
+**Tests**: 4/4 passing (RED → GREEN → REFACTOR complete)  
+**Bug #3 Fixed**: AttributeError in fleeting_health - used WorkflowManager directly (bypassed buggy adapter)  
+**Progress**: 44% complete (11/25 commands extracted)  
+**Duration**: 2 hours actual vs 2-3 hours estimated  
+**Pattern**: Formatter extraction proven again (2nd CLI to need it)  
+**Learning**: Bug fixes belong in dedicated CLIs, not monolith  
+**Next**: Safe workflow CLI on 2025-10-11+ (estimated 3-4 hours)
 
 ### [2025-10-10] - Iteration 1 Complete: Weekly Review CLI
 **Extracted**: `weekly-review` and `enhanced-metrics` commands  
