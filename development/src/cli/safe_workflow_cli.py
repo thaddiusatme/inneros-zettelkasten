@@ -314,6 +314,48 @@ class SafeWorkflowCLI:
             print(f"❌ Error listing backups: {e}", file=sys.stderr)
             logger.exception("Error in list_backups")
             return 1
+    
+    def start_safe_session(self, session_name: str = "default",
+                          output_format: str = 'normal') -> int:
+        """
+        Start a new concurrent safe processing session (ADR-004 Iteration 5)
+        
+        Args:
+            session_name: Name for the processing session
+            output_format: 'normal' or 'json'
+            
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
+        quiet = self._is_quiet_mode(output_format)
+        
+        try:
+            if not quiet:
+                print(f"🚀 Starting safe processing session: {session_name}")
+            
+            # Execute using utilities (wraps existing safe_workflow_cli_utils.py)
+            result = self.safe_cli.execute_command("start-safe-session", {
+                "session_name": session_name,
+                "format": output_format
+            })
+            
+            # Format and display output
+            if quiet:
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                self._print_header(f"SAFE SESSION STARTED: {session_name}")
+                session_id = result.get("session_id", "unknown")
+                print(f"✅ Session ID: {session_id}")
+                print(f"📝 Session Name: {session_name}")
+                print(f"⏰ Started at: {result.get('start_time', 'unknown')}")
+                print("\n💡 Session is now active for concurrent processing")
+            
+            return 0
+            
+        except Exception as e:
+            print(f"❌ Error starting safe session: {e}", file=sys.stderr)
+            logger.exception("Error in start_safe_session")
+            return 1
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -455,6 +497,25 @@ Examples:
         help='Output format'
     )
     
+    # start-safe-session subcommand (ADR-004 Iteration 5)
+    session_parser = subparsers.add_parser(
+        'start-safe-session',
+        help='Start a new concurrent safe processing session'
+    )
+    session_parser.add_argument(
+        'session_name',
+        type=str,
+        nargs='?',
+        default='default',
+        help='Name for the processing session (default: default)'
+    )
+    session_parser.add_argument(
+        '--format',
+        choices=['normal', 'json'],
+        default='normal',
+        help='Output format'
+    )
+    
     return parser
 
 
@@ -501,6 +562,11 @@ def main():
             return cli.create_backup(output_format=args.format)
         elif args.command == 'list-backups':
             return cli.list_backups(output_format=args.format)
+        elif args.command == 'start-safe-session':
+            return cli.start_safe_session(
+                session_name=args.session_name,
+                output_format=args.format
+            )
         else:
             parser.print_help()
             return 1

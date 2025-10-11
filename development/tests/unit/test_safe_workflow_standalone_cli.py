@@ -183,8 +183,23 @@ class TestStandaloneSafeWorkflowCLI:
         finally:
             sys.stdout = sys.__stdout__
     
+    def test_start_safe_session_command_execution(self):
+        """TEST 10: Verify start-safe-session command executes successfully (RED PHASE - Iteration 5)."""
+        from src.cli.safe_workflow_cli import SafeWorkflowCLI
+        
+        cli = SafeWorkflowCLI(vault_path=str(self.base_dir))
+        
+        # Execute start-safe-session command
+        exit_code = cli.start_safe_session(
+            session_name="test-session",
+            output_format='normal'
+        )
+        
+        # Should execute without errors
+        assert exit_code == 0
+        
     def test_argparse_integration(self):
-        """TEST 10: Verify CLI has proper argparse subcommands."""
+        """TEST 11: Verify CLI has proper argparse subcommands."""
         from src.cli.safe_workflow_cli import create_parser
         
         parser = create_parser()
@@ -200,6 +215,7 @@ class TestStandaloneSafeWorkflowCLI:
             ['integrity-report'],
             ['backup'],
             ['list-backups'],
+            ['start-safe-session', 'test-session'],  # NEW: Added in Iteration 5
         ]
         
         for cmd in test_commands:
