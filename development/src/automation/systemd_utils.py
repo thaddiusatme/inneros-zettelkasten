@@ -19,7 +19,7 @@ from typing import Dict, Optional
 # Service file template constant
 SERVICE_FILE_TEMPLATE = """[Unit]
 Description=InnerOS Automation Daemon
-Documentation=https://github.com/thaddiusatme/inneros-zettelkasten
+Documentation=https://github.com/YOUR-USERNAME/inneros-zettelkasten
 After=network.target
 
 [Service]

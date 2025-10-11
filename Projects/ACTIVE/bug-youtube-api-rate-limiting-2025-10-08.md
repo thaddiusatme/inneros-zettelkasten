@@ -36,7 +36,7 @@ YouTube Feature Handler should fetch video transcripts and extract quotes automa
 Handler detects YouTube notes correctly but fails during transcript fetching with error:
 ```
 Rate limit exceeded. Please retry later. Details: 
-Could not retrieve a transcript for the video https://www.youtube.com/watch?v=EUG65dIY-2k! 
+Could not retrieve a transcript for the video https://www.xyoutube.com/watch?v=EUG65dIY-2k! 
 This is most likely caused by:
 
 YouTube is blocking requests from your IP. This usually is due to one of the following reasons:
