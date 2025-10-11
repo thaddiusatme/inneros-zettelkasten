@@ -1,8 +1,56 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-09 08:00 PDT  
-**Status**: ✅ **READY TO PIVOT** - Incident resolved, codebase clean, waiting for YouTube IP unblock  
-**Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context
+**Last Updated**: 2025-10-10 19:40 PDT  
+**Status**: 🏗️ **ARCHITECTURAL PIVOT** - ADR-004 CLI extraction prioritized over bug fixes  
+**Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
+**Critical**: `Projects/ACTIVE/adr-004-cli-layer-extraction.md` - 2-week sprint starting Oct 11
+
+---
+
+## 🎯 Product Vision & Validation Strategy
+
+**Last Updated**: 2025-10-10 (Added streaming validation manifest)  
+**Manifest**: `Projects/ACTIVE/streaming-validation-manifest.md` ✅
+
+### **Core Purpose**
+**Primary**: Personal knowledge management tool that fills gaps in existing solutions (Obsidian, etc.)
+- Built for developer workflow (CLI-first, local files, powerful automation)
+- Solves real friction points in note-taking process
+- Local-first, markdown-based, privacy-preserving
+
+### **Validation Approach: Streaming + Organic Discovery**
+**Strategy**: Demonstrate tool naturally during live streams
+- Use InnerOS authentically while streaming development work
+- Show AI workflows processing notes in real-time
+- Let viewers discover organically ("What's that tool you're using?")
+- GitHub link in stream description for interested developers
+- **Complete Strategy**: See `streaming-validation-manifest.md`
+
+### **Target User (Phase 1)**
+**Developer Power Users**:
+- Comfortable with CLI/terminal tools
+- Value local markdown files and data ownership
+- Want AI-enhanced workflows without SaaS subscriptions
+- Technical enough for 15-minute installation
+
+### **NOT Building (Explicitly Ruled Out)**
+❌ Web application (Notion-like, browser-based)
+❌ Cloud database storage (PostgreSQL on Railway)
+❌ Mass-market consumer product
+❌ Multi-user SaaS platform (Phase 1)
+
+### **Success Metrics**
+- Personal workflow friction eliminated (primary goal)
+- Organic GitHub stars/clones after streams
+- "What tool was that?" questions in chat
+- Small community of power users (5-10 users)
+- Dogfooding: Daily use without friction
+
+### **Future Pivot Points** (Only if validated)
+- **If demand proven**: Consider web version for non-technical users
+- **If community grows**: Multi-user collaboration features
+- **If monetization needed**: Premium AI features or hosting
+- **Current Phase**: Focus on personal use + developer distribution
 
 ---
 
@@ -40,9 +88,10 @@
 
 - **Current Classes >500 LOC**: **0** ✅ (Target achieved Oct 5, 2025!)
 - **Current Classes >20 methods**: **0** ✅ (Target achieved Oct 5, 2025!)
+- **CLI Monoliths >2000 LOC**: **1** ❌ (workflow_demo.py at 2,074 LOC)
 - **Original Target**: Zero classes exceeding limits by Nov 2, 2025
 - **Actual Achievement**: **27 days ahead of schedule!** 🏆
-- **ADRs Created**: 1 (ADR-001: WorkflowManager refactoring)
+- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅, ADR-004: CLI extraction ✅ ACCEPTED)
 
 ---
 
@@ -179,9 +228,145 @@
 
 ---
 
-## 🎯 Active Projects (AUTOMATION-FIRST FOCUS)
+## 🎯 Active Projects (ARCHITECTURAL PIVOT)
 
 *Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
+
+### 🏗️ P0 CRITICAL: ADR-004 CLI Layer Extraction (Oct 11-25, 2025)
+
+**Status**: ✅ **ACCEPTED** - Architectural pivot approved  
+**Priority**: P0 - **COMPLETES ADR-001 ARCHITECTURE VISION**  
+**Timeline**: 2 weeks (Oct 11-25)  
+**ADR**: `adr-004-cli-layer-extraction.md` ✅  
+**Branch**: `feat/adr-004-cli-extraction` (to be created)
+
+#### Why This is P0
+
+**ADR-001 Only Half Complete**:
+- ✅ Backend refactored: WorkflowManager → 4 managers (COMPLETE Oct 5)
+- ❌ Frontend still monolithic: workflow_demo.py at 2,074 LOC (28% extracted)
+- Quality audit found bugs in **wrong architectural layer** (monolithic CLI)
+
+**Decision**: Complete the architecture before continuing features
+- Backend clean ✅ + Frontend clean ❌ = System half-broken
+- 18/25 commands need extraction from workflow_demo.py
+- Bug fixes should go to **dedicated CLIs**, not monolith
+
+#### Current CLI Extraction Status: 28% Complete (7/25)
+
+**✅ Already Extracted** (7 commands):
+- YouTube processing (2) → `youtube_cli.py` (372 LOC)
+- Tag enhancement (3) → `advanced_tag_enhancement_cli.py`
+- Review notes (3) → `notes_cli.py`
+- Performance (1) → `real_data_performance_cli.py`
+
+**❌ Needs Extraction** (18 commands):
+- Weekly review (2) → `weekly_review_cli.py` [P1.1 - Week 1]
+- Fleeting notes (3) → `fleeting_cli.py` [P1.2 - Week 1]
+- Safe workflows (5) → `workflow_cli.py` [P1.3 - Week 1]
+- Backup (3) → `backup_cli.py` [P1.4 - Week 1]
+- Core workflow (5) → `core_workflow_cli.py` [P2.1 - Week 2]
+
+#### 2-Week Sprint Plan
+
+**Week 1 (Oct 11-18)**: High-priority extractions
+- Days 1-2: Weekly review + fleeting CLIs
+- Days 3-4: Safe workflow + backup CLIs
+- Day 5: Integration testing, bug fixes
+
+**Week 2 (Oct 19-25)**: Core workflow + completion
+- Days 1-2: Core workflow CLI
+- Days 3-4: Remaining commands
+- Days 5-6: Documentation, deprecation, final testing
+
+#### Success Criteria
+- [ ] All 25 commands extracted to dedicated CLIs
+- [ ] workflow_demo.py has deprecation warning
+- [ ] All docs updated (README, CLI-REF, QUICK-REF, GETTING-STARTED)
+- [ ] Quality audit re-run validates bugs in correct files
+- [ ] Each CLI <400 LOC, focused, testable
+
+**After Completion**: TUI development can begin with clean architecture foundation
+
+---
+
+### 🐛 P1 DEFERRED: Quality Audit Bug Fixes (Oct 10, 2025)
+
+**Status**: ⏸️ **DEFERRED** - Waiting for ADR-004 CLI extraction  
+**Priority**: P1 - Deferred until dedicated CLIs exist  
+**Timeline**: Fix bugs in dedicated CLIs after extraction  
+**Manifest**: `quality-audit-manifest.md` ✅
+
+**Why Deferred**: Quality audit found bugs in monolithic workflow_demo.py. Rather than fix bugs in deprecated code, we're extracting commands to dedicated CLIs first (ADR-004), then fixing bugs in the correct architectural layer.
+
+#### Audit Results Summary
+
+**Tested**: 11/11 workflows (100% coverage) ✅  
+**Working**: 3/11 (27%) - Backup, Directory Preview, Daemon Status  
+**Broken**: 4/11 (36%) - Connection Discovery, Enhanced Metrics, Fleeting Health, Orphaned Notes  
+**Partial**: 1/11 (9%) - YouTube Processing  
+**With Issues**: 1/11 (9%) - Weekly Review  
+
+#### Critical Bugs Found
+
+**Systemic Issue**: 4 KeyError bugs with identical root cause (unsafe dictionary access)
+- All use `note['key']` instead of `note.get('key', default)`
+- Indicates need for typed `Note` dataclass
+
+**Bug Reports Created** (5):
+1. **`bug-connections-import-error-2025-10-10.md`** 🔴 CRITICAL
+   - Import paths wrong: `from cli.` should be `from src.cli.`
+   - **Impact**: Connection Discovery completely broken
+   - **Fix Time**: 5 minutes
+
+2. **`bug-enhanced-metrics-keyerror-2025-10-10.md`** 🟠 HIGH
+   - KeyError: 'directory' in `weekly_review_formatter.py` line 313
+   - **Impact**: Cannot view vault analytics
+   - **Fix Time**: 10 minutes
+
+3. **`bug-fleeting-health-attributeerror-2025-10-10.md`** 🟠 HIGH
+   - Missing method after WorkflowManager refactoring (Oct 5)
+   - **Impact**: Cannot monitor fleeting note health
+   - **Fix Time**: 60 minutes (needs investigation)
+
+4. **`bug-orphaned-notes-keyerror-2025-10-10.md`** 🟠 HIGH
+   - KeyError: 'path' at line 1394 (4th KeyError bug)
+   - **Impact**: Cannot identify disconnected knowledge
+   - **Fix Time**: 5 minutes
+
+5. **`bug-youtube-processing-failures-2025-10-10.md`** 🟠 HIGH
+   - Silent failures with no error messages
+   - **Impact**: Feature broken, no debugging info
+   - **Fix Time**: 30 minutes
+
+#### Deliverables
+
+- ✅ **Audit Report**: `audit-report-2025-10-10.md` (live test results)
+- ✅ **Session Summary**: `AUDIT-SESSION-SUMMARY-2025-10-10.md` (complete findings)
+- ✅ **Bug Reports**: 5 comprehensive reports with fixes proposed
+- ✅ **Audit Manifest**: `quality-audit-manifest.md` (strategy)
+- [ ] **Bug Fixes**: Implement all 5 fixes (2-3 hours)
+- [ ] **Regression Tests**: Validate all workflows working
+- [ ] **TUI Development**: Begin after bugs fixed
+
+#### Next Steps (Priority Order)
+
+1. **Fix Import Error** (5 min) - Unblocks Connection Discovery
+2. **Fix KeyErrors** (20 min) - 3 bugs, same pattern
+3. **Investigate Fleeting Health** (60 min) - Find missing method
+4. **Improve YouTube Errors** (30 min) - Add error messages
+5. **Code Review** (30 min) - Find other unsafe dict accesses
+6. **Consider Note Dataclass** (optional) - Prevent future KeyErrors
+
+#### Success Metrics
+
+**Current**: 27% workflows working (3/11)  
+**After Quick Fixes**: 63% workflows working (7/11)  
+**Target**: 100% workflows working before TUI
+
+**ROI**: 1 hour audit found 5 bugs, saved 2.5-5 hours of debugging during TUI development
+
+---
 
 ### 🚨 CATASTROPHIC INCIDENT - RESOLVED (Oct 8, 2025)
 
@@ -241,7 +426,12 @@
 
 ---
 
-### 🐛 Active Bugs (Priority: MEDIUM)
+### 🐛 Active Bugs (Priority: HIGH → P0)
+
+**NEW P0 BUGS** (Oct 10, 2025) - From Quality Audit:
+- See "P0 CRITICAL: Quality Audit Bug Fixes" section above for 5 new bugs
+- **Total Fix Time**: 2-3 hours
+- **Blocking**: TUI development
 
 #### Bug: Empty video_id Frontmatter in YouTube Template
 - **File**: `bug-empty-video-id-frontmatter-templater-2025-10-08.md`
@@ -387,28 +577,107 @@
   - CLI import adapters + triage
   - [ ] **User journey flowchart** (NEEDS REVIEW: `Projects/reading-intake-user-journey-flowchart.md`)
 
-### 🚀 Distribution & Productionization System (Strategic)
+### 🚀 Distribution & Productionization System - ✅ COMPLETE (Oct 9, 2025)
 
-- **Goal**: Create public-ready distribution of InnerOS while keeping personal knowledge private
-- **Status**: 📋 Planning Complete → Ready for Implementation
-- **Approach**: Two-repository model (personal test environment vs. public distribution)
-- **Timeline**: 3-week phased rollout to alpha release (v0.1.0-alpha)
-- **Deliverables**:
-  - [ ] Distribution creation script (`scripts/create-distribution.sh`)
-  - [ ] Sample knowledge structure (`knowledge-starter-pack/`)
-  - [ ] Distribution .gitignore (excludes all personal content)
-  - [ ] Installation guide (INSTALLATION.md)
-  - [ ] Public GitHub repository
-  - [ ] v0.1.0-alpha release
+**Status**: ✅ **SHIPPED** - v0.1.0-alpha live on GitHub  
+**Priority**: P0 - **STREAMING VALIDATION ENABLER**  
+**Timeline**: 2-3 days → **COMPLETED**
+
+**Achievement**:
+- ✅ GitHub repository: https://github.com/thaddiusatme/inneros-zettelkasten-public
+- ✅ v0.1.0-alpha release tagged and published
+- ✅ 437 files in public distribution (98.4% size reduction)
+- ✅ 680/775 tests passing (88%)
+- ✅ Security audit passed
+- ✅ Installation guide complete
+
+**Deliverables** (ALL COMPLETE):
+  - ✅ Distribution creation script (`scripts/create-distribution.sh`)
+  - ✅ Security audit script (`scripts/security-audit.py`)
+  - ✅ Sample knowledge structure (`knowledge-starter-pack/` with 6 example notes)
+  - ✅ Distribution .gitignore (excludes all personal content)
+  - ✅ Installation guide (INSTALLATION.md)
+  - ✅ Streaming demo workflow guide (`streaming-demo-workflow.md`)
+  - ✅ README with features documented
+  - ✅ Public GitHub repository
+  - ✅ v0.1.0-alpha release
+  - **Architecture**: `Projects/ACTIVE/adr-003-distribution-architecture.md` ✅
+  - **Directory Guide**: `Projects/ACTIVE/directory-context-guide.md` ✅
+  - **Summary**: `Projects/ACTIVE/DISTRIBUTION-SYSTEM-SUMMARY.md` ✅
   - **Manifest**: `Projects/ACTIVE/distribution-productionization-manifest.md` ✅
-  - **Strategy**: `Projects/REFERENCE/deployment-strategy-phased-rollout.md` ✅
-  - **Stakeholder Review**: `Projects/REFERENCE/project-introduction-stakeholder-review.md` ✅
+  - **Lessons Learned**: `Projects/ACTIVE/distribution-system-tdd-iteration-1-lessons-learned.md` ✅
+
+---
+
+### 🎨 Retro TUI Development (P1 - PLANNED)
+
+**Status**: 📋 **BLOCKED** - Awaiting bug fixes  
+**Priority**: P1 - High value after bugs fixed  
+**Timeline**: 1 week (After bugs fixed - Oct 11-18)  
+**Manifest**: `retro-tui-design-manifest.md` ✅
+
+**Goal**: Unified retro terminal UI for all InnerOS workflows
+
+**Design**:
+- ASCII-based retro aesthetic (nostalgic, fun)
+- Keyboard-driven navigation (no mouse)
+- Single `inneros` command for everything
+- Main menu → workflow selection → execution → results
+- Tech stack: Rich/Textual (Python TUI libraries)
+
+**Prerequisites**:
+- ✅ Quality audit complete (11/11 workflows tested)
+- ✅ Bugs documented (5 comprehensive reports)
+- [ ] **BLOCKING**: All critical bugs must be fixed first
+- [ ] All workflows must be working reliably
+
+**Why After Bugs**:
+- Can't build UI on broken foundation
+- Audit found 36% workflows completely broken
+- Fixing bugs first = smooth TUI development
+- No painful debugging during UI integration
+
+**Timeline**:
+- **Week 1** (Oct 11-18): TUI implementation after bugs fixed
+- **Week 2** (Oct 19-25): Polish, testing, integration
+- **Target**: Oct 25 for production-ready TUI
+
+---
+
+### 🎬 Streaming Validation Strategy (BACKLOG - LOW PRIORITY)
+
+**Status**: 📋 **BACKLOG** - Not needed for months  
+**Priority**: Backlog - Focus on tool quality first  
+**Timeline**: TBD (After TUI + dogfooding period)  
+**Manifest**: `Projects/ACTIVE/streaming-validation-manifest.md` ✅
+
+**Rationale for Deprioritization**:
+- Tool needs to be **excellent** before showing anyone
+- Currently only 27% of workflows working
+- Need months of personal dogfooding first
+- Distribution system already complete (v0.1.0-alpha)
+- Can share GitHub link anytime without streaming
+
+**Prerequisites Before Streaming**:
+- [ ] All workflows 100% working and tested
+- [ ] Retro TUI complete and polished
+- [ ] 3+ months of daily personal use without friction
+- [ ] Tool feels "magical" to use
+- [ ] Clear value proposition proven through own use
+
+**When Ready** (Months from now):
+- Use tool naturally during streams
+- Let organic discovery happen
+- GitHub link available in description
+- No forced demos, no pressure
 
 ---
 
 ## 🛣️ Next Steps Roadmap
 
-### Immediate Actions (Oct 8-9)
+### Immediate Actions (Oct 9-11) - DISTRIBUTION SYSTEM IMPLEMENTATION
+
+**Current Phase**: Implement distribution system while waiting for YouTube IP unblock
 
 1. ✅ **Fix YouTube Template Bug** - COMPLETED 2025-10-08 (commit ac70aa2)
    - Template now uses tp.file.update_frontmatter() to inject video_id
@@ -416,12 +685,45 @@
    - 21 YouTube notes migrated to Inbox/YouTube/
    - 3 TDD tests passing
 
-2. **Plan Iteration 10: Directory Organization Handler** (Priority: P1) 📋
-   - Create TDD planning document
-   - Design handler for auto-fixing directory mismatches
-   - Define success criteria and test cases
-   - **Estimated**: 2 hours (planning)
-   - **Implementation**: 3 hours (TDD execution)
+2. ✅ **Product Vision Clarified** - COMPLETED 2025-10-09
+   - Personal tool + streaming validation strategy
+   - Desktop distribution (NOT web app)
+   - Developer power user focus
+   - Organic discovery through live streams
+
+3. 🎯 **Distribution System Implementation** (Priority: P0) 🚀
+   **Day 1-2 (Oct 9-10)**: Core Infrastructure
+   - [ ] Create `.gitignore-distribution` file (30 min)
+   - [ ] Create `scripts/create-distribution.sh` (2 hours)
+   - [ ] Create `scripts/security-audit.py` (1 hour)
+   - [ ] Test distribution creation locally (1 hour)
+   
+   **Day 2-3 (Oct 10-11)**: Content & Documentation
+   - [ ] Build `knowledge-starter-pack/` directory (4 hours)
+     - 3 permanent note examples (demonstrate AI features)
+     - 2 literature note examples (YouTube workflow)
+     - README files for each directory
+   - [ ] Write INSTALLATION.md (15-minute setup guide)
+   - [ ] Polish main README with screenshots
+   - [ ] Create streaming demo workflow guide
+   
+   **Day 3 (Oct 11)**: Validation & Release
+   - [ ] Run security audit (verify no personal data)
+   - [ ] Test installation on clean environment
+   - [ ] Create public GitHub repository
+   - [ ] Push v0.1.0-alpha release
+   - [ ] Add GitHub link to stream setup
+
+4. **Streaming Setup Preparation** (Priority: P0) 📺
+   - [ ] Create `Projects/ACTIVE/streaming-demo-workflow.md`
+   - [ ] Identify 3-5 "wow moments" to show naturally
+   - [ ] Test terminal output visibility (font size, colors)
+   - [ ] Prepare stream overlay with GitHub link
+   - [ ] Set up !inneros chat command
+
+5. **Plan Iteration 10: Directory Organization Handler** (Priority: P1) 📋
+   - Defer until after distribution system complete
+   - **Estimated**: 2 hours (planning) + 3 hours (implementation)
 
 ### Upcoming Priorities
 

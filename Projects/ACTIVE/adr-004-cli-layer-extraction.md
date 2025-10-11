@@ -1,7 +1,7 @@
 # Architecture Decision Record: CLI Layer Extraction
 
 **Date**: 2025-10-10  
-**Status**: 🔴 PROPOSED (October 2025)  
+**Status**: ✅ ACCEPTED (October 2025)  
 **Context**: Monolithic CLI crisis - workflow_demo.py at 2,074 LOC blocks clean architecture  
 **Decision**: Extract remaining 18 commands to dedicated CLIs, deprecate workflow_demo.py  
 **Related**: ADR-001 (WorkflowManager refactoring COMPLETE), workflow-demo-deprecation-plan.md  
@@ -342,10 +342,12 @@ inneros (wrapper) → routes to dedicated CLIs
 
 ## Updates
 
-### [2025-10-10] - Status: Proposed
+### [2025-10-10] - Status: Accepted
 **Reason**: Quality audit found bugs in monolithic CLI; ADR-001 only completed backend  
-**Impact**: Blocks TUI development for 2 weeks; completes clean architecture  
-**Action Required**: Begin extraction sprint Monday Oct 11 with weekly review CLI
+**Impact**: Architectural pivot - prioritize CLI extraction over bug fixes/TUI  
+**Decision**: User approved 2-week sprint to complete clean architecture  
+**Action Required**: Begin extraction sprint Monday Oct 11 with weekly review CLI  
+**Branch**: Create `feat/adr-004-cli-extraction` from current branch
 
 ---
 
