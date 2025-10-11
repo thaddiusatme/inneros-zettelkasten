@@ -577,3 +577,76 @@ class TestWeeklyReviewCLI:
         mock_workflow_instance.scan_review_candidates.assert_called_once()
         mock_workflow_instance.generate_weekly_recommendations.assert_called_once_with(mock_candidates)
         mock_formatter_instance.format_checklist.assert_called_once_with(mock_recommendations)
+
+
+class TestDedicatedWeeklyReviewCLI:
+    """
+    Test cases for the NEW dedicated weekly_review_cli.py module.
+    
+    RED PHASE: These tests will fail until we create weekly_review_cli.py
+    """
+    
+    def setup_method(self):
+        """Set up test environment."""
+        self.temp_dir = tempfile.mkdtemp()
+        self.base_dir = Path(self.temp_dir)
+        
+        # Create directory structure
+        (self.base_dir / "Inbox").mkdir()
+        (self.base_dir / "Fleeting Notes").mkdir()
+        (self.base_dir / "Permanent Notes").mkdir()
+        (self.base_dir / "Archive").mkdir()
+    
+    def teardown_method(self):
+        """Clean up test environment."""
+        shutil.rmtree(self.temp_dir)
+    
+    def test_weekly_review_cli_import(self):
+        """TEST 1: Verify weekly_review_cli module can be imported."""
+        try:
+            from src.cli import weekly_review_cli
+            assert weekly_review_cli is not None
+        except ImportError as e:
+            pytest.fail(f"weekly_review_cli module should exist and be importable: {e}")
+    
+    def test_weekly_review_command_execution(self):
+        """TEST 2: Verify weekly-review command executes successfully."""
+        from src.cli.weekly_review_cli import WeeklyReviewCLI
+        
+        cli = WeeklyReviewCLI(vault_path=str(self.base_dir))
+        
+        # Execute weekly review command
+        exit_code = cli.weekly_review(preview=True, output_format='normal')
+        
+        # Should execute without errors
+        assert exit_code == 0
+    
+    def test_enhanced_metrics_command_execution(self):
+        """TEST 3: Verify enhanced-metrics command executes successfully."""
+        from src.cli.weekly_review_cli import WeeklyReviewCLI
+        
+        cli = WeeklyReviewCLI(vault_path=str(self.base_dir))
+        
+        # Execute enhanced metrics command
+        exit_code = cli.enhanced_metrics(output_format='normal')
+        
+        # Should execute without errors
+        assert exit_code == 0
+    
+    def test_output_matches_workflow_demo(self):
+        """TEST 4: Regression test - output should match workflow_demo.py."""
+        # This test will verify that the new CLI produces the same output
+        # as the original workflow_demo.py implementation
+        from src.cli.weekly_review_cli import WeeklyReviewCLI
+        from src.ai.workflow_manager import WorkflowManager
+        
+        # Get output from new CLI
+        cli = WeeklyReviewCLI(vault_path=str(self.base_dir))
+        
+        # Get output from WorkflowManager (what workflow_demo uses)
+        workflow = WorkflowManager(str(self.base_dir))
+        
+        # Both should produce similar results
+        # (We'll implement detailed comparison after GREEN phase)
+        assert cli is not None
+        assert workflow is not None
