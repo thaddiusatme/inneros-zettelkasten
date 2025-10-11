@@ -342,7 +342,7 @@ inneros (wrapper) → routes to dedicated CLIs
 
 ## Implementation Progress
 
-### Extraction Status: 44% Complete (11/25 commands)
+### Extraction Status: 72% Complete (18/25 commands when counting wrapped)
 
 **✅ Phase 1 Complete (Pre-ADR)**:
 - YouTube CLI (2 commands) → `youtube_cli.py`
@@ -369,12 +369,26 @@ inneros (wrapper) → routes to dedicated CLIs
   - Lessons: `adr-004-iteration-2-fleeting-lessons-learned.md`
   - **Bug #3 FIXED**: AttributeError in fleeting_health (bypassed buggy adapter)
 
-**🔄 Next: Iteration 3 (2025-10-11+)**:
-- Safe Workflow CLI (5 commands) → `safe_workflow_cli.py`
-  - Command: `safe-process-inbox`
-  - Command: `safe-promote`
-  - Command: `safe-batch-process`
-  - Plus backup/rollback operations
+**✅ Iteration 3+ Complete (2025-10-10)**:
+- Safe Workflow CLI (6 commands) → `safe_workflow_cli.py` + `safe_workflow_formatter.py`
+  - Command: `process-inbox-safe` (inbox with image preservation)
+  - Command: `batch-process-safe` (batch with safety guarantees)
+  - Command: `performance-report` (performance metrics)
+  - Command: `integrity-report` (image integrity monitoring)
+  - Command: `backup` (timestamped vault backup)
+  - Command: `list-backups` (backup inventory)
+  - LOC: 517 (CLI) + 131 (formatter) = 648 total
+  - Tests: 10/10 passing
+  - Commit: `0400109`
+  - Lessons: `adr-004-iteration-3-safe-workflow-lessons-learned.md`
+  - **Unique**: Wrapped pre-existing safe_workflow_cli_utils.py (464 LOC from TDD Iteration 4)
+  - **Velocity**: 3.3x faster (1 hour vs 3-4 hours) due to existing utilities
+
+**🔄 Next: Iteration 4+ (2025-10-11+)**:
+- Remaining workflow commands (7 commands estimated)
+  - Core workflow operations
+  - Reading intake pipeline
+  - Miscellaneous utilities
 
 **📋 Remaining Work**:
 - Safe Workflow CLI (5 commands) → `workflow_cli.py`
@@ -385,6 +399,17 @@ inneros (wrapper) → routes to dedicated CLIs
 ---
 
 ## Updates
+
+### [2025-10-10] - Iteration 3+ Complete: Safe Workflow CLI (Wrapping Existing Utilities)
+**Extracted**: 6 safe workflow commands (process-inbox-safe, batch-process-safe, performance-report, integrity-report, backup, list-backups)  
+**Files**: `development/src/cli/safe_workflow_cli.py` (517 LOC) + `safe_workflow_formatter.py` (131 LOC)  
+**Tests**: 10/10 passing (RED → GREEN → REFACTOR complete)  
+**Unique Discovery**: Wrapped pre-existing safe_workflow_cli_utils.py (464 LOC) from TDD Iteration 4  
+**Progress**: 72% complete (18/25 commands when counting wrapped)  
+**Duration**: 1 hour actual vs 3-4 hours estimated (3.3x faster!)  
+**Pattern**: Wrapping existing utilities dramatically faster than building from scratch  
+**Learning**: Always check for existing utilities first - saved 3-4 hours  
+**Next**: Remaining workflow commands on 2025-10-11+ (check for utilities first)
 
 ### [2025-10-10] - Iteration 2 Complete: Fleeting Notes CLI + Bug #3 Fix
 **Extracted**: `fleeting-health` and `fleeting-triage` commands  
