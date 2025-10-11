@@ -340,7 +340,50 @@ inneros (wrapper) → routes to dedicated CLIs
 
 ---
 
+## Implementation Progress
+
+### Extraction Status: 32% Complete (8/25 commands)
+
+**✅ Phase 1 Complete (Pre-ADR)**:
+- YouTube CLI (2 commands) → `youtube_cli.py`
+- Tag Enhancement CLI (3 commands) → `advanced_tag_enhancement_cli.py`
+- Review Notes CLI (3 commands) → `notes_cli.py`
+- Performance CLI (1 command) → `real_data_performance_cli.py`
+
+**✅ Iteration 1 Complete (2025-10-10)**:
+- Weekly Review CLI (2 commands) → `weekly_review_cli.py`
+  - Command: `weekly-review` (checklist generation)
+  - Command: `enhanced-metrics` (comprehensive metrics)
+  - LOC: 340 (under 400 target)
+  - Tests: 4/4 passing
+  - Commit: `600672d`
+  - Lessons: `adr-004-iteration-1-weekly-review-lessons-learned.md`
+
+**🔄 Next: Iteration 2 (2025-10-11)**:
+- Fleeting Notes CLI (3 commands) → `fleeting_cli.py`
+  - Command: `fleeting-health`
+  - Command: `fleeting-triage`
+  - Command: fleeting note processing
+  - **Includes**: Bug #3 fix (AttributeError)
+
+**📋 Remaining Work**:
+- Safe Workflow CLI (5 commands) → `workflow_cli.py`
+- Backup CLI (3 commands) → `backup_cli.py`
+- Core Workflow CLI (5 commands) → `core_cli.py`
+- Miscellaneous (5 commands) → TBD
+
+---
+
 ## Updates
+
+### [2025-10-10] - Iteration 1 Complete: Weekly Review CLI
+**Extracted**: `weekly-review` and `enhanced-metrics` commands  
+**File**: `development/src/cli/weekly_review_cli.py` (340 LOC)  
+**Tests**: 4/4 passing (RED → GREEN → REFACTOR complete)  
+**Progress**: 32% complete (8/25 commands extracted)  
+**Duration**: 1.5 hours actual vs 2-4 hours estimated  
+**Learning**: TDD cycle faster than expected, extraction patterns proven  
+**Next**: Fleeting notes CLI on 2025-10-11 (includes Bug #3 fix)
 
 ### [2025-10-10] - Status: Accepted
 **Reason**: Quality audit found bugs in monolithic CLI; ADR-001 only completed backend  
