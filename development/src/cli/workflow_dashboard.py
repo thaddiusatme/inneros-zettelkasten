@@ -20,10 +20,18 @@ from typing import Dict, Any
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from .workflow_dashboard_utils import CLIIntegrator, StatusPanelRenderer, RICH_AVAILABLE
+from .workflow_dashboard_utils import (
+    CLIIntegrator, 
+    StatusPanelRenderer, 
+    AsyncCLIExecutor, 
+    TestablePanel,
+    RICH_AVAILABLE
+)
 
 try:
     from rich.console import Console
+    from rich.panel import Panel
+    from rich.text import Text
 except ImportError:
     RICH_AVAILABLE = False
 
@@ -51,6 +59,17 @@ class WorkflowDashboard:
         self.vault_path = vault_path
         self.cli_integrator = CLIIntegrator(vault_path=vault_path)
         self.panel_renderer = StatusPanelRenderer()
+        self.async_executor = AsyncCLIExecutor()
+        
+        # Keyboard shortcut mapping (TDD Iteration 2)
+        self.key_commands = {
+            'p': {'cli': 'core_workflow_cli.py', 'args': ['process-inbox'], 'desc': 'Process Inbox'},
+            'w': {'cli': 'weekly_review_cli.py', 'args': ['weekly-review'], 'desc': 'Weekly Review'},
+            'f': {'cli': 'fleeting_cli.py', 'args': ['fleeting-health'], 'desc': 'Fleeting Health'},
+            's': {'cli': 'core_workflow_cli.py', 'args': ['status', '--format', 'json'], 'desc': 'System Status'},
+            'b': {'cli': 'safe_workflow_cli.py', 'args': ['backup'], 'desc': 'Create Backup'},
+            'q': {'exit': True, 'desc': 'Quit Dashboard'}
+        }
         
         if RICH_AVAILABLE:
             self.console = Console()
@@ -138,6 +157,84 @@ class WorkflowDashboard:
         )
         
         return panel
+    
+    def handle_key_press(self, key: str) -> Dict[str, Any]:
+        """
+        Handle keyboard shortcut press.
+        
+        TDD Iteration 2: P0.2 - Keyboard Navigation
+        
+        Args:
+            key: Key pressed (single character, lowercase)
+            
+        Returns:
+            Dictionary with 'success', 'exit', 'error', 'message' keys
+        """
+        key = key.lower()
+        
+        # Check if key is valid
+        if key not in self.key_commands:
+            return {
+                'error': True,
+                'message': f"Invalid key '{key}'. Valid keys: {', '.join(self.key_commands.keys())}"
+            }
+        
+        command = self.key_commands[key]
+        
+        # Handle quit
+        if command.get('exit'):
+            return {'exit': True, 'success': True}
+        
+        # Execute CLI command
+        result = self.async_executor.execute_with_progress(
+            cli_name=command['cli'],
+            args=command['args'],
+            vault_path=self.vault_path
+        )
+        
+        return {
+            'success': result['returncode'] == 0,
+            'returncode': result['returncode'],
+            'stdout': result['stdout'],
+            'stderr': result['stderr']
+        }
+    
+    def render_quick_actions_panel(self) -> Any:
+        """
+        Render quick actions panel with keyboard shortcuts.
+        
+        TDD Iteration 2: P0.2 - Quick Actions Panel
+        
+        Returns:
+            Rich Panel object or formatted string
+        """
+        if not RICH_AVAILABLE:
+            lines = ["⚡ Quick Actions:"]
+            for key, cmd in self.key_commands.items():
+                lines.append(f"  [{key.upper()}] {cmd['desc']}")
+            return "\n".join(lines)
+        
+        # Build panel content as string for GREEN phase (will enhance in REFACTOR)
+        lines = ["⚡ Quick Actions:\n"]
+        shortcuts = list(self.key_commands.items())
+        for i in range(0, len(shortcuts), 3):
+            row_items = shortcuts[i:i+3]
+            row_text = "  ".join(
+                f"[{k.upper()}] {cmd['desc']}" 
+                for k, cmd in row_items
+            )
+            lines.append(row_text)
+        
+        lines.append("\nPress any key to execute action...")
+        content_str = "\n".join(lines)
+        
+        # Return TestablePanel (converts to string for tests, renders as Panel for Rich)
+        panel = Panel(
+            content_str,
+            title="⚡ Quick Actions",
+            border_style="cyan"
+        )
+        return TestablePanel(panel, content_str)
     
     def display(self):
         """
