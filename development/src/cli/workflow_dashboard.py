@@ -218,6 +218,63 @@ class WorkflowDashboard:
             'stderr': result['stderr']
         }
     
+    def _display_operation_result(self, key: str, result: dict):
+        """
+        Display user-friendly operation result.
+        
+        Parses CLI output and shows summary instead of raw output.
+        
+        Args:
+            key: The keyboard shortcut that was pressed
+            result: Result dict from handle_key_press()
+        """
+        key_names = {
+            'p': 'Process Inbox',
+            'w': 'Weekly Review',
+            'f': 'Fleeting Health',
+            's': 'System Status',
+            'b': 'Create Backup'
+        }
+        
+        operation_name = key_names.get(key, 'Operation')
+        
+        # Parse stdout for summary info
+        stdout = result.get('stdout', '')
+        
+        self.console.print(f"\n✅ [green]{operation_name} Complete![/green]")
+        
+        # Extract key metrics from output
+        if 'Processed:' in stdout:
+            # Process Inbox results
+            import re
+            processed_match = re.search(r'Processed:\s*(\d+)', stdout)
+            failed_match = re.search(r'Failed:\s*(\d+)', stdout)
+            total_match = re.search(r'Total:\s*(\d+)', stdout)
+            
+            if processed_match:
+                processed = processed_match.group(1)
+                failed = failed_match.group(1) if failed_match else '0'
+                total = total_match.group(1) if total_match else processed
+                
+                self.console.print(f"   📊 Results:")
+                self.console.print(f"      • Total notes: {total}")
+                self.console.print(f"      • Successfully processed: {processed}")
+                if failed != '0':
+                    self.console.print(f"      • [yellow]Failed: {failed}[/yellow]")
+        
+        elif 'notes in inbox' in stdout.lower() or 'inbox count' in stdout.lower():
+            # Status results - show brief summary
+            lines = stdout.strip().split('\n')[:10]  # First 10 lines
+            self.console.print("   " + "\n   ".join(lines))
+        
+        else:
+            # Generic success - show first few lines
+            lines = stdout.strip().split('\n')[:5]
+            if lines:
+                self.console.print("   " + "\n   ".join(lines))
+        
+        self.console.print("\n[dim]Press any key to continue...[/dim]")
+    
     def render_quick_actions_panel(self) -> Any:
         """
         Render quick actions panel with keyboard shortcuts.
@@ -297,8 +354,10 @@ class WorkflowDashboard:
                     self.console.print(f"\n❌ [red]{result.get('message')}[/red]")
                     continue
                 
-                # Show success message
-                if result.get('message'):
+                # Show operation result with better feedback
+                if result.get('success'):
+                    self._display_operation_result(key, result)
+                elif result.get('message'):
                     self.console.print(f"\n✅ [green]{result.get('message')}[/green]")
                 
             except KeyboardInterrupt:
