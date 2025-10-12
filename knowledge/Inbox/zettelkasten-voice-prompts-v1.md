@@ -1,3 +1,10 @@
+---
+created: 2025-10-05 22:20
+tags: [concept-map-building, connection-type-tags, development-stage-tags, fleeting-permanent-pathway,
+  herearetheextractedtagszettelkasten, knowledge-capture, knowledge-management, literature-note-focus]
+quality_score: 0.85
+ai_processed: '2025-10-12T13:00:19.112241'
+---
 # 🎤 Zettelkasten Voice Note Prompts v1.0
 
 **For Samsung S23 Knowledge Capture - Zettelkasten Optimized**

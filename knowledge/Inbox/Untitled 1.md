@@ -1,3 +1,10 @@
+---
+created: 2025-10-07 14:37
+tags: [ai, ai-assisted-note-taking, ai-processing, automation, cli-commands, error-handling,
+  machine-learning, manual-processing]
+quality_score: 0.2
+ai_processed: '2025-10-12T12:52:50.737126'
+---
 ```mermaid
 flowchart TD
 	Start([Processing Triggered]) --> CheckTranscript{Can Fetch<br/>Transcript?}

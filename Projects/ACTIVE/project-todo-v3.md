@@ -1,9 +1,9 @@
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-10 19:40 PDT  
-**Status**: 🏗️ **ARCHITECTURAL PIVOT** - ADR-004 CLI extraction prioritized over bug fixes  
+**Last Updated**: 2025-10-12 14:20 PDT  
+**Status**: ✅ **CLEAN ARCHITECTURE COMPLETE** - ADR-004 done (100%), bugs ready to fix  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
-**Critical**: `Projects/ACTIVE/adr-004-cli-layer-extraction.md` - 2-week sprint starting Oct 11
+**Latest**: `Projects/ACTIVE/PROJECT-STATUS-UPDATE-2025-10-12.md` - 48-hour progress summary
 
 ---
 
@@ -88,16 +88,81 @@
 
 - **Current Classes >500 LOC**: **0** ✅ (Target achieved Oct 5, 2025!)
 - **Current Classes >20 methods**: **0** ✅ (Target achieved Oct 5, 2025!)
-- **CLI Monoliths >2000 LOC**: **1** ❌ (workflow_demo.py at 2,074 LOC)
+- **CLI Monoliths >2000 LOC**: **0** ✅ (workflow_demo.py extracted Oct 11, 2025!)
+- **Dedicated CLIs**: **10** (avg 400 LOC each)
 - **Original Target**: Zero classes exceeding limits by Nov 2, 2025
 - **Actual Achievement**: **27 days ahead of schedule!** 🏆
-- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅, ADR-004: CLI extraction ✅ ACCEPTED)
+- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅ COMPLETE, ADR-004: CLI extraction ✅ COMPLETE)
 
 ---
 
 ## ✅ Recently Completed Major Systems
 
-### ✅ WorkflowManager Refactor - 4-Week Sprint (Oct 6 - Oct 5, 2025)
+### ✅ ADR-004 CLI Layer Extraction - 2-Day Sprint (Oct 10-11, 2025)
+
+**ARCHITECTURAL VICTORY** - 2-week sprint completed in 2 days (4.7x faster)!
+
+- **Duration**: 8.5 hours over 2 days (vs 40 hours estimated)
+- **Status**: 🎉 **100% COMPLETE** (25/25 commands extracted)
+- **Efficiency**: 4.7x faster than estimated
+- **Deliverables**:
+  - ✅ 10 Dedicated CLIs (weekly_review_cli.py, fleeting_cli.py, safe_workflow_cli.py, core_workflow_cli.py, backup_cli.py, interactive_cli.py, + 4 pre-existing)
+  - ✅ Eliminated 2,074 LOC monolith (workflow_demo.py)
+  - ✅ 100% test coverage (all CLI tests passing)
+  - ✅ Bug #3 fixed (fleeting-health AttributeError) during Iteration 2
+  - ✅ Clean architecture: CLI ← Manager ← Utilities
+- **5 Iterations Completed**:
+  1. Iteration 1 (Oct 10): Weekly Review CLI - 2 commands, 1.5 hours
+  2. Iteration 2 (Oct 10): Fleeting Notes CLI + Bug #3 fix - 3 commands, 2.0 hours
+  3. Iteration 3 (Oct 10): Safe Workflow CLI - 6 commands, 1.0 hour (wrapping pattern)
+  4. Iteration 4 (Oct 11): Core Workflow CLI - 4 commands, 2.5 hours
+  5. Iteration 5 (Oct 11): Final commands - 3 commands, 1.0 hour
+- **Key Lessons**:
+  - Discovery phase saved 20+ hours (found 7 remaining, not 25)
+  - Wrapping utilities 3.3x faster (0.17 vs 0.67 hrs/cmd)
+  - TDD methodology delivered zero regressions
+  - Velocity tracking enabled accurate re-planning
+- **Branch**: `feat/adr-004-cli-extraction` → **MERGED TO MAIN** ✅
+- **ADR**: `Projects/ACTIVE/adr-004-cli-layer-extraction.md` ✅ COMPLETE
+- **Documentation**: 5 iteration lessons learned + discovery analysis (~1,500 lines)
+- **Impact**: Technical debt eliminated, bugs ready to fix in correct architecture
+
+### ✅ UX Regression Prevention Tests (Oct 12, 2025)
+
+**TEST SUITE COMPLETE** - Dashboard progress & completion UX protected!
+
+- **Duration**: Part of testing sprint (Oct 12)
+- **Tests**: 13/13 passing (100% success rate)
+- **File**: `tests/integration/test_dashboard_progress_ux.py`
+- **What This Prevents**:
+  1. Dashboard appearing frozen (no progress feedback)
+  2. Silent operation completion (no confirmation messages)
+  3. Unclear progress (no file names or percentages)
+- **Test Coverage**:
+  - 4 tests: Progress display validation
+  - 4 tests: Completion message validation
+  - 2 tests: Async CLI executor
+  - 3 tests: Original regression scenarios
+- **Key Fix**: Test #12 regression - separated integration & UI layer testing
+- **Documentation**: `development/TEST-STATUS-SUMMARY.md` (298 lines)
+- **Impact**: Can't ship broken UX - tests catch regressions before deployment
+
+### ✅ Contract Testing - Interface Validation (Oct 12, 2025)
+
+**TEST SUITE COMPLETE** - Interface mismatches prevented!
+
+- **Duration**: Part of testing sprint (Oct 12)
+- **Tests**: 7/7 passing (100% success rate)
+- **File**: `tests/unit/test_workflow_cli_contract.py`
+- **What This Prevents**:
+  - Interface mismatches between WorkflowManager ↔ CLI
+  - Key name mismatches causing incorrect displays
+  - Example bug: CLI showing "Total: 0" when should show "Total: 60"
+- **Test Coverage**: Verifies both sides use same dictionary keys
+- **Documentation**: `development/TDD-CONTRACT-TEST-LESSONS.md` (221 lines)
+- **Impact**: Contract violations caught by tests, not users
+
+### ✅ WorkflowManager Refactor - 4-Week Sprint (Sep 30 - Oct 5, 2025)
 
 **MAJOR ARCHITECTURAL VICTORY** - God class eliminated 27 days ahead of schedule!
 

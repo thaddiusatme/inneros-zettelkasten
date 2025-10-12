@@ -1413,8 +1413,12 @@ Examples:
         print(f"\n📊 Found {len(orphaned_notes)} orphaned notes:")
         if orphaned_notes:
             for note in orphaned_notes:
-                relative_path = note['path'].replace(str(workflow.base_dir) + '/', '')
-                print(f"   📄 {note['title']} ({relative_path})")
+                note_path = note.get('path', '')
+                if note_path:
+                    relative_path = note_path.replace(str(workflow.base_dir) + '/', '')
+                else:
+                    relative_path = 'Unknown path'
+                print(f"   📄 {note.get('title', 'Untitled')} ({relative_path})")
         else:
             print("   🎉 No orphaned notes found!")
         
@@ -1646,17 +1650,9 @@ Examples:
                 print(f"❌ Error: Inbox directory not found at {inbox_dir}")
                 return 1
             
-            # Find YouTube notes
-            youtube_notes = []
-            for note_path in inbox_dir.glob("*.md"):
-                try:
-                    content = note_path.read_text()
-                    metadata, _ = parse_frontmatter(content)
-                    
-                    if metadata.get('source') == 'youtube' and not metadata.get('ai_processed', False):
-                        youtube_notes.append((note_path, metadata))
-                except Exception as e:
-                    print(f"   ⚠️ Skipping {note_path.name}: {e}")
+            # Get all YouTube notes in Inbox (excluding backup files)
+            all_youtube_notes = workflow.scan_youtube_notes()
+            youtube_notes = [(path, meta) for path, meta in all_youtube_notes if '_backup_' not in path.name]
             
             print(f"📊 Found {len(youtube_notes)} unprocessed YouTube notes")
             
@@ -1727,7 +1723,15 @@ Examples:
                         failed += 1
                         
                 except Exception as e:
-                    print(f"   ❌ Error: {e}")
+                    # Provide detailed error information for debugging
+                    error_type = type(e).__name__
+                    error_msg = str(e) if str(e) else "No error message available"
+                    print(f"   ❌ Failed: {error_type}: {error_msg}")
+                    # Log full traceback for debugging
+                    import traceback
+                    import logging
+                    logging.error(f"YouTube processing error for {note_path.name}")
+                    logging.error(traceback.format_exc())
                     failed += 1
             
             # Summary (skip if JSON output requested)

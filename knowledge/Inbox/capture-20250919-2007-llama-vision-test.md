@@ -2,8 +2,8 @@
 created: 2025-09-19 20:07
 type: fleeting
 status: inbox
-tags: [agent, agent-topology, ai, artificial-intelligence, attention, attention-context-window,
-  capture, computer-vision]
+tags: [agent, agent-topology, ai, ai-development, artificial-intelligence, attention,
+  attention-context-window, capture]
 source: capture
 quality_score: 0.75
 ai_tags:
@@ -15,7 +15,7 @@ capture_type: vision_enhanced
 ai_quality_score: 0.85
 ai_processing_method: llama-vision
 ai_processed_at: 2025-09-24 21:50:46
-ai_processed: '2025-09-28T09:49:47.397713'
+ai_processed: '2025-10-12T12:57:50.337826'
 ---
 
 

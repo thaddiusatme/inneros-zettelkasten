@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from cli.real_data_performance_validator import RealDataPerformanceValidator
+from src.cli.real_data_performance_validator import RealDataPerformanceValidator
 
 
 class ConcurrentProcessingManager:
