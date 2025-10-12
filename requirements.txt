@@ -25,3 +25,6 @@ flask==3.1.0
 
 # Utilities
 python-dateutil==2.9.0
+
+# Terminal UI (for workflow dashboard)
+rich==13.7.0
