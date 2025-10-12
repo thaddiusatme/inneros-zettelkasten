@@ -194,11 +194,113 @@ class StatusPanelRenderer:
         return "\n".join(lines)
 
 
+class ProgressDisplayManager:
+    """
+    Manage Rich progress indicators and spinners.
+    
+    TDD Iteration 2: REFACTOR Phase - Extracted utility for progress display
+    
+    Responsibilities:
+    - Create and manage Rich Progress objects
+    - Show/hide progress spinners
+    - Track operation duration
+    - Format progress messages
+    """
+    
+    def __init__(self):
+        """Initialize progress display manager."""
+        self.active_progress = None
+        self.show_progress = RICH_AVAILABLE
+    
+    def format_operation_message(self, operation: str, status: str = "running") -> str:
+        """
+        Format operation status message.
+        
+        Args:
+            operation: Operation name (e.g., "Process Inbox")
+            status: Status indicator (running, success, error)
+            
+        Returns:
+            Formatted message string
+        """
+        status_icons = {
+            'running': '⏳',
+            'success': '✅',
+            'error': '❌'
+        }
+        icon = status_icons.get(status, '•')
+        return f"{icon} {operation}..."
+
+
+class ActivityLogger:
+    """
+    Log and track dashboard operations.
+    
+    TDD Iteration 2: REFACTOR Phase - Foundation for P1.2 Activity Log Panel
+    
+    Responsibilities:
+    - Store operation history
+    - Format activity entries
+    - Provide last N operations
+    - Track timestamps and results
+    """
+    
+    def __init__(self, max_entries: int = 10):
+        """
+        Initialize activity logger.
+        
+        Args:
+            max_entries: Maximum number of entries to retain
+        """
+        self.max_entries = max_entries
+        self.activities = []
+    
+    def log_operation(
+        self,
+        action: str,
+        result: str,
+        status: str = "success"
+    ):
+        """
+        Log an operation.
+        
+        Args:
+            action: Action performed (e.g., "Process Inbox")
+            result: Result description
+            status: Operation status (success, error, info)
+        """
+        import datetime
+        entry = {
+            'timestamp': datetime.datetime.now(),
+            'action': action,
+            'result': result,
+            'status': status
+        }
+        self.activities.append(entry)
+        
+        # Keep only last max_entries
+        if len(self.activities) > self.max_entries:
+            self.activities = self.activities[-self.max_entries:]
+    
+    def get_recent_activities(self, count: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get recent activities.
+        
+        Args:
+            count: Number of activities to return
+            
+        Returns:
+            List of activity dictionaries
+        """
+        return self.activities[-count:]
+
+
 class AsyncCLIExecutor:
     """
     Execute CLI commands asynchronously with progress indicators.
     
     TDD Iteration 2: GREEN Phase - Minimal async execution
+    Enhanced in REFACTOR with ProgressDisplayManager integration
     
     Responsibilities:
     - Non-blocking CLI execution using threading
@@ -207,16 +309,18 @@ class AsyncCLIExecutor:
     - Timeout handling
     """
     
-    def __init__(self, timeout: int = 60):
+    def __init__(self, timeout: int = 60, progress_manager: Optional['ProgressDisplayManager'] = None):
         """
         Initialize async CLI executor.
         
         Args:
             timeout: Command timeout in seconds (default: 60)
+            progress_manager: Optional progress display manager
         """
         self.timeout = timeout
         self.result = None
         self.thread = None
+        self.progress_manager = progress_manager or ProgressDisplayManager()
     
     def execute_with_progress(
         self,

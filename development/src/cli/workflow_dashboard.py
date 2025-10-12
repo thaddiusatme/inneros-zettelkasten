@@ -163,6 +163,7 @@ class WorkflowDashboard:
         Handle keyboard shortcut press.
         
         TDD Iteration 2: P0.2 - Keyboard Navigation
+        Enhanced in REFACTOR with improved error messages
         
         Args:
             key: Key pressed (single character, lowercase)
@@ -174,9 +175,15 @@ class WorkflowDashboard:
         
         # Check if key is valid
         if key not in self.key_commands:
+            # Enhanced error message with actionable guidance (REFACTOR phase)
+            valid_keys = ', '.join(sorted(self.key_commands.keys()))
             return {
                 'error': True,
-                'message': f"Invalid key '{key}'. Valid keys: {', '.join(self.key_commands.keys())}"
+                'message': (
+                    f"Invalid key '{key}'. "
+                    f"Valid shortcuts: [{valid_keys.upper()}]. "
+                    f"Press [?] for help (planned for P2.3)."
+                )
             }
         
         command = self.key_commands[key]
