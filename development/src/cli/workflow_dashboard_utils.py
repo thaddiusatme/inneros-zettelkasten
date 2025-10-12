@@ -365,19 +365,40 @@ class AsyncCLIExecutor:
             stdout_lines = []
             stderr_lines = []
             
-            # Simple spinner animation
-            spinner_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-            spinner_idx = 0
+            # Read progress from stderr in real-time
+            import select
+            import os
+            import fcntl
+            
+            # Make stderr non-blocking
+            stderr_fd = process.stderr.fileno()
+            flags = fcntl.fcntl(stderr_fd, fcntl.F_GETFL)
+            fcntl.fcntl(stderr_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+            
+            last_progress = ""
             
             while True:
                 # Check if process finished
                 if process.poll() is not None:
                     break
                 
-                # Show spinner
-                print(f"\r   {spinner_chars[spinner_idx]} Processing...", end='', flush=True)
-                spinner_idx = (spinner_idx + 1) % len(spinner_chars)
-                time.sleep(0.1)
+                # Try to read stderr (progress info)
+                try:
+                    # Use select to check if data available
+                    ready, _, _ = select.select([process.stderr], [], [], 0.1)
+                    if ready:
+                        chunk = process.stderr.read(1024)
+                        if chunk:
+                            stderr_lines.append(chunk)
+                            # Extract last line for display (progress info)
+                            lines = chunk.split('\r')
+                            if lines:
+                                last_progress = lines[-1].strip()
+                                if last_progress:
+                                    print(f"\r   {last_progress}", end='', flush=True)
+                except (IOError, OSError):
+                    # No data available yet
+                    time.sleep(0.1)
             
             # Get remaining output
             stdout, stderr = process.communicate(timeout=self.timeout)

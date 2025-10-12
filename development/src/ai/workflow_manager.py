@@ -574,12 +574,18 @@ class WorkflowManager:
         except Exception as e:
             return {"error": f"Failed to promote note: {e}"}
     
-    def batch_process_inbox(self) -> Dict:
-        """Process all notes in the inbox."""
+    def batch_process_inbox(self, show_progress: bool = True) -> Dict:
+        """
+        Process all notes in the inbox.
+        
+        Args:
+            show_progress: If True, print progress to stderr (for dashboard display)
+        """
         inbox_files = list(self.inbox_dir.glob("*.md"))
+        total = len(inbox_files)
         
         results = {
-            "total_files": len(inbox_files),
+            "total_files": total,
             "processed": 0,
             "failed": 0,
             "results": [],
@@ -590,7 +596,18 @@ class WorkflowManager:
             }
         }
         
-        for note_file in inbox_files:
+        for idx, note_file in enumerate(inbox_files, 1):
+            # Show progress (to stderr so it doesn't interfere with JSON output)
+            if show_progress:
+                import sys
+                filename = note_file.name
+                # Truncate long filenames
+                if len(filename) > 50:
+                    filename = filename[:47] + "..."
+                progress_pct = int((idx / total) * 100)
+                sys.stderr.write(f"\r[{idx}/{total}] {progress_pct}% - {filename}...")
+                sys.stderr.flush()
+            
             try:
                 result = self.process_inbox_note(str(note_file))
                 
@@ -617,6 +634,12 @@ class WorkflowManager:
                     "original_file": str(note_file),
                     "error": str(e)
                 })
+        
+        # Clear progress line
+        if show_progress and total > 0:
+            import sys
+            sys.stderr.write("\r" + " " * 80 + "\r")
+            sys.stderr.flush()
         
         return results
     
