@@ -20,7 +20,8 @@ from typing import Dict, Any
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from .workflow_dashboard_utils import (
+# Use absolute import for direct script execution
+from src.cli.workflow_dashboard_utils import (
     CLIIntegrator, 
     StatusPanelRenderer, 
     AsyncCLIExecutor, 
