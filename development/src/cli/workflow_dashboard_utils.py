@@ -329,7 +329,7 @@ class AsyncCLIExecutor:
         vault_path: str = "."
     ) -> Dict[str, Any]:
         """
-        Execute CLI command with progress indicator.
+        Execute CLI command with live progress display.
         
         Args:
             cli_name: Name of CLI file (e.g., 'core_workflow_cli.py')
@@ -345,28 +345,64 @@ class AsyncCLIExecutor:
         cli_path = Path(__file__).parent / cli_name
         cmd = [sys.executable, str(cli_path), vault_path] + args
         
-        # Execute in subprocess (synchronous for minimal GREEN implementation)
-        # Threading can be added in REFACTOR phase if needed
+        # Show what's happening
+        operation_name = self._get_operation_name(cli_name, args)
+        print(f"\n⏳ {operation_name}...")
+        print("   (This may take a moment for large collections)\n")
+        
+        # Execute in subprocess with live output
         try:
-            result = subprocess.run(
+            # Use Popen for streaming output
+            process = subprocess.Popen(
                 cmd,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=self.timeout
+                bufsize=1  # Line buffered
             )
             
+            # Collect output while showing progress
+            stdout_lines = []
+            stderr_lines = []
+            
+            # Simple spinner animation
+            spinner_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+            spinner_idx = 0
+            
+            while True:
+                # Check if process finished
+                if process.poll() is not None:
+                    break
+                
+                # Show spinner
+                print(f"\r   {spinner_chars[spinner_idx]} Processing...", end='', flush=True)
+                spinner_idx = (spinner_idx + 1) % len(spinner_chars)
+                time.sleep(0.1)
+            
+            # Get remaining output
+            stdout, stderr = process.communicate(timeout=self.timeout)
+            stdout_lines.append(stdout)
+            stderr_lines.append(stderr)
+            
+            # Clear spinner line
+            print("\r   " + " " * 50 + "\r", end='', flush=True)
+            
             duration = time.time() - start_time
+            full_stdout = ''.join(stdout_lines)
+            full_stderr = ''.join(stderr_lines)
             
             return {
-                'returncode': result.returncode,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
+                'returncode': process.returncode,
+                'stdout': full_stdout,
+                'stderr': full_stderr,
                 'duration': duration,
                 'timeout': False
             }
             
         except subprocess.TimeoutExpired:
             duration = time.time() - start_time
+            if 'process' in locals():
+                process.kill()
             return {
                 'returncode': -1,
                 'stdout': '',
@@ -374,3 +410,17 @@ class AsyncCLIExecutor:
                 'duration': duration,
                 'timeout': True
             }
+    
+    def _get_operation_name(self, cli_name: str, args: List[str]) -> str:
+        """Get friendly operation name from CLI name and args."""
+        if 'process-inbox' in args:
+            return "Processing Inbox"
+        elif 'status' in args:
+            return "Getting Status"
+        elif 'weekly-review' in args:
+            return "Running Weekly Review"
+        elif 'fleeting-health' in args:
+            return "Checking Fleeting Health"
+        elif 'backup' in args:
+            return "Creating Backup"
+        return "Running Operation"
