@@ -332,6 +332,368 @@ class TestStatusPanelRenderer(unittest.TestCase):
             self.fail("RED Phase: Panel metrics formatting not implemented")
 
 
+class TestWorkflowDashboardKeyboardShortcuts(unittest.TestCase):
+    """
+    TDD Iteration 2 - RED Phase Tests for Keyboard Navigation
+    
+    Tests for P0.2 - Quick Actions Panel with keyboard shortcuts
+    
+    Test Coverage:
+    1. Keyboard shortcuts - [P]rocess, [W]eekly, [F]leeting, [S]tatus, [B]ackup, [Q]uit
+    2. CLI execution via shortcuts
+    3. Invalid key handling
+    4. Quick actions panel display
+    """
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        self.vault_path = "/test/vault"
+    
+    @patch('subprocess.run')
+    def test_keyboard_shortcut_p_calls_process_inbox(self, mock_run):
+        """
+        Test [P] key triggers process-inbox CLI command
+        
+        RED: This will fail - keyboard handling doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Processed 5 notes",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('p')
+            
+            # Verify CLI was called
+            mock_run.assert_called_once()
+            call_args = mock_run.call_args[0][0]
+            cmd_str = ' '.join(call_args)
+            self.assertIn('core_workflow_cli.py', cmd_str)
+            self.assertIn('process-inbox', cmd_str)
+            
+            # Verify result
+            self.assertIn('success', result)
+            self.assertTrue(result['success'])
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: handle_key_press not implemented")
+    
+    @patch('subprocess.run')
+    def test_keyboard_shortcut_w_calls_weekly_review(self, mock_run):
+        """
+        Test [W] key triggers weekly-review CLI command
+        
+        RED: This will fail - weekly review shortcut doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Weekly review completed",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('w')
+            
+            # Verify CLI was called
+            call_args = mock_run.call_args[0][0]
+            cmd_str = ' '.join(call_args)
+            self.assertIn('weekly_review_cli.py', cmd_str)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: weekly review shortcut not implemented")
+    
+    @patch('subprocess.run')
+    def test_keyboard_shortcut_f_calls_fleeting_health(self, mock_run):
+        """
+        Test [F] key triggers fleeting-health CLI command
+        
+        RED: This will fail - fleeting health shortcut doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Fleeting notes: 5 healthy, 3 stale",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('f')
+            
+            # Verify CLI was called
+            call_args = mock_run.call_args[0][0]
+            cmd_str = ' '.join(call_args)
+            self.assertIn('fleeting_cli.py', cmd_str)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: fleeting health shortcut not implemented")
+    
+    @patch('subprocess.run')
+    def test_keyboard_shortcut_s_calls_system_status(self, mock_run):
+        """
+        Test [S] key triggers system status CLI command
+        
+        RED: This will fail - system status shortcut doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout='{"status": "healthy"}',
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('s')
+            
+            # Verify CLI was called
+            call_args = mock_run.call_args[0][0]
+            cmd_str = ' '.join(call_args)
+            self.assertIn('core_workflow_cli.py', cmd_str)
+            self.assertIn('status', cmd_str)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: system status shortcut not implemented")
+    
+    @patch('subprocess.run')
+    def test_keyboard_shortcut_b_calls_backup(self, mock_run):
+        """
+        Test [B] key triggers backup CLI command
+        
+        RED: This will fail - backup shortcut doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Backup created: backup-2025-10-11.tar.gz",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('b')
+            
+            # Verify CLI was called
+            call_args = mock_run.call_args[0][0]
+            cmd_str = ' '.join(call_args)
+            self.assertIn('safe_workflow_cli.py', cmd_str)
+            self.assertIn('backup', cmd_str)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: backup shortcut not implemented")
+    
+    def test_keyboard_shortcut_q_exits_dashboard(self):
+        """
+        Test [Q] key triggers clean exit
+        
+        RED: This will fail - quit handling doesn't exist yet
+        """
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('q')
+            
+            # Verify exit signal
+            self.assertIn('exit', result)
+            self.assertTrue(result['exit'])
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: quit handling not implemented")
+    
+    def test_invalid_key_shows_error_message(self):
+        """
+        Test invalid key press shows helpful error
+        
+        RED: This will fail - error handling doesn't exist yet
+        """
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            result = dashboard.handle_key_press('x')
+            
+            # Verify error response
+            self.assertIn('error', result)
+            self.assertTrue(result['error'])
+            self.assertIn('message', result)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: invalid key handling not implemented")
+    
+    def test_quick_actions_panel_displays(self):
+        """
+        Test quick actions panel renders with all shortcuts
+        
+        RED: This will fail - render_quick_actions_panel doesn't exist yet
+        """
+        try:
+            from src.cli.workflow_dashboard import WorkflowDashboard
+            
+            dashboard = WorkflowDashboard(vault_path=self.vault_path)
+            panel = dashboard.render_quick_actions_panel()
+            
+            # Verify panel exists
+            self.assertIsNotNone(panel)
+            
+            # Should contain shortcut hints
+            # Panel might be Rich object or string
+            panel_str = str(panel) if not isinstance(panel, str) else panel
+            self.assertIn('[P]', panel_str)
+            self.assertIn('[W]', panel_str)
+            self.assertIn('[F]', panel_str)
+            self.assertIn('[S]', panel_str)
+            self.assertIn('[B]', panel_str)
+            self.assertIn('[Q]', panel_str)
+            
+        except (ImportError, AttributeError):
+            self.fail("RED Phase: render_quick_actions_panel not implemented")
+
+
+class TestAsyncCLIExecutor(unittest.TestCase):
+    """
+    TDD Iteration 2 - RED Phase Tests for Async CLI Execution
+    
+    Tests for P0.3 - Async execution with progress indicators
+    
+    Test Coverage:
+    1. Threaded CLI execution - non-blocking operations
+    2. Progress display - spinner during execution
+    3. Success/error messaging
+    4. Timeout handling
+    """
+    
+    @patch('subprocess.run')
+    @patch('threading.Thread')
+    def test_async_cli_executor_shows_progress(self, mock_thread, mock_run):
+        """
+        Test async executor shows progress during operation
+        
+        RED: This will fail - AsyncCLIExecutor doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Operation completed",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard_utils import AsyncCLIExecutor
+            
+            executor = AsyncCLIExecutor()
+            result = executor.execute_with_progress(
+                cli_name='core_workflow_cli.py',
+                args=['process-inbox']
+            )
+            
+            # Verify execution started
+            self.assertIsNotNone(result)
+            self.assertIn('returncode', result)
+            
+        except ImportError:
+            self.fail("RED Phase: AsyncCLIExecutor not implemented")
+    
+    @patch('subprocess.run')
+    def test_success_message_after_operation(self, mock_run):
+        """
+        Test success message displayed after successful operation
+        
+        RED: This will fail - success messaging doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=0,
+            stdout="Processed 5 notes",
+            stderr=""
+        )
+        
+        try:
+            from src.cli.workflow_dashboard_utils import AsyncCLIExecutor
+            
+            executor = AsyncCLIExecutor()
+            result = executor.execute_with_progress(
+                cli_name='core_workflow_cli.py',
+                args=['process-inbox']
+            )
+            
+            # Verify success result
+            self.assertEqual(result['returncode'], 0)
+            self.assertIn('stdout', result)
+            self.assertIn('Processed', result['stdout'])
+            
+        except ImportError:
+            self.fail("RED Phase: Success messaging not implemented")
+    
+    @patch('subprocess.run')
+    def test_error_message_on_cli_failure(self, mock_run):
+        """
+        Test error message displayed on CLI failure
+        
+        RED: This will fail - error messaging doesn't exist yet
+        """
+        mock_run.return_value = Mock(
+            returncode=1,
+            stdout="",
+            stderr="Error: Operation failed"
+        )
+        
+        try:
+            from src.cli.workflow_dashboard_utils import AsyncCLIExecutor
+            
+            executor = AsyncCLIExecutor()
+            result = executor.execute_with_progress(
+                cli_name='core_workflow_cli.py',
+                args=['process-inbox']
+            )
+            
+            # Verify error result
+            self.assertEqual(result['returncode'], 1)
+            self.assertIn('stderr', result)
+            self.assertIn('Error', result['stderr'])
+            
+        except ImportError:
+            self.fail("RED Phase: Error messaging not implemented")
+    
+    @patch('subprocess.run')
+    def test_timeout_handling_for_long_operations(self, mock_run):
+        """
+        Test timeout prevents hanging on long operations
+        
+        RED: This will fail - timeout handling doesn't exist yet
+        """
+        # Mock timeout scenario
+        import subprocess
+        mock_run.side_effect = subprocess.TimeoutExpired(
+            cmd=['test'],
+            timeout=60
+        )
+        
+        try:
+            from src.cli.workflow_dashboard_utils import AsyncCLIExecutor
+            
+            executor = AsyncCLIExecutor(timeout=60)
+            result = executor.execute_with_progress(
+                cli_name='core_workflow_cli.py',
+                args=['process-inbox']
+            )
+            
+            # Verify timeout handling
+            self.assertIn('timeout', result)
+            self.assertTrue(result['timeout'])
+            
+        except ImportError:
+            self.fail("RED Phase: Timeout handling not implemented")
+
+
 if __name__ == '__main__':
     # Run tests with verbose output to see RED phase failures
     unittest.main(verbosity=2)
