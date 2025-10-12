@@ -34,22 +34,22 @@ class TestWorkflowDashboardInboxStatus(unittest.TestCase):
         self.vault_path = "/test/vault"
         
         # Mock JSON response from core_workflow_cli.py status --format json
+        # Updated to match real CLI output format with directory_counts
         self.mock_status_json = {
             "workflow_status": {
-                "inbox_count": 60,
-                "fleeting_count": 0,
-                "permanent_count": 142,
-                "literature_count": 18
+                "health": "needs_attention",
+                "directory_counts": {
+                    "Inbox": 60,
+                    "Fleeting Notes": 0,
+                    "Permanent Notes": 142,
+                    "Archive": 18
+                },
+                "total_notes": 220
             },
             "ai_features": {
-                "summarization": True,
-                "connections": True,
-                "tagging": True
-            },
-            "recommendations": [
-                "Process 60 inbox notes",
-                "All fleeting notes processed"
-            ]
+                "notes_with_ai_tags": 449,
+                "notes_with_ai_summaries": 27
+            }
         }
     
     @patch('subprocess.run')

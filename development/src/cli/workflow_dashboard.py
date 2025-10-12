@@ -97,10 +97,21 @@ class WorkflowDashboard:
         
         # Extract workflow status from data
         data = result['data']
-        if 'workflow_status' in data:
-            return data['workflow_status']
+        workflow_status = data.get('workflow_status', {})
         
-        return data
+        # Normalize to expected format with inbox_count at top level
+        normalized = {
+            'health': workflow_status.get('health', 'unknown'),
+            'total_notes': workflow_status.get('total_notes', 0),
+            'directory_counts': workflow_status.get('directory_counts', {})
+        }
+        
+        # Extract inbox_count from directory_counts for convenience
+        dir_counts = workflow_status.get('directory_counts', {})
+        normalized['inbox_count'] = dir_counts.get('Inbox', 0)
+        normalized['fleeting_count'] = dir_counts.get('Fleeting Notes', 0)
+        
+        return normalized
     
     def get_inbox_count(self) -> int:
         """
