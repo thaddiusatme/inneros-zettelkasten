@@ -3,10 +3,10 @@ created: 2025-10-06 16:42
 type: fleeting
 status: inbox
 visibility: private
-tags: [ai-assisted, ai-assisted-writing, ai-processing, automation, content-enhancement,
-  fleeting, inbox, machine-learning]
+tags: [ai-assisted, ai-assisted-note-taking, ai-assisted-writing, ai-processing, artificial-intelligence,
+  automation, content-enhancement, fleeting]
 quality_score: 0.85
-ai_processed: '2025-10-12T19:27:37.798504'
+ai_processed: '2025-10-12T20:44:02.112936'
 ---
 ```mermaid
 

@@ -4,8 +4,8 @@ tags: [afteranalyzingtheprovidedtext, andbusinesscommunication, andcommunication
   andpersuasioninmarketingandbranding, andtheimportanceofbrandingandmarketinginbusiness,
   andtheimportanceofnarrativestructureinmarketingandbusinesscommunication, andtheimportanceofpurposeandmotivationinbusinessandmarketing,
   andtheroleofsocialproofinmarketingandbranding]
-quality_score: 0.85
-ai_processed: '2025-10-12T19:22:53.175581'
+quality_score: 0.6000000000000001
+ai_processed: '2025-10-12T20:40:13.115750'
 ---
 # The "Hammer Point" Technique: How Personal Stories Anchor Ideas and Build Intimacy
 

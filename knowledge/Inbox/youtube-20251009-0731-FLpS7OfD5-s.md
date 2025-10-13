@@ -7,10 +7,10 @@ tags: [ai, andillextract3-8highlyrelevanttagsthatcapturethekeyconcepts, andtheme
   pleaseprovidethecontentyoudlikemetoextracttagsfromillbehappytohelpnoteillwaitforthecontentbeforeextractingthetags,
   topics, transformation]
 source: https://youtube.com/watch?v=FLpS7OfD5-s
-quality_score: 0.7
+quality_score: 0.2
 video_id: FLpS7OfD5-s
 title: AI Video
-ai_processed: '2025-10-12T19:24:39.758554'
+ai_processed: '2025-10-12T20:41:49.731121'
 ---
 
 # Formatted Note

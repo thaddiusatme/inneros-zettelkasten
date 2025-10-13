@@ -5,9 +5,9 @@ status: inbox
 tags: [agentic-ai, ai-systems, artificial-intelligence, composability, discoverability,
   mvc-architecture, pluggability]
 source: https://youtube.com/watch?v=FLpS7OfD5-s
-quality_score: 0.85
+quality_score: 0.75
 video_id: FLpS7OfD5-s
-ai_processed: '2025-10-12T19:26:49.124455'
+ai_processed: '2025-10-12T20:43:13.586830'
 ---
 
 # Video Summary

@@ -15,7 +15,7 @@ capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-24 17:30:12
-ai_processed: '2025-10-12T19:20:41.372885'
+ai_processed: '2025-10-12T20:38:07.937910'
 ---
 # Screenshot Capture
 

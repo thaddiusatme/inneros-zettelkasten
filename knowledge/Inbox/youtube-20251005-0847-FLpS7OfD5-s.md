@@ -4,10 +4,10 @@ type: literature
 status: inbox
 tags: [ai, pleaseprovidethecontentyoudlikemetoextracttagsfromillbehappytohelp, transformation]
 source: https://youtube.com/watch?v=FLpS7OfD5-s
-quality_score: 0.2
+quality_score: 0.7
 video_id: FLpS7OfD5-s
 title: AI Video
-ai_processed: '2025-10-12T19:20:15.830996'
+ai_processed: '2025-10-12T20:37:44.811109'
 ---
 
 # Formatted Note

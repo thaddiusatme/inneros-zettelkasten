@@ -6,7 +6,7 @@ visibility: private
 tags: [business-development, business-intimacy, decision-making-emotions, emotional-buying,
   emotional-decision-making, emotional-intelligence, emotional-intimacy, emotional-marketing]
 quality_score: 0.85
-ai_processed: '2025-10-12T19:24:02.487160'
+ai_processed: '2025-10-12T20:41:17.540832'
 ---
 Here’s how I’d handle this fleeting note and move it toward a permanent one:
 

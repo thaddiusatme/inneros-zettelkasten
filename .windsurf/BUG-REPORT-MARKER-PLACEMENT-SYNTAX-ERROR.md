@@ -94,4 +94,15 @@ This occurred during TDD Iteration 4 REFACTOR phase while categorizing 13 integr
 
 ## Status
 
-**OPEN** - Fix in progress, will be resolved in next commit.
+**RESOLVED** - 2025-10-12 20:32 PDT
+
+The decorator placement was corrected and all integration tests now have proper syntax. Verified with:
+
+```bash
+python3 -m py_compile development/tests/integration/*.py  # All pass
+git status  # Working tree clean
+```
+
+## New Issue Discovered: Terminal Corruption
+
+During resolution, discovered a **separate issue** with zsh prompt corruption displaying `%nG℄m %i~ %#` characters, which made error investigation difficult. This is unrelated to the pytest marker issue.
