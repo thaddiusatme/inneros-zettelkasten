@@ -54,9 +54,12 @@ CLI_DIR = DEV_DIR / "src" / "cli"
 
 
 @pytest.mark.integration
+@pytest.mark.fast_integration
 class TestDedicatedCLIParity:
     """
-    Integration tests for dedicated CLI feature parity verification
+    Integration tests verifying CLI parity across commands.
+    
+    Performance: 1.35s (migrated to vault factories)rity verification
     
     Tests verify that dedicated CLIs provide equivalent functionality
     to deprecated workflow_demo.py commands.

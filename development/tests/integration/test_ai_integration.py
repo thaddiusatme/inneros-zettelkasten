@@ -9,8 +9,13 @@ import os
 from pathlib import Path
 
 
+@pytest.mark.integration
+@pytest.mark.slow_integration
 class TestAIIntegration:
-    """Integration tests for AI-powered note processing."""
+    """Integration tests for AI-powered note processing.
+    
+    Performance: 47s (slow due to real Ollama API calls)
+    """
     
     def test_complete_note_processing_workflow(self):
         """Test complete workflow: note → AI analysis → tags."""

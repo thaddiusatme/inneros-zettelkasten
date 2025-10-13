@@ -22,8 +22,12 @@ from ai.analytics import NoteAnalytics
 
 
 @pytest.mark.integration
+@pytest.mark.fast_integration
 class TestAnalyticsIntegration:
-    """Integration tests for NoteAnalytics with realistic data."""
+    """Integration tests for NoteAnalytics with realistic data.
+    
+    Performance: 0.11s (already fast, uses tmp_path)
+    """
     
     def setup_method(self):
         """Set up test environment with realistic note structure."""
