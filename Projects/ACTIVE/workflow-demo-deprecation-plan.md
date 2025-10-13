@@ -33,22 +33,70 @@ Complete removal of deprecated `workflow_demo.py` monolith (2,128 LOC) following
 
 ### **Phase 1: Audit & Document** (1 hour)
 
-#### **1.1 Command Mapping**
-Create complete mapping of workflow_demo.py flags to dedicated CLIs:
+#### **1.1 Complete Command Mapping** ✅
 
+All 26 workflow_demo.py commands mapped to dedicated CLIs:
+
+##### **Weekly Review & Metrics (weekly_review_cli.py)**
 ```bash
-# OLD (deprecated)                    # NEW (dedicated CLI)
---weekly-review                    → python3 src/cli/weekly_review_cli.py
---fleeting-triage                  → python3 src/cli/fleeting_cli.py triage
---fleeting-health                  → python3 src/cli/fleeting_cli.py health
---comprehensive-orphaned           → python3 src/cli/weekly_review_cli.py --orphaned
---enhanced-metrics                 → python3 src/cli/weekly_review_cli.py --metrics
---process-youtube-notes            → python3 src/cli/youtube_cli.py batch-process
+--weekly-review                    → python3 src/cli/weekly_review_cli.py weekly-review
+--enhanced-metrics                 → python3 src/cli/weekly_review_cli.py enhanced-metrics
+--comprehensive-orphaned           → python3 src/cli/weekly_review_cli.py comprehensive-orphaned
+--remediate-orphans                → python3 src/cli/weekly_review_cli.py remediate-orphans
+```
+
+##### **Fleeting Notes (fleeting_cli.py)**
+```bash
+--fleeting-health                  → python3 src/cli/fleeting_cli.py fleeting-health
+--fleeting-triage                  → python3 src/cli/fleeting_cli.py fleeting-triage
+--promote-note [PATH]              → python3 src/cli/fleeting_cli.py promote-note [PATH]
+```
+
+##### **Core Workflow (core_workflow_cli.py)**
+```bash
+--status                           → python3 src/cli/core_workflow_cli.py status
 --process-inbox                    → python3 src/cli/core_workflow_cli.py process-inbox
---backup                           → python3 src/cli/backup_cli.py create
---list-backups                     → python3 src/cli/backup_cli.py list
---prune-backups                    → python3 src/cli/backup_cli.py prune
-# ... (all 25 commands)
+--promote [FILE] [TYPE]            → python3 src/cli/core_workflow_cli.py promote [FILE] [TYPE]
+--report                           → python3 src/cli/core_workflow_cli.py report
+```
+
+##### **Safe Workflow Processing (safe_workflow_cli.py)**
+```bash
+--process-inbox-safe               → python3 src/cli/safe_workflow_cli.py process-inbox-safe
+--batch-process-safe               → python3 src/cli/safe_workflow_cli.py batch-process-safe
+--performance-report               → python3 src/cli/safe_workflow_cli.py performance-report
+--integrity-report                 → python3 src/cli/safe_workflow_cli.py integrity-report
+--start-safe-session [NAME]        → python3 src/cli/safe_workflow_cli.py start-safe-session --session-name [NAME]
+--process-in-session [ID] [PATH]  → python3 src/cli/safe_workflow_cli.py process-in-session --session-id [ID] --note-path [PATH]
+```
+
+##### **Backup Management (backup_cli.py)**
+```bash
+--backup                           → python3 src/cli/backup_cli.py backup
+--list-backups                     → python3 src/cli/backup_cli.py list-backups
+--prune-backups                    → python3 src/cli/backup_cli.py prune-backups --keep [N]
+```
+
+##### **YouTube Processing (youtube_cli.py)**
+```bash
+--process-youtube-note [PATH]      → python3 src/cli/youtube_cli.py process-note [PATH]
+--process-youtube-notes            → python3 src/cli/youtube_cli.py batch-process
+```
+
+##### **Reading Intake (reading_intake_cli.py)**
+```bash
+--import-csv [PATH]                → python3 src/cli/reading_intake_cli.py import-csv [PATH]
+--import-json [PATH]               → python3 src/cli/reading_intake_cli.py import-json [PATH]
+```
+
+##### **Screenshot Processing (screenshot_cli.py)**
+```bash
+--screenshots                      → python3 src/cli/screenshot_cli.py process-screenshots
+```
+
+##### **Interactive Mode (interactive_cli.py)**
+```bash
+--interactive                      → python3 src/cli/interactive_cli.py interactive
 ```
 
 #### **1.2 Reference Audit**
@@ -253,10 +301,20 @@ Impact: -2,128 LOC technical debt eliminated"
 
 ## 📋 Checklist
 
-### **Phase 1: Audit** ⏸️ Not Started
-- [ ] Create command mapping (workflow_demo → dedicated CLIs)
-- [ ] Find all references in codebase
-- [ ] Document current usage locations
+### **Phase 1: Audit** ✅ COMPLETE (2025-10-12)
+- [x] Create command mapping (workflow_demo → dedicated CLIs)
+- [x] Find all references in codebase
+- [x] Document current usage locations
+
+**Audit Results**:
+- **709 matches** across **161 files**
+- **26 command flags** mapped to dedicated CLIs
+- Top reference locations:
+  - Test files: 30-32 matches (test_evening_screenshot_cli_tdd_2.py, test_weekly_review_cli.py)
+  - Documentation: 8-29 matches (MIGRATION-GUIDE.md, ADR-004, getting-started)
+  - Project docs: 5-12 matches (manifests, workflows, lessons learned)
+  - Archive files: 5-20 matches (legacy documentation)
+  - Automation scripts: References in .automation/ and cron scripts
 
 ### **Phase 2: Documentation** ⏸️ Not Started
 - [ ] Update CLI-REFERENCE.md
