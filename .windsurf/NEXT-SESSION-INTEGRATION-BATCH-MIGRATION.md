@@ -86,15 +86,31 @@ Migrate `test_dashboard_vault_integration.py`:
 
 **Test Execution Commands**:
 ```bash
-# Fast tests only (local development)
+# Local development - fast feedback loop
 pytest -m fast_integration  # Target: <10s total
 
-# Slow tests (pre-commit or CI)
-pytest -m slow_integration  # External APIs, may take minutes
+# Local development - comprehensive (optional)
+pytest -m integration  # Run everything including slow tests
 
-# All integration tests
-pytest -m integration  # Run everything
+# CI/CD pipeline - comprehensive validation
+pytest -m integration  # Runs ALL tests (fast + slow)
+# OR separate jobs:
+pytest -m fast_integration  # Job 1: Fast tests (fail fast)
+pytest -m slow_integration  # Job 2: Slow tests (parallel)
 ```
+
+**CI/CD Strategy**:
+- **Option A (Simple)**: Run all integration tests in CI (`pytest -m integration`)
+  - Pros: Simple configuration, catches everything
+  - Cons: ~50-100s for slow tests blocks merge
+
+- **Option B (Parallel)**: Separate fast and slow test jobs
+  - **Job 1 (Fast)**: `pytest -m fast_integration` (~10s, fail fast)
+  - **Job 2 (Slow)**: `pytest -m slow_integration` (~50-100s, parallel)
+  - Pros: Fast feedback, slow tests don't block developers
+  - Cons: Slightly more complex CI config
+
+**Recommended**: Option B for best developer experience
 
 **Performance Metrics**:
 ```
