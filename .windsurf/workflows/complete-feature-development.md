@@ -54,7 +54,7 @@ Every feature MUST progress through all 4 phases to be considered production-rea
 
 **Deliverables**:
 - CLI module (e.g., `connections_demo.py`)
-- Updated `workflow_demo.py` with new flag
+- Dedicated CLI (ADR-004, October 2025) or updated existing dedicated CLI
 - CLI tests
 - Usage documentation
 

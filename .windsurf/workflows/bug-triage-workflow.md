@@ -106,8 +106,8 @@ Fixes critical path blocker for Reading Intake Pipeline development"
 ```bash
 # Ensure fixes don't break existing functionality
 python3 -m pytest tests/ -v
-python3 src/cli/workflow_demo.py . --status
-python3 src/cli/analytics_demo.py . --quick
+python3 development/src/cli/core_workflow_cli.py status
+python3 development/src/cli/analytics_demo.py . --quick
 ```
 
 ## 📊 Bug Prevention Guidelines
