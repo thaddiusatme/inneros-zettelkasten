@@ -42,9 +42,9 @@ Before implementing new features, fix critical template bug:
 ### **Phase 2: AI Integration (Aug 18-22)**
 4. **Extend existing AI workflows**
    ```bash
-   # Leverage Phase 5 AI features
-   python3 src/cli/workflow_demo.py . --process-imports
-   python3 src/cli/analytics_demo.py . --import-quality
+   # Leverage Phase 5 AI features (use dedicated CLIs per ADR-004)
+   python3 development/src/cli/reading_intake_cli.py process-imports
+   python3 development/src/cli/analytics_demo.py . --import-quality
    ```
 
 5. **Schema integration**
@@ -55,9 +55,9 @@ Before implementing new features, fix critical template bug:
 ### **Phase 3: Advanced Features (Aug 25-29)**
 6. **CLI integration**
    ```bash
-   # Add new commands to workflow_demo.py
-   python3 src/cli/workflow_demo.py . --import-bookmarks file.html
-   python3 src/cli/workflow_demo.py . --upgrade-reading-notes
+   # Use dedicated reading_intake_cli.py (ADR-004, October 2025)
+   python3 development/src/cli/reading_intake_cli.py import-bookmarks file.html
+   python3 development/src/cli/reading_intake_cli.py upgrade-reading-notes
    ```
 
 7. **Performance validation**
@@ -83,7 +83,7 @@ python3 -m pytest tests/ -v
 ### **Integration Points**
 - **Existing AI Features**: Quality scoring, smart tagging, weekly review
 - **Template System**: Literature note templates with structured claims/quotes  
-- **CLI Tools**: Extend `workflow_demo.py` and `analytics_demo.py`
+- **CLI Tools**: Dedicated `reading_intake_cli.py` (ADR-004) and `analytics_demo.py`
 - **Validation**: Link checking, quality thresholds, promotion automation
 
 ## 📊 Success Metrics
