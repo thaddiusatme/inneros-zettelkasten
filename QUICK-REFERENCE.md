@@ -2,6 +2,8 @@
 
 *Keep this handy for daily use!*
 
+> **⚠️ IMPORTANT**: `workflow_demo.py` is deprecated (ADR-004, October 2025). All commands below use dedicated CLIs. See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for migration from old commands.
+
 ## 🚀 Essential Commands
 
 ### **Daily Workflow**
@@ -88,11 +90,18 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)/development"
 python3 development/src/cli/core_workflow_cli.py --help
 ```
 
-### **Deprecated workflow_demo.py Warnings**
-- **Action**: Migrate to dedicated CLIs (see `MIGRATION-GUIDE.md`)
-- **Deadline**: November 11, 2025
-- **Mapping**: Each old command has a dedicated CLI equivalent
+### **Migrating from workflow_demo.py** ⚠️
+
+| **Old (Deprecated)** | **New (Use This)** |
+|----------------------|-------------------|
+| `workflow_demo.py . --status` | `core_workflow_cli.py status` |
+| `workflow_demo.py . --process-inbox` | `core_workflow_cli.py process-inbox` |
+| `workflow_demo.py . --weekly-review` | `weekly_review_cli.py weekly-review` |
+| `workflow_demo.py . --fleeting-triage` | `fleeting_cli.py fleeting-triage` |
+| `workflow_demo.py . --backup` | `backup_cli.py backup` |
+
+**Migration Details**: See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for all 26 commands  
+**Deadline**: November 11, 2025 (workflow_demo.py will be removed)
 
 ---
 *Need more details? Check `GETTING-STARTED.md` or `CLI-REFERENCE.md`*
-*Migrating from workflow_demo.py? See `MIGRATION-GUIDE.md`*
