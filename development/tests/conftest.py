@@ -33,22 +33,32 @@ def pytest_collection_modifyitems(config, items):
     """
     for item in items:
         test_path = Path(item.fspath)
-        relative_path = test_path.relative_to(Path(__file__).parent)
+        
+        # Try to get relative path, but handle tests outside tests/ directory
+        try:
+            relative_path = test_path.relative_to(Path(__file__).parent)
+        except ValueError:
+            # Test is outside development/tests/ directory (e.g., demos/)
+            # Use the full path for marker detection
+            relative_path = test_path
+        
+        # Convert to string for easier checking
+        path_str = str(relative_path)
         
         # Auto-apply markers based on directory
-        if "smoke" in relative_path.parts:
+        if "smoke" in path_str or "smoke" in relative_path.parts:
             # Smoke tests: Real vault validation (nightly)
             item.add_marker(pytest.mark.smoke)
             item.add_marker(pytest.mark.slow)
-        elif "integration" in relative_path.parts:
+        elif "integration" in path_str or "integration" in relative_path.parts:
             # Integration tests: Fast with vault factories
             item.add_marker(pytest.mark.integration)
-        elif "unit" in relative_path.parts:
+        elif "unit" in path_str or "unit" in relative_path.parts:
             # Unit tests: Pure logic, mocked dependencies
             item.add_marker(pytest.mark.fast)
-        elif "performance" in relative_path.parts:
+        elif "performance" in path_str or "performance" in relative_path.parts:
             # Performance tests: Benchmarks and profiling
             item.add_marker(pytest.mark.performance)
         else:
-            # Tests in root tests/ directory get fast marker
+            # Tests in root tests/ directory or demos/ get fast marker
             item.add_marker(pytest.mark.fast)
