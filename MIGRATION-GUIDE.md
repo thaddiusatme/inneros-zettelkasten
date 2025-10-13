@@ -81,54 +81,111 @@ inneros enhance knowledge/Inbox/note.md
 
 ### **What Changed?**
 
-The monolithic `workflow_demo.py` (2,074 LOC) has been deprecated and replaced with **10 dedicated CLIs** for better maintainability and clarity.
+The monolithic `workflow_demo.py` (2,128 LOC) has been **deprecated** and replaced with **9 dedicated CLIs** for better maintainability and clarity.
 
 **Transition Period**: 1 month (October 11 - November 11, 2025)
 - `workflow_demo.py` will show deprecation warnings but continue working
 - After November 11, 2025: `workflow_demo.py` moves to `development/legacy/`
 
-### **Migration Path: workflow_demo.py → Dedicated CLIs**
+**Audit Results** (Phase 1 Complete: Oct 12, 2025):
+- ✅ 26 commands mapped to dedicated CLIs
+- ✅ 709 references found across 161 files
+- ✅ Complete migration path documented below
 
-#### **Weekly Review Commands**
+---
+
+### **Complete Command Migration Reference**
+
+All 26 `workflow_demo.py` commands have dedicated CLI equivalents. Use this table to migrate your workflows:
+
+#### **1. Weekly Review & Metrics** (4 commands → `weekly_review_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
 | `python3 development/src/cli/workflow_demo.py . --weekly-review` | `python3 development/src/cli/weekly_review_cli.py weekly-review` |
 | `python3 development/src/cli/workflow_demo.py . --enhanced-metrics` | `python3 development/src/cli/weekly_review_cli.py enhanced-metrics` |
-| `python3 development/src/cli/workflow_demo.py . --weekly-review --export-checklist review.md` | `python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md` |
+| `python3 development/src/cli/workflow_demo.py . --comprehensive-orphaned` | `python3 development/src/cli/weekly_review_cli.py comprehensive-orphaned` |
+| `python3 development/src/cli/workflow_demo.py . --remediate-orphans` | `python3 development/src/cli/weekly_review_cli.py remediate-orphans` |
 
-#### **Fleeting Notes Commands**
+**Common Options**: `--export-checklist FILE`, `--format json`, `--dry-run`
+
+#### **2. Fleeting Notes Lifecycle** (3 commands → `fleeting_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
 | `python3 development/src/cli/workflow_demo.py . --fleeting-health` | `python3 development/src/cli/fleeting_cli.py fleeting-health` |
 | `python3 development/src/cli/workflow_demo.py . --fleeting-triage` | `python3 development/src/cli/fleeting_cli.py fleeting-triage` |
+| `python3 development/src/cli/workflow_demo.py . --promote-note PATH` | `python3 development/src/cli/fleeting_cli.py promote-note PATH` |
 
-#### **Safe Workflow Commands**
+**Common Options**: `--min-quality SCORE`, `--export FILE`, `--format json`
+
+#### **3. Core Workflow Processing** (4 commands → `core_workflow_cli.py`)
+
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --status` | `python3 development/src/cli/core_workflow_cli.py status` |
+| `python3 development/src/cli/workflow_demo.py . --process-inbox` | `python3 development/src/cli/core_workflow_cli.py process-inbox` |
+| `python3 development/src/cli/workflow_demo.py . --promote FILE TYPE` | `python3 development/src/cli/core_workflow_cli.py promote FILE TYPE` |
+| `python3 development/src/cli/workflow_demo.py . --report` | `python3 development/src/cli/core_workflow_cli.py report` |
+
+**Common Options**: `--dry-run`, `--verbose`, `--format json`
+
+#### **4. Safe Workflow Processing** (6 commands → `safe_workflow_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
 | `python3 development/src/cli/workflow_demo.py . --process-inbox-safe` | `python3 development/src/cli/safe_workflow_cli.py process-inbox-safe` |
 | `python3 development/src/cli/workflow_demo.py . --batch-process-safe` | `python3 development/src/cli/safe_workflow_cli.py batch-process-safe` |
 | `python3 development/src/cli/workflow_demo.py . --performance-report` | `python3 development/src/cli/safe_workflow_cli.py performance-report` |
-| `python3 development/src/cli/workflow_demo.py . --backup` | `python3 development/src/cli/safe_workflow_cli.py backup` |
-| `python3 development/src/cli/workflow_demo.py . --list-backups` | `python3 development/src/cli/safe_workflow_cli.py list-backups` |
+| `python3 development/src/cli/workflow_demo.py . --integrity-report` | `python3 development/src/cli/safe_workflow_cli.py integrity-report` |
 | `python3 development/src/cli/workflow_demo.py . --start-safe-session NAME` | `python3 development/src/cli/safe_workflow_cli.py start-safe-session --session-name NAME` |
+| `python3 development/src/cli/workflow_demo.py . --process-in-session ID PATH` | `python3 development/src/cli/safe_workflow_cli.py process-in-session --session-id ID --note-path PATH` |
 
-#### **Core Workflow Commands**
+**Common Options**: `--dry-run`, `--export FILE`, `--session-name NAME`
+
+#### **5. Backup Management** (3 commands → `backup_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
-| `python3 development/src/cli/workflow_demo.py . --status` | `python3 development/src/cli/core_workflow_cli.py status` |
-| `python3 development/src/cli/workflow_demo.py . --process-inbox` | `python3 development/src/cli/core_workflow_cli.py process-inbox` |
-| `python3 development/src/cli/workflow_demo.py . --promote note.md permanent` | `python3 development/src/cli/core_workflow_cli.py promote note.md permanent` |
-| `python3 development/src/cli/workflow_demo.py . --report` | `python3 development/src/cli/core_workflow_cli.py report` |
+| `python3 development/src/cli/workflow_demo.py . --backup` | `python3 development/src/cli/backup_cli.py backup` |
+| `python3 development/src/cli/workflow_demo.py . --list-backups` | `python3 development/src/cli/backup_cli.py list-backups` |
+| `python3 development/src/cli/workflow_demo.py . --prune-backups --keep N` | `python3 development/src/cli/backup_cli.py prune-backups --keep N` |
 
-#### **Backup Management Commands**
+**Common Options**: `--keep N`, `--dry-run`, `--export FILE`
+
+#### **6. YouTube Note Processing** (2 commands → `youtube_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
-| `python3 development/src/cli/workflow_demo.py . --prune-backups --keep 5` | `python3 development/src/cli/backup_cli.py prune-backups --keep 5` |
+| `python3 development/src/cli/workflow_demo.py . --process-youtube-note PATH` | `python3 development/src/cli/youtube_cli.py process-note PATH` |
+| `python3 development/src/cli/workflow_demo.py . --process-youtube-notes` | `python3 development/src/cli/youtube_cli.py batch-process` |
 
-#### **Interactive Mode**
+**Common Options**: `--dry-run`, `--verbose`
+
+#### **7. Reading Intake Pipeline** (2 commands → `reading_intake_cli.py`)
+
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --import-csv PATH` | `python3 development/src/cli/reading_intake_cli.py import-csv PATH` |
+| `python3 development/src/cli/workflow_demo.py . --import-json PATH` | `python3 development/src/cli/reading_intake_cli.py import-json PATH` |
+
+**Common Options**: `--dry-run`, `--format json`
+
+#### **8. Screenshot Processing** (1 command → `screenshot_cli.py`)
+
+| **Old Command** | **New Dedicated CLI** |
+|-----------------|----------------------|
+| `python3 development/src/cli/workflow_demo.py . --screenshots` | `python3 development/src/cli/screenshot_cli.py process-screenshots` |
+
+**Common Options**: `--onedrive-path PATH`, `--dry-run`, `--progress`
+
+#### **9. Interactive Mode** (1 command → `interactive_cli.py`)
+
 | **Old Command** | **New Dedicated CLI** |
 |-----------------|----------------------|
 | `python3 development/src/cli/workflow_demo.py . --interactive` | `python3 development/src/cli/interactive_cli.py interactive` |
+
+---
 
 ### **Why Migrate?**
 
@@ -136,25 +193,255 @@ The monolithic `workflow_demo.py` (2,074 LOC) has been deprecated and replaced w
 ✅ **Faster Development**: Bugs found in correct architectural layer  
 ✅ **Clear Documentation**: Each CLI has specific usage examples  
 ✅ **Better Testing**: Isolated test suites per CLI  
-✅ **Maintainable**: 250-500 LOC per CLI vs 2,074 LOC monolith
+✅ **Maintainable**: 200-500 LOC per CLI vs 2,128 LOC monolith  
+✅ **Faster Performance**: Dedicated CLIs load only required dependencies
 
-### **Automation Script Migration**
+---
 
-If you have automation scripts using `workflow_demo.py`, update them:
+### **Automation Script Migration Examples**
+
+#### **Example 1: Daily Automation Script**
+
+**Before (workflow_demo.py):**
+```bash
+#!/bin/bash
+# Daily automation - OLD workflow_demo.py approach
+
+VAULT_PATH="."
+
+# Process inbox
+python3 development/src/cli/workflow_demo.py $VAULT_PATH --process-inbox --dry-run
+
+# Weekly review on Mondays
+if [ $(date +%u) -eq 1 ]; then
+    python3 development/src/cli/workflow_demo.py $VAULT_PATH --weekly-review --export-checklist review.md
+fi
+
+# Backup
+python3 development/src/cli/workflow_demo.py $VAULT_PATH --backup
+
+# Status check
+python3 development/src/cli/workflow_demo.py $VAULT_PATH --status
+```
+
+**After (Dedicated CLIs):**
+```bash
+#!/bin/bash
+# Daily automation - NEW dedicated CLIs approach
+
+VAULT_PATH="."
+
+# Process inbox
+python3 development/src/cli/core_workflow_cli.py process-inbox --dry-run
+
+# Weekly review on Mondays
+if [ $(date +%u) -eq 1 ]; then
+    python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md
+fi
+
+# Backup
+python3 development/src/cli/backup_cli.py backup
+
+# Status check
+python3 development/src/cli/core_workflow_cli.py status
+```
+
+#### **Example 2: Fleeting Notes Workflow**
 
 **Before:**
 ```bash
 #!/bin/bash
-python3 development/src/cli/workflow_demo.py . --weekly-review --export-checklist review.md
-python3 development/src/cli/workflow_demo.py . --process-inbox --dry-run
+# Check fleeting notes health, triage, and promote high-quality notes
+
+python3 development/src/cli/workflow_demo.py . --fleeting-health
+python3 development/src/cli/workflow_demo.py . --fleeting-triage --min-quality 0.7
+python3 development/src/cli/workflow_demo.py . --promote-note knowledge/Fleeting\ Notes/note.md
 ```
 
 **After:**
 ```bash
 #!/bin/bash
-python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md
-python3 development/src/cli/core_workflow_cli.py process-inbox --dry-run
+# Check fleeting notes health, triage, and promote high-quality notes
+
+python3 development/src/cli/fleeting_cli.py fleeting-health
+python3 development/src/cli/fleeting_cli.py fleeting-triage --min-quality 0.7
+python3 development/src/cli/fleeting_cli.py promote-note knowledge/Fleeting\ Notes/note.md
 ```
+
+#### **Example 3: Safe Workflow Processing with Sessions**
+
+**Before:**
+```bash
+#!/bin/bash
+# Safe workflow processing with performance monitoring
+
+python3 development/src/cli/workflow_demo.py . --start-safe-session "morning-processing"
+SESSION_ID=$(cat .last_session_id)
+python3 development/src/cli/workflow_demo.py . --process-in-session $SESSION_ID knowledge/Inbox/note1.md
+python3 development/src/cli/workflow_demo.py . --performance-report
+```
+
+**After:**
+```bash
+#!/bin/bash
+# Safe workflow processing with performance monitoring
+
+python3 development/src/cli/safe_workflow_cli.py start-safe-session --session-name "morning-processing"
+SESSION_ID=$(cat .last_session_id)
+python3 development/src/cli/safe_workflow_cli.py process-in-session --session-id $SESSION_ID --note-path knowledge/Inbox/note1.md
+python3 development/src/cli/safe_workflow_cli.py performance-report
+```
+
+#### **Example 4: Backup Management with Pruning**
+
+**Before:**
+```bash
+#!/bin/bash
+# Create backup, list all backups, prune old ones
+
+python3 development/src/cli/workflow_demo.py . --backup
+python3 development/src/cli/workflow_demo.py . --list-backups
+python3 development/src/cli/workflow_demo.py . --prune-backups --keep 5 --dry-run
+```
+
+**After:**
+```bash
+#!/bin/bash
+# Create backup, list all backups, prune old ones
+
+python3 development/src/cli/backup_cli.py backup
+python3 development/src/cli/backup_cli.py list-backups
+python3 development/src/cli/backup_cli.py prune-backups --keep 5 --dry-run
+```
+
+---
+
+### **Troubleshooting Common Migration Scenarios**
+
+#### **Problem: "Command not found" after migration**
+
+**Symptom**: `bash: python3: command not found` or CLI file not found
+
+**Solution**:
+```bash
+# Ensure you're running from project root
+cd /path/to/inneros-zettelkasten
+
+# Verify Python is available
+which python3
+
+# Check CLI file exists
+ls -la development/src/cli/weekly_review_cli.py
+
+# Make sure you're using correct relative path
+python3 development/src/cli/weekly_review_cli.py --help
+```
+
+#### **Problem: Import errors after migration**
+
+**Symptom**: `ModuleNotFoundError: No module named 'src'`
+
+**Solution**:
+```bash
+# Run from project root, not from development/
+cd /path/to/inneros-zettelkasten
+
+# Set PYTHONPATH if needed
+export PYTHONPATH=$(pwd)/development:$PYTHONPATH
+
+# Test import
+python3 -c "from src.ai.workflow_manager import WorkflowManager"
+```
+
+#### **Problem: Different argument syntax in new CLI**
+
+**Symptom**: `error: unrecognized arguments: .` or missing positional arguments
+
+**Solution**: Dedicated CLIs use subcommands, not flags:
+```bash
+# OLD: workflow_demo.py . --weekly-review
+python3 development/src/cli/workflow_demo.py . --weekly-review
+
+# NEW: Remove vault path '.', use subcommand directly
+python3 development/src/cli/weekly_review_cli.py weekly-review
+
+# If vault path needed, use --vault-path option
+python3 development/src/cli/weekly_review_cli.py weekly-review --vault-path /custom/path
+```
+
+#### **Problem: Automation scripts fail silently**
+
+**Symptom**: Script runs but commands don't execute, no error output
+
+**Solution**: Add error handling and verify each CLI call:
+```bash
+#!/bin/bash
+set -e  # Exit on first error
+
+# Test each CLI individually first
+python3 development/src/cli/weekly_review_cli.py --help
+python3 development/src/cli/fleeting_cli.py --help
+
+# Add explicit error handling
+if ! python3 development/src/cli/core_workflow_cli.py status; then
+    echo "Error: status command failed"
+    exit 1
+fi
+```
+
+#### **Problem: Missing options in dedicated CLI**
+
+**Symptom**: Option worked in `workflow_demo.py` but not in dedicated CLI
+
+**Solution**: Check dedicated CLI help for equivalent option:
+```bash
+# Check what options are available
+python3 development/src/cli/weekly_review_cli.py weekly-review --help
+
+# Common option name changes:
+# --export-checklist → --export
+# . (vault path) → --vault-path PATH
+# --keep N → --keep N (same, but check placement)
+```
+
+#### **Problem: Need to migrate Templater scripts**
+
+**Symptom**: Obsidian Templater scripts use `workflow_demo.py` commands
+
+**Solution**: Update Templater scripts to use dedicated CLIs:
+```javascript
+// Before
+const result = await tp.user.system("python3 development/src/cli/workflow_demo.py . --status");
+
+// After  
+const result = await tp.user.system("python3 development/src/cli/core_workflow_cli.py status");
+```
+
+---
+
+### **Verification Checklist**
+
+After migrating, verify your workflows work correctly:
+
+- [ ] **Weekly Review**: Run `python3 development/src/cli/weekly_review_cli.py weekly-review`
+- [ ] **Fleeting Notes**: Run `python3 development/src/cli/fleeting_cli.py fleeting-health`
+- [ ] **Status Check**: Run `python3 development/src/cli/core_workflow_cli.py status`
+- [ ] **Backups**: Run `python3 development/src/cli/backup_cli.py list-backups`
+- [ ] **Automation Scripts**: Test each migrated script individually
+- [ ] **Templater Scripts**: Verify Obsidian templates using CLI commands work
+- [ ] **Cron Jobs**: Update any scheduled tasks to use dedicated CLIs
+
+---
+
+### **Getting Help**
+
+If you encounter migration issues:
+
+1. **Check CLI help**: `python3 development/src/cli/[CLI_NAME] --help`
+2. **Review this guide**: Complete command mapping table above
+3. **Test incrementally**: Migrate one command at a time
+4. **Use dry-run mode**: Test with `--dry-run` before making changes
+5. **Check logs**: Enable `--verbose` for detailed output
 
 ---
 
