@@ -4,6 +4,8 @@
 
 > **New to this codebase?** This guide will get you up and running with all the powerful features you've built. Don't feel overwhelmed—start with the basics and gradually explore advanced features.
 
+> **⚠️ Note**: All commands in this guide use **dedicated CLIs** (October 2025 architecture, ADR-004). If you see references to `workflow_demo.py` elsewhere, see [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for updated commands.
+
 ## 🎯 Quick Start (5 minutes)
 
 ### 1. **Check System Health**
