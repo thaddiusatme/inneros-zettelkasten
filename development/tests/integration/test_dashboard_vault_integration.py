@@ -20,6 +20,7 @@ import pytest
 from src.cli.workflow_dashboard import WorkflowDashboard
 from tests.fixtures.vault_factory import create_small_vault
 
+@pytest.mark.integration
 @pytest.mark.fast_integration
 class TestDashboardVaultIntegration:
     """

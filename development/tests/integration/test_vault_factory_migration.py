@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.integration
 class TestVaultFactoryMigration:
     """
     RED Phase tests verifying vault factory migration requirements.

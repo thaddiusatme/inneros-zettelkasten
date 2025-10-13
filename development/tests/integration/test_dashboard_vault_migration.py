@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.integration
 class TestMarkerInfrastructure:
     """
     RED Phase tests verifying pytest marker system.
@@ -80,6 +81,7 @@ class TestMarkerInfrastructure:
         )
 
 
+@pytest.mark.integration
 class TestDashboardVaultIsolation:
     """
     RED Phase tests verifying dashboard test isolation.
@@ -159,6 +161,7 @@ class TestDashboardVaultIsolation:
         )
 
 
+@pytest.mark.integration
 class TestIntegrationTestCategorization:
     """
     RED Phase tests verifying all integration tests are categorized.
@@ -197,6 +200,7 @@ class TestIntegrationTestCategorization:
         )
 
 
+@pytest.mark.integration
 class TestPerformanceValidation:
     """
     RED Phase tests verifying performance targets are met.
