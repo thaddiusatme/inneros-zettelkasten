@@ -22,8 +22,13 @@ import pytest
 import json
 
 
+@pytest.mark.integration
+@pytest.mark.fast_integration
 class TestDistributionCreation:
-    """Tests for create-distribution.sh script"""
+    """Tests for create-distribution.sh script.
+    
+    Performance: Fast (uses tmp_path, filesystem operations)
+    """
     
     @pytest.fixture
     def temp_source_repo(self):

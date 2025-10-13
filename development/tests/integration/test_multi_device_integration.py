@@ -18,8 +18,13 @@ from src.cli.screenshot_processor import ScreenshotProcessor
 from src.cli.multi_device_detector import MultiDeviceDetector, DeviceType
 
 
+@pytest.mark.integration
+@pytest.mark.fast_integration
 class TestMultiDeviceScanning:
-    """Test multi-device path scanning and screenshot detection"""
+    """Test multi-device path scanning and screenshot detection.
+    
+    Performance: Fast (uses tempfile, no external APIs)
+    """
     
     @pytest.fixture
     def temp_test_env(self):

@@ -17,12 +17,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import pytest
 
 
+@pytest.mark.integration
+@pytest.mark.fast_integration
 class TestProgressDisplayUX:
     """
     Tests to prevent regression of progress display features.
     
     CRITICAL: These tests ensure users see feedback during operations.
     Without these, dashboard appears frozen (original bug).
+    
+    Performance: Fast (uses mocks, no vault dependencies)
     """
     
     @pytest.fixture
