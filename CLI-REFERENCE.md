@@ -426,87 +426,66 @@ inneros analytics --format json
 
 ---
 
-## 🔄 **Workflow Command**
+## 🔄 **Workflow Command** ⚠️ **DEPRECATED**
 
-Manage knowledge workflows with AI-assisted processing and automation.
+> **⚠️ DEPRECATION NOTICE**: The `inneros workflow` wrapper is deprecated as of October 2025 (ADR-004).  
+> **Migration Required**: Use dedicated CLIs listed above for all workflow operations.  
+> **Timeline**: `workflow_demo.py` will be removed November 11, 2025.  
+> **See**: [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for complete migration instructions.
 
-### **Basic Usage**
+### **Migration Quick Reference**
+
+Instead of `inneros workflow`, use these dedicated CLIs:
+
+| **Old Workflow Command** | **New Dedicated CLI** |
+|--------------------------|----------------------|
+| `inneros workflow --status` | `python3 development/src/cli/core_workflow_cli.py status` |
+| `inneros workflow --process-inbox` | `python3 development/src/cli/core_workflow_cli.py process-inbox` |
+| `inneros workflow --weekly-review` | `python3 development/src/cli/weekly_review_cli.py weekly-review` |
+| `inneros workflow --enhanced-metrics` | `python3 development/src/cli/weekly_review_cli.py enhanced-metrics` |
+| `inneros workflow --remediate-orphans` | `python3 development/src/cli/weekly_review_cli.py remediate-orphans` |
+| `inneros workflow --interactive` | `python3 development/src/cli/interactive_cli.py interactive` |
+
+**See "Dedicated CLIs" section above** for complete command reference with all options.
+
+### **Legacy Examples (For Reference Only)**
+
+<details>
+<summary>Click to expand legacy inneros workflow examples</summary>
+
+**⚠️ These examples are deprecated. Use dedicated CLIs instead.**
+
 ```bash
-# Check workflow health status
+# Quick health check (OLD)
 inneros workflow --status
+# NEW: python3 development/src/cli/core_workflow_cli.py status
 
-# Process inbox notes with AI assistance
+# Process inbox (OLD)
 inneros workflow --process-inbox
+# NEW: python3 development/src/cli/core_workflow_cli.py process-inbox
 
-# Generate weekly review
+# Generate weekly review (OLD)
 inneros workflow --weekly-review
-```
+# NEW: python3 development/src/cli/weekly_review_cli.py weekly-review
 
-### **All Options**
-```bash
-inneros workflow [PATH] [OPTIONS]
-
-Arguments:
-  PATH                     # Path to knowledge directory (default: knowledge/)
-
-Options:
-  --status                 # Show workflow status
-  --process-inbox          # Process all inbox notes
-  --report                 # Generate full workflow report
-  --interactive            # Run in interactive mode
-  --weekly-review          # Generate weekly review checklist
-  --enhanced-metrics       # Enhanced metrics with orphaned/stale detection
-  --remediate-orphans      # Remediate orphaned notes (insert links or checklist)
-  --remediate-mode MODE    # Remediation mode: link|checklist (default: link)
-  --remediate-scope SCOPE  # Scope: permanent|fleeting|all (default: permanent)
-  --remediate-limit N      # Max number of orphans to process (default: 10)
-  --target-note PATH       # Explicit target note/MOC (relative to vault or absolute)
-  --apply                  # Apply changes (disable dry-run); default is dry-run preview
-  --format {text,json}     # Output format (default: text)
-  --export FILENAME        # Export report to JSON file
-  --export-checklist PATH  # Export weekly review checklist to markdown
-  --dry-run                # Preview recommendations without processing
-```
-
-### **Examples**
-```bash
-# Quick health check
-inneros workflow --status
-
-# Process inbox with AI tagging and quality assessment
-inneros workflow --process-inbox
-
-# Preview what would be processed (safe)
-inneros workflow --process-inbox --dry-run
-
-# Generate weekly review checklist
-inneros workflow --weekly-review
-
-# Export weekly review to markdown file
-inneros workflow --weekly-review --export-checklist weekly-review.md
-
-# Enhanced metrics with orphaned note detection
+# Enhanced metrics (OLD)
 inneros workflow --enhanced-metrics
+# NEW: python3 development/src/cli/weekly_review_cli.py enhanced-metrics
 
-# Orphan remediation (dry-run by default)
+# Orphan remediation (OLD)
 inneros workflow --remediate-orphans --remediate-scope permanent --remediate-limit 5
-
-# Apply link insertions to Home Note (be careful; creates backups)
-inneros workflow --remediate-orphans --apply --target-note "knowledge/Home Note.md" \
-  --remediate-scope permanent --remediate-limit 10
-
-# Generate a remediation checklist instead of making changes
-inneros workflow --remediate-orphans --remediate-mode checklist --export checklist.md
-
-# Interactive workflow management
-inneros workflow --interactive
-
-# Full workflow report in JSON
-inneros workflow --report --format json --export workflow-report.json
-
-# Work with custom directory
-inneros workflow /path/to/custom/knowledge --status
+# NEW: python3 development/src/cli/weekly_review_cli.py remediate-orphans --scope permanent --limit 5
 ```
+
+</details>
+
+### **Why Migrate?**
+
+- ✅ **Faster Performance**: Dedicated CLIs load only required dependencies
+- ✅ **Clearer Errors**: Issues identified in correct architectural layer
+- ✅ **Better Documentation**: Each CLI has focused, specific examples
+- ✅ **Maintainable**: 200-500 LOC per CLI vs 2,128 LOC monolith
+- ✅ **Active Development**: New features added to dedicated CLIs only
 
 ---
 
