@@ -1,14 +1,25 @@
 """
 Smoke Tests - Real Vault Validation (TDD Iteration 6, Week 2)
 
+⚠️  CRITICAL SAFETY REQUIREMENT ⚠️
+====================================
+ALL smoke tests MUST use --dry-run or READ-ONLY operations!
+NEVER mutate production vault data in smoke tests!
+
+Safety Rules:
+1. Always use --dry-run flag for any write operations
+2. Never modify files directly
+3. Use file modification time checks to verify no mutations
+4. If testing write operations, use a COPY of production vault
+
 These tests validate real-world scenarios with the production vault.
 They run NIGHTLY (not on every commit) and take minutes, not seconds.
 
 Purpose:
-- Validate against actual 300+ note production vault
+- Validate against actual 300+ note production vault (READ-ONLY)
 - Test edge cases that controlled test data might miss
 - Verify performance with real vault size
-- Ensure workflows work with actual user data
+- Ensure workflows work with actual user data (WITHOUT MODIFYING)
 
 Performance: 5-10 minutes (acceptable for nightly runs)
 Markers: @pytest.mark.smoke + @pytest.mark.slow
@@ -65,6 +76,8 @@ class TestWeeklyReviewProduction:
         """
         RED Phase: Validate weekly review command against actual vault.
         
+        SAFETY: Uses --dry-run to prevent data mutation!
+        
         This test should initially fail to drive:
         - Performance validation (should complete in reasonable time)
         - Real note parsing (handle all edge cases in production)
@@ -74,9 +87,9 @@ class TestWeeklyReviewProduction:
         """
         start_time = time.time()
         
-        # Run weekly review CLI on production vault
+        # ⚠️ CRITICAL: Always use --dry-run with production vault!
         result = subprocess.run(
-            ['python', 'workflow_demo.py', str(production_vault), '--weekly-review'],
+            ['python', 'workflow_demo.py', str(production_vault), '--weekly-review', '--dry-run'],
             cwd=production_vault.parent / 'development' / 'src' / 'cli',
             capture_output=True,
             text=True,
