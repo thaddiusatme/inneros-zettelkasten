@@ -10,8 +10,8 @@ import psutil
 from pathlib import Path
 from typing import Dict, List, Any
 
-from cli.real_data_performance_validator import RealDataPerformanceValidator
-from cli.memory_usage_monitor import MemoryUsageMonitor
+from src.cli.real_data_performance_validator import RealDataPerformanceValidator
+from src.cli.memory_usage_monitor import MemoryUsageMonitor
 
 
 class StressTestManager:

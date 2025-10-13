@@ -1,12 +1,12 @@
 ---
 trigger: model_decision
+description: Testing infrastructure best practices for fast, reliable, comprehensive test suites
 ---
-
 
 # Development Workflow & Guidelines
 
 > **Purpose**: TDD methodology, integration guidelines, Git standards  
-> **Updated**: 2025-10-05 (Added architectural safeguards)
+> **Updated**: 2025-10-12 (Added testing infrastructure requirements)
 
 ## 🏗️ Development Guidelines
 
@@ -27,6 +27,16 @@ trigger: model_decision
 - Performance benchmarking against established targets
 - Integration testing with existing AI workflows
 - **Architectural testing**: Prevent god classes through size constraints
+
+#### Testing Infrastructure Requirements (2025-10-12)
+
+**Mandatory**: Tests in unit/integration/smoke/performance tiers, all tests marked (@pytest.mark.fast, @integration, @smoke), test data committed to git, coverage only in CI/CD, test isolation verified, mock strategy documented
+
+**Anti-Patterns**: ❌ Real vault in integration tests, ❌ Integration >1min, ❌ Unmarked tests, ❌ Inline test data, ❌ Coverage during dev
+
+**Tiers**: Unit (<10s), Integration (<30s, fixtures), Smoke (minutes, real vault, nightly), Performance (benchmarking)
+
+**Reference**: `/testing-best-practices` workflow for details
 
 #### TDD with Architectural Safeguards
 
@@ -170,9 +180,9 @@ If any answer is NO:
 ### Code Organization
 - CLI Tools: `development/src/cli/` - User-facing commands and demos
 - AI Engine: `development/src/ai/` - Core AI processing and workflows
-- Tests: `development/tests/` - Comprehensive unit and integration tests
+- Tests: [development/tests/](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/tests:0:0-0:0) - Comprehensive unit and integration tests
 - Templates: `knowledge/Templates/` - Dynamic content generation (Production Ready)
-- Project Docs: `Projects/ACTIVE/` - Current manifests and specifications
+- Project Docs: [Projects/ACTIVE/](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE:0:0-0:0) - Current manifests and specifications
 
 ### Project Lifecycle Integration
 - New Projects: Start manifests in Projects/ACTIVE/
@@ -242,6 +252,7 @@ If any answer is NO:
 - [ ] Confirm integration opportunities with existing systems
 - [ ] Validate performance benchmarks are maintained
 - [ ] **Check target class size** (use Pre-Development Checklist from Architectural Constraints)
+- [ ] **Verify test tier separation** (markers, fixtures, coverage profiles per `/testing-best-practices`)
 
 ### Development Validation
 - [ ] TDD methodology followed (RED → GREEN → REFACTOR)
@@ -250,6 +261,7 @@ If any answer is NO:
 - [ ] Integration with existing workflows verified
 - [ ] Documentation updated to reflect changes
 - [ ] **Architectural constraints maintained** (<500 LOC, <20 methods per class)
+- [ ] **Test infrastructure requirements met** (tiers, markers, isolation)
 
 ### Completion Checklist
 - [ ] Lessons learned documented and archived
@@ -295,5 +307,4 @@ If any answer is NO:
 
 **See Also**:
 - `.windsurf/rules/architectural-constraints.md` - Detailed architectural limits and enforcement
-- `Projects/COMPLETED-2025-10/god-class-prevention-lessons-learned.md` - Lessons from WorkflowManager god class
-- `Projects/ACTIVE/workflow-manager-refactor-tdd-manifest.md` - Example refactoring project
+- .windsurf/workflows/testing-best-practices.md

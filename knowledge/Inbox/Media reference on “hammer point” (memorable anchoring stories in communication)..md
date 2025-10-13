@@ -1,11 +1,11 @@
 ---
 created: 2025-09-21 16:02
-tags: [afteranalyzingtheprovidedtext, andbusinesscommunication, andpersuasioninmarketingandbranding,
-  andtheimportanceofbrandingandmarketinginbusiness, andtheimportanceofnarrativestructureinmarketingandbusinesscommunication,
-  andtheimportanceofpurposeandmotivationinbusinessandmarketing, andtheroleofsocialproofinmarketingandbranding,
-  artificial-intelligence]
-quality_score: 0.7
-ai_processed: '2025-09-28T09:43:49.930754'
+tags: [afteranalyzingtheprovidedtext, andbusinesscommunication, andcommunication2narrativepsychologythistagisrelatedtothestudyofhowstoriesshapeourunderstandingofourselvesandothers3socialproofthetexthighlightstheimportanceofsocialproofinmarketing,
+  andpersuasioninmarketingandbranding, andtheimportanceofbrandingandmarketinginbusiness,
+  andtheimportanceofnarrativestructureinmarketingandbusinesscommunication, andtheimportanceofpurposeandmotivationinbusinessandmarketing,
+  andtheroleofsocialproofinmarketingandbranding]
+quality_score: 0.6000000000000001
+ai_processed: '2025-10-12T20:40:13.115750'
 ---
 # The "Hammer Point" Technique: How Personal Stories Anchor Ideas and Build Intimacy
 

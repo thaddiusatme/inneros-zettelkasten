@@ -1,9 +1,12 @@
 ---
-type: fleeting
 created: 2025-10-06 16:42
+type: fleeting
 status: inbox
-tags: [fleeting, inbox]
 visibility: private
+tags: [ai-assisted, ai-assisted-note-taking, ai-assisted-writing, ai-processing, artificial-intelligence,
+  automation, content-enhancement, fleeting]
+quality_score: 0.85
+ai_processed: '2025-10-12T20:44:02.112936'
 ---
 ```mermaid
 

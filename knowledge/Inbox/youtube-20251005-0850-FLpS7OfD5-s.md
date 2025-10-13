@@ -1,13 +1,13 @@
 ---
+created: 2025-10-05 08:50
 type: literature
 status: inbox
-created: 2025-10-05 08:50
-video_id: FLpS7OfD5-s
+tags: [agentic-ai, ai-systems, artificial-intelligence, composability, discoverability,
+  mvc-architecture, pluggability]
 source: https://youtube.com/watch?v=FLpS7OfD5-s
-tags:
-  - pluggability
-  - discoverability
-  - composability
+quality_score: 0.75
+video_id: FLpS7OfD5-s
+ai_processed: '2025-10-12T20:43:13.586830'
 ---
 
 # Video Summary

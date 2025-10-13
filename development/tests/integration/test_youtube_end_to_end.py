@@ -24,6 +24,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.cli.youtube_processor import YouTubeProcessor
 
 
+@pytest.mark.integration
+@pytest.mark.slow_integration  # External YouTube API
 class TestYouTubeProcessorURLValidation:
     """Test YouTube URL validation and video ID extraction."""
     

@@ -1,3 +1,10 @@
+---
+created: 2025-10-05 22:20
+tags: [atomic-thinking, connection-making, contradiction-questioning, contradiction-resolution,
+  development-path, evidence-based-learning, example-evidence, idea-organization]
+quality_score: 0.85
+ai_processed: '2025-10-12T19:30:10.796087'
+---
 # 🎤 Zettelkasten Voice Note Quick Reference
 
 **For Samsung S23 Knowledge Capture - Zettelkasten Optimized**

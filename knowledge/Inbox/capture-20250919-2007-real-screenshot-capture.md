@@ -2,10 +2,10 @@
 created: 2025-09-19 20:07
 type: fleeting
 status: inbox
-tags: [ai-enhancement, capture, digital-organization, knowledge-capture, knowledge-management,
-  metadata, metadata-analysis, processing-notes]
+tags: [ai-enhancement, android-device, android-devices, capture, digital-asset-management,
+  digital-asset-tracking, digital-forensics, digital-organization]
 source: capture
-quality_score: 0.8
+quality_score: 0.85
 ai_tags:
 - capture
 - samsung-s23
@@ -15,7 +15,7 @@ capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-24 17:30:12
-ai_processed: '2025-09-28T09:42:13.665848'
+ai_processed: '2025-10-12T20:38:07.937910'
 ---
 # Screenshot Capture
 

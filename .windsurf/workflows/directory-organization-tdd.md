@@ -195,6 +195,6 @@ PYTHONPATH=development pytest development/tests/ -v
 # Check link integrity
 python3 development/src/utils/directory_organizer.py --validate-links
 
-# Generate project status report  
-python3 development/src/cli/workflow_demo.py . --enhanced-metrics
+# Generate project status report (use dedicated CLI per ADR-004)
+python3 development/src/cli/weekly_review_cli.py enhanced-metrics
 ```

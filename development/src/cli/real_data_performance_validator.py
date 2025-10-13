@@ -16,7 +16,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 # Import our existing CLI utilities
-from cli.safe_workflow_cli_utils import SafeWorkflowCLI
+from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
 
 class RealDataPerformanceValidator:

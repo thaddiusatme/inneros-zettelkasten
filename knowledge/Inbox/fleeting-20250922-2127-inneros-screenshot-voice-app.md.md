@@ -3,10 +3,10 @@ created: 2025-09-22 21:24
 type: fleeting
 status: inbox
 visibility: private
-tags: [ai-enhancement, analytics-dashboard, claude-api, content-creation, desktop-processing-station,
-  fleeting, fleeting-notes, foundation-phase]
-quality_score: 0.7
-ai_processed: '2025-09-28T09:51:10.230135'
+tags: [ai-enhancement, analytics-dashboard, blog-posts, capture-manifest, claude-api,
+  content-creation, desktop-processing-station, file-paths]
+quality_score: 1.0
+ai_processed: '2025-10-12T12:59:05.034697'
 ---
 
 <!--

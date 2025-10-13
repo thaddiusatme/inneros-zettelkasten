@@ -17,6 +17,8 @@ from ai.summarizer import AISummarizer
 from ai.ollama_client import OllamaClient
 
 
+@pytest.mark.integration
+@pytest.mark.slow_integration  # AI API calls
 class TestAISummarizerIntegration:
     """Integration tests for AISummarizer with real API."""
     

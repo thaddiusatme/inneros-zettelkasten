@@ -84,12 +84,12 @@ python3 -m pytest tests/test_integration_feature.py::test_extends_existing -v
 
 ### **Phase 3: Validation & Performance**
 ```bash
-# Comprehensive integration testing
-python3 src/cli/workflow_demo.py . --integration-test
-python3 src/cli/analytics_demo.py . --performance-benchmark
+# Comprehensive integration testing (use dedicated CLIs per ADR-004)
+python3 development/src/cli/core_workflow_cli.py integration-test
+python3 development/src/cli/analytics_demo.py . --performance-benchmark
 
 # Validate existing functionality preserved
-python3 src/cli/workflow_demo.py . --existing-features-check
+python3 development/src/cli/core_workflow_cli.py status
 ```
 
 ## 📊 Integration Success Criteria

@@ -1,9 +1,9 @@
 ---
 created: 2025-09-21 16:03
 tags: [ai-assistant, ai-humble-servant, ai-tool-review, arxiv-papers, bottom-line,
-  breaking-ai-news, business-impact, core-features]
-quality_score: 0.85
-ai_processed: '2025-09-28T09:52:16.365462'
+  breaking-ai-news, breaking-news, business-impact]
+quality_score: 0.8
+ai_processed: '2025-10-12T12:59:35.494065'
 ---
 You are an AI assistant tasked with drafting the weekly AI Humble Servant newsletter. Create a newsletter that tells a story, provokes thought, and delivers practical value. Follow this structure:
 

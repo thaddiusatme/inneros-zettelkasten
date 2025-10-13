@@ -52,7 +52,7 @@ touch development/tests/unit/test_fleeting_lifecycle.py
 #### **Step 3: TDD GREEN Phase - Minimal Implementation**
 ```bash
 # Extend WorkflowManager with minimal fleeting methods
-# Add CLI flag to workflow_demo.py
+# Add CLI flag to dedicated fleeting_cli.py (ADR-004)
 # Implement just enough to pass tests
 
 # Verify tests pass:
@@ -72,10 +72,10 @@ python3 -m pytest development/tests/ -v
 #### **Step 5: Real Data Validation**
 ```bash
 # Test with actual fleeting notes collection
-python3 development/src/cli/workflow_demo.py . --fleeting-health
+python3 development/src/cli/fleeting_cli.py fleeting-health
 
 # Verify performance <3 seconds
-time python3 development/src/cli/workflow_demo.py . --fleeting-health
+time python3 development/src/cli/fleeting_cli.py fleeting-health
 ```
 
 #### **Step 6: Documentation & Integration**
@@ -149,13 +149,14 @@ class WorkflowManager:
 
 ### **CLI Integration Pattern**
 ```bash
-# Extend workflow_demo.py argparse (existing pattern)
-parser.add_argument('--fleeting-health', action='store_true',
-                   help='Generate fleeting notes health report')
-parser.add_argument('--fleeting-triage', action='store_true',  
-                   help='Generate AI-powered triage recommendations')
-parser.add_argument('--promote-note', type=str,
-                   help='Promote specific fleeting note to permanent')
+# Use dedicated fleeting_cli.py (ADR-004, October 2025)
+# Commands available:
+python3 development/src/cli/fleeting_cli.py fleeting-health
+python3 development/src/cli/fleeting_cli.py fleeting-triage
+python3 development/src/cli/fleeting_cli.py promote-note PATH
+
+# Core workflow commands in core_workflow_cli.py:
+python3 development/src/cli/core_workflow_cli.py promote note.md permanent
 ```
 
 ### **Data Structure Patterns**
@@ -195,9 +196,9 @@ class TestFleetingIntegration:
 ### **Performance Validation**
 ```bash
 # Benchmark commands (must maintain existing performance)
-time python3 development/src/cli/workflow_demo.py . --weekly-review
-time python3 development/src/cli/workflow_demo.py . --fleeting-health
-time python3 development/src/cli/workflow_demo.py . --fleeting-triage
+time python3 development/src/cli/weekly_review_cli.py weekly-review
+time python3 development/src/cli/fleeting_cli.py fleeting-health
+time python3 development/src/cli/fleeting_cli.py fleeting-triage
 ```
 
 ## 🔒 Safety & Validation Checklist
@@ -225,24 +226,24 @@ time python3 development/src/cli/workflow_demo.py . --fleeting-triage
 ### **Functional Validation**
 ```bash
 # Phase 1: Age detection working
-python3 development/src/cli/workflow_demo.py . --fleeting-health
+python3 development/src/cli/fleeting_cli.py fleeting-health
 # Should show: total notes, age distribution, oldest note, <3s execution
 
 # Phase 2: AI triage working  
-python3 development/src/cli/workflow_demo.py . --fleeting-triage
+python3 development/src/cli/fleeting_cli.py fleeting-triage
 # Should show: promotion recommendations, rationale, confidence scores
 
 # Phase 3: Promotion working
-python3 development/src/cli/workflow_demo.py . --promote-note "Fleeting Notes/test.md"
+python3 development/src/cli/fleeting_cli.py promote-note "Fleeting Notes/test.md"
 # Should: move file safely, preserve links, update metadata
 ```
 
 ### **Integration Validation**
 ```bash
 # Ensure existing workflows unaffected
-python3 development/src/cli/workflow_demo.py . --weekly-review
-python3 development/src/cli/workflow_demo.py . --process-inbox
-python3 development/src/cli/workflow_demo.py . --enhanced-metrics
+python3 development/src/cli/weekly_review_cli.py weekly-review
+python3 development/src/cli/core_workflow_cli.py process-inbox
+python3 development/src/cli/weekly_review_cli.py enhanced-metrics
 
 # All should work exactly as before
 ```
@@ -279,7 +280,7 @@ time python3 development/src/cli/analytics_demo.py . --interactive
 ### **Monitoring Health**
 ```bash
 # Weekly validation of fleeting lifecycle health
-python3 development/src/cli/workflow_demo.py . --fleeting-health --export fleeting-health-$(date +%Y-%m-%d).md
+python3 development/src/cli/fleeting_cli.py fleeting-health --export fleeting-health-$(date +%Y-%m-%d).md
 
 # Track progression metrics over time
 python3 development/src/cli/analytics_demo.py . --fleeting-trends

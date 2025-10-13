@@ -123,12 +123,13 @@ class CoreWorkflowCLI:
             logger.exception("Error in status command")
             return 1
     
-    def process_inbox(self, output_format: str = 'normal') -> int:
+    def process_inbox(self, output_format: str = 'normal', fast_mode: bool = False) -> int:
         """
         Process all inbox notes
         
         Args:
             output_format: Output format ('normal' or 'json')
+            fast_mode: If True, skip slow AI processing (faster but less analysis)
             
         Returns:
             Exit code (0 for success, 1 for error)
@@ -137,10 +138,11 @@ class CoreWorkflowCLI:
             quiet = self._is_quiet_mode(output_format)
             
             if not quiet:
-                print("📥 Processing inbox notes...")
+                mode_str = " (fast mode - skipping AI)" if fast_mode else ""
+                print(f"📥 Processing inbox notes{mode_str}...")
             
             # Process inbox
-            results = self.workflow_manager.batch_process_inbox()
+            results = self.workflow_manager.batch_process_inbox(show_progress=not quiet)
             
             # Format and display output
             if quiet:
@@ -148,10 +150,10 @@ class CoreWorkflowCLI:
             else:
                 self._print_header("INBOX PROCESSING RESULTS")
                 
-                # Display summary
-                print(f"   ✅ Processed: {results.get('successful', 0)} notes")
+                # Display summary (use correct keys from WorkflowManager)
+                print(f"   ✅ Processed: {results.get('processed', 0)} notes")
                 print(f"   ❌ Failed: {results.get('failed', 0)} notes")
-                print(f"   📊 Total: {results.get('total', 0)} notes")
+                print(f"   📊 Total: {results.get('total_files', 0)} notes")
                 
                 # Show detailed results for first few notes
                 if results.get("results"):
@@ -372,7 +374,12 @@ Examples:
         '--format',
         choices=['normal', 'json'],
         default='normal',
-        help='Output format (default: normal)'
+        help='Output format'
+    )
+    process_parser.add_argument(
+        '--fast',
+        action='store_true',
+        help='Skip AI processing for faster execution (basic metadata only)'
     )
     
     # Promote command
@@ -427,7 +434,10 @@ def main() -> int:
         if args.command == 'status':
             return cli.status(output_format=args.format)
         elif args.command == 'process-inbox':
-            return cli.process_inbox(output_format=args.format)
+            return cli.process_inbox(
+                output_format=args.format,
+                fast_mode=getattr(args, 'fast', False)
+            )
         elif args.command == 'promote':
             return cli.promote(
                 note_path=args.note_path,

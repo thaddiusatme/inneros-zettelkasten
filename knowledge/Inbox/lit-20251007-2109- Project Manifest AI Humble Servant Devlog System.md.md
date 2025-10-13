@@ -1,11 +1,14 @@
 ---
-type: literature
 created: 2025-10-07 21:09
+type: literature
 status: inbox
-tags: [literature]
 visibility: private
-source: 
-author: 
+tags: [ai, ai-humble-servant, artificial-intelligence, chatgpt, devlog, devlog-system,
+  herearetheextractedtagsai, herearetheextractedtagsai-humile-servant]
+source: null
+quality_score: 0.75
+author: null
+ai_processed: '2025-10-12T20:37:25.880256'
 ---
 
 

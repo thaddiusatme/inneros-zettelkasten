@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import sys
 import os
 import re
+import pytest
 
 # Add development directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -20,6 +21,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from capture_matcher import CaptureMatcherPOC
 
 
+@pytest.mark.integration
+@pytest.mark.slow_integration  # External OneDrive API
 class TestOneDriveIntegration(unittest.TestCase):
     """Test OneDrive file discovery and Samsung capture scanning"""
     
