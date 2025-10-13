@@ -6,7 +6,7 @@ visibility: private
 tags: [ai-assistant, ai-humble-servant, ai-newsletter, ai-tool-review, aihumbleservant,
   ainewsletter, aitoolreview, artificial-intelligence]
 quality_score: 0.8
-ai_processed: '2025-10-12T12:53:15.819936'
+ai_processed: '2025-10-12T19:29:38.310691'
 ---
 You are an AI assistant tasked with drafting the weekly AI Humble Servant newsletter. Create a newsletter that tells a story, provokes thought, and delivers practical value. Follow this structure:
 

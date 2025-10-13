@@ -5,7 +5,7 @@ status: inbox
 tags: [ai-enhancement, ai-enhancement-suggestions, capture, capture-session, capture-session-tracking,
   device-detection, herearetheextractedrelevanttagssamsung-s23, knowledge-capture]
 source: capture
-quality_score: 0.7
+quality_score: 0.75
 ai_tags:
 - capture
 - samsung-s23
@@ -15,7 +15,7 @@ time_gap_seconds: 15
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-22 22:24:15
-ai_processed: '2025-10-12T13:15:38.837465'
+ai_processed: '2025-10-12T19:23:07.663263'
 ---
 # Capture Summary
 

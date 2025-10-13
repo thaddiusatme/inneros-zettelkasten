@@ -3,7 +3,7 @@ created: 2025-09-19 20:07
 type: fleeting
 status: inbox
 tags: [aienhancementsuggestions, android, android-devices, capture, capture-metadata,
-  capture-session, capturesession, contentanalysischecklist]
+  capture-session, capturesession, cloud-storage]
 source: capture
 quality_score: 0.85
 ai_tags:
@@ -15,7 +15,7 @@ capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-22 22:35:53
-ai_processed: '2025-10-12T12:53:56.569079'
+ai_processed: '2025-10-12T19:30:49.605454'
 ---
 # Screenshot Capture
 

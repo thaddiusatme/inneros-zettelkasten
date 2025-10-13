@@ -2,9 +2,9 @@
 created: 2025-10-05 22:20
 tags: [ai-workflow-integration, andthemesknowledge-capture, data-analytics-captures,
   hereare7highlyrelevanttagsthatcapturethekeyconcepts, hereare7relevanttagsthatcapturethekeyconcepts,
-  inneros-knowledge-system, screenshot-analysis, screenshot-captures]
+  inneros, inneros-knowledge-system, screenshot-analysis]
 quality_score: 0.85
-ai_processed: '2025-10-12T13:14:27.830777'
+ai_processed: '2025-10-12T19:21:48.505666'
 ---
 c# Voice Note Prompts for Knowledge Capture
 

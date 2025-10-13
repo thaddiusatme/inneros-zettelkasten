@@ -1,9 +1,9 @@
 ---
 created: 2025-10-07 14:37
-tags: [ai, ai-assisted-note-taking, ai-processing, automation, cli-commands, error-handling,
-  machine-learning, manual-processing]
+tags: [ai, ai-assisted-note-taking, ai-processing, automation, categories, cli-commands,
+  error-handling, machine-learning]
 quality_score: 0.2
-ai_processed: '2025-10-12T12:52:50.737126'
+ai_processed: '2025-10-12T19:29:05.448715'
 ---
 ```mermaid
 flowchart TD

@@ -2,8 +2,8 @@
 created: 2025-09-19 20:07
 type: fleeting
 status: inbox
-tags: [ai-enhancement, android-devices, capture, digital-asset-tracking, digital-forensics,
-  digital-organization, image-analysis, image-file-management]
+tags: [ai-enhancement, android-device, android-devices, capture, digital-asset-management,
+  digital-asset-tracking, digital-forensics, digital-organization]
 source: capture
 quality_score: 0.85
 ai_tags:
@@ -15,7 +15,7 @@ capture_type: screenshot_only
 ai_quality_score: 0.8
 ai_processing_method: fallback
 ai_processed_at: 2025-09-24 17:30:12
-ai_processed: '2025-10-12T13:18:13.067047'
+ai_processed: '2025-10-12T19:20:41.372885'
 ---
 # Screenshot Capture
 

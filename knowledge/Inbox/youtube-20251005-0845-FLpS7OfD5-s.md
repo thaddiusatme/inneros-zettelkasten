@@ -6,10 +6,10 @@ tags: [ai, basedontheprovidedtext, iextractedthefollowing5highlyrelevanttagsthat
   note-taking, pleaseprovidethecontentyoudlikemetoextracttagsfromillbehappytohelp,
   transformation]
 source: https://youtube.com/watch?v=FLpS7OfD5-s
-quality_score: 0.65
+quality_score: 0.2
 video_id: FLpS7OfD5-s
 title: AI Video
-ai_processed: '2025-10-12T12:50:57.131241'
+ai_processed: '2025-10-12T19:26:58.318722'
 ---
 
 # Formatted Note

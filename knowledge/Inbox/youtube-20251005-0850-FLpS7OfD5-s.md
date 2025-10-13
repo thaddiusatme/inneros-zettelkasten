@@ -7,7 +7,7 @@ tags: [agentic-ai, ai-systems, artificial-intelligence, composability, discovera
 source: https://youtube.com/watch?v=FLpS7OfD5-s
 quality_score: 0.85
 video_id: FLpS7OfD5-s
-ai_processed: '2025-10-12T12:50:47.400334'
+ai_processed: '2025-10-12T19:26:49.124455'
 ---
 
 # Video Summary
