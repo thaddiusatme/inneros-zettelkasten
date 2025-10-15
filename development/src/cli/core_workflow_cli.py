@@ -66,6 +66,67 @@ class CoreWorkflowCLI:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == 'json'
     
+    def _format_auto_promote_preview(self, results: dict) -> None:
+        """Format and display auto-promotion preview (dry-run mode)."""
+        self._print_header("AUTO-PROMOTION PREVIEW (DRY RUN)")
+        would_promote = results.get('would_promote_count', 0)
+        print(f"   Would promote: {would_promote} notes")
+        
+        # Show preview list
+        if results.get('preview'):
+            self._print_section("NOTES TO BE PROMOTED")
+            for item in results['preview']:
+                note_name = item.get('note', 'Unknown')
+                note_type = item.get('type', 'Unknown')
+                quality = item.get('quality', 0.0)
+                target = item.get('target', 'Unknown')
+                print(f"   📄 {note_name}")
+                print(f"      Type: {note_type} → {target}")
+                print(f"      Quality: {quality:.2f}")
+    
+    def _format_auto_promote_results(self, results: dict) -> None:
+        """Format and display auto-promotion results."""
+        self._print_header("AUTO-PROMOTION RESULTS")
+        
+        # Summary statistics
+        total = results.get('total_candidates', 0)
+        promoted = results.get('promoted_count', 0)
+        skipped = results.get('skipped_count', 0)
+        errors = results.get('error_count', 0)
+        
+        print(f"   📊 Candidates: {total} notes")
+        print(f"   ✅ Promoted: {promoted} notes")
+        print(f"   ⚠️  Skipped: {skipped} notes (below threshold)")
+        print(f"   🚨 Errors: {errors} notes")
+        
+        # By-type breakdown
+        if results.get('by_type'):
+            self._print_section("BY TYPE")
+            for note_type, counts in results['by_type'].items():
+                promoted_count = counts.get('promoted', 0)
+                skipped_count = counts.get('skipped', 0)
+                print(f"   {note_type.title()}:")
+                print(f"      ✅ Promoted: {promoted_count}")
+                print(f"      ⚠️  Skipped: {skipped_count}")
+        
+        # Show skipped notes
+        if results.get('skipped_notes'):
+            self._print_section("SKIPPED NOTES")
+            for skip in results['skipped_notes'][:5]:  # Show first 5
+                note_path = skip.get('path', 'Unknown')
+                quality = skip.get('quality', 0.0)
+                note_type = skip.get('type', 'Unknown')
+                print(f"   📄 {note_path}")
+                print(f"      Type: {note_type}, Quality: {quality:.2f}")
+        
+        # Show errors
+        if results.get('errors'):
+            self._print_section("ERRORS")
+            for error in results['errors']:
+                note = error.get('note', 'Unknown')
+                error_msg = error.get('error', 'Unknown error')
+                print(f"   🚨 {note}: {error_msg}")
+    
     def status(self, output_format: str = 'normal') -> int:
         """
         Show workflow status
@@ -328,6 +389,67 @@ class CoreWorkflowCLI:
             print(f"❌ Error generating report: {e}", file=sys.stderr)
             logger.exception("Error in report command")
             return 1
+    
+    def auto_promote(self, dry_run: bool = False, quality_threshold: float = 0.7,
+                     output_format: str = 'normal') -> int:
+        """
+        Auto-promote notes that meet quality threshold
+        
+        Args:
+            dry_run: If True, show preview without making changes
+            quality_threshold: Minimum quality score (0.0-1.0) for promotion
+            output_format: Output format ('normal' or 'json')
+            
+        Returns:
+            Exit code (0=success, 1=errors occurred, 2=invalid arguments)
+        """
+        try:
+            # Validate threshold
+            if not (0.0 <= quality_threshold <= 1.0):
+                print(f"❌ Error: Quality threshold must be between 0.0 and 1.0 (got {quality_threshold})",
+                      file=sys.stderr)
+                return 2
+            
+            # Validate vault path exists
+            from pathlib import Path
+            vault_path_obj = Path(self.vault_path)
+            if not vault_path_obj.exists():
+                print(f"❌ Error: Vault path does not exist: {self.vault_path}",
+                      file=sys.stderr)
+                return 1
+            
+            quiet = self._is_quiet_mode(output_format)
+            
+            if not quiet:
+                mode_str = " (DRY RUN - Preview Only)" if dry_run else ""
+                print(f"🚀 Auto-promoting ready notes{mode_str}...")
+                print(f"   Quality threshold: {quality_threshold}")
+            
+            # Call backend
+            results = self.workflow_manager.auto_promote_ready_notes(
+                dry_run=dry_run,
+                quality_threshold=quality_threshold
+            )
+            
+            # Format and display output
+            if quiet:
+                print(json.dumps(results, indent=2, default=str))
+            else:
+                # Dry-run preview mode or actual results
+                if results.get('dry_run'):
+                    self._format_auto_promote_preview(results)
+                else:
+                    self._format_auto_promote_results(results)
+            
+            # Exit code based on results
+            if results.get('error_count', 0) > 0:
+                return 1  # Errors occurred
+            return 0  # Success
+            
+        except Exception as e:
+            print(f"❌ Error in auto-promotion: {e}", file=sys.stderr)
+            logger.exception("Error in auto_promote command")
+            return 1
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -345,6 +467,15 @@ Examples:
   
   # Promote a note
   python core_workflow_cli.py /path/to/vault promote note.md permanent
+  
+  # Auto-promote high quality notes
+  python core_workflow_cli.py /path/to/vault auto-promote
+  
+  # Preview auto-promotion (dry-run)
+  python core_workflow_cli.py /path/to/vault auto-promote --dry-run
+  
+  # Custom quality threshold
+  python core_workflow_cli.py /path/to/vault auto-promote --quality-threshold 0.8
   
   # Generate comprehensive report
   python core_workflow_cli.py /path/to/vault report --export report.json
@@ -414,6 +545,29 @@ Examples:
         help='Export report to JSON file'
     )
     
+    # Auto-promote command
+    auto_promote_parser = subparsers.add_parser(
+        'auto-promote',
+        help='Automatically promote high-quality notes from Inbox to appropriate directories'
+    )
+    auto_promote_parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Preview which notes would be promoted without making changes'
+    )
+    auto_promote_parser.add_argument(
+        '--quality-threshold',
+        type=float,
+        default=0.7,
+        help='Minimum quality score (0.0-1.0) required for auto-promotion (default: 0.7)'
+    )
+    auto_promote_parser.add_argument(
+        '--format',
+        choices=['normal', 'json'],
+        default='normal',
+        help='Output format (default: normal)'
+    )
+    
     return parser
 
 
@@ -448,6 +602,12 @@ def main() -> int:
             return cli.report(
                 output_format=args.format,
                 export_path=args.export
+            )
+        elif args.command == 'auto-promote':
+            return cli.auto_promote(
+                dry_run=args.dry_run,
+                quality_threshold=args.quality_threshold,
+                output_format=args.format
             )
         else:
             parser.print_help()
