@@ -460,6 +460,15 @@ Examples:
   # Promote a note
   python core_workflow_cli.py /path/to/vault promote note.md permanent
   
+  # Auto-promote high quality notes
+  python core_workflow_cli.py /path/to/vault auto-promote
+  
+  # Preview auto-promotion (dry-run)
+  python core_workflow_cli.py /path/to/vault auto-promote --dry-run
+  
+  # Custom quality threshold
+  python core_workflow_cli.py /path/to/vault auto-promote --quality-threshold 0.8
+  
   # Generate comprehensive report
   python core_workflow_cli.py /path/to/vault report --export report.json
         """
@@ -528,6 +537,29 @@ Examples:
         help='Export report to JSON file'
     )
     
+    # Auto-promote command
+    auto_promote_parser = subparsers.add_parser(
+        'auto-promote',
+        help='Automatically promote high-quality notes from Inbox to appropriate directories'
+    )
+    auto_promote_parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Preview which notes would be promoted without making changes'
+    )
+    auto_promote_parser.add_argument(
+        '--quality-threshold',
+        type=float,
+        default=0.7,
+        help='Minimum quality score (0.0-1.0) required for auto-promotion (default: 0.7)'
+    )
+    auto_promote_parser.add_argument(
+        '--format',
+        choices=['normal', 'json'],
+        default='normal',
+        help='Output format (default: normal)'
+    )
+    
     return parser
 
 
@@ -562,6 +594,12 @@ def main() -> int:
             return cli.report(
                 output_format=args.format,
                 export_path=args.export
+            )
+        elif args.command == 'auto-promote':
+            return cli.auto_promote(
+                dry_run=args.dry_run,
+                quality_threshold=args.quality_threshold,
+                output_format=args.format
             )
         else:
             parser.print_help()
