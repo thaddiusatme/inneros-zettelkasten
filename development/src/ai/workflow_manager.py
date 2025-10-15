@@ -601,6 +601,80 @@ class WorkflowManager:
         except Exception as e:
             return {"error": f"Failed to promote note: {e}"}
     
+    def _validate_note_for_promotion(
+        self, 
+        note_path: Path, 
+        frontmatter: Dict, 
+        quality_threshold: float
+    ) -> Tuple[bool, Optional[str], Optional[str]]:
+        """
+        Validate if a note is eligible for auto-promotion.
+        
+        Args:
+            note_path: Path to the note
+            frontmatter: Parsed frontmatter metadata
+            quality_threshold: Minimum quality score required
+            
+        Returns:
+            Tuple of (is_valid, note_type, error_message)
+        """
+        # Check quality score
+        quality_score = frontmatter.get("quality_score", 0.0)
+        if quality_score < quality_threshold:
+            return False, None, f"Quality score {quality_score:.2f} below threshold {quality_threshold}"
+        
+        # Check for required type field
+        note_type = frontmatter.get("type")
+        if not note_type:
+            return False, None, "Missing 'type' field in frontmatter"
+        
+        # Validate type is supported
+        if note_type not in ["fleeting", "literature", "permanent"]:
+            return False, None, f"Invalid note type: {note_type}"
+        
+        return True, note_type, None
+    
+    def _execute_note_promotion(
+        self, 
+        note_path: Path, 
+        note_type: str
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Execute promotion of a single note.
+        
+        Args:
+            note_path: Path to the note
+            note_type: Target type (fleeting/literature/permanent)
+            
+        Returns:
+            Tuple of (success, error_message)
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Execute file move
+        promote_result = self.promote_note(str(note_path), target_type=note_type)
+        
+        if "error" in promote_result:
+            logger.warning(f"Promotion failed for {note_path.name}: {promote_result['error']}")
+            return False, promote_result["error"]
+        
+        # Update status to 'published' via NoteLifecycleManager
+        target_path = Path(promote_result["target"])
+        status_result = self.lifecycle_manager.update_status(
+            target_path,
+            new_status="published",
+            reason="Auto-promotion completed"
+        )
+        
+        if status_result.get("status_updated") == "published":
+            logger.info(f"Successfully promoted {note_path.name} to {note_type.title()} Notes/")
+            return True, None
+        else:
+            error_msg = f"Moved but status update failed: {status_result.get('error', 'Unknown')}"
+            logger.error(f"Status update failed for {note_path.name}: {error_msg}")
+            return False, error_msg
+    
     def auto_promote_ready_notes(
         self, 
         dry_run: bool = False, 
@@ -619,6 +693,9 @@ class WorkflowManager:
         Returns:
             Dict with promotion results including counts and details
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         results = {
             "total_candidates": 0,
             "promoted_count": 0,
@@ -633,12 +710,15 @@ class WorkflowManager:
         if dry_run:
             results["would_promote_count"] = 0
             results["preview"] = []
+            logger.info("Auto-promotion running in DRY-RUN mode (no changes will be made)")
         
         # Scan inbox for candidate notes
         if not self.inbox_dir.exists():
+            logger.warning(f"Inbox directory does not exist: {self.inbox_dir}")
             return results
         
         inbox_files = list(self.inbox_dir.glob("*.md"))
+        logger.info(f"Scanning {len(inbox_files)} notes in Inbox/ for auto-promotion candidates")
         
         for note_path in inbox_files:
             try:
@@ -651,31 +731,28 @@ class WorkflowManager:
                     continue
                 
                 results["total_candidates"] += 1
+                logger.debug(f"Evaluating candidate: {note_path.name}")
                 
-                # Check quality score
-                quality_score = frontmatter.get("quality_score", 0.0)
-                if quality_score < quality_threshold:
+                # Validate note eligibility
+                is_valid, note_type, error_msg = self._validate_note_for_promotion(
+                    note_path, frontmatter, quality_threshold
+                )
+                
+                if not is_valid:
                     results["skipped_count"] += 1
-                    results["skipped_notes"][note_path.name] = (
-                        f"Quality score {quality_score:.2f} below threshold {quality_threshold}"
-                    )
+                    results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
+                    if error_msg and "type" in error_msg.lower():
+                        results["error_count"] += 1
+                        results["errors"][note_path.name] = error_msg
+                    logger.debug(f"Skipped {note_path.name}: {error_msg}")
                     continue
                 
-                # Check for required type field
-                note_type = frontmatter.get("type")
-                if not note_type:
-                    results["error_count"] += 1
-                    results["errors"][note_path.name] = "Missing 'type' field in frontmatter"
-                    continue
-                
-                # Validate type is supported
-                if note_type not in ["fleeting", "literature", "permanent"]:
-                    results["error_count"] += 1
-                    results["errors"][note_path.name] = f"Invalid note type: {note_type}"
-                    continue
+                # At this point, note_type is guaranteed to be a string (validation passed)
+                assert note_type is not None, "note_type should not be None after successful validation"
                 
                 # Dry-run mode: preview only
                 if dry_run:
+                    quality_score = frontmatter.get("quality_score", 0.0)
                     results["would_promote_count"] += 1
                     results["preview"].append({
                         "note": note_path.name,
@@ -683,37 +760,30 @@ class WorkflowManager:
                         "quality": quality_score,
                         "target": f"{note_type.title()} Notes/"
                     })
+                    logger.info(f"Would promote: {note_path.name} → {note_type.title()} Notes/")
                     continue
                 
                 # Execute promotion
-                promote_result = self.promote_note(str(note_path), target_type=note_type)
+                success, error_msg = self._execute_note_promotion(note_path, note_type)
                 
-                if "error" in promote_result:
-                    results["error_count"] += 1
-                    results["errors"][note_path.name] = promote_result["error"]
-                    continue
-                
-                # Update status to 'published' via NoteLifecycleManager
-                target_path = Path(promote_result["target"])
-                status_result = self.lifecycle_manager.update_status(
-                    target_path,
-                    new_status="published",
-                    reason="Auto-promotion completed"
-                )
-                
-                if status_result.get("status_updated") == "published":
+                if success:
                     results["promoted_count"] += 1
                     results["by_type"][note_type] += 1
                 else:
-                    # Promotion succeeded but status update failed
                     results["error_count"] += 1
-                    results["errors"][note_path.name] = (
-                        f"Moved but status update failed: {status_result.get('error', 'Unknown')}"
-                    )
+                    results["errors"][note_path.name] = error_msg
                 
             except Exception as e:
                 results["error_count"] += 1
-                results["errors"][note_path.name] = f"Exception during processing: {str(e)}"
+                error_msg = f"Exception during processing: {str(e)}"
+                results["errors"][note_path.name] = error_msg
+                logger.exception(f"Error processing {note_path.name}: {e}")
+        
+        # Summary logging
+        logger.info(
+            f"Auto-promotion complete: {results['promoted_count']} promoted, "
+            f"{results['skipped_count']} skipped, {results['error_count']} errors"
+        )
         
         return results
     
