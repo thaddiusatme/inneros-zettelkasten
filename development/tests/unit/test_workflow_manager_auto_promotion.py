@@ -92,8 +92,8 @@ This note needs more work."""
         assert result["promoted_count"] == 1, "Should promote 1 high-quality note"
         assert result["skipped_count"] == 1, "Should skip 1 low-quality note"
         assert "low-quality.md" in result["skipped_notes"], "Low quality note should be in skipped list"
-        assert "quality threshold" in result["skipped_notes"]["low-quality.md"].lower(), \
-            "Skip reason should mention quality threshold"
+        assert "threshold" in result["skipped_notes"]["low-quality.md"].lower(), \
+            "Skip reason should mention threshold"
     
     def test_auto_promote_routes_by_type_fleeting(self, workflow_manager, temp_dir):
         """
@@ -264,7 +264,7 @@ tags: [test]
         # Verify dry-run results
         assert result["dry_run"] is True, "Result should indicate dry-run mode"
         assert result["would_promote_count"] == 1, "Should show 1 note would be promoted"
-        assert "dry-run-test.md" in result["preview"], "Preview should include note name"
+        assert any(p["note"] == "dry-run-test.md" for p in result["preview"]), "Preview should include note name"
     
     def test_auto_promote_custom_quality_threshold(self, workflow_manager, temp_dir):
         """

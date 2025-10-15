@@ -70,18 +70,31 @@ tags: [note-lifecycle, status-management, workflow-automation, directory-integra
 
 ### Current Architectural Concerns
 
-✅ **ALL CLEAR** - No classes exceeding architectural thresholds!
+⚠️ **1 ACTIVE VIOLATION** - WorkflowManager exceeds architectural thresholds
+
+**Current State:**
+- ❌ **WorkflowManager**: 2,420 LOC (484% over 500 LOC limit), 59 methods (295% over 20 method limit)
+  - Status: Active god class requiring decomposition
+  - Pattern established: NoteLifecycleManager extraction (ADR-002, Oct 14, 2025)
+  - Plan: P1 project scheduled post-sprint (Nov 2025)
+  - Target: Extract ConnectionManager, AnalyticsCoordinator, PromotionEngine
 
 **Recent Victory:**
-- ✅ **WorkflowManager**: Refactored from 2,374 LOC god class → 4 focused managers (Oct 5, 2025)
-  - CoreWorkflowManager, AnalyticsManager, AIEnhancementManager, ConnectionManager
-  - Adapter pattern enables zero-risk migration (1-line import change)
-  - 52 tests passing, zero regressions
-  - **ADR**: `Projects/ACTIVE/adr-001-workflow-manager-refactoring.md` ✅
+- ✅ **NoteLifecycleManager**: Extracted from WorkflowManager (ADR-002, Oct 14, 2025)
+  - Single responsibility: Status lifecycle management
+  - 222 LOC, 4 methods (well under limits)
+  - 16/16 tests passing, zero regressions
+  - Proves extraction pattern works
 
 ### Refactoring Queue
 
-**Empty** - All P1 architectural issues resolved! 🎉
+**P1 - WorkflowManager Decomposition** (Planned - Post Sprint):
+- ConnectionManager extraction (~300 LOC)
+- AnalyticsCoordinator extraction (~400 LOC)
+- PromotionEngine extraction (~200 LOC)
+- WorkflowManagerAdapter for migration
+- Timeline: 3-4 sprints (12-16 hours)
+- Target: End of November 2025
 
 ### Architectural Guardrails Status
 
@@ -95,13 +108,15 @@ tags: [note-lifecycle, status-management, workflow-automation, directory-integra
 
 ### Success Metrics
 
-- **Current Classes >500 LOC**: **0** ✅ (Target achieved Oct 5, 2025!)
-- **Current Classes >20 methods**: **0** ✅ (Target achieved Oct 5, 2025!)
+- **Current Classes >500 LOC**: **1** ⚠️ (WorkflowManager: 2,420 LOC)
+  - NoteLifecycleManager extracted Oct 14, 2025 (pattern proven)
+  - Decomposition plan: Nov 2025 (3 more extractions)
+- **Current Classes >20 methods**: **1** ⚠️ (WorkflowManager: 59 methods)
 - **CLI Monoliths >2000 LOC**: **0** ✅ (workflow_demo.py extracted Oct 11, 2025!)
 - **Dedicated CLIs**: **10** (avg 400 LOC each)
-- **Original Target**: Zero classes exceeding limits by Nov 2, 2025
-- **Actual Achievement**: **27 days ahead of schedule!** 🏆
-- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅ COMPLETE, ADR-004: CLI extraction ✅ COMPLETE)
+- **Target**: Zero classes exceeding limits by Nov 30, 2025
+- **Progress**: 1 extraction complete (NoteLifecycleManager), 3 planned
+- **ADRs Created**: 2 (ADR-002: NoteLifecycleManager ✅ COMPLETE Oct 14, 2025, ADR-003: WorkflowManager Decomposition 📋 PLANNED)
 
 ---
 
@@ -179,44 +194,7 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 - **Error Handling**: Status only updates if AI processing succeeds ✅
 - **Lessons**: `Projects/COMPLETED-2025-10/pbi-001-note-lifecycle-status-management-lessons-learned.md` ✅
 
-#### 🏗️ Architectural Approach for Remaining PBIs
-
-**WorkflowManager Current State:**
-- **2,420 LOC, 59 methods** (380% over LOC limit, 295% over method limit)
-- **After PBI-002 + PBI-004**: ~2,550 LOC, 61 methods (estimated)
-
-**Decision: No Further Extraction This Sprint**
-
-**Rationale:**
-1. **PBI-002** (Literature Directory): ~30 LOC addition to existing `promote_note()` method
-   - Extends existing functionality, doesn't add new responsibility
-   - Uses existing DirectoryOrganizer infrastructure
-   
-2. **PBI-004** (Auto-Promotion): ~80-100 LOC new method
-   - Single focused method: `auto_promote_ready_notes()`
-   - Clear responsibility: filter + delegate to existing promotion
-   - Enables user's primary goal: "flow" automation
-   
-3. **PBI-003 & PBI-005**: Zero WorkflowManager changes
-   - Uses DirectoryOrganizer (already extracted)
-   - Standalone repair scripts
-
-**Why Not Extract Now:**
-- ✅ NoteLifecycleManager pattern established (extraction template proven)
-- ✅ Remaining PBIs are targeted feature additions (~130 LOC total)
-- ✅ Priority: User value (flow automation) over premature optimization
-- ✅ Can extract PromotionEngine later if promotion logic grows
-
-**When to Extract Next:**
-- **After sprint completion**: Evaluate PromotionEngine extraction
-- **Phase 6 targets**: ConnectionManager (~300 LOC), AnalyticsCoordinator (~400 LOC)
-- **Goal**: WorkflowManager <500 LOC, <20 methods by end of Phase 6
-
-**Key Principle:** Extract when hitting limits OR clear separation emerges, not prematurely.
-
----
-
-#### The Critical Bug (RESOLVED by PBI-001)
+#### The Critical Bug
 
 **Issue Identified**: Notes are being AI-processed but status field never updates
 - ✅ AI adds metadata (tags, quality scores, connections)
@@ -372,6 +350,126 @@ if not results.get("error"):
 **Value Proposition**: Auto-promotion transforms InnerOS from semi-automated tool → true flow system
 
 **ROI**: 6-8 hours enables complete hands-off knowledge processing pipeline
+
+---
+
+### 🟡 P1: WorkflowManager Deprecation & Decomposition (Post-Sprint)
+
+**Status**: 📋 **PLANNED** - Extract after Note Lifecycle sprint complete  
+**Priority**: P1 - **ARCHITECTURAL DEBT REDUCTION**  
+**Timeline**: 3-4 sprints (12-16 hours total)  
+**Trigger**: Current sprint completion (PBI-001 through PBI-005)  
+**Goal**: Deprecate monolithic WorkflowManager while maintaining 100% functionality
+
+#### Current State (Architectural Violation)
+
+**WorkflowManager god class metrics:**
+```
+LOC: 2,420 (limit: 500) - 384% over limit
+Methods: 59 (limit: 20) - 295% over limit
+Responsibilities: 8+ (should be 1)
+```
+
+**Violations:**
+- ❌ Exceeds 500 LOC hard limit by 1,920 lines
+- ❌ Exceeds 20 methods hard limit by 39 methods
+- ❌ Multiple unrelated responsibilities
+- ❌ High coupling (imported by 10+ files)
+- ❌ Difficult to test (extensive mocking required)
+
+#### Decomposition Strategy (ADR-003 Required)
+
+**Phase 1: Extract Managers (~8 hours over 2 sprints)**
+
+1. **ConnectionManager** (~300 LOC extraction)
+   - Responsibility: Connection discovery and link suggestions
+   - Extract from: Lines 329-356 + related methods
+   - Benefits: Reusable by smart link system
+   - Tests: 15+ unit tests
+   - Pattern: Follow NoteLifecycleManager (ADR-002)
+
+2. **AnalyticsCoordinator** (~400 LOC extraction)
+   - Responsibility: Analytics and metrics aggregation
+   - Extract from: Analytics methods + weekly review logic
+   - Benefits: Reusable by reporting systems
+   - Tests: 20+ unit tests
+
+3. **PromotionEngine** (~200 LOC extraction)
+   - Responsibility: Quality-gated note promotion
+   - Extract from: Promotion methods + auto-promote logic
+   - Benefits: Clear separation of promotion concerns
+   - Tests: 12+ unit tests
+   - Depends on: NoteLifecycleManager integration
+
+**Phase 2: Create Facade/Adapter (~4 hours)**
+
+4. **WorkflowManagerAdapter** (Deprecation wrapper)
+   - Purpose: Maintain backward compatibility during migration
+   - Pattern: Facade that delegates to new managers
+   - Migration path: Change imports gradually
+   - Timeline: 1-2 releases to fully deprecate
+
+**Phase 3: Migration & Deprecation (~4 hours)**
+
+5. **Update Imports** across codebase
+   - CLI files: Use specific managers directly
+   - Tests: Update to test managers, not god class
+   - Documentation: Migration guide for any external users
+
+6. **Deprecate WorkflowManager**
+   - Add `@deprecated` decorator
+   - Emit warnings when used
+   - Document migration path
+   - Remove in Phase 6 (multi-user foundation)
+
+#### Success Metrics
+
+**Architectural Compliance:**
+- [ ] Zero classes >500 LOC
+- [ ] Zero classes >20 methods
+- [ ] All managers follow single responsibility principle
+- [ ] Test coverage maintained >95%
+
+**Functionality Preservation:**
+- [ ] 100% backward compatibility during migration
+- [ ] Zero regressions in existing tests
+- [ ] All CLI commands work identically
+- [ ] Performance maintained or improved
+
+**Migration Completion:**
+- [ ] All internal imports updated
+- [ ] Deprecation warnings active
+- [ ] Migration guide published
+- [ ] WorkflowManagerAdapter tested
+
+#### Timeline & Dependencies
+
+**Prerequisites:**
+- ✅ Note Lifecycle sprint complete (PBI-001 through PBI-005)
+- ✅ NoteLifecycleManager pattern proven (ADR-002)
+- ✅ TDD methodology established
+
+**Sprint Breakdown:**
+- **Sprint 1** (Week 1): Extract ConnectionManager + AnalyticsCoordinator
+- **Sprint 2** (Week 2): Extract PromotionEngine + Create Adapter
+- **Sprint 3** (Week 3): Migration + Deprecation + Testing
+- **Sprint 4** (Week 4): Buffer + Documentation + Lessons Learned
+
+**Completion Target:** End of November 2025
+
+#### References & Documentation
+
+**Pattern Established:**
+- ADR-002: NoteLifecycleManager extraction (completed Oct 14, 2025)
+- Lessons: `Projects/COMPLETED-2025-10/pbi-001-note-lifecycle-status-management-lessons-learned.md`
+- Constraints: `.windsurf/rules/architectural-constraints.md`
+
+**To Be Created:**
+- ADR-003: WorkflowManager Decomposition Strategy
+- ADR-004: Migration & Deprecation Path
+- Lessons: Complete after each extraction
+
+---
 
 ### ✅ Testing Infrastructure Revamp - Week 1-2 (Oct 12-16, 2025)
 

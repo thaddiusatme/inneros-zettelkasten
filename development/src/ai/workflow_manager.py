@@ -74,6 +74,7 @@ class WorkflowManager:
         # Define workflow directories
         self.inbox_dir = self.base_dir / "Inbox"
         self.fleeting_dir = self.base_dir / "Fleeting Notes"
+        self.literature_dir = self.base_dir / "Literature Notes"
         self.permanent_dir = self.base_dir / "Permanent Notes"
         self.archive_dir = self.base_dir / "Archive"
         
@@ -528,11 +529,11 @@ class WorkflowManager:
     
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """
-        Promote a note from inbox/fleeting to permanent notes.
+        Promote a note from inbox/fleeting to appropriate directory.
         
         Args:
             note_path: Path to the note to promote
-            target_type: Target note type ("permanent" or "fleeting")
+            target_type: Target note type ("permanent", "literature", or "fleeting")
             
         Returns:
             Promotion results
@@ -545,6 +546,8 @@ class WorkflowManager:
         # Determine target directory
         if target_type == "permanent":
             target_dir = self.permanent_dir
+        elif target_type == "literature":
+            target_dir = self.literature_dir
         elif target_type == "fleeting":
             target_dir = self.fleeting_dir
         else:
@@ -562,7 +565,8 @@ class WorkflowManager:
             
             # Update metadata for promotion
             frontmatter["type"] = target_type
-            frontmatter["status"] = "promoted" if target_type == "permanent" else "draft"
+            # Keep status as "promoted" for all types (will be updated to "published" by caller if needed)
+            frontmatter["status"] = "promoted"
             frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
             
             # Add AI summary for long permanent notes
@@ -596,6 +600,122 @@ class WorkflowManager:
             
         except Exception as e:
             return {"error": f"Failed to promote note: {e}"}
+    
+    def auto_promote_ready_notes(
+        self, 
+        dry_run: bool = False, 
+        quality_threshold: float = 0.7
+    ) -> Dict:
+        """
+        Automatically promote notes that are ready (status=promoted, quality >= threshold).
+        
+        Scans Inbox/ for notes with status='promoted' and quality_score >= threshold,
+        then promotes them to appropriate directories based on type field.
+        
+        Args:
+            dry_run: If True, preview promotions without making changes
+            quality_threshold: Minimum quality score required (default: 0.7)
+            
+        Returns:
+            Dict with promotion results including counts and details
+        """
+        results = {
+            "total_candidates": 0,
+            "promoted_count": 0,
+            "skipped_count": 0,
+            "error_count": 0,
+            "skipped_notes": {},
+            "errors": {},
+            "by_type": {"fleeting": 0, "literature": 0, "permanent": 0},
+            "dry_run": dry_run,
+        }
+        
+        if dry_run:
+            results["would_promote_count"] = 0
+            results["preview"] = []
+        
+        # Scan inbox for candidate notes
+        if not self.inbox_dir.exists():
+            return results
+        
+        inbox_files = list(self.inbox_dir.glob("*.md"))
+        
+        for note_path in inbox_files:
+            try:
+                # Read note metadata
+                content = note_path.read_text(encoding="utf-8")
+                frontmatter, _ = parse_frontmatter(content)
+                
+                # Only process notes with status='promoted'
+                if frontmatter.get("status") != "promoted":
+                    continue
+                
+                results["total_candidates"] += 1
+                
+                # Check quality score
+                quality_score = frontmatter.get("quality_score", 0.0)
+                if quality_score < quality_threshold:
+                    results["skipped_count"] += 1
+                    results["skipped_notes"][note_path.name] = (
+                        f"Quality score {quality_score:.2f} below threshold {quality_threshold}"
+                    )
+                    continue
+                
+                # Check for required type field
+                note_type = frontmatter.get("type")
+                if not note_type:
+                    results["error_count"] += 1
+                    results["errors"][note_path.name] = "Missing 'type' field in frontmatter"
+                    continue
+                
+                # Validate type is supported
+                if note_type not in ["fleeting", "literature", "permanent"]:
+                    results["error_count"] += 1
+                    results["errors"][note_path.name] = f"Invalid note type: {note_type}"
+                    continue
+                
+                # Dry-run mode: preview only
+                if dry_run:
+                    results["would_promote_count"] += 1
+                    results["preview"].append({
+                        "note": note_path.name,
+                        "type": note_type,
+                        "quality": quality_score,
+                        "target": f"{note_type.title()} Notes/"
+                    })
+                    continue
+                
+                # Execute promotion
+                promote_result = self.promote_note(str(note_path), target_type=note_type)
+                
+                if "error" in promote_result:
+                    results["error_count"] += 1
+                    results["errors"][note_path.name] = promote_result["error"]
+                    continue
+                
+                # Update status to 'published' via NoteLifecycleManager
+                target_path = Path(promote_result["target"])
+                status_result = self.lifecycle_manager.update_status(
+                    target_path,
+                    new_status="published",
+                    reason="Auto-promotion completed"
+                )
+                
+                if status_result.get("status_updated") == "published":
+                    results["promoted_count"] += 1
+                    results["by_type"][note_type] += 1
+                else:
+                    # Promotion succeeded but status update failed
+                    results["error_count"] += 1
+                    results["errors"][note_path.name] = (
+                        f"Moved but status update failed: {status_result.get('error', 'Unknown')}"
+                    )
+                
+            except Exception as e:
+                results["error_count"] += 1
+                results["errors"][note_path.name] = f"Exception during processing: {str(e)}"
+        
+        return results
     
     def batch_process_inbox(self, show_progress: bool = True) -> Dict:
         """
