@@ -142,10 +142,10 @@ This is the body content."""
         assert "status: published" in rebuilt
         assert rebuilt.endswith(body)
     
-    @patch('src.ai.workflow_manager.WorkflowManager._load_notes_corpus')
+    @patch('src.ai.connection_coordinator.ConnectionCoordinator.discover_connections')
     @patch('src.ai.enhancer.AIEnhancer.enhance_note')
     @patch('src.ai.tagger.AITagger.generate_tags')
-    def test_process_inbox_note_success(self, mock_generate_tags, mock_enhance, mock_load_corpus):
+    def test_process_inbox_note_success(self, mock_generate_tags, mock_enhance, mock_discover_connections):
         """Test successful inbox note processing."""
         # Setup mocks
         mock_generate_tags.return_value = ["ai", "machine-learning"]
@@ -153,9 +153,9 @@ This is the body content."""
             "quality_score": 0.8,
             "suggestions": ["Add more examples", "Include references"]
         }
-        mock_load_corpus.return_value = {
-            "related-note.md": "Related content about AI"
-        }
+        mock_discover_connections.return_value = [
+            {"filename": "related-note.md", "similarity": 0.85}
+        ]
         
         # Create test note
         content = """---
@@ -513,12 +513,13 @@ This is a note for fleeting promotion."""
         assert result["summary"]["needs_improvement"] == 1
     
     def test_load_notes_corpus(self):
-        """Test loading notes corpus from directory."""
+        """Test loading notes corpus from directory via ConnectionCoordinator."""
         # Create test notes in permanent directory
         self.create_test_note("Permanent Notes", "note1.md", "Content 1")
         self.create_test_note("Permanent Notes", "note2.md", "Content 2")
         
-        corpus = self.workflow._load_notes_corpus(self.workflow.permanent_dir)
+        # ADR-002 Phase 2: Use ConnectionCoordinator
+        corpus = self.workflow.connection_coordinator.load_corpus(self.workflow.permanent_dir)
         
         assert len(corpus) == 2
         assert "note1.md" in corpus
@@ -527,15 +528,17 @@ This is a note for fleeting promotion."""
         assert corpus["note2.md"] == "Content 2"
     
     def test_load_notes_corpus_empty_directory(self):
-        """Test loading corpus from empty directory."""
-        corpus = self.workflow._load_notes_corpus(self.workflow.permanent_dir)
+        """Test loading corpus from empty directory via ConnectionCoordinator."""
+        # ADR-002 Phase 2: Use ConnectionCoordinator
+        corpus = self.workflow.connection_coordinator.load_corpus(self.workflow.permanent_dir)
         
         assert corpus == {}
     
     def test_load_notes_corpus_nonexistent_directory(self):
-        """Test loading corpus from non-existent directory."""
+        """Test loading corpus from non-existent directory via ConnectionCoordinator."""
         nonexistent_dir = self.base_dir / "NonExistent"
-        corpus = self.workflow._load_notes_corpus(nonexistent_dir)
+        # ADR-002 Phase 2: Use ConnectionCoordinator
+        corpus = self.workflow.connection_coordinator.load_corpus(nonexistent_dir)
         
         assert corpus == {}
     

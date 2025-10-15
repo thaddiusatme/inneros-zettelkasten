@@ -19,6 +19,8 @@ from .analytics import NoteAnalytics
 from .safe_image_processor import SafeImageProcessor
 from .image_integrity_monitor import ImageIntegrityMonitor
 from .note_lifecycle_manager import NoteLifecycleManager
+from .connection_coordinator import ConnectionCoordinator
+from .analytics_coordinator import AnalyticsCoordinator
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -81,12 +83,22 @@ class WorkflowManager:
         # Initialize AI components
         self.tagger = AITagger()
         self.summarizer = AISummarizer()
-        self.connections = AIConnections()
+        self.connections = AIConnections()  # Legacy support
         self.enhancer = AIEnhancer()
         self.analytics = NoteAnalytics(str(self.base_dir))
         
-        # Initialize lifecycle manager (ADR-002: Extracted from god class)
+        # ADR-002 Phase 1: Lifecycle manager extraction
         self.lifecycle_manager = NoteLifecycleManager()
+        
+        # ADR-002 Phase 2: Connection coordinator extraction
+        self.connection_coordinator = ConnectionCoordinator(
+            str(self.base_dir),
+            min_similarity=0.7,
+            max_suggestions=5
+        )
+        
+        # ADR-002 Phase 3: Analytics coordinator extraction
+        self.analytics_coordinator = AnalyticsCoordinator(self.base_dir)
         
         # Initialize image safety components (GREEN phase)
         self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
@@ -328,27 +340,27 @@ class WorkflowManager:
             ai_processing_errors.append(("quality", str(e)))
         
         # Find potential connections (use body content only)
+        # ADR-002 Phase 2: Using ConnectionCoordinator
         try:
-            # Load existing permanent notes for connection analysis
-            permanent_notes = self._load_notes_corpus(self.permanent_dir)
+            # Discover connections using coordinator
+            connections = self.connection_coordinator.discover_connections(
+                body,
+                corpus_dir=self.permanent_dir
+            )
             
-            if permanent_notes:
-                # Use body content for AI analysis - focus on actual content, not metadata
-                similar_notes = self.connections.find_similar_notes(body, permanent_notes)
+            if connections:
+                results["processing"]["connections"] = {
+                    "similar_notes": [
+                        {"file": conn["filename"], "similarity": float(conn["similarity"])}
+                        for conn in connections[:3]
+                    ]
+                }
                 
-                if similar_notes:
-                    results["processing"]["connections"] = {
-                        "similar_notes": [
-                            {"file": filename, "similarity": float(score)}
-                            for filename, score in similar_notes[:3]
-                        ]
-                    }
-                    
-                    results["recommendations"].append({
-                        "action": "add_links",
-                        "reason": f"Found {len(similar_notes)} related notes",
-                        "details": similar_notes[:3]
-                    })
+                results["recommendations"].append({
+                    "action": "add_links",
+                    "reason": f"Found {len(connections)} related notes",
+                    "details": connections[:3]
+                })
         except Exception as e:
             results["processing"]["connections"] = {"error": str(e)}
         
@@ -1014,21 +1026,7 @@ class WorkflowManager:
         
         return recommendations
     
-    def _load_notes_corpus(self, directory: Path) -> Dict[str, str]:
-        """Load all notes from a directory into a corpus."""
-        corpus = {}
-        
-        if not directory.exists():
-            return corpus
-        
-        for md_file in directory.glob("*.md"):
-            try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    corpus[md_file.name] = f.read()
-            except Exception:
-                continue
-        
-        return corpus
+    # NOTE: _load_notes_corpus() extracted to ConnectionCoordinator (ADR-002 Phase 2)
     
     
     def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
@@ -1299,7 +1297,7 @@ class WorkflowManager:
             "metadata": metadata
         }
 
-    # Phase 5.5.4: Enhanced Review Features
+    # Phase 5.5.4: Enhanced Review Features (delegated to AnalyticsCoordinator)
     def detect_orphaned_notes(self) -> List[Dict]:
         """
         Detect notes that have no bidirectional links to other notes.
@@ -1311,15 +1309,7 @@ class WorkflowManager:
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
-        orphaned_notes = []
-        all_notes = self._get_all_notes()
-        link_graph = self._build_link_graph(all_notes)
-        
-        for note_path in all_notes:
-            if self._is_orphaned_note(note_path, link_graph):
-                orphaned_notes.append(self._create_orphaned_note_info(note_path))
-        
-        return orphaned_notes
+        return self.analytics_coordinator.detect_orphaned_notes()
     
     def detect_orphaned_notes_comprehensive(self) -> List[Dict]:
         """
@@ -1331,15 +1321,7 @@ class WorkflowManager:
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
-        orphaned_notes = []
-        all_notes = self._get_all_notes_comprehensive()
-        link_graph = self._build_link_graph(all_notes)
-        
-        for note_path in all_notes:
-            if self._is_orphaned_note(note_path, link_graph):
-                orphaned_notes.append(self._create_orphaned_note_info(note_path))
-        
-        return orphaned_notes
+        return self.analytics_coordinator.detect_orphaned_notes_comprehensive()
     
     def detect_stale_notes(self, days_threshold: int = 90) -> List[Dict]:
         """
@@ -1351,25 +1333,7 @@ class WorkflowManager:
         Returns:
             List of stale note dictionaries with path, title, last_modified, days_since_modified
         """
-        # using module-level datetime, timedelta
-        
-        stale_notes = []
-        cutoff_date = datetime.now() - timedelta(days=days_threshold)
-        all_notes = self._get_all_notes()
-        
-        for note_path in all_notes:
-            try:
-                last_modified = datetime.fromtimestamp(note_path.stat().st_mtime)
-                if last_modified < cutoff_date:
-                    days_since_modified = (datetime.now() - last_modified).days
-                    stale_notes.append(self._create_stale_note_info(note_path, last_modified, days_since_modified))
-            except (OSError, AttributeError):
-                # Skip if we can't get file stats
-                continue
-        
-        # Sort by days since modified (most stale first)
-        stale_notes.sort(key=lambda x: x["days_since_modified"], reverse=True)
-        return stale_notes
+        return self.analytics_coordinator.detect_stale_notes(days_threshold)
     
     def generate_enhanced_metrics(self) -> Dict:
         """
@@ -1384,26 +1348,7 @@ class WorkflowManager:
             - note_age_distribution: Distribution of note ages
             - productivity_metrics: Creation and modification patterns
         """
-        # using module-level datetime, timedelta
-        
-        metrics = {
-            "generated_at": datetime.now().isoformat(),
-            "orphaned_notes": self.detect_orphaned_notes(),
-            "stale_notes": self.detect_stale_notes(),
-            "link_density": self._calculate_link_density(),
-            "note_age_distribution": self._calculate_note_age_distribution(),
-            "productivity_metrics": self._calculate_productivity_metrics()
-        }
-        
-        # Add summary statistics
-        metrics["summary"] = {
-            "total_orphaned": len(metrics["orphaned_notes"]),
-            "total_stale": len(metrics["stale_notes"]),
-            "avg_links_per_note": metrics["link_density"],
-            "total_notes": len(self._get_all_notes())
-        }
-        
-        return metrics
+        return self.analytics_coordinator.generate_enhanced_metrics()
 
     # Phase 5.6: Orphan Remediation (bidirectional link insertion)
     def remediate_orphaned_notes(
@@ -1679,177 +1624,10 @@ class WorkflowManager:
         
         return all_notes
     
-    def _build_link_graph(self, all_notes: List[Path]) -> Dict[str, set]:
-        """Build a graph of note links."""
-        import re
-        
-        link_graph = {}
-        
-        for note_path in all_notes:
-            note_name = note_path.stem
-            link_graph[note_name] = set()
-            
-            try:
-                with open(note_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Find all [[wiki-style]] links
-                wiki_links = re.findall(r'\[\[([^\]]+)\]\]', content)
-                for link in wiki_links:
-                    # Clean up the link (remove .md extension if present)
-                    clean_link = link.replace('.md', '')
-                    link_graph[note_name].add(clean_link)
-                    
-            except (UnicodeDecodeError, FileNotFoundError):
-                continue
-        
-        return link_graph
-    
-    def _is_orphaned_note(self, note_path: Path, link_graph: Dict[str, set]) -> bool:
-        """Check if a note is orphaned (no incoming or outgoing links)."""
-        note_name = note_path.stem
-        
-        # Skip inbox notes (they're expected to be unlinked initially)
-        if note_path.parent.name == "Inbox":
-            return False
-        
-        # Check if note has outgoing links
-        has_outgoing_links = len(link_graph.get(note_name, set())) > 0
-        
-        # Check if note has incoming links
-        has_incoming_links = any(
-            note_name in links for other_note, links in link_graph.items() 
-            if other_note != note_name
-        )
-        
-        return not (has_outgoing_links or has_incoming_links)
-    
-    def _create_orphaned_note_info(self, note_path: Path) -> Dict:
-        """Create info dict for an orphaned note."""
-        from datetime import datetime
-        
-        try:
-            last_modified = datetime.fromtimestamp(note_path.stat().st_mtime)
-            title = self._extract_note_title(note_path)
-        except (OSError, AttributeError):
-            last_modified = None
-            title = note_path.stem
-        
-        return {
-            "path": str(note_path),
-            "title": title,
-            "last_modified": last_modified.isoformat() if last_modified else None,
-            "directory": note_path.parent.name
-        }
-    
-    def _create_stale_note_info(self, note_path: Path, last_modified, days_since_modified: int) -> Dict:
-        """Create info dict for a stale note."""
-        title = self._extract_note_title(note_path)
-        
-        return {
-            "path": str(note_path),
-            "title": title,
-            "last_modified": last_modified.isoformat(),
-            "days_since_modified": days_since_modified,
-            "directory": note_path.parent.name
-        }
-    
-    def _extract_note_title(self, note_path: Path) -> str:
-        """Extract title from note (first # heading or filename)."""
-        try:
-            with open(note_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Look for first markdown heading
-            import re
-            heading_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
-            if heading_match:
-                return heading_match.group(1).strip()
-            
-            # Fall back to filename
-            return note_path.stem
-            
-        except (UnicodeDecodeError, FileNotFoundError):
-            return note_path.stem
-    
-    def _calculate_link_density(self) -> float:
-        """Calculate average number of links per note."""
-        all_notes = self._get_all_notes()
-        if not all_notes:
-            return 0.0
-        
-        link_graph = self._build_link_graph(all_notes)
-        total_links = sum(len(links) for links in link_graph.values())
-        
-        return total_links / len(all_notes) if all_notes else 0.0
-    
-    def _calculate_note_age_distribution(self) -> Dict:
-        """Calculate distribution of note ages."""
-        # using module-level datetime, timedelta
-        
-        all_notes = self._get_all_notes()
-        age_buckets = {
-            "new": 0,        # < 7 days
-            "recent": 0,     # 7-30 days
-            "mature": 0,     # 30-90 days
-            "old": 0         # > 90 days
-        }
-        
-        now = datetime.now()
-        
-        for note_path in all_notes:
-            try:
-                created_time = datetime.fromtimestamp(note_path.stat().st_ctime)
-                age_days = (now - created_time).days
-                
-                if age_days < 7:
-                    age_buckets["new"] += 1
-                elif age_days < 30:
-                    age_buckets["recent"] += 1
-                elif age_days < 90:
-                    age_buckets["mature"] += 1
-                else:
-                    age_buckets["old"] += 1
-                    
-            except (OSError, AttributeError):
-                age_buckets["old"] += 1  # Default to old if we can't get creation time
-        
-        return age_buckets
-    
-    def _calculate_productivity_metrics(self) -> Dict:
-        """Calculate productivity metrics like notes per week."""
-        # using module-level datetime, timedelta
-        from collections import defaultdict
-        
-        all_notes = self._get_all_notes()
-        weekly_creation = defaultdict(int)
-        weekly_modification = defaultdict(int)
-        
-        for note_path in all_notes:
-            try:
-                created_time = datetime.fromtimestamp(note_path.stat().st_ctime)
-                modified_time = datetime.fromtimestamp(note_path.stat().st_mtime)
-                
-                # Get week start (Monday) for creation and modification
-                created_week = created_time.strftime("%Y-W%U")
-                modified_week = modified_time.strftime("%Y-W%U")
-                
-                weekly_creation[created_week] += 1
-                weekly_modification[modified_week] += 1
-                
-            except (OSError, AttributeError):
-                continue
-        
-        # Calculate averages
-        creation_counts = list(weekly_creation.values())
-        modification_counts = list(weekly_modification.values())
-        
-        return {
-            "avg_notes_created_per_week": sum(creation_counts) / len(creation_counts) if creation_counts else 0,
-            "avg_notes_modified_per_week": sum(modification_counts) / len(modification_counts) if modification_counts else 0,
-            "most_productive_week_creation": max(weekly_creation.items(), key=lambda x: x[1]) if weekly_creation else None,
-            "total_weeks_active": len(set(list(weekly_creation.keys()) + list(weekly_modification.keys())))
-        }
+    # Analytics helper methods removed - now handled by AnalyticsCoordinator (ADR-002 Phase 3)
+    # Removed: _build_link_graph, _is_orphaned_note, _create_orphaned_note_info,
+    # _create_stale_note_info, _extract_note_title, _calculate_link_density,
+    # _calculate_note_age_distribution, _calculate_productivity_metrics
     
     # Phase 5.6 Extension: Fleeting Note Lifecycle Management
     
