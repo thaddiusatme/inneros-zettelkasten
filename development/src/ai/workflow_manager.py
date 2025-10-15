@@ -21,6 +21,7 @@ from .image_integrity_monitor import ImageIntegrityMonitor
 from .note_lifecycle_manager import NoteLifecycleManager
 from .connection_coordinator import ConnectionCoordinator
 from .analytics_coordinator import AnalyticsCoordinator
+from .promotion_engine import PromotionEngine
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -99,6 +100,13 @@ class WorkflowManager:
         
         # ADR-002 Phase 3: Analytics coordinator extraction
         self.analytics_coordinator = AnalyticsCoordinator(self.base_dir)
+        
+        # ADR-002 Phase 4: Promotion engine extraction
+        self.promotion_engine = PromotionEngine(
+            self.base_dir,
+            self.lifecycle_manager,
+            config=None  # Use default config for now
+        )
         
         # Initialize image safety components (GREEN phase)
         self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
@@ -543,6 +551,8 @@ class WorkflowManager:
         """
         Promote a note from inbox/fleeting to appropriate directory.
         
+        ADR-002 Phase 4: Delegates to PromotionEngine.
+        
         Args:
             note_path: Path to the note to promote
             target_type: Target note type ("permanent", "literature", or "fleeting")
@@ -550,146 +560,12 @@ class WorkflowManager:
         Returns:
             Promotion results
         """
-        source_file = Path(note_path)
-        
-        if not source_file.exists():
-            return {"error": "Source note not found"}
-        
-        # Determine target directory
-        if target_type == "permanent":
-            target_dir = self.permanent_dir
-        elif target_type == "literature":
-            target_dir = self.literature_dir
-        elif target_type == "fleeting":
-            target_dir = self.fleeting_dir
-        else:
-            return {"error": f"Invalid target type: {target_type}"}
-        
-        target_dir.mkdir(exist_ok=True)
-        target_file = target_dir / source_file.name
-        
-        try:
-            # Read and update content
-            with open(source_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            frontmatter, body = parse_frontmatter(content)
-            
-            # Update metadata for promotion
-            frontmatter["type"] = target_type
-            # Keep status as "promoted" for all types (will be updated to "published" by caller if needed)
-            frontmatter["status"] = "promoted"
-            frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-            
-            # Add AI summary for long permanent notes
-            if (target_type == "permanent" and 
-                self.config["auto_summarize_long_notes"] and
-                self.summarizer.should_summarize(content)):
-                
-                try:
-                    summary = self.summarizer.generate_summary(content)
-                    if summary:
-                        frontmatter["ai_summary"] = summary
-                except Exception:
-                    pass  # Don't fail promotion if summary fails
-            
-            # Rebuild and save to target location using centralized utility
-            updated_content = build_frontmatter(frontmatter, body)
-            
-            # Use atomic write to prevent partial writes on interruption
-            safe_write(target_file, updated_content)
-            
-            # Remove from source location
-            source_file.unlink()
-            
-            return {
-                "success": True,
-                "source": str(source_file),
-                "target": str(target_file),
-                "type": target_type,
-                "has_summary": "ai_summary" in frontmatter
-            }
-            
-        except Exception as e:
-            return {"error": f"Failed to promote note: {e}"}
+        return self.promotion_engine.promote_note(note_path, target_type)
     
     def _validate_note_for_promotion(
         self, 
         note_path: Path, 
         frontmatter: Dict, 
-        quality_threshold: float
-    ) -> Tuple[bool, Optional[str], Optional[str]]:
-        """
-        Validate if a note is eligible for auto-promotion.
-        
-        Args:
-            note_path: Path to the note
-            frontmatter: Parsed frontmatter metadata
-            quality_threshold: Minimum quality score required
-            
-        Returns:
-            Tuple of (is_valid, note_type, error_message)
-        """
-        # Check quality score
-        quality_score = frontmatter.get("quality_score", 0.0)
-        if quality_score < quality_threshold:
-            return False, None, f"Quality score {quality_score:.2f} below threshold {quality_threshold}"
-        
-        # Check for required type field
-        note_type = frontmatter.get("type")
-        if not note_type:
-            return False, None, "Missing 'type' field in frontmatter"
-        
-        # Validate type is supported
-        if note_type not in ["fleeting", "literature", "permanent"]:
-            return False, None, f"Invalid note type: {note_type}"
-        
-        return True, note_type, None
-    
-    def _execute_note_promotion(
-        self, 
-        note_path: Path, 
-        note_type: str
-    ) -> Tuple[bool, Optional[str]]:
-        """
-        Execute promotion of a single note.
-        
-        Args:
-            note_path: Path to the note
-            note_type: Target type (fleeting/literature/permanent)
-            
-        Returns:
-            Tuple of (success, error_message)
-        """
-        import logging
-        logger = logging.getLogger(__name__)
-        
-        # Execute file move
-        promote_result = self.promote_note(str(note_path), target_type=note_type)
-        
-        if "error" in promote_result:
-            logger.warning(f"Promotion failed for {note_path.name}: {promote_result['error']}")
-            return False, promote_result["error"]
-        
-        # Update status to 'published' via NoteLifecycleManager
-        target_path = Path(promote_result["target"])
-        status_result = self.lifecycle_manager.update_status(
-            target_path,
-            new_status="published",
-            reason="Auto-promotion completed"
-        )
-        
-        if status_result.get("status_updated") == "published":
-            logger.info(f"Successfully promoted {note_path.name} to {note_type.title()} Notes/")
-            return True, None
-        else:
-            error_msg = f"Moved but status update failed: {status_result.get('error', 'Unknown')}"
-            logger.error(f"Status update failed for {note_path.name}: {error_msg}")
-            return False, error_msg
-    
-    def auto_promote_ready_notes(
-        self, 
-        dry_run: bool = False, 
         quality_threshold: float = 0.7
     ) -> Dict:
         """
@@ -1893,6 +1769,8 @@ class WorkflowManager:
         """
         Promote a single fleeting note to permanent or literature status.
         
+        ADR-002 Phase 4: Delegates to PromotionEngine.
+        
         Args:
             note_path: Path to the fleeting note to promote
             target_type: Target type ('permanent' or 'literature'), auto-detected if None
@@ -1901,131 +1779,13 @@ class WorkflowManager:
         Returns:
             Dict: Promotion results with details of operations performed
         """
-        import time
-        start_time = time.time()
-        
-        try:
-            # Import DirectoryOrganizer from production-ready infrastructure
-            from ..utils.directory_organizer import DirectoryOrganizer
-            
-            # Resolve note path
-            if not note_path.startswith('/'):
-                # If path starts with 'knowledge/', it's relative to the vault root
-                if note_path.startswith('knowledge/'):
-                    # Remove 'knowledge/' prefix since base_dir already points to knowledge/
-                    relative_path = note_path.replace('knowledge/', '', 1)
-                    note_path_obj = self.base_dir / relative_path
-                else:
-                    note_path_obj = self.base_dir / note_path
-            else:
-                note_path_obj = Path(note_path)
-                
-            if not note_path_obj.exists():
-                raise ValueError(f"Note not found: {note_path}")
-                
-            # Validate note is fleeting type
-            content = note_path_obj.read_text(encoding='utf-8')
-            metadata, body = parse_frontmatter(content)
-            
-            if metadata.get('type') != 'fleeting':
-                raise ValueError(f"Note is not a fleeting note (type: {metadata.get('type')})")
-                
-            # Get AI quality assessment for the note
-            ai_result = self.process_inbox_note(note_path_obj, fast=True)
-            quality_score = ai_result.get('quality_score', 0.5)
-            
-            # Auto-detect target type if not specified
-            if target_type is None:
-                # Use simple heuristic: literature if it has source/url, otherwise permanent
-                if metadata.get('source') or metadata.get('url'):
-                    target_type = 'literature'
-                else:
-                    target_type = 'permanent'
-                    
-            # Determine target directory
-            if target_type == 'literature':
-                target_dir = self.base_dir / "Literature Notes"
-            else:
-                target_dir = self.base_dir / "Permanent Notes"
-                
-            if not target_dir.exists():
-                target_dir.mkdir(parents=True)
-                
-            # Create target path
-            target_path = target_dir / note_path_obj.name
-            
-            promotion_result = {
-                'promoted_notes': [{
-                    'note_path': str(note_path_obj),
-                    'target_type': target_type,
-                    'target_path': str(target_path),
-                    'quality_score': quality_score,
-                    'preview_mode': preview_mode
-                }],
-                'batch_mode': False,
-                'preview_mode': preview_mode,
-                'target_directory': str(target_dir),
-                'promotion_time': datetime.now().isoformat(),
-                'processing_time': 0,
-                'backup_created': False
-            }
-            
-            if preview_mode:
-                # Preview mode - don't actually move files
-                promotion_result['processing_time'] = time.time() - start_time
-                return promotion_result
-                
-            # Create backup using DirectoryOrganizer
-            organizer = DirectoryOrganizer(self.base_dir.parent)
-            backup_path = organizer.create_backup()
-            promotion_result['backup_created'] = True
-            promotion_result['backup_path'] = str(backup_path)
-            
-            # Update metadata for promotion
-            updated_metadata = metadata.copy()
-            updated_metadata['type'] = target_type
-            updated_metadata['promoted_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
-            updated_metadata['promotion_quality_score'] = quality_score
-            
-            # Reconstruct file content with updated metadata
-            updated_content = f"---\n"
-            for key, value in updated_metadata.items():
-                if isinstance(value, list):
-                    updated_content += f"{key}: {value}\n"
-                elif isinstance(value, str) and ' ' in value:
-                    updated_content += f'{key}: "{value}"\n'
-                else:
-                    updated_content += f"{key}: {value}\n"
-            updated_content += f"---\n\n{body}"
-            
-            # Write to target location
-            target_path.write_text(updated_content, encoding='utf-8')
-            
-            # Remove original file
-            note_path_obj.unlink()
-            
-            promotion_result['processing_time'] = time.time() - start_time
-            return promotion_result
-            
-        except Exception as e:
-            return {
-                'promoted_notes': [{
-                    'note_path': note_path,
-                    'error': str(e),
-                    'quality_score': 0,
-                    'preview_mode': preview_mode
-                }],
-                'batch_mode': False,
-                'preview_mode': preview_mode,
-                'target_directory': 'unknown',
-                'promotion_time': datetime.now().isoformat(),
-                'processing_time': time.time() - start_time,
-                'backup_created': False
-            }
+        return self.promotion_engine.promote_fleeting_note(note_path, target_type, preview_mode)
     
     def promote_fleeting_notes_batch(self, quality_threshold: float = 0.7, target_type: Optional[str] = None, preview_mode: bool = False) -> Dict:
         """
         Promote multiple fleeting notes based on quality threshold.
+        
+        ADR-002 Phase 4: Delegates to PromotionEngine.
         
         Args:
             quality_threshold: Minimum quality score for promotion
@@ -2035,88 +1795,9 @@ class WorkflowManager:
         Returns:
             Dict: Batch promotion results
         """
-        import time
-        start_time = time.time()
-        
-        try:
-            # Get triage results to identify high-quality notes
-            triage_report = self.generate_fleeting_triage_report(quality_threshold=quality_threshold, fast=True)
-            
-            # Find notes eligible for promotion
-            eligible_notes = [
-                rec for rec in triage_report['recommendations'] 
-                if rec['action'] == 'Promote to Permanent' and rec['quality_score'] >= quality_threshold
-            ]
-            
-            if not eligible_notes:
-                return {
-                    'promoted_notes': [],
-                    'batch_mode': True,
-                    'preview_mode': preview_mode,
-                    'quality_threshold': quality_threshold,
-                    'processing_time': time.time() - start_time,
-                    'backup_created': False
-                }
-            
-            # Create single backup for batch operation
-            backup_created = False
-            backup_path = None
-            
-            if not preview_mode:
-                try:
-                    from ..utils.directory_organizer import DirectoryOrganizer
-                    organizer = DirectoryOrganizer(self.base_dir.parent)
-                    backup_path = organizer.create_backup()
-                    backup_created = True
-                except Exception as e:
-                    print(f"Warning: Could not create backup: {e}")
-            
-            # Process each eligible note
-            promoted_notes = []
-            for note_rec in eligible_notes:
-                try:
-                    single_result = self.promote_fleeting_note(
-                        note_path=note_rec['note_path'],
-                        target_type=target_type,
-                        preview_mode=preview_mode
-                    )
-                    
-                    # Extract the promoted note info and add batch context
-                    if single_result['promoted_notes']:
-                        promoted_note = single_result['promoted_notes'][0]
-                        promoted_note['batch_promotion'] = True
-                        promoted_notes.append(promoted_note)
-                        
-                except Exception as e:
-                    # Add failed note to results
-                    promoted_notes.append({
-                        'note_path': note_rec['note_path'],
-                        'error': str(e),
-                        'quality_score': note_rec['quality_score'],
-                        'batch_promotion': True,
-                        'preview_mode': preview_mode
-                    })
-            
-            return {
-                'promoted_notes': promoted_notes,
-                'batch_mode': True,
-                'preview_mode': preview_mode,
-                'quality_threshold': quality_threshold,
-                'processing_time': time.time() - start_time,
-                'backup_created': backup_created,
-                'backup_path': str(backup_path) if backup_path else None
-            }
-            
-        except Exception as e:
-            return {
-                'promoted_notes': [],
-                'batch_mode': True,
-                'preview_mode': preview_mode,
-                'quality_threshold': quality_threshold,
-                'error': str(e),
-                'processing_time': time.time() - start_time,
-                'backup_created': False
-            }
+        return self.promotion_engine.promote_fleeting_notes_batch(
+            quality_threshold, target_type, preview_mode
+        )
 
     # ============================================================================
     # GREEN PHASE: Safe Image Processing Integration Methods
