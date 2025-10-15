@@ -23,6 +23,7 @@ from .connection_coordinator import ConnectionCoordinator
 from .analytics_coordinator import AnalyticsCoordinator
 from .promotion_engine import PromotionEngine
 from .review_triage_coordinator import ReviewTriageCoordinator
+from .note_processing_coordinator import NoteProcessingCoordinator
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -115,6 +116,15 @@ class WorkflowManager:
             self  # Pass self for delegation to process_inbox_note
         )
         
+        # ADR-002 Phase 6: Note processing coordinator extraction
+        self.note_processing_coordinator = NoteProcessingCoordinator(
+            tagger=self.tagger,
+            summarizer=self.summarizer,
+            enhancer=self.enhancer,
+            connection_coordinator=self.connection_coordinator,
+            config=None  # Will use default config
+        )
+        
         # Initialize image safety components (GREEN phase)
         self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
         self.image_integrity_monitor = ImageIntegrityMonitor(str(self.base_dir))
@@ -166,6 +176,8 @@ class WorkflowManager:
         """
         Process a note in the inbox with AI assistance.
         
+        ADR-002 Phase 6: Delegates to NoteProcessingCoordinator for single responsibility.
+        
         Args:
             note_path: Path to the note in inbox
             dry_run: If True, do not write any changes to disk
@@ -174,385 +186,28 @@ class WorkflowManager:
         Returns:
             Processing results and recommendations
         """
-        note_file = Path(note_path)
+        # Delegate to NoteProcessingCoordinator
+        results = self.note_processing_coordinator.process_note(
+            note_path=note_path,
+            dry_run=dry_run,
+            fast=fast,
+            corpus_dir=self.permanent_dir
+        )
         
-        if not note_file.exists():
-            return {"error": "Note file not found"}
-        
-        try:
-            with open(note_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-        except Exception as e:
-            return {"error": f"Failed to read note: {e}"}
-        
-        # Preprocess raw content to fix 'created' placeholders that break YAML parsing
-        # e.g., "created: {{date:YYYY-MM-DD HH:mm}}", "created: {{date}}",
-        # or Templater EJS patterns like "<% tp.date.now(...) %>" which make YAML invalid
-        content, raw_template_fixed = self._preprocess_created_placeholder_in_raw(content, note_file)
-        
-        results = {
-            "original_file": str(note_file),
-            "processing": {},
-            "recommendations": []
-        }
-        
-        # Extract frontmatter and body using centralized utility (after preprocessing)
-        frontmatter, body = parse_frontmatter(content)
-
-        # Fix template placeholders in frontmatter BEFORE any processing
-        template_fixed = self._fix_template_placeholders(frontmatter, note_file)
-        any_template_fixed = raw_template_fixed or template_fixed
-
-        # Determine fast-mode (heuristic, no external AI calls)
-        fast_mode = fast if fast is not None else dry_run
-
-        if fast_mode:
-            # Heuristic-only path to avoid network/AI latency for dry runs
-            results["processing"] = {}
-            # Sanitize existing tags for consistent downstream output
-            existing_tags = sanitize_tags(frontmatter.get("tags", []))
-            # Ensure ai_tags present for weekly review consumers
-            results["processing"]["ai_tags"] = list(existing_tags)
-
-            # Simple word count heuristic
-            body_text = body if isinstance(body, str) else ""
-            # Normalize whitespace for a rough tokenization
-            try:
-                normalized = re.sub(r"\s+", " ", body_text).strip()
-            except Exception:
-                normalized = body_text
-            word_count = len(normalized.split()) if normalized else 0
-
-            # Score: emphasize length and presence of tags
-            quality_score = 0.0
-            if word_count >= 500:
-                quality_score = 0.8
-            elif word_count >= 200:
-                quality_score = 0.55
-            elif word_count >= 80:
-                quality_score = 0.42
-            else:
-                quality_score = 0.30
-
-            # Small boost for tags present
-            if len(existing_tags) >= 3:
-                quality_score = min(1.0, quality_score + 0.05)
-
-            # Populate processing info without AI calls
-            results["processing"]["quality"] = {
-                "score": quality_score,
-                "suggestions": [
-                    "Add more detail and structure to improve quality" if word_count < 200 else "Refine key points and add links to related notes",
-                ],
-            }
-            results["processing"]["tags"] = {
-                "added": [],
-                "total": len(existing_tags),
-            }
-
-            # Primary recommendation based on heuristic score
-            if quality_score > 0.7:
-                primary = {
-                    "action": "promote_to_permanent",
-                    "reason": "High quality (heuristic) suitable for permanent notes",
-                    "confidence": "medium",
-                }
-            elif quality_score > 0.4:
-                primary = {
-                    "action": "move_to_fleeting",
-                    "reason": "Medium quality (heuristic) needs development",
-                    "confidence": "medium",
-                }
-            else:
-                primary = {
-                    "action": "improve_or_archive",
-                    "reason": "Low quality (heuristic) needs significant improvement",
-                    "confidence": "high",
-                }
-
-            results["recommendations"].append(primary)
-            results["quality_score"] = quality_score
-
-            # Persist template fixes even in fast-mode (no AI calls), using atomic write
-            if any_template_fixed and not dry_run:
-                try:
-                    updated_content = build_frontmatter(frontmatter, body)
-                    safe_write(note_file, updated_content)
-                    results["file_updated"] = True
-                except Exception as e:
-                    results["file_update_error"] = str(e)
-                    results["file_updated"] = False
-            else:
-                results["file_updated"] = False
-
-            return results
-        
-        # Track if any AI processing errors occurred (prevents status update on partial failure)
-        ai_processing_errors = []
-        
-        # Auto-tag if enabled (use body content only, frontmatter is processed separately)
-        if self.config["auto_tag_inbox"]:
-            try:
-                # Use body content for AI analysis - AI should focus on content, not metadata
-                suggested_tags = self.tagger.generate_tags(body)
-                # Sanitize both existing and suggested tags before merging
-                existing_tags = sanitize_tags(frontmatter.get("tags", []))
-                suggested_tags = sanitize_tags(suggested_tags)
-                
-                # Merge tags intelligently
-                merged_tags = self._merge_tags(existing_tags, suggested_tags)
-                # Ensure merged tags remain sanitized and deduplicated
-                merged_tags = sanitize_tags(merged_tags)
-                
-                if merged_tags != existing_tags:
-                    frontmatter["tags"] = merged_tags
-                    results["processing"]["tags"] = {
-                        "added": list(set(merged_tags) - set(existing_tags)),
-                        "total": len(merged_tags)
-                    }
-                # Expose AI tags in processing result for downstream formatters
-                results["processing"]["ai_tags"] = merged_tags
-            except Exception as e:
-                results["processing"]["tags"] = {"error": str(e)}
-                ai_processing_errors.append(("tagging", str(e)))
-        # Ensure ai_tags key is always present based on current frontmatter state
-        current_tags = sanitize_tags(frontmatter.get("tags", []))
-        if "ai_tags" not in results["processing"]:
-            results["processing"]["ai_tags"] = current_tags
-        
-        # Analyze note quality and suggest improvements (use body content only)
-        try:
-            # Use body content for AI analysis - AI should focus on content, not metadata
-            enhancement = self.enhancer.enhance_note(body)
-            quality_score = enhancement.get("quality_score", 0)
-            
-            results["processing"]["quality"] = {
-                "score": quality_score,
-                "suggestions": enhancement.get("suggestions", [])[:3]
-            }
-            
-            # Generate workflow recommendations based on quality
-            if quality_score > 0.7:
-                results["recommendations"].append({
-                    "action": "promote_to_permanent",
-                    "reason": "High quality content suitable for permanent notes",
-                    "confidence": "high"
-                })
-            elif quality_score > 0.4:
-                results["recommendations"].append({
-                    "action": "move_to_fleeting",
-                    "reason": "Medium quality content needs development",
-                    "confidence": "medium"
-                })
-            else:
-                results["recommendations"].append({
-                    "action": "improve_or_archive",
-                    "reason": "Low quality content needs significant improvement",
-                    "confidence": "high"
-                })
-        except Exception as e:
-            results["processing"]["quality"] = {"error": str(e)}
-            ai_processing_errors.append(("quality", str(e)))
-        
-        # Find potential connections (use body content only)
-        # ADR-002 Phase 2: Using ConnectionCoordinator
-        try:
-            # Discover connections using coordinator
-            connections = self.connection_coordinator.discover_connections(
-                body,
-                corpus_dir=self.permanent_dir
-            )
-            
-            if connections:
-                results["processing"]["connections"] = {
-                    "similar_notes": [
-                        {"file": conn["filename"], "similarity": float(conn["similarity"])}
-                        for conn in connections[:3]
-                    ]
-                }
-                
-                results["recommendations"].append({
-                    "action": "add_links",
-                    "reason": f"Found {len(connections)} related notes",
-                    "details": connections[:3]
-                })
-        except Exception as e:
-            results["processing"]["connections"] = {"error": str(e)}
-        
-        # TDD Iteration 10: Track image references in note
-        try:
-            from utils.image_link_manager import ImageLinkManager
-            image_manager = ImageLinkManager(base_path=Path(self.base_dir))
-            image_links = image_manager.parse_image_links(content)
-            
-            if image_links:
-                results["processing"]["images"] = {
-                    "count": len(image_links),
-                    "references": [link.get("filename", link.get("path", "")) for link in image_links],
-                    "preserved": True
-                }
-                self.logger.debug(f"Tracked {len(image_links)} image references in {note_file.name}")
-        except ImportError:
-            self.logger.debug("Image link manager not available - skipping image tracking")
-        except Exception as e:
-            self.logger.warning(f"Could not track image references: {e}")
-        
-        # Update note with AI enhancements (skip when dry_run)
-        # Check if we need to update the file (AI processing OR template fixes)
-        needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
-        
-        if needs_ai_update or any_template_fixed:
-            if dry_run:
-                # Indicate what would have happened without modifying files
-                if needs_ai_update:
-                    frontmatter["ai_processed"] = datetime.now().isoformat()
-                results["file_updated"] = False
-            else:
-                try:
-                    # Update status to indicate AI processing (only if AI processing happened)
-                    if needs_ai_update:
-                        frontmatter["ai_processed"] = datetime.now().isoformat()
-                        
-                        # Add quality score to frontmatter if it was processed
-                        if "quality" in results["processing"] and "score" in results["processing"]["quality"]:
-                            frontmatter["quality_score"] = results["processing"]["quality"]["score"]
-                    
-                    # Rebuild content using centralized utility (includes template fixes)
-                    updated_content = build_frontmatter(frontmatter, body)
-                    
-                    # Use atomic write to prevent partial writes on interruption
-                    safe_write(note_file, updated_content)
-                    
-                    # PBI-001: Delegate status update to NoteLifecycleManager (ADR-002)
-                    # Only update status if AI processing succeeded without errors
-                    if needs_ai_update and not ai_processing_errors:
-                        quality_score = results["processing"].get("quality", {}).get("score", 0.0)
-                        status_result = self.lifecycle_manager.update_status(
-                            note_file,
-                            new_status="promoted",
-                            reason="AI processing completed",
-                            metadata={"quality_score": quality_score}
-                        )
-                        
-                        if status_result.get("status_updated"):
-                            results["status_updated"] = status_result["status_updated"]
-                    
-                    results["file_updated"] = True
-                except Exception as e:
-                    results["file_update_error"] = str(e)
-        else:
-            results["file_updated"] = False
-        
-        # Report template processing status
-        if any_template_fixed:
-            results["template_fixed"] = True
+        # ADR-002 Phase 6 Note: Automatic status updates removed during extraction
+        # The original code updated status via lifecycle_manager here, but it was tightly
+        # coupled to ai_processing_errors tracking which is now internal to NoteProcessingCoordinator.
+        # Status updates should be handled explicitly by calling code (e.g., ReviewTriageCoordinator)
+        # rather than automatically in process_inbox_note.
+        # TODO: Investigate if automatic status updates are needed and implement properly if so.
         
         return results
     
-    def _fix_template_placeholders(self, frontmatter: Dict, note_file: Path) -> bool:
-        """
-        Fix template placeholders in frontmatter, particularly {{date:...}} patterns.
-        
-        Args:
-            frontmatter: The frontmatter dictionary to modify
-            note_file: Path to the note file for timestamp inference
-            
-        Returns:
-            True if any changes were made, False otherwise
-        """
-        import os
-        from datetime import datetime
-        
-        changes_made = False
-        
-        # Check if 'created' field needs fixing
-        created_value = frontmatter.get("created")
-        
-        # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
-        if (created_value is None or 
-            (isinstance(created_value, str) and (
-                "{{date" in created_value or
-                "<% tp.date.now(" in created_value or
-                "<% tp.file.creation_date(" in created_value
-            ))):
-            
-            # Try to get file creation/modification time
-            try:
-                file_stat = os.stat(note_file)
-                # Use modification time as the best proxy for when note was created
-                timestamp = datetime.fromtimestamp(file_stat.st_mtime)
-            except (OSError, ValueError):
-                # Fallback to current time if file operations fail
-                timestamp = datetime.now()
-            
-            # Format in the required YYYY-MM-DD HH:MM format
-            formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
-            frontmatter["created"] = formatted_timestamp
-            changes_made = True
-        
-        return changes_made
-
-    def _preprocess_created_placeholder_in_raw(self, content: str, note_file: Path) -> tuple[str, bool]:
-        """Replace invalid 'created' placeholders directly in the raw frontmatter block.
-
-        This is necessary when placeholders make YAML unparseable (e.g., {{date:...}}, {{date}},
-        or Templater EJS patterns), causing parse_frontmatter() to return empty metadata and
-        leaving the original frontmatter in the body. Preprocessing ensures YAML becomes valid so
-        other frontmatter fields are preserved.
-
-        Returns a tuple of (possibly updated content, changes_made).
-        """
-        try:
-            text = content if isinstance(content, str) else ""
-            if not text or not text.lstrip().startswith('---'):
-                return content, False
-            lines = text.split('\n')
-            # locate closing delimiter
-            closing_idx = None
-            for i in range(1, len(lines)):
-                if lines[i].strip() == '---':
-                    closing_idx = i
-                    break
-            if closing_idx is None:
-                return content, False
-
-            placeholder_markers = (
-                "{{date",
-                "<% tp.date.now(",
-                "<% tp.file.creation_date(",
-            )
-
-            changed = False
-            # Scan only within frontmatter region
-            for j in range(1, closing_idx):
-                line = lines[j]
-                if not line.strip().startswith("created:"):
-                    continue
-                # Preserve original spacing after ':'
-                prefix, sep, value = line.partition(":")
-                value_str = value.strip()
-                if any(marker in value_str for marker in placeholder_markers):
-                    try:
-                        import os
-                        from datetime import datetime
-                        ts = datetime.fromtimestamp(os.stat(note_file).st_mtime)
-                    except Exception:
-                        from datetime import datetime
-                        ts = datetime.now()
-                    formatted = ts.strftime("%Y-%m-%d %H:%M")
-                    # preserve spaces after colon
-                    import re as _re
-                    m = _re.match(r"^(\s*)", value)
-                    spaces = m.group(1) if m else " "
-                    lines[j] = f"{prefix}:{spaces}{formatted}"
-                    changed = True
-                break  # only handle the first created occurrence
-
-            if changed:
-                return "\n".join(lines), True
-            return content, False
-        except Exception:
-            return content, False
+    # ADR-002 Phase 6: Template processing methods removed - delegated to NoteProcessingCoordinator
+    # These methods are now internal to NoteProcessingCoordinator:
+    # - _fix_template_placeholders()
+    # - _preprocess_created_placeholder_in_raw()
+    # - _merge_tags()
     
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """
