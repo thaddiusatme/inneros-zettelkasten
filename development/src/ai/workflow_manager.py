@@ -28,6 +28,7 @@ from .fleeting_analysis_coordinator import FleetingAnalysisCoordinator, Fleeting
 from .workflow_reporting_coordinator import WorkflowReportingCoordinator
 from .batch_processing_coordinator import BatchProcessingCoordinator
 from .fleeting_note_coordinator import FleetingNoteCoordinator
+from .metadata_repair_engine import MetadataRepairEngine
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -176,6 +177,12 @@ class WorkflowManager:
             literature_dir=self.literature_dir,
             process_callback=self.process_inbox_note,
             default_quality_threshold=0.7
+        )
+        
+        # ADR-002 Phase 13: Metadata repair engine extraction
+        self.metadata_repair_engine = MetadataRepairEngine(
+            str(self.inbox_dir),
+            dry_run=True  # Default to safe mode
         )
         
         # Session management for concurrent processing (legacy compatibility)
@@ -684,6 +691,40 @@ class WorkflowManager:
             dry_run=dry_run,
             quality_threshold=quality_threshold
         )
+    
+    def repair_inbox_metadata(self, execute: bool = False) -> Dict:
+        """
+        Repair missing frontmatter metadata in Inbox notes.
+        
+        ADR-002 Phase 13: Delegates to MetadataRepairEngine for metadata repair operations.
+        Fixes critical blocker where 8 notes (21%) are missing 'type:' field.
+        
+        Args:
+            execute: If True, actually modify files. If False (default), preview only.
+            
+        Returns:
+            Dict: Repair results with counts and details
+        """
+        # Create engine with appropriate dry_run setting
+        engine = MetadataRepairEngine(str(self.inbox_dir), dry_run=not execute)
+        
+        # Scan for notes needing repair
+        results = {'notes_scanned': 0, 'repairs_needed': 0, 'repairs_made': 0, 'errors': []}
+        
+        for note_path in self.inbox_dir.glob('*.md'):
+            results['notes_scanned'] += 1
+            missing_fields = engine.detect_missing_metadata(str(note_path))
+            
+            if missing_fields:
+                results['repairs_needed'] += 1
+                try:
+                    repair_result = engine.repair_note_metadata(str(note_path))
+                    if execute and 'added' in repair_result:
+                        results['repairs_made'] += 1
+                except Exception as e:
+                    results['errors'].append({'note': note_path.name, 'error': str(e)})
+        
+        return results
 
     # ============================================================================
     # GREEN PHASE: Safe Image Processing Integration Methods
