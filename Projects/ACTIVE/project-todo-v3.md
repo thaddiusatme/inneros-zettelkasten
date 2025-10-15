@@ -179,7 +179,44 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 - **Error Handling**: Status only updates if AI processing succeeds ✅
 - **Lessons**: `Projects/COMPLETED-2025-10/pbi-001-note-lifecycle-status-management-lessons-learned.md` ✅
 
-#### The Critical Bug
+#### 🏗️ Architectural Approach for Remaining PBIs
+
+**WorkflowManager Current State:**
+- **2,420 LOC, 59 methods** (380% over LOC limit, 295% over method limit)
+- **After PBI-002 + PBI-004**: ~2,550 LOC, 61 methods (estimated)
+
+**Decision: No Further Extraction This Sprint**
+
+**Rationale:**
+1. **PBI-002** (Literature Directory): ~30 LOC addition to existing `promote_note()` method
+   - Extends existing functionality, doesn't add new responsibility
+   - Uses existing DirectoryOrganizer infrastructure
+   
+2. **PBI-004** (Auto-Promotion): ~80-100 LOC new method
+   - Single focused method: `auto_promote_ready_notes()`
+   - Clear responsibility: filter + delegate to existing promotion
+   - Enables user's primary goal: "flow" automation
+   
+3. **PBI-003 & PBI-005**: Zero WorkflowManager changes
+   - Uses DirectoryOrganizer (already extracted)
+   - Standalone repair scripts
+
+**Why Not Extract Now:**
+- ✅ NoteLifecycleManager pattern established (extraction template proven)
+- ✅ Remaining PBIs are targeted feature additions (~130 LOC total)
+- ✅ Priority: User value (flow automation) over premature optimization
+- ✅ Can extract PromotionEngine later if promotion logic grows
+
+**When to Extract Next:**
+- **After sprint completion**: Evaluate PromotionEngine extraction
+- **Phase 6 targets**: ConnectionManager (~300 LOC), AnalyticsCoordinator (~400 LOC)
+- **Goal**: WorkflowManager <500 LOC, <20 methods by end of Phase 6
+
+**Key Principle:** Extract when hitting limits OR clear separation emerges, not prematurely.
+
+---
+
+#### The Critical Bug (RESOLVED by PBI-001)
 
 **Issue Identified**: Notes are being AI-processed but status field never updates
 - ✅ AI adds metadata (tags, quality scores, connections)
