@@ -4,18 +4,36 @@ Follows the established patterns from the project manifest.
 """
 
 import json
-import re
-import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
-# ADR-002 Phase 12a: Configuration coordinator extraction
-from .configuration_coordinator import ConfigurationCoordinator
-
-# Keep direct imports for type hints and backwards compatibility
+from .tagger import AITagger
+from .summarizer import AISummarizer
+from .connections import AIConnections
+from .enhancer import AIEnhancer
+from .analytics import NoteAnalytics
+from .safe_image_processor import SafeImageProcessor
+from .image_integrity_monitor import ImageIntegrityMonitor
+from .note_lifecycle_manager import NoteLifecycleManager
+from .connection_coordinator import ConnectionCoordinator
+from .analytics_coordinator import AnalyticsCoordinator
+from .promotion_engine import PromotionEngine
+from .review_triage_coordinator import ReviewTriageCoordinator
+from .note_processing_coordinator import NoteProcessingCoordinator
+from .safe_image_processing_coordinator import SafeImageProcessingCoordinator
+from .orphan_remediation_coordinator import OrphanRemediationCoordinator
+from .fleeting_analysis_coordinator import FleetingAnalysisCoordinator, FleetingAnalysis
+from .workflow_reporting_coordinator import WorkflowReportingCoordinator
+from .batch_processing_coordinator import BatchProcessingCoordinator
+from .fleeting_note_coordinator import FleetingNoteCoordinator
 from .workflow_integration_utils import (
+    SafeWorkflowProcessor,
+    AtomicWorkflowEngine,
+    IntegrityMonitoringManager,
+    ConcurrentSessionManager,
+    PerformanceMetricsCollector,
     WorkflowProcessingResult,
     BatchProcessingStats
 )
@@ -24,91 +42,177 @@ from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 from src.utils.io import safe_write
 
 
-@dataclass
-class FleetingAnalysis:
-    """Data structure for fleeting note analysis results."""
-    total_count: int = 0
-    age_distribution: Dict[str, int] = field(default_factory=lambda: {
-        'new': 0,       # 0-7 days
-        'recent': 0,    # 8-30 days  
-        'stale': 0,     # 31-90 days
-        'old': 0        # 90+ days
-    })
-    oldest_note: Optional[Dict[str, any]] = None
-    newest_note: Optional[Dict[str, any]] = None
-    notes_by_age: List[Dict[str, any]] = field(default_factory=list)
-
-
 class WorkflowManager:
     """Manages the complete AI-enhanced Zettelkasten workflow."""
     
     def __init__(self, base_directory: str | None = None):
         """Initialize workflow manager.
 
-        ADR-002 Phase 12a: Delegates configuration and initialization to ConfigurationCoordinator.
-
         Args:
             base_directory: Explicit path to the Zettelkasten root. If ``None`` the
                 resolver in ``utils.vault_path`` is used. Raises ``ValueError`` if
                 no valid directory can be resolved.
         """
-        # ADR-002 Phase 12a: Delegate initialization to ConfigurationCoordinator
-        self._config_coordinator = ConfigurationCoordinator(base_directory=base_directory, workflow_manager=self)
+        if base_directory is None:
+            from src.utils.vault_path import get_default_vault_path
+            resolved = get_default_vault_path()
+            if resolved is None:
+                raise ValueError(
+                    "No vault path supplied and none could be resolved via "
+                    "INNEROS_VAULT_PATH or .inneros.* config files."
+                )
+            self.base_dir = resolved
+        else:
+            self.base_dir = Path(base_directory).expanduser()
         
-        # Expose coordinator properties for backwards compatibility
-        self.base_dir = self._config_coordinator.base_dir
-        self.inbox_dir = self._config_coordinator.inbox_dir
-        self.fleeting_dir = self._config_coordinator.fleeting_dir
-        self.literature_dir = self._config_coordinator.literature_dir
-        self.permanent_dir = self._config_coordinator.permanent_dir
-        self.archive_dir = self._config_coordinator.archive_dir
+        # Define workflow directories
+        self.inbox_dir = self.base_dir / "Inbox"
+        self.fleeting_dir = self.base_dir / "Fleeting Notes"
+        self.literature_dir = self.base_dir / "Literature Notes"
+        self.permanent_dir = self.base_dir / "Permanent Notes"
+        self.archive_dir = self.base_dir / "Archive"
         
-        # Expose AI components
-        self.tagger = self._config_coordinator.tagger
-        self.summarizer = self._config_coordinator.summarizer
-        self.connections = self._config_coordinator.connections
-        self.enhancer = self._config_coordinator.enhancer
-        self.analytics = self._config_coordinator.analytics
+        # Initialize AI components
+        self.tagger = AITagger()
+        self.summarizer = AISummarizer()
+        self.connections = AIConnections()  # Legacy support
+        self.enhancer = AIEnhancer()
+        self.analytics = NoteAnalytics(str(self.base_dir))
         
-        # Expose image safety components
-        self.safe_image_processor = self._config_coordinator.safe_image_processor
-        self.image_integrity_monitor = self._config_coordinator.image_integrity_monitor
-        self.safe_workflow_processor = self._config_coordinator.safe_workflow_processor
-        self.atomic_workflow_engine = self._config_coordinator.atomic_workflow_engine
-        self.integrity_monitoring_manager = self._config_coordinator.integrity_monitoring_manager
-        self.concurrent_session_manager = self._config_coordinator.concurrent_session_manager
-        self.performance_metrics_collector = self._config_coordinator.performance_metrics_collector
+        # ADR-002 Phase 1: Lifecycle manager extraction
+        self.lifecycle_manager = NoteLifecycleManager()
         
-        # ADR-002 Phase 1-11: Expose all coordinators
-        self.lifecycle_manager = self._config_coordinator.lifecycle_manager
-        self.connection_coordinator = self._config_coordinator.connection_coordinator
-        self.analytics_coordinator = self._config_coordinator.analytics_coordinator
-        self.promotion_engine = self._config_coordinator.promotion_engine
-        self.review_triage_coordinator = self._config_coordinator.review_triage_coordinator
-        self.note_processing_coordinator = self._config_coordinator.note_processing_coordinator
-        self.safe_image_processing_coordinator = self._config_coordinator.safe_image_processing_coordinator
-        self.orphan_remediation_coordinator = self._config_coordinator.orphan_remediation_coordinator
-        self.fleeting_analysis_coordinator = self._config_coordinator.fleeting_analysis_coordinator
-        self.reporting_coordinator = self._config_coordinator.reporting_coordinator
-        self.batch_processing_coordinator = self._config_coordinator.batch_processing_coordinator
+        # ADR-002 Phase 2: Connection coordinator extraction
+        self.connection_coordinator = ConnectionCoordinator(
+            str(self.base_dir),
+            min_similarity=0.7,
+            max_suggestions=5
+        )
         
-        # Set callbacks for coordinators that need them
-        self.review_triage_coordinator.workflow_manager = self
-        self.safe_image_processing_coordinator.process_note_callback = self.process_inbox_note
-        self.safe_image_processing_coordinator.batch_process_callback = self.batch_process_inbox
-        self.batch_processing_coordinator.process_callback = self.process_inbox_note
+        # ADR-002 Phase 3: Analytics coordinator extraction
+        self.analytics_coordinator = AnalyticsCoordinator(self.base_dir)
         
-        # ADR-002 Phase 12b: Expose FleetingNoteCoordinator and set process_callback
-        self.fleeting_note_coordinator = self._config_coordinator.fleeting_note_coordinator
-        self.fleeting_note_coordinator.process_callback = self.process_inbox_note
+        # ADR-002 Phase 4: Promotion engine extraction
+        self.promotion_engine = PromotionEngine(
+            self.base_dir,
+            self.lifecycle_manager,
+            config=None  # Use default config for now
+        )
         
-        # Legacy compatibility
-        self.active_sessions = self._config_coordinator.active_sessions
-        self.config = self._config_coordinator.config
+        # ADR-002 Phase 5: Review/Triage coordinator extraction
+        self.review_triage_coordinator = ReviewTriageCoordinator(
+            self.base_dir,
+            self  # Pass self for delegation to process_inbox_note
+        )
+        
+        # ADR-002 Phase 6: Note processing coordinator extraction
+        self.note_processing_coordinator = NoteProcessingCoordinator(
+            tagger=self.tagger,
+            summarizer=self.summarizer,
+            enhancer=self.enhancer,
+            connection_coordinator=self.connection_coordinator,
+            config=None  # Will use default config
+        )
+        
+        # Initialize image safety components (GREEN phase)
+        self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
+        self.image_integrity_monitor = ImageIntegrityMonitor(str(self.base_dir))
+        
+        # REFACTOR: Initialize extracted utility classes for modular architecture
+        self.safe_workflow_processor = SafeWorkflowProcessor(
+            self.safe_image_processor, 
+            self.image_integrity_monitor
+        )
+        self.atomic_workflow_engine = AtomicWorkflowEngine(self.safe_image_processor)
+        self.integrity_monitoring_manager = IntegrityMonitoringManager(
+            self.image_integrity_monitor, 
+            self.safe_image_processor
+        )
+        self.concurrent_session_manager = ConcurrentSessionManager(self.safe_workflow_processor)
+        self.performance_metrics_collector = PerformanceMetricsCollector(self.safe_image_processor)
+        
+        # ADR-002 Phase 7: Safe image processing coordinator extraction
+        self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
+            safe_workflow_processor=self.safe_workflow_processor,
+            atomic_workflow_engine=self.atomic_workflow_engine,
+            integrity_monitoring_manager=self.integrity_monitoring_manager,
+            concurrent_session_manager=self.concurrent_session_manager,
+            performance_metrics_collector=self.performance_metrics_collector,
+            safe_image_processor=self.safe_image_processor,
+            image_integrity_monitor=self.image_integrity_monitor,
+            inbox_dir=self.inbox_dir,
+            process_note_callback=self.process_inbox_note,
+            batch_process_callback=self.batch_process_inbox
+        )
+        
+        # ADR-002 Phase 8: Orphan remediation coordinator extraction
+        self.orphan_remediation_coordinator = OrphanRemediationCoordinator(
+            base_dir=str(self.base_dir),
+            analytics_coordinator=self.analytics_coordinator
+        )
+        
+        # ADR-002 Phase 9: Fleeting analysis coordinator extraction
+        self.fleeting_analysis_coordinator = FleetingAnalysisCoordinator(
+            fleeting_dir=self.fleeting_dir
+        )
+        
+        # ADR-002 Phase 10: Workflow reporting coordinator extraction
+        self.reporting_coordinator = WorkflowReportingCoordinator(
+            base_dir=self.base_dir,
+            analytics=self.analytics
+        )
+        
+        # ADR-002 Phase 11: Batch processing coordinator extraction
+        self.batch_processing_coordinator = BatchProcessingCoordinator(
+            inbox_dir=self.inbox_dir,
+            process_callback=self.process_inbox_note
+        )
+        
+        # ADR-002 Phase 12b: Fleeting note coordinator extraction
+        self.fleeting_note_coordinator = FleetingNoteCoordinator(
+            fleeting_dir=self.fleeting_dir,
+            inbox_dir=self.inbox_dir,
+            permanent_dir=self.permanent_dir,
+            literature_dir=self.literature_dir,
+            process_callback=self.process_inbox_note,
+            default_quality_threshold=0.7
+        )
+        
+        # Session management for concurrent processing (legacy compatibility)
+        self.active_sessions = {}
+        
+        # Workflow configuration
+        self.config = self._load_config()
+    
+    def _load_config(self) -> Dict:
+        """Load workflow configuration."""
+        config_file = self.base_dir / ".ai_workflow_config.json"
+        
+        default_config = {
+            "auto_tag_inbox": True,
+            "auto_summarize_long_notes": True,
+            "auto_enhance_permanent_notes": False,
+            "min_words_for_summary": 500,
+            "max_tags_per_note": 8,
+            "similarity_threshold": 0.7,
+            "archive_after_days": 90
+        }
+        
+        if config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    user_config = json.load(f)
+                default_config.update(user_config)
+            except Exception:
+                pass
+        
+        return default_config
     
     def process_inbox_note(self, note_path: str, dry_run: bool = False, fast: bool | None = None) -> Dict:
         """
         Process a note in the inbox with AI assistance.
+        
+        ADR-002 Phase 6: Delegates to NoteProcessingCoordinator for single responsibility.
         
         Args:
             note_path: Path to the note in inbox
@@ -118,642 +222,221 @@ class WorkflowManager:
         Returns:
             Processing results and recommendations
         """
-        note_file = Path(note_path)
+        # Delegate to NoteProcessingCoordinator
+        results = self.note_processing_coordinator.process_note(
+            note_path=note_path,
+            dry_run=dry_run,
+            fast=fast,
+            corpus_dir=self.permanent_dir
+        )
         
-        if not note_file.exists():
-            return {"error": "Note file not found"}
-        
-        try:
-            with open(note_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-        except Exception as e:
-            return {"error": f"Failed to read note: {e}"}
-        
-        # Preprocess raw content to fix 'created' placeholders that break YAML parsing
-        # e.g., "created: {{date:YYYY-MM-DD HH:mm}}", "created: {{date}}",
-        # or Templater EJS patterns like "<% tp.date.now(...) %>" which make YAML invalid
-        content, raw_template_fixed = self._preprocess_created_placeholder_in_raw(content, note_file)
-        
-        results = {
-            "original_file": str(note_file),
-            "processing": {},
-            "recommendations": []
-        }
-        
-        # Extract frontmatter and body using centralized utility (after preprocessing)
-        frontmatter, body = parse_frontmatter(content)
-
-        # Fix template placeholders in frontmatter BEFORE any processing
-        template_fixed = self._fix_template_placeholders(frontmatter, note_file)
-        any_template_fixed = raw_template_fixed or template_fixed
-
-        # Determine fast-mode (heuristic, no external AI calls)
-        fast_mode = fast if fast is not None else dry_run
-
-        if fast_mode:
-            # Heuristic-only path to avoid network/AI latency for dry runs
-            results["processing"] = {}
-            # Sanitize existing tags for consistent downstream output
-            existing_tags = sanitize_tags(frontmatter.get("tags", []))
-            # Ensure ai_tags present for weekly review consumers
-            results["processing"]["ai_tags"] = list(existing_tags)
-
-            # Simple word count heuristic
-            body_text = body if isinstance(body, str) else ""
-            # Normalize whitespace for a rough tokenization
-            try:
-                normalized = re.sub(r"\s+", " ", body_text).strip()
-            except Exception:
-                normalized = body_text
-            word_count = len(normalized.split()) if normalized else 0
-
-            # Score: emphasize length and presence of tags
-            quality_score = 0.0
-            if word_count >= 500:
-                quality_score = 0.8
-            elif word_count >= 200:
-                quality_score = 0.55
-            elif word_count >= 80:
-                quality_score = 0.42
-            else:
-                quality_score = 0.30
-
-            # Small boost for tags present
-            if len(existing_tags) >= 3:
-                quality_score = min(1.0, quality_score + 0.05)
-
-            # Populate processing info without AI calls
-            results["processing"]["quality"] = {
-                "score": quality_score,
-                "suggestions": [
-                    "Add more detail and structure to improve quality" if word_count < 200 else "Refine key points and add links to related notes",
-                ],
-            }
-            results["processing"]["tags"] = {
-                "added": [],
-                "total": len(existing_tags),
-            }
-
-            # Primary recommendation based on heuristic score
-            if quality_score > 0.7:
-                primary = {
-                    "action": "promote_to_permanent",
-                    "reason": "High quality (heuristic) suitable for permanent notes",
-                    "confidence": "medium",
-                }
-            elif quality_score > 0.4:
-                primary = {
-                    "action": "move_to_fleeting",
-                    "reason": "Medium quality (heuristic) needs development",
-                    "confidence": "medium",
-                }
-            else:
-                primary = {
-                    "action": "improve_or_archive",
-                    "reason": "Low quality (heuristic) needs significant improvement",
-                    "confidence": "high",
-                }
-
-            results["recommendations"].append(primary)
-            results["quality_score"] = quality_score
-
-            # Persist template fixes even in fast-mode (no AI calls), using atomic write
-            if any_template_fixed and not dry_run:
-                try:
-                    updated_content = build_frontmatter(frontmatter, body)
-                    safe_write(note_file, updated_content)
-                    results["file_updated"] = True
-                except Exception as e:
-                    results["file_update_error"] = str(e)
-                    results["file_updated"] = False
-            else:
-                results["file_updated"] = False
-
-            return results
-        
-        # Auto-tag if enabled (use body content only, frontmatter is processed separately)
-        if self.config["auto_tag_inbox"]:
-            try:
-                # Use body content for AI analysis - AI should focus on content, not metadata
-                suggested_tags = self.tagger.generate_tags(body)
-                # Sanitize both existing and suggested tags before merging
-                existing_tags = sanitize_tags(frontmatter.get("tags", []))
-                suggested_tags = sanitize_tags(suggested_tags)
-                
-                # Merge tags intelligently
-                merged_tags = self._merge_tags(existing_tags, suggested_tags)
-                # Ensure merged tags remain sanitized and deduplicated
-                merged_tags = sanitize_tags(merged_tags)
-                
-                if merged_tags != existing_tags:
-                    frontmatter["tags"] = merged_tags
-                    results["processing"]["tags"] = {
-                        "added": list(set(merged_tags) - set(existing_tags)),
-                        "total": len(merged_tags)
-                    }
-                # Expose AI tags in processing result for downstream formatters
-                results["processing"]["ai_tags"] = merged_tags
-            except Exception as e:
-                results["processing"]["tags"] = {"error": str(e)}
-        # Ensure ai_tags key is always present based on current frontmatter state
-        current_tags = sanitize_tags(frontmatter.get("tags", []))
-        if "ai_tags" not in results["processing"]:
-            results["processing"]["ai_tags"] = current_tags
-        
-        # Analyze note quality and suggest improvements (use body content only)
-        try:
-            # Use body content for AI analysis - AI should focus on content, not metadata
-            enhancement = self.enhancer.enhance_note(body)
-            quality_score = enhancement.get("quality_score", 0)
-            
-            results["processing"]["quality"] = {
-                "score": quality_score,
-                "suggestions": enhancement.get("suggestions", [])[:3]
-            }
-            
-            # Generate workflow recommendations based on quality
-            if quality_score > 0.7:
-                results["recommendations"].append({
-                    "action": "promote_to_permanent",
-                    "reason": "High quality content suitable for permanent notes",
-                    "confidence": "high"
-                })
-            elif quality_score > 0.4:
-                results["recommendations"].append({
-                    "action": "move_to_fleeting",
-                    "reason": "Medium quality content needs development",
-                    "confidence": "medium"
-                })
-            else:
-                results["recommendations"].append({
-                    "action": "improve_or_archive",
-                    "reason": "Low quality content needs significant improvement",
-                    "confidence": "high"
-                })
-        except Exception as e:
-            results["processing"]["quality"] = {"error": str(e)}
-        
-        # Find potential connections (use body content only)
-        try:
-            # Load existing permanent notes for connection analysis
-            permanent_notes = self._load_notes_corpus(self.permanent_dir)
-            
-            if permanent_notes:
-                # Use body content for AI analysis - focus on actual content, not metadata
-                similar_notes = self.connections.find_similar_notes(body, permanent_notes)
-                
-                if similar_notes:
-                    results["processing"]["connections"] = {
-                        "similar_notes": [
-                            {"file": filename, "similarity": float(score)}
-                            for filename, score in similar_notes[:3]
-                        ]
-                    }
-                    
-                    results["recommendations"].append({
-                        "action": "add_links",
-                        "reason": f"Found {len(similar_notes)} related notes",
-                        "details": similar_notes[:3]
-                    })
-        except Exception as e:
-            results["processing"]["connections"] = {"error": str(e)}
-        
-        # TDD Iteration 10: Track image references in note
-        try:
-            from utils.image_link_manager import ImageLinkManager
-            image_manager = ImageLinkManager(base_path=Path(self.base_dir))
-            image_links = image_manager.parse_image_links(content)
-            
-            if image_links:
-                results["processing"]["images"] = {
-                    "count": len(image_links),
-                    "references": [link.get("filename", link.get("path", "")) for link in image_links],
-                    "preserved": True
-                }
-                self.logger.debug(f"Tracked {len(image_links)} image references in {note_file.name}")
-        except ImportError:
-            self.logger.debug("Image link manager not available - skipping image tracking")
-        except Exception as e:
-            self.logger.warning(f"Could not track image references: {e}")
-        
-        # Update note with AI enhancements (skip when dry_run)
-        # Check if we need to update the file (AI processing OR template fixes)
-        needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
-        
-        if needs_ai_update or any_template_fixed:
-            if dry_run:
-                # Indicate what would have happened without modifying files
-                if needs_ai_update:
-                    frontmatter["ai_processed"] = datetime.now().isoformat()
-                results["file_updated"] = False
-            else:
-                try:
-                    # Update status to indicate AI processing (only if AI processing happened)
-                    if needs_ai_update:
-                        frontmatter["ai_processed"] = datetime.now().isoformat()
-                        
-                        # Add quality score to frontmatter if it was processed
-                        if "quality" in results["processing"] and "score" in results["processing"]["quality"]:
-                            frontmatter["quality_score"] = results["processing"]["quality"]["score"]
-                    
-                    # Rebuild content using centralized utility (includes template fixes)
-                    updated_content = build_frontmatter(frontmatter, body)
-                    
-                    # Use atomic write to prevent partial writes on interruption
-                    safe_write(note_file, updated_content)
-                    
-                    results["file_updated"] = True
-                except Exception as e:
-                    results["file_update_error"] = str(e)
-        else:
-            results["file_updated"] = False
-        
-        # Report template processing status
-        if any_template_fixed:
-            results["template_fixed"] = True
+        # ADR-002 Phase 6 Note: Automatic status updates removed during extraction
+        # The original code updated status via lifecycle_manager here, but it was tightly
+        # coupled to ai_processing_errors tracking which is now internal to NoteProcessingCoordinator.
+        # Status updates should be handled explicitly by calling code (e.g., ReviewTriageCoordinator)
+        # rather than automatically in process_inbox_note.
+        # TODO: Investigate if automatic status updates are needed and implement properly if so.
         
         return results
     
-    def _fix_template_placeholders(self, frontmatter: Dict, note_file: Path) -> bool:
-        """
-        Fix template placeholders in frontmatter, particularly {{date:...}} patterns.
-        
-        Args:
-            frontmatter: The frontmatter dictionary to modify
-            note_file: Path to the note file for timestamp inference
-            
-        Returns:
-            True if any changes were made, False otherwise
-        """
-        import os
-        from datetime import datetime
-        
-        changes_made = False
-        
-        # Check if 'created' field needs fixing
-        created_value = frontmatter.get("created")
-        
-        # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
-        if (created_value is None or 
-            (isinstance(created_value, str) and (
-                "{{date" in created_value or
-                "<% tp.date.now(" in created_value or
-                "<% tp.file.creation_date(" in created_value
-            ))):
-            
-            # Try to get file creation/modification time
-            try:
-                file_stat = os.stat(note_file)
-                # Use modification time as the best proxy for when note was created
-                timestamp = datetime.fromtimestamp(file_stat.st_mtime)
-            except (OSError, ValueError):
-                # Fallback to current time if file operations fail
-                timestamp = datetime.now()
-            
-            # Format in the required YYYY-MM-DD HH:MM format
-            formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
-            frontmatter["created"] = formatted_timestamp
-            changes_made = True
-        
-        return changes_made
-
-    def _preprocess_created_placeholder_in_raw(self, content: str, note_file: Path) -> tuple[str, bool]:
-        """Replace invalid 'created' placeholders directly in the raw frontmatter block.
-
-        This is necessary when placeholders make YAML unparseable (e.g., {{date:...}}, {{date}},
-        or Templater EJS patterns), causing parse_frontmatter() to return empty metadata and
-        leaving the original frontmatter in the body. Preprocessing ensures YAML becomes valid so
-        other frontmatter fields are preserved.
-
-        Returns a tuple of (possibly updated content, changes_made).
-        """
-        try:
-            text = content if isinstance(content, str) else ""
-            if not text or not text.lstrip().startswith('---'):
-                return content, False
-            lines = text.split('\n')
-            # locate closing delimiter
-            closing_idx = None
-            for i in range(1, len(lines)):
-                if lines[i].strip() == '---':
-                    closing_idx = i
-                    break
-            if closing_idx is None:
-                return content, False
-
-            placeholder_markers = (
-                "{{date",
-                "<% tp.date.now(",
-                "<% tp.file.creation_date(",
-            )
-
-            changed = False
-            # Scan only within frontmatter region
-            for j in range(1, closing_idx):
-                line = lines[j]
-                if not line.strip().startswith("created:"):
-                    continue
-                # Preserve original spacing after ':'
-                prefix, sep, value = line.partition(":")
-                value_str = value.strip()
-                if any(marker in value_str for marker in placeholder_markers):
-                    try:
-                        import os
-                        from datetime import datetime
-                        ts = datetime.fromtimestamp(os.stat(note_file).st_mtime)
-                    except Exception:
-                        from datetime import datetime
-                        ts = datetime.now()
-                    formatted = ts.strftime("%Y-%m-%d %H:%M")
-                    # preserve spaces after colon
-                    import re as _re
-                    m = _re.match(r"^(\s*)", value)
-                    spaces = m.group(1) if m else " "
-                    lines[j] = f"{prefix}:{spaces}{formatted}"
-                    changed = True
-                break  # only handle the first created occurrence
-
-            if changed:
-                return "\n".join(lines), True
-            return content, False
-        except Exception:
-            return content, False
+    # ADR-002 Phase 6: Template processing methods removed - delegated to NoteProcessingCoordinator
+    # These methods are now internal to NoteProcessingCoordinator:
+    # - _fix_template_placeholders()
+    # - _preprocess_created_placeholder_in_raw()
+    # - _merge_tags()
     
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """
-        Promote a note from inbox/fleeting to permanent notes.
+        Promote a note from inbox/fleeting to appropriate directory.
+        
+        ADR-002 Phase 4: Delegates to PromotionEngine.
         
         Args:
             note_path: Path to the note to promote
-            target_type: Target note type ("permanent" or "fleeting")
+            target_type: Target note type ("permanent", "literature", or "fleeting")
             
         Returns:
             Promotion results
         """
-        source_file = Path(note_path)
+        return self.promotion_engine.promote_note(note_path, target_type)
+    
+    def _validate_note_for_promotion(
+        self, 
+        note_path: Path, 
+        frontmatter: Dict, 
+        quality_threshold: float = 0.7
+    ) -> Dict:
+        """
+        Automatically promote notes that meet quality threshold.
         
-        if not source_file.exists():
-            return {"error": "Source note not found"}
+        Scans Inbox/ for notes with quality_score >= threshold,
+        then promotes them to appropriate directories based on type field.
         
-        # Determine target directory
-        if target_type == "permanent":
-            target_dir = self.permanent_dir
-        elif target_type == "fleeting":
-            target_dir = self.fleeting_dir
-        else:
-            return {"error": f"Invalid target type: {target_type}"}
-        
-        target_dir.mkdir(exist_ok=True)
-        target_file = target_dir / source_file.name
-        
-        try:
-            # Read and update content
-            with open(source_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+        Args:
+            dry_run: If True, preview promotions without making changes
+            quality_threshold: Minimum quality score required (default: 0.7)
             
-            frontmatter, body = parse_frontmatter(content)
-            
-            # Update metadata for promotion
-            frontmatter["type"] = target_type
-            frontmatter["status"] = "promoted" if target_type == "permanent" else "draft"
-            frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-            
-            # Add AI summary for long permanent notes
-            if (target_type == "permanent" and 
-                self.config["auto_summarize_long_notes"] and
-                self.summarizer.should_summarize(content)):
+        Returns:
+            Dict with promotion results including counts and details
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        results = {
+            "total_candidates": 0,
+            "promoted_count": 0,
+            "skipped_count": 0,
+            "error_count": 0,
+            "promoted": [],  # List of promoted note details
+            "skipped_notes": [],
+            "errors": [],
+            "by_type": {
+                "fleeting": {"promoted": 0, "skipped": 0},
+                "literature": {"promoted": 0, "skipped": 0},
+                "permanent": {"promoted": 0, "skipped": 0}
+            },
+            "dry_run": dry_run,
+        }
+        
+        if dry_run:
+            results["would_promote_count"] = 0
+            results["preview"] = []
+            logger.info("Auto-promotion running in DRY-RUN mode (no changes will be made)")
+        
+        # Scan inbox for candidate notes
+        if not self.inbox_dir.exists():
+            logger.warning(f"Inbox directory does not exist: {self.inbox_dir}")
+            return results
+        
+        inbox_files = list(self.inbox_dir.glob("*.md"))
+        logger.info(f"Scanning {len(inbox_files)} notes in Inbox/ for auto-promotion candidates")
+        
+        for note_path in inbox_files:
+            try:
+                # Read note metadata
+                content = note_path.read_text(encoding="utf-8")
+                frontmatter, _ = parse_frontmatter(content)
                 
-                try:
-                    summary = self.summarizer.generate_summary(content)
-                    if summary:
-                        frontmatter["ai_summary"] = summary
-                except Exception:
-                    pass  # Don't fail promotion if summary fails
-            
-            # Rebuild and save to target location using centralized utility
-            updated_content = build_frontmatter(frontmatter, body)
-            
-            # Use atomic write to prevent partial writes on interruption
-            safe_write(target_file, updated_content)
-            
-            # Remove from source location
-            source_file.unlink()
-            
-            return {
-                "success": True,
-                "source": str(source_file),
-                "target": str(target_file),
-                "type": target_type,
-                "has_summary": "ai_summary" in frontmatter
-            }
-            
-        except Exception as e:
-            return {"error": f"Failed to promote note: {e}"}
+                # Skip notes without quality scores
+                quality_score = frontmatter.get("quality_score")
+                if quality_score is None:
+                    continue
+                
+                # Skip notes that don't have inbox status
+                status = frontmatter.get("status", "inbox")
+                if status not in ["inbox", "promoted"]:
+                    continue
+                
+                results["total_candidates"] += 1
+                logger.debug(f"Evaluating candidate: {note_path.name} (quality: {quality_score})")
+                
+                # Validate note eligibility
+                is_valid, note_type, error_msg = self._validate_note_for_promotion(
+                    note_path, frontmatter, quality_threshold
+                )
+                
+                if not is_valid:
+                    results["skipped_count"] += 1
+                    results["skipped_notes"].append({
+                        "path": note_path.name,
+                        "quality": frontmatter.get("quality_score", 0.0),
+                        "type": frontmatter.get("type", "unknown"),
+                        "reason": error_msg or "Validation failed"
+                    })
+                    # Track by type for skipped notes
+                    note_type_for_skip = frontmatter.get("type", "permanent")
+                    if note_type_for_skip in results["by_type"]:
+                        results["by_type"][note_type_for_skip]["skipped"] += 1
+                    if error_msg and "type" in error_msg.lower():
+                        results["error_count"] += 1
+                        results["errors"].append({"note": note_path.name, "error": error_msg})
+                    logger.debug(f"Skipped {note_path.name}: {error_msg}")
+                    continue
+                
+                # At this point, note_type is guaranteed to be a string (validation passed)
+                assert note_type is not None, "note_type should not be None after successful validation"
+                
+                # Dry-run mode: preview only
+                if dry_run:
+                    quality_score = frontmatter.get("quality_score", 0.0)
+                    results["would_promote_count"] += 1
+                    results["preview"].append({
+                        "note": note_path.name,
+                        "type": note_type,
+                        "quality": quality_score,
+                        "target": f"{note_type.title()} Notes/"
+                    })
+                    logger.info(f"Would promote: {note_path.name} → {note_type.title()} Notes/")
+                    continue
+                
+                # Execute promotion
+                success, error_msg = self._execute_note_promotion(note_path, note_type)
+                
+                if success:
+                    results["promoted_count"] += 1
+                    results["by_type"][note_type]["promoted"] += 1
+                    results["promoted"].append({
+                        "title": note_path.name,
+                        "type": note_type,
+                        "quality": frontmatter.get("quality_score", 0.0),
+                        "target": f"{note_type.title()} Notes/"
+                    })
+                    logger.info(f"Promoted: {note_path.name} → {note_type.title()} Notes/")
+                else:
+                    results["error_count"] += 1
+                    results["errors"].append({"note": note_path.name, "error": error_msg})
+                    logger.error(f"Promotion failed for {note_path.name}: {error_msg}")
+                
+            except Exception as e:
+                results["error_count"] += 1
+                results["errors"].append({
+                    "note": note_path.name,
+                    "error": str(e)
+                })
+                logger.exception(f"Error processing {note_path.name}: {e}")
+        
+        # Add summary section for JSON output compatibility
+        results["summary"] = {
+            "total_candidates": results["total_candidates"],
+            "promoted_count": results["promoted_count"],
+            "skipped_count": results["skipped_count"],
+            "error_count": results["error_count"]
+        }
+        
+        # Summary logging
+        logger.info(
+            f"Auto-promotion complete: {results['promoted_count']} promoted, "
+            f"{results['skipped_count']} skipped, {results['error_count']} errors"
+        )
+        
+        return results
     
     def batch_process_inbox(self, show_progress: bool = True) -> Dict:
         """
         Process all notes in the inbox.
         
+        ADR-002 Phase 11: Delegates to BatchProcessingCoordinator.
+        
         Args:
             show_progress: If True, print progress to stderr (for dashboard display)
+        
+        Returns:
+            Dict with total_files, processed, failed, results, and summary
         """
-        inbox_files = list(self.inbox_dir.glob("*.md"))
-        total = len(inbox_files)
-        
-        results = {
-            "total_files": total,
-            "processed": 0,
-            "failed": 0,
-            "results": [],
-            "summary": {
-                "promote_to_permanent": 0,
-                "move_to_fleeting": 0,
-                "needs_improvement": 0
-            }
-        }
-        
-        for idx, note_file in enumerate(inbox_files, 1):
-            # Show progress (to stderr so it doesn't interfere with JSON output)
-            if show_progress:
-                import sys
-                filename = note_file.name
-                # Truncate long filenames
-                if len(filename) > 50:
-                    filename = filename[:47] + "..."
-                progress_pct = int((idx / total) * 100)
-                sys.stderr.write(f"\r[{idx}/{total}] {progress_pct}% - {filename}...")
-                sys.stderr.flush()
-            
-            try:
-                result = self.process_inbox_note(str(note_file))
-                
-                if "error" not in result:
-                    results["processed"] += 1
-                    
-                    # Categorize recommendations
-                    for rec in result.get("recommendations", []):
-                        action = rec.get("action", "")
-                        if action == "promote_to_permanent":
-                            results["summary"]["promote_to_permanent"] += 1
-                        elif action == "move_to_fleeting":
-                            results["summary"]["move_to_fleeting"] += 1
-                        elif action == "improve_or_archive":
-                            results["summary"]["needs_improvement"] += 1
-                else:
-                    results["failed"] += 1
-                
-                results["results"].append(result)
-                
-            except Exception as e:
-                results["failed"] += 1
-                results["results"].append({
-                    "original_file": str(note_file),
-                    "error": str(e)
-                })
-        
-        # Clear progress line
-        if show_progress and total > 0:
-            import sys
-            sys.stderr.write("\r" + " " * 80 + "\r")
-            sys.stderr.flush()
-        
-        return results
+        return self.batch_processing_coordinator.batch_process_inbox(show_progress=show_progress)
     
     def generate_workflow_report(self) -> Dict:
-        """Generate a comprehensive workflow status report."""
-        # Get analytics for the entire collection
-        analytics_report = self.analytics.generate_report()
+        """
+        Generate a comprehensive workflow status report.
         
-        # Count notes by directory
-        directory_counts = {}
-        for dir_name, dir_path in [
-            ("Inbox", self.inbox_dir),
-            ("Fleeting Notes", self.fleeting_dir),
-            ("Permanent Notes", self.permanent_dir),
-            ("Archive", self.archive_dir)
-        ]:
-            if dir_path.exists():
-                directory_counts[dir_name] = len(list(dir_path.glob("*.md")))
-            else:
-                directory_counts[dir_name] = 0
+        ADR-002 Phase 10: Delegates to WorkflowReportingCoordinator.
         
-        # Workflow health metrics
-        inbox_count = directory_counts["Inbox"]
-        fleeting_count = directory_counts["Fleeting Notes"]
-        permanent_count = directory_counts["Permanent Notes"]
-        
-        workflow_health = "healthy"
-        if inbox_count > 20:
-            workflow_health = "needs_attention"
-        elif inbox_count > 50:
-            workflow_health = "critical"
-        
-        # AI feature usage
-        ai_usage = self._analyze_ai_usage()
-        
-        return {
-            "workflow_status": {
-                "health": workflow_health,
-                "directory_counts": directory_counts,
-                "total_notes": sum(directory_counts.values())
-            },
-            "ai_features": ai_usage,
-            "analytics": analytics_report,
-            "recommendations": self._generate_workflow_recommendations(
-                directory_counts, ai_usage
-            )
-        }
+        Returns:
+            Dict with workflow_status, ai_features, analytics, and recommendations
+        """
+        return self.reporting_coordinator.generate_workflow_report()
     
-    def _analyze_ai_usage(self) -> Dict:
-        """Analyze usage of AI features across the collection."""
-        usage_stats = {
-            "notes_with_ai_tags": 0,
-            "notes_with_ai_summaries": 0,
-            "notes_with_ai_processing": 0,
-            "total_analyzed": 0
-        }
-        
-        # Scan all notes for AI features
-        for md_file in self.base_dir.rglob("*.md"):
-            try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                frontmatter, _ = parse_frontmatter(content)
-                usage_stats["total_analyzed"] += 1
-                
-                if "ai_summary" in frontmatter:
-                    usage_stats["notes_with_ai_summaries"] += 1
-                
-                if "ai_processed" in frontmatter:
-                    usage_stats["notes_with_ai_processing"] += 1
-                
-                # Check if tags were likely AI-generated (heuristic)
-                tags = frontmatter.get("tags", [])
-                if isinstance(tags, list) and len(tags) >= 3:
-                    # Look for AI-style kebab-case tags
-                    ai_style_tags = [t for t in tags if '-' in t and len(t) > 5]
-                    if len(ai_style_tags) >= 2:
-                        usage_stats["notes_with_ai_tags"] += 1
-                
-            except Exception:
-                continue
-        
-        return usage_stats
-    
-    def _generate_workflow_recommendations(self, directory_counts: Dict, 
-                                         ai_usage: Dict) -> List[str]:
-        """Generate workflow improvement recommendations."""
-        recommendations = []
-        
-        # Inbox management
-        inbox_count = directory_counts.get("Inbox", 0)
-        if inbox_count > 20:
-            recommendations.append(
-                f"Process {inbox_count} notes in inbox - consider batch processing"
-            )
-        
-        # AI feature adoption
-        total_notes = ai_usage.get("total_analyzed", 0)
-        if total_notes > 0:
-            ai_summary_rate = ai_usage["notes_with_ai_summaries"] / total_notes
-            if ai_summary_rate < 0.3:
-                recommendations.append(
-                    "Consider enabling auto-summarization for long notes"
-                )
-            
-            ai_processing_rate = ai_usage["notes_with_ai_processing"] / total_notes
-            if ai_processing_rate < 0.5:
-                recommendations.append(
-                    "Enable AI processing for inbox notes to improve workflow efficiency"
-                )
-        
-        # Balance between note types
-        permanent_count = directory_counts.get("Permanent Notes", 0)
-        fleeting_count = directory_counts.get("Fleeting Notes", 0)
-        
-        if fleeting_count > permanent_count * 2:
-            recommendations.append(
-                "Consider promoting more fleeting notes to permanent status"
-            )
-        
-        return recommendations
-    
-    def _load_notes_corpus(self, directory: Path) -> Dict[str, str]:
-        """Load all notes from a directory into a corpus."""
-        corpus = {}
-        
-        if not directory.exists():
-            return corpus
-        
-        for md_file in directory.glob("*.md"):
-            try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    corpus[md_file.name] = f.read()
-            except Exception:
-                continue
-        
-        return corpus
+    # NOTE: _load_notes_corpus() extracted to ConnectionCoordinator (ADR-002 Phase 2)
     
     
     def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
@@ -766,265 +449,32 @@ class WorkflowManager:
     
     
     def scan_review_candidates(self) -> List[Dict]:
-        """Scan for notes that need weekly review attention.
+        """
+        Scan for notes that need weekly review attention.
         
-        Finds all notes that require review:
-        - All .md files in Inbox/ directory (regardless of status)
-        - Files in Fleeting Notes/ directory with status: inbox
+        ADR-002 Phase 5: Delegates to ReviewTriageCoordinator.
         
         Returns:
-            List of candidate dictionaries with:
-                - path: Path object to the note file
-                - source: "inbox" or "fleeting" indicating origin
-                - metadata: Parsed YAML frontmatter (empty dict if invalid)
+            List of candidate dictionaries with path, source, and metadata
         """
-        candidates = []
-        
-        # Scan inbox directory - all .md files are candidates
-        candidates.extend(self._scan_directory_for_candidates(
-            self.inbox_dir, 
-            source_type="inbox", 
-            filter_func=None  # All inbox files are candidates
-        ))
-        
-        # Scan fleeting notes directory - only notes with status: inbox
-        candidates.extend(self._scan_directory_for_candidates(
-            self.fleeting_dir,
-            source_type="fleeting",
-            filter_func=lambda metadata: metadata.get("status") == "inbox"
-        ))
-        
-        return candidates
-    
-    def _scan_directory_for_candidates(self, directory: Path, source_type: str, 
-                                     filter_func: Optional[callable] = None) -> List[Dict]:
-        """Helper method to scan a directory for review candidates.
-        
-        Args:
-            directory: Path to scan
-            source_type: Type identifier ("inbox" or "fleeting")
-            filter_func: Optional function to filter candidates based on metadata
-            
-        Returns:
-            List of candidate dictionaries
-        """
-        candidates = []
-        
-        if not directory.exists():
-            return candidates
-            
-        try:
-            for note_path in directory.glob("*.md"):
-                try:
-                    candidate = self._create_candidate_dict(note_path, source_type)
-                    
-                    # Apply filter if provided
-                    if filter_func is None or filter_func(candidate["metadata"]):
-                        candidates.append(candidate)
-                        
-                except Exception as e:
-                    # Log error but continue processing other files
-                    # For now, include problematic files with empty metadata
-                    candidates.append({
-                        "path": note_path,
-                        "source": source_type,
-                        "metadata": {},
-                        "error": str(e)
-                    })
-        except Exception:
-            # Handle directory access errors gracefully
-            pass
-            
-        return candidates
-    
-    def _create_candidate_dict(self, note_path: Path, source_type: str) -> Dict:
-        """Create a candidate dictionary from a note file.
-        
-        Args:
-            note_path: Path to the note file
-            source_type: Source type ("inbox" or "fleeting")
-            
-        Returns:
-            Dictionary with path, source, and metadata
-            
-        Raises:
-            Exception: If file cannot be read or processed
-        """
-        with open(note_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        metadata, _ = parse_frontmatter(content)
-        
-        return {
-            "path": note_path,
-            "source": source_type,
-            "metadata": metadata
-        }
+        return self.review_triage_coordinator.scan_review_candidates()
     
     def generate_weekly_recommendations(self, candidates: List[Dict], dry_run: bool = False) -> Dict:
-        """Generate AI-powered recommendations for weekly review candidates.
+        """
+        Generate AI-powered recommendations for weekly review candidates.
         
-        Processes each candidate using existing AI quality assessment and generates
-        structured recommendations for weekly review sessions.
+        ADR-002 Phase 5: Delegates to ReviewTriageCoordinator.
         
         Args:
-            candidates: List of candidate dictionaries from scan_review_candidates()
+            candidates: List of candidate dictionaries
+            dry_run: If True, use fast mode to skip external AI calls
             
         Returns:
-            Dictionary with:
-                - summary: Counts by recommendation type
-                - recommendations: List of detailed recommendation objects
-                - generated_at: ISO timestamp of generation
+            Dictionary with summary, recommendations, and timestamp
         """
-        result = self._initialize_recommendations_result(len(candidates))
-        
-        # Process each candidate with error handling
-        for candidate in candidates:
-            recommendation = self._process_candidate_for_recommendation(candidate, dry_run=dry_run)
-            result["recommendations"].append(recommendation)
-            
-            # Update summary counts based on action
-            self._update_summary_counts(result["summary"], recommendation["action"])
-        
-        return result
+        return self.review_triage_coordinator.generate_weekly_recommendations(candidates, dry_run)
     
-    def _initialize_recommendations_result(self, total_candidates: int) -> Dict:
-        """Initialize the weekly recommendations result structure.
-        
-        Args:
-            total_candidates: Number of candidates being processed
-            
-        Returns:
-            Initialized result dictionary
-        """
-        from datetime import datetime
-        
-        return {
-            "summary": {
-                "total_notes": total_candidates,
-                "promote_to_permanent": 0,
-                "move_to_fleeting": 0,
-                "needs_improvement": 0,
-                "processing_errors": 0
-            },
-            "recommendations": [],
-            "generated_at": datetime.now().isoformat()
-        }
-    
-    def _process_candidate_for_recommendation(self, candidate: Dict, dry_run: bool = False) -> Dict:
-        """Process a single candidate and generate its recommendation.
-        
-        Args:
-            candidate: Candidate dictionary with path, source, metadata
-            
-        Returns:
-            Recommendation dictionary for the candidate
-        """
-        try:
-            # Use existing AI processing for quality assessment
-            # In dry-run, force fast-mode to avoid external AI calls that may stall
-            if dry_run:
-                processing_result = self.process_inbox_note(str(candidate["path"]), dry_run=True, fast=True)
-            else:
-                # Call without kwargs to remain compatible with simple mocks in tests
-                processing_result = self.process_inbox_note(str(candidate["path"]))
-            
-            if "error" in processing_result:
-                return self._create_error_recommendation(
-                    candidate, 
-                    "Processing failed - manual review required",
-                    processing_result["error"]
-                )
-            
-            # Extract and format the recommendation
-            return self._extract_weekly_recommendation(candidate, processing_result)
-            
-        except Exception as e:
-            return self._create_error_recommendation(
-                candidate,
-                "Unexpected error during processing", 
-                str(e)
-            )
-    
-    def _create_error_recommendation(self, candidate: Dict, reason: str, error: str) -> Dict:
-        """Create a recommendation for a candidate that failed processing.
-        
-        Args:
-            candidate: Original candidate dictionary
-            reason: Human-readable reason for the error
-            error: Technical error message
-            
-        Returns:
-            Error recommendation dictionary
-        """
-        return {
-            "file_name": candidate["path"].name,
-            "source": candidate["source"],
-            "action": "manual_review",
-            "reason": reason,
-            "error": error,
-            "quality_score": None,
-            "confidence": None,
-            "ai_tags": [],
-            "metadata": candidate.get("metadata", {})
-        }
-    
-    def _update_summary_counts(self, summary: Dict, action: str) -> None:
-        """Update summary counts based on recommendation action.
-        
-        Args:
-            summary: Summary dictionary to update
-            action: Recommendation action type
-        """
-        if action == "promote_to_permanent":
-            summary["promote_to_permanent"] += 1
-        elif action == "move_to_fleeting":
-            summary["move_to_fleeting"] += 1
-        elif action == "improve_or_archive":
-            summary["needs_improvement"] += 1
-        elif action == "manual_review":
-            summary["processing_errors"] += 1
-    
-    def _extract_weekly_recommendation(self, candidate: Dict, processing_result: Dict) -> Dict:
-        """Extract weekly recommendation from processing result.
-        
-        Args:
-            candidate: Original candidate dictionary
-            processing_result: Result from process_inbox_note()
-            
-        Returns:
-            Formatted recommendation dictionary
-        """
-        # Get first recommendation (most important)
-        recommendations = processing_result.get("recommendations", [])
-        primary_rec = recommendations[0] if recommendations else {
-            "action": "manual_review",
-            "reason": "No specific recommendation generated",
-            "confidence": 0.5
-        }
-        
-        # Sanitize metadata tags for clean display in weekly outputs (non-destructive)
-        metadata = candidate["metadata"] if isinstance(candidate.get("metadata"), dict) else {}
-        if metadata:
-            try:
-                if "tags" in metadata:
-                    metadata = {**metadata, "tags": sanitize_tags(metadata.get("tags", []))}
-            except Exception:
-                # If anything goes wrong, fall back to original metadata
-                metadata = candidate.get("metadata", {})
-
-        return {
-            "file_name": candidate["path"].name,
-            "source": candidate["source"],
-            "action": primary_rec["action"],
-            "reason": primary_rec["reason"],
-            "quality_score": processing_result.get("quality_score"),
-            "confidence": primary_rec.get("confidence", 0.5),
-            "ai_tags": processing_result.get("processing", {}).get("ai_tags", []),
-            "metadata": metadata
-        }
-
-    # Phase 5.5.4: Enhanced Review Features
+    # Phase 5.5.4: Enhanced Review Features (delegated to AnalyticsCoordinator)
     def detect_orphaned_notes(self) -> List[Dict]:
         """
         Detect notes that have no bidirectional links to other notes.
@@ -1036,15 +486,7 @@ class WorkflowManager:
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
-        orphaned_notes = []
-        all_notes = self._get_all_notes()
-        link_graph = self._build_link_graph(all_notes)
-        
-        for note_path in all_notes:
-            if self._is_orphaned_note(note_path, link_graph):
-                orphaned_notes.append(self._create_orphaned_note_info(note_path))
-        
-        return orphaned_notes
+        return self.analytics_coordinator.detect_orphaned_notes()
     
     def detect_orphaned_notes_comprehensive(self) -> List[Dict]:
         """
@@ -1056,15 +498,7 @@ class WorkflowManager:
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
-        orphaned_notes = []
-        all_notes = self._get_all_notes_comprehensive()
-        link_graph = self._build_link_graph(all_notes)
-        
-        for note_path in all_notes:
-            if self._is_orphaned_note(note_path, link_graph):
-                orphaned_notes.append(self._create_orphaned_note_info(note_path))
-        
-        return orphaned_notes
+        return self.analytics_coordinator.detect_orphaned_notes_comprehensive()
     
     def detect_stale_notes(self, days_threshold: int = 90) -> List[Dict]:
         """
@@ -1076,25 +510,7 @@ class WorkflowManager:
         Returns:
             List of stale note dictionaries with path, title, last_modified, days_since_modified
         """
-        # using module-level datetime, timedelta
-        
-        stale_notes = []
-        cutoff_date = datetime.now() - timedelta(days=days_threshold)
-        all_notes = self._get_all_notes()
-        
-        for note_path in all_notes:
-            try:
-                last_modified = datetime.fromtimestamp(note_path.stat().st_mtime)
-                if last_modified < cutoff_date:
-                    days_since_modified = (datetime.now() - last_modified).days
-                    stale_notes.append(self._create_stale_note_info(note_path, last_modified, days_since_modified))
-            except (OSError, AttributeError):
-                # Skip if we can't get file stats
-                continue
-        
-        # Sort by days since modified (most stale first)
-        stale_notes.sort(key=lambda x: x["days_since_modified"], reverse=True)
-        return stale_notes
+        return self.analytics_coordinator.detect_stale_notes(days_threshold)
     
     def generate_enhanced_metrics(self) -> Dict:
         """
@@ -1109,28 +525,9 @@ class WorkflowManager:
             - note_age_distribution: Distribution of note ages
             - productivity_metrics: Creation and modification patterns
         """
-        # using module-level datetime, timedelta
-        
-        metrics = {
-            "generated_at": datetime.now().isoformat(),
-            "orphaned_notes": self.detect_orphaned_notes(),
-            "stale_notes": self.detect_stale_notes(),
-            "link_density": self._calculate_link_density(),
-            "note_age_distribution": self._calculate_note_age_distribution(),
-            "productivity_metrics": self._calculate_productivity_metrics()
-        }
-        
-        # Add summary statistics
-        metrics["summary"] = {
-            "total_orphaned": len(metrics["orphaned_notes"]),
-            "total_stale": len(metrics["stale_notes"]),
-            "avg_links_per_note": metrics["link_density"],
-            "total_notes": len(self._get_all_notes())
-        }
-        
-        return metrics
+        return self.analytics_coordinator.generate_enhanced_metrics()
 
-    # Phase 5.6: Orphan Remediation (bidirectional link insertion)
+    # Phase 5.6: Orphan Remediation (ADR-002 Phase 8: Delegated to OrphanRemediationCoordinator)
     def remediate_orphaned_notes(
         self,
         mode: str = "link",
@@ -1139,241 +536,28 @@ class WorkflowManager:
         target: Optional[str] = None,
         dry_run: bool = True,
     ) -> Dict:
-        """Remediate orphaned notes by inserting bidirectional links.
-
+        """
+        Remediate orphaned notes by inserting bidirectional links.
+        
+        ADR-002 Phase 8: Delegates to OrphanRemediationCoordinator.
+        
         Args:
             mode: "link" (insert links) or "checklist" (output markdown checklist)
             scope: "permanent", "fleeting", or "all"
             limit: maximum number of orphaned notes to process
-            target: explicit path to target MOC/note for inserting links (absolute or relative to vault)
+            target: explicit path to target MOC/note for inserting links
             dry_run: when True, do not modify files; preview only
-
+        
         Returns:
             Dictionary with summary and actions performed or planned.
         """
-        mode = (mode or "link").lower()
-        scope = (scope or "permanent").lower()
-        if mode not in {"link", "checklist"}:
-            mode = "link"
-        if scope not in {"permanent", "fleeting", "all"}:
-            scope = "permanent"
-
-        vault_root = self._vault_root()
-
-        # Determine target note
-        target_path: Optional[Path]
-        if target:
-            t = Path(target)
-            target_path = t if t.is_absolute() else (vault_root / t)
-        else:
-            target_path = self._find_default_link_target()
-
-        result: Dict = {
-            "mode": mode,
-            "scope": scope,
-            "limit": int(limit),
-            "dry_run": bool(dry_run),
-            "target": str(target_path) if target_path else None,
-            "actions": [],
-            "summary": {
-                "considered": 0,
-                "processed": 0,
-                "skipped": 0,
-                "errors": 0,
-            },
-        }
-
-        if not target_path or not target_path.exists():
-            return {
-                **result,
-                "error": f"Target note not found: {target_path if target_path else 'None'}",
-            }
-
-        # Gather orphaned notes by scope and apply limit
-        orphans = self._list_orphans_by_scope(scope)
-        result["summary"]["considered"] = len(orphans)
-        selected = orphans[: max(0, int(limit))] if limit else orphans
-
-        if mode == "checklist":
-            checklist = [
-                f"- [ ] Add link [[{Path(o['path']).stem}]] to [[{target_path.stem}]] and reciprocal link"
-                for o in selected
-            ]
-            md = [
-                "# Orphan Remediation Checklist",
-                f"Generated: {datetime.now().isoformat(timespec='seconds')}",
-                f"Target: [[{target_path.stem}]]",
-                "",
-            ] + checklist
-            result["checklist_markdown"] = "\n".join(md) + "\n"
-            return result
-
-        # link mode
-        for o in selected:
-            orphan_fp = Path(o["path"])
-            try:
-                changed = self._insert_bidirectional_links(orphan_fp, target_path, dry_run=dry_run)
-                result["actions"].append(
-                    {
-                        "orphan": str(orphan_fp),
-                        "target": str(target_path),
-                        "modified_target": changed.get("modified_target", False),
-                        "modified_orphan": changed.get("modified_orphan", False),
-                        "backups": changed.get("backups", {}),
-                    }
-                )
-                result["summary"]["processed"] += 1
-            except Exception as e:
-                result["actions"].append(
-                    {"orphan": str(orphan_fp), "target": str(target_path), "error": str(e)}
-                )
-                result["summary"]["errors"] += 1
-
-        result["summary"]["skipped"] = max(0, result["summary"]["considered"] - result["summary"]["processed"])
-        return result
-
-    def _vault_root(self) -> Path:
-        """Resolve the root folder that actually contains the note collections."""
-        base = Path(self.base_dir)
-        knowledge = base / "knowledge"
-        return knowledge if knowledge.exists() else base
-
-    def _list_orphans_by_scope(self, scope: str) -> List[Dict]:
-        """Return orphaned notes filtered by scope and sorted deterministically."""
-        # Use comprehensive detector to be robust to vault layouts
-        all_orphans = self.detect_orphaned_notes_comprehensive()
-        root = self._vault_root()
-
-        def in_dir(p: str, name: str) -> bool:
-            try:
-                return (root / name) in Path(p).parents or Path(p).parent == (root / name)
-            except Exception:
-                return False
-
-        if scope == "permanent":
-            filtered = [o for o in all_orphans if in_dir(o["path"], "Permanent Notes")]
-        elif scope == "fleeting":
-            filtered = [o for o in all_orphans if in_dir(o["path"], "Fleeting Notes")]
-        else:
-            filtered = [
-                o
-                for o in all_orphans
-                if in_dir(o["path"], "Permanent Notes") or in_dir(o["path"], "Fleeting Notes")
-            ]
-
-        # Sort: Permanent first, then by title
-        def sort_key(o: Dict):
-            dir_weight = 0 if in_dir(o["path"], "Permanent Notes") else 1
-            return (dir_weight, o.get("title", ""))
-
-        return sorted(filtered, key=sort_key)
-
-    def _find_default_link_target(self) -> Optional[Path]:
-        """Pick a sensible default target note (Home Note or an MOC)."""
-        root = self._vault_root()
-        # 1) Home Note.md
-        home = root / "Home Note.md"
-        if home.exists():
-            return home
-        # 2) Zettelkasten MOC in Permanent Notes
-        z_moc = root / "Permanent Notes" / "Zettelkasten MOC.md"
-        if z_moc.exists():
-            return z_moc
-        # 3) any MOC file under vault
-        moc_candidates = list(root.rglob("*MOC*.md"))
-        if moc_candidates:
-            moc_candidates.sort()
-            return moc_candidates[0]
-        return None
-
-    def _insert_bidirectional_links(self, orphan_path: Path, target_path: Path, dry_run: bool = True) -> Dict:
-        """Insert [[orphan]] in target and [[target]] in orphan, creating backups if not dry-run.
-
-        Returns dict with modified flags and backup paths.
-        """
-        orphan_key = orphan_path.stem
-        target_key = target_path.stem
-
-        result = {"modified_target": False, "modified_orphan": False, "backups": {}}
-
-        # Update target file
-        tgt_text = self._read_text(target_path)
-        if not self._has_wikilink(tgt_text, orphan_key):
-            new_tgt_text = self._append_to_section(tgt_text, f"[[{orphan_key}]]")
-            if not dry_run:
-                bk = self._backup_file(target_path)
-                result["backups"]["target"] = str(bk) if bk else None
-                self._write_text(target_path, new_tgt_text)
-            result["modified_target"] = True
-
-        # Update orphan file
-        orphan_text = self._read_text(orphan_path)
-        if not self._has_wikilink(orphan_text, target_key):
-            new_orphan_text = self._append_to_section(orphan_text, f"[[{target_key}]]")
-            if not dry_run:
-                bk = self._backup_file(orphan_path)
-                result["backups"]["orphan"] = str(bk) if bk else None
-                self._write_text(orphan_path, new_orphan_text)
-            result["modified_orphan"] = True
-
-        return result
-
-    def _read_text(self, path: Path) -> str:
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read()
-        except FileNotFoundError:
-            return ""
-
-    def _write_text(self, path: Path, text: str) -> None:
-        # Use atomic write to prevent partial writes on interruption
-        safe_write(path, text)
-
-    def _backup_file(self, path: Path) -> Optional[Path]:
-        try:
-            ts = datetime.now().strftime("%Y%m%d%H%M%S")
-            backup = path.parent / f"{path.name}.bak.{ts}"
-            shutil.copy2(path, backup)
-            return backup
-        except Exception:
-            return None
-
-    def _has_wikilink(self, text: str, key: str) -> bool:
-        # matches [[key]] or [[key|alias]]
-        try:
-            pattern = rf"\[\[\s*{re.escape(key)}(?:\|[^\]]+)?\s*\]\]"
-            return re.search(pattern, text) is not None
-        except Exception:
-            return False
-
-    def _append_to_section(self, text: str, bullet_line: str, section_title: str = "## Linked Notes") -> str:
-        """Append a bullet to a dedicated section, creating it if missing."""
-        lines = text.splitlines()
-        # Find section heading index
-        import re as _re
-        heading_re = _re.compile(rf"^#+\s+{_re.escape(section_title.lstrip('#').strip())}$", _re.IGNORECASE)
-        idx = None
-        for i, ln in enumerate(lines):
-            if heading_re.match(ln.strip()):
-                idx = i
-                break
-        bullet = f"- {bullet_line}"
-        if idx is None:
-            # Append new section at end
-            new = []
-            if lines and lines[-1].strip() != "":
-                new = lines + ["", section_title, "", bullet, ""]
-            else:
-                new = lines + [section_title, "", bullet, ""]
-            return "\n".join(new)
-        else:
-            # Insert after heading; find the next blank or end to insert before next heading? Simple append after heading.
-            insert_at = idx + 1
-            # skip leading blank after heading
-            while insert_at < len(lines) and lines[insert_at].strip() == "":
-                insert_at += 1
-            new_lines = lines[:insert_at] + ["", bullet] + lines[insert_at:]
-            return "\n".join(new_lines)
+        return self.orphan_remediation_coordinator.remediate_orphaned_notes(
+            mode=mode,
+            scope=scope,
+            limit=limit,
+            target=target,
+            dry_run=dry_run
+        )
     
     # Helper methods for enhanced features
     def _get_all_notes(self) -> List[Path]:
@@ -1404,177 +588,10 @@ class WorkflowManager:
         
         return all_notes
     
-    def _build_link_graph(self, all_notes: List[Path]) -> Dict[str, set]:
-        """Build a graph of note links."""
-        import re
-        
-        link_graph = {}
-        
-        for note_path in all_notes:
-            note_name = note_path.stem
-            link_graph[note_name] = set()
-            
-            try:
-                with open(note_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Find all [[wiki-style]] links
-                wiki_links = re.findall(r'\[\[([^\]]+)\]\]', content)
-                for link in wiki_links:
-                    # Clean up the link (remove .md extension if present)
-                    clean_link = link.replace('.md', '')
-                    link_graph[note_name].add(clean_link)
-                    
-            except (UnicodeDecodeError, FileNotFoundError):
-                continue
-        
-        return link_graph
-    
-    def _is_orphaned_note(self, note_path: Path, link_graph: Dict[str, set]) -> bool:
-        """Check if a note is orphaned (no incoming or outgoing links)."""
-        note_name = note_path.stem
-        
-        # Skip inbox notes (they're expected to be unlinked initially)
-        if note_path.parent.name == "Inbox":
-            return False
-        
-        # Check if note has outgoing links
-        has_outgoing_links = len(link_graph.get(note_name, set())) > 0
-        
-        # Check if note has incoming links
-        has_incoming_links = any(
-            note_name in links for other_note, links in link_graph.items() 
-            if other_note != note_name
-        )
-        
-        return not (has_outgoing_links or has_incoming_links)
-    
-    def _create_orphaned_note_info(self, note_path: Path) -> Dict:
-        """Create info dict for an orphaned note."""
-        from datetime import datetime
-        
-        try:
-            last_modified = datetime.fromtimestamp(note_path.stat().st_mtime)
-            title = self._extract_note_title(note_path)
-        except (OSError, AttributeError):
-            last_modified = None
-            title = note_path.stem
-        
-        return {
-            "path": str(note_path),
-            "title": title,
-            "last_modified": last_modified.isoformat() if last_modified else None,
-            "directory": note_path.parent.name
-        }
-    
-    def _create_stale_note_info(self, note_path: Path, last_modified, days_since_modified: int) -> Dict:
-        """Create info dict for a stale note."""
-        title = self._extract_note_title(note_path)
-        
-        return {
-            "path": str(note_path),
-            "title": title,
-            "last_modified": last_modified.isoformat(),
-            "days_since_modified": days_since_modified,
-            "directory": note_path.parent.name
-        }
-    
-    def _extract_note_title(self, note_path: Path) -> str:
-        """Extract title from note (first # heading or filename)."""
-        try:
-            with open(note_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Look for first markdown heading
-            import re
-            heading_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
-            if heading_match:
-                return heading_match.group(1).strip()
-            
-            # Fall back to filename
-            return note_path.stem
-            
-        except (UnicodeDecodeError, FileNotFoundError):
-            return note_path.stem
-    
-    def _calculate_link_density(self) -> float:
-        """Calculate average number of links per note."""
-        all_notes = self._get_all_notes()
-        if not all_notes:
-            return 0.0
-        
-        link_graph = self._build_link_graph(all_notes)
-        total_links = sum(len(links) for links in link_graph.values())
-        
-        return total_links / len(all_notes) if all_notes else 0.0
-    
-    def _calculate_note_age_distribution(self) -> Dict:
-        """Calculate distribution of note ages."""
-        # using module-level datetime, timedelta
-        
-        all_notes = self._get_all_notes()
-        age_buckets = {
-            "new": 0,        # < 7 days
-            "recent": 0,     # 7-30 days
-            "mature": 0,     # 30-90 days
-            "old": 0         # > 90 days
-        }
-        
-        now = datetime.now()
-        
-        for note_path in all_notes:
-            try:
-                created_time = datetime.fromtimestamp(note_path.stat().st_ctime)
-                age_days = (now - created_time).days
-                
-                if age_days < 7:
-                    age_buckets["new"] += 1
-                elif age_days < 30:
-                    age_buckets["recent"] += 1
-                elif age_days < 90:
-                    age_buckets["mature"] += 1
-                else:
-                    age_buckets["old"] += 1
-                    
-            except (OSError, AttributeError):
-                age_buckets["old"] += 1  # Default to old if we can't get creation time
-        
-        return age_buckets
-    
-    def _calculate_productivity_metrics(self) -> Dict:
-        """Calculate productivity metrics like notes per week."""
-        # using module-level datetime, timedelta
-        from collections import defaultdict
-        
-        all_notes = self._get_all_notes()
-        weekly_creation = defaultdict(int)
-        weekly_modification = defaultdict(int)
-        
-        for note_path in all_notes:
-            try:
-                created_time = datetime.fromtimestamp(note_path.stat().st_ctime)
-                modified_time = datetime.fromtimestamp(note_path.stat().st_mtime)
-                
-                # Get week start (Monday) for creation and modification
-                created_week = created_time.strftime("%Y-W%U")
-                modified_week = modified_time.strftime("%Y-W%U")
-                
-                weekly_creation[created_week] += 1
-                weekly_modification[modified_week] += 1
-                
-            except (OSError, AttributeError):
-                continue
-        
-        # Calculate averages
-        creation_counts = list(weekly_creation.values())
-        modification_counts = list(weekly_modification.values())
-        
-        return {
-            "avg_notes_created_per_week": sum(creation_counts) / len(creation_counts) if creation_counts else 0,
-            "avg_notes_modified_per_week": sum(modification_counts) / len(modification_counts) if modification_counts else 0,
-            "most_productive_week_creation": max(weekly_creation.items(), key=lambda x: x[1]) if weekly_creation else None,
-            "total_weeks_active": len(set(list(weekly_creation.keys()) + list(weekly_modification.keys())))
-        }
+    # Analytics helper methods removed - now handled by AnalyticsCoordinator (ADR-002 Phase 3)
+    # Removed: _build_link_graph, _is_orphaned_note, _create_orphaned_note_info,
+    # _create_stale_note_info, _extract_note_title, _calculate_link_density,
+    # _calculate_note_age_distribution, _calculate_productivity_metrics
     
     # Phase 5.6 Extension: Fleeting Note Lifecycle Management
     
@@ -1582,368 +599,112 @@ class WorkflowManager:
         """
         Analyze fleeting notes collection for age distribution and health metrics.
         
+        ADR-002 Phase 9: Delegates to FleetingAnalysisCoordinator.
+        
         Returns:
             FleetingAnalysis: Data structure with age analysis results
         """
-        analysis = FleetingAnalysis()
-        notes_data = []
-        
-        # Scan fleeting notes directory
-        if not self.fleeting_dir.exists():
-            return analysis
-        
-        current_date = datetime.now()
-        
-        for note_path in self.fleeting_dir.glob("*.md"):
-            try:
-                # Get note age from metadata or file stats
-                content = note_path.read_text(encoding='utf-8')
-                frontmatter, _ = parse_frontmatter(content)
-                
-                # Try to get created date from frontmatter
-                created_str = frontmatter.get('created', '')
-                if created_str and not any(placeholder in created_str for placeholder in ['{{', '<%', 'tp.']):
-                    # Parse the date
-                    try:
-                        created_date = datetime.strptime(created_str, "%Y-%m-%d %H:%M")
-                    except ValueError:
-                        try:
-                            created_date = datetime.strptime(created_str, "%Y-%m-%d")
-                        except ValueError:
-                            # Fall back to file modification time
-                            created_date = datetime.fromtimestamp(note_path.stat().st_mtime)
-                else:
-                    # Use file modification time as fallback
-                    created_date = datetime.fromtimestamp(note_path.stat().st_mtime)
-                
-                # Calculate age in days
-                age_delta = current_date - created_date
-                days_old = age_delta.days
-                
-                # Store note data
-                note_info = {
-                    'name': note_path.name,
-                    'path': str(note_path),
-                    'days_old': days_old,
-                    'created': created_date
-                }
-                notes_data.append(note_info)
-                
-                # Categorize by age
-                if days_old <= 7:
-                    analysis.age_distribution['new'] += 1
-                elif days_old <= 30:
-                    analysis.age_distribution['recent'] += 1
-                elif days_old <= 90:
-                    analysis.age_distribution['stale'] += 1
-                else:
-                    analysis.age_distribution['old'] += 1
-                    
-            except Exception:
-                # Skip notes that can't be processed
-                continue
-        
-        # Sort notes by age
-        notes_data.sort(key=lambda x: x['days_old'], reverse=True)
-        
-        # Set analysis results
-        analysis.total_count = len(notes_data)
-        analysis.notes_by_age = notes_data
-        
-        if notes_data:
-            analysis.oldest_note = notes_data[0]
-            analysis.newest_note = notes_data[-1]
-        
-        return analysis
+        return self.fleeting_analysis_coordinator.analyze_fleeting_notes()
     
     def generate_fleeting_health_report(self) -> Dict:
         """
         Generate a health report for fleeting notes with recommendations.
         
+        ADR-002 Phase 9: Delegates to FleetingAnalysisCoordinator.
+        
         Returns:
             Dict: Health report with status, distribution, and recommendations
         """
-        # Get analysis
-        analysis = self.analyze_fleeting_notes()
-        
-        # Calculate health status
-        if analysis.total_count == 0:
-            health_status = 'HEALTHY'
-            summary = 'No fleeting notes found. Your fleeting notes are well-managed.'
-        else:
-            old_percentage = (analysis.age_distribution['old'] / analysis.total_count * 100) if analysis.total_count > 0 else 0
-            stale_percentage = (analysis.age_distribution['stale'] / analysis.total_count * 100) if analysis.total_count > 0 else 0
-            
-            if old_percentage >= 50:
-                health_status = 'CRITICAL'
-                summary = f'Critical: {old_percentage:.0f}% of fleeting notes are over 90 days old and require immediate attention.'
-            elif old_percentage >= 30 or stale_percentage >= 40:
-                health_status = 'ATTENTION'
-                summary = f'Attention needed: {stale_percentage + old_percentage:.0f}% of fleeting notes are stale or old.'
-            else:
-                health_status = 'HEALTHY'
-                summary = f'Healthy: Most fleeting notes ({analysis.age_distribution["new"] + analysis.age_distribution["recent"]}/{analysis.total_count}) are being actively processed.'
-        
-        # Generate recommendations
-        recommendations = []
-        if analysis.age_distribution['old'] > 0:
-            recommendations.append(f"Process {analysis.age_distribution['old']} old notes (90+ days) for promotion or archival")
-        if analysis.age_distribution['stale'] > 0:
-            recommendations.append(f"Review {analysis.age_distribution['stale']} stale notes (31-90 days) for relevance")
-        if analysis.total_count > 20:
-            recommendations.append("Consider batch processing to reduce fleeting note backlog")
-        if analysis.age_distribution['new'] == 0 and analysis.total_count > 0:
-            recommendations.append("No new notes in the last week - consider if capture process is working")
-        
-        # Get oldest notes for priority processing
-        oldest_notes = analysis.notes_by_age[:5] if len(analysis.notes_by_age) >= 5 else analysis.notes_by_age
-        
-        # Get newest notes to show recent activity  
-        newest_notes = analysis.notes_by_age[-5:] if len(analysis.notes_by_age) >= 5 else analysis.notes_by_age
-        newest_notes.reverse()  # Show newest first
-        
-        return {
-            'summary': summary,
-            'health_status': health_status,
-            'total_count': analysis.total_count,
-            'age_distribution': analysis.age_distribution,
-            'recommendations': recommendations if recommendations else ['Keep up the good work maintaining your fleeting notes!'],
-            'oldest_notes': oldest_notes,
-            'newest_notes': newest_notes,
-            'oldest_note': analysis.oldest_note,
-            'newest_note': analysis.newest_note
-        }
+        return self.fleeting_analysis_coordinator.generate_fleeting_health_report()
     
     def generate_fleeting_triage_report(self, quality_threshold: Optional[float] = None, fast: bool = False) -> Dict:
-        """ADR-002 Phase 12b: Delegate to FleetingNoteCoordinator."""
-        return self.fleeting_note_coordinator.generate_triage_report(
-            quality_threshold=quality_threshold,
-            fast=fast
-        )
-    
-    def _find_fleeting_notes(self) -> List[Path]:
-        """ADR-002 Phase 12b: Delegate to FleetingNoteCoordinator."""
-        return self.fleeting_note_coordinator.find_fleeting_notes()
+        """
+        Generate AI-powered triage report for fleeting notes with quality assessment.
+        
+        ADR-002 Phase 5: Delegates to ReviewTriageCoordinator.
+        
+        Args:
+            quality_threshold: Optional minimum quality threshold (0.0-1.0) for filtering
+            fast: If True, use fast mode to skip external AI calls for speed
+            
+        Returns:
+            Dict: Triage report with quality assessment and recommendations
+        """
+        return self.review_triage_coordinator.generate_fleeting_triage_report(quality_threshold, fast)
     
     def promote_fleeting_note(self, note_path: str, target_type: Optional[str] = None, preview_mode: bool = False) -> Dict:
-        """ADR-002 Phase 12b: Delegate to FleetingNoteCoordinator."""
-        return self.fleeting_note_coordinator.promote_fleeting_note(
-            note_path=note_path,
-            target_type=target_type,
-            preview_mode=preview_mode,
-            base_dir=self.base_dir
-        )
+        """
+        Promote a single fleeting note to permanent or literature status.
+        
+        ADR-002 Phase 4: Delegates to PromotionEngine.
+        
+        Args:
+            note_path: Path to the fleeting note to promote
+            target_type: Target type ('permanent' or 'literature'), auto-detected if None
+            preview_mode: If True, show what would be done without making changes
+            
+        Returns:
+            Dict: Promotion results with details of operations performed
+        """
+        return self.promotion_engine.promote_fleeting_note(note_path, target_type, preview_mode)
     
     def promote_fleeting_notes_batch(self, quality_threshold: float = 0.7, target_type: Optional[str] = None, preview_mode: bool = False) -> Dict:
-        """ADR-002 Phase 12b: Delegate to FleetingNoteCoordinator."""
-        return self.fleeting_note_coordinator.promote_fleeting_notes_batch(
-            quality_threshold=quality_threshold,
-            target_type=target_type,
-            preview_mode=preview_mode,
-            base_dir=self.base_dir
+        """
+        Promote multiple fleeting notes based on quality threshold.
+        
+        ADR-002 Phase 4: Delegates to PromotionEngine.
+        
+        Args:
+            quality_threshold: Minimum quality score for promotion
+            target_type: Target type ('permanent' or 'literature'), auto-detected if None
+            preview_mode: If True, show what would be done without making changes
+            
+        Returns:
+            Dict: Batch promotion results
+        """
+        return self.promotion_engine.promote_fleeting_notes_batch(
+            quality_threshold, target_type, preview_mode
         )
 
     # ============================================================================
     # GREEN PHASE: Safe Image Processing Integration Methods
     # ============================================================================
+    # ADR-002 Phase 7: Delegated to SafeImageProcessingCoordinator
 
     def safe_process_inbox_note(self, note_path: str, preserve_images: bool = True, **kwargs) -> Dict:
-        """REFACTOR: Process inbox note using modular SafeWorkflowProcessor"""
-        note_file = Path(note_path)
-        
-        # Use extracted SafeWorkflowProcessor for modular processing
-        result = self.safe_workflow_processor.process_note_safely(
-            note_file,
-            lambda path: self.process_inbox_note(path, **kwargs),
-            preserve_images
-        )
-        
-        # Convert to legacy format for backward compatibility
-        if result.success and result.workflow_result:
-            legacy_result = result.workflow_result.copy()
-            legacy_result['image_preservation'] = result.image_preservation_details or {}
-            legacy_result['image_preservation']['images_preserved'] = result.images_preserved
-            legacy_result['image_preservation']['backup_session_id'] = result.backup_session_id
-            legacy_result['image_preservation']['processing_time'] = result.processing_time
-            return legacy_result
-        else:
-            return {
-                'success': False,
-                'error': result.error_message,
-                'image_preservation': result.image_preservation_details or {}
-            }
+        """Delegate to SafeImageProcessingCoordinator for safe inbox note processing."""
+        return self.safe_image_processing_coordinator.safe_process_inbox_note(note_path, preserve_images, **kwargs)
 
     def process_inbox_note_atomic(self, note_path: str) -> Dict:
-        """GREEN Phase: Atomic inbox processing with rollback capability"""
-        note_file = Path(note_path)
-        
-        # Extract images for tracking
-        images = self.safe_image_processor.image_extractor.extract_images_from_note(note_file)
-        
-        # Process with atomic operations
-        result = self.safe_image_processor.process_note_with_images(
-            note_file, 
-            operation="atomic_inbox_processing"
-        )
-        
-        if result.success:
-            # Perform actual processing
-            processing_result = self.process_inbox_note(note_path)
-            return {
-                'processing_successful': True,
-                'images_preserved': len(result.preserved_images),
-                'backup_session_id': result.backup_session_id,
-                'processing_time': result.processing_time,
-                'workflow_result': processing_result
-            }
-        else:
-            return {
-                'processing_successful': False,
-                'images_preserved': 0,
-                'backup_session_id': result.backup_session_id,
-                'processing_time': result.processing_time,
-                'error': result.error_message
-            }
+        """Delegate to SafeImageProcessingCoordinator for atomic processing."""
+        return self.safe_image_processing_coordinator.process_inbox_note_atomic(note_path)
 
     def safe_batch_process_inbox(self) -> Dict:
-        """GREEN Phase: Safe batch processing with image preservation"""
-        inbox_files = list(self.inbox_dir.glob("*.md"))
-        
-        # Process all notes with SafeImageProcessor
-        results = self.safe_image_processor.process_notes_batch(
-            inbox_files, 
-            operation="safe_batch_inbox_processing"
-        )
-        
-        total_images_preserved = sum(len(r.preserved_images) for r in results)
-        successful_processing = sum(1 for r in results if r.success)
-        
-        # Run standard batch processing for workflow results
-        standard_results = self.batch_process_inbox()
-        
-        # Enhance with image preservation data
-        standard_results.update({
-            'images_preserved_total': total_images_preserved,
-            'image_integrity_report': {
-                'total_files_with_images': len([r for r in results if r.preserved_images]),
-                'successful_image_preservation': successful_processing,
-                'failed_image_preservation': len(results) - successful_processing
-            }
-        })
-        
-        return standard_results
+        """Delegate to SafeImageProcessingCoordinator for safe batch processing."""
+        return self.safe_image_processing_coordinator.safe_batch_process_inbox()
 
     def process_inbox_note_enhanced(self, note_path: str, enable_monitoring: bool = False, 
                                   collect_performance_metrics: bool = False, **kwargs) -> Dict:
-        """GREEN Phase: Enhanced processing with monitoring and metrics"""
-        result = self.process_inbox_note(note_path, **kwargs)
-        
-        if enable_monitoring:
-            # Add integrity monitoring (GREEN phase: basic implementation)
-            note_file = Path(note_path)
-            # Extract images for monitoring
-            images = self.safe_image_processor.image_extractor.extract_images_from_note(note_file)
-            # Register images for monitoring
-            for image in images:
-                self.image_integrity_monitor.register_image(image, f"monitoring:{note_path}")
-            
-            result['integrity_report'] = {
-                'images_tracked': len(images),
-                'monitoring_enabled': True,
-                'scan_result': {
-                    'found_images': images,
-                    'monitored_images': len(images)
-                }
-            }
-        
-        if collect_performance_metrics:
-            # Add performance metrics
-            metrics = self.safe_image_processor.get_performance_metrics()
-            result['performance_metrics'] = {
-                'backup_time': metrics.get('backup_time', 0),
-                'processing_time': metrics.get('processing_time', 0),
-                'image_operations_time': metrics.get('atomic_operations', {}).get('average_execution_time', 0)
-            }
-        
-        return result
+        """Delegate to SafeImageProcessingCoordinator for enhanced processing."""
+        return self.safe_image_processing_coordinator.process_inbox_note_enhanced(
+            note_path, enable_monitoring, collect_performance_metrics, **kwargs
+        )
 
     def process_inbox_note_safe(self, note_path: str) -> Dict:
-        """GREEN Phase: Safe processing with automatic backup/rollback"""
-        try:
-            # Create backup session
-            session = self.safe_image_processor.create_backup_session("safe_inbox_processing")
-            
-            # Process with monitoring
-            result = self.process_inbox_note_enhanced(note_path, enable_monitoring=True)
-            
-            # Check if processing succeeded
-            if result.get('error'):
-                # Rollback on error
-                return {
-                    'processing_failed': True,
-                    'rollback_successful': True,
-                    'images_restored': len(session.images_to_backup),
-                    'error': result.get('error')
-                }
-            else:
-                return {
-                    'processing_failed': False,
-                    'rollback_successful': False,
-                    'images_restored': 0,
-                    'result': result
-                }
-                
-        except Exception as e:
-            return {
-                'processing_failed': True,
-                'rollback_successful': True,
-                'images_restored': 0,
-                'error': str(e)
-            }
+        """Delegate to SafeImageProcessingCoordinator for safe processing with backup/rollback."""
+        return self.safe_image_processing_coordinator.process_inbox_note_safe(note_path)
 
     def start_safe_processing_session(self, operation_name: str) -> str:
-        """REFACTOR: Start concurrent safe processing session using ConcurrentSessionManager"""
-        session_id = self.concurrent_session_manager.create_processing_session(operation_name)
-        
-        # Legacy compatibility
-        self.active_sessions[session_id] = {
-            'operation_name': operation_name,
-            'created_at': datetime.now(),
-            'notes_processed': []
-        }
-        return session_id
+        """Delegate to SafeImageProcessingCoordinator for session management."""
+        return self.safe_image_processing_coordinator.start_safe_processing_session(operation_name)
 
     def process_note_in_session(self, note_path: str, session_id: str) -> Dict:
-        """REFACTOR: Process note within session using modular session manager"""
-        note_file = Path(note_path)
-        
-        # Use modular session manager for processing
-        result = self.concurrent_session_manager.process_note_in_session(
-            session_id,
-            note_file,
-            lambda path: self.process_inbox_note(str(path))
-        )
-        
-        # Update legacy tracking for compatibility
-        if session_id in self.active_sessions:
-            self.active_sessions[session_id]['notes_processed'].append({
-                'note_path': note_path,
-                'result': result,
-                'processed_at': datetime.now()
-            })
-        
-        return result
+        """Delegate to SafeImageProcessingCoordinator for session-based processing."""
+        return self.safe_image_processing_coordinator.process_note_in_session(note_path, session_id)
 
     def commit_safe_processing_session(self, session_id: str) -> bool:
-        """REFACTOR: Commit safe processing session using modular session manager"""
-        # Finalize using modular session manager
-        session_summary = self.concurrent_session_manager.finalize_session(session_id)
-        
-        # Legacy cleanup
-        if session_id in self.active_sessions:
-            self.active_sessions.pop(session_id)
-        
-        return session_summary.get('success', True)
+        """Delegate to SafeImageProcessingCoordinator for session commit."""
+        return self.safe_image_processing_coordinator.commit_safe_processing_session(session_id)
 
 
 def main():
