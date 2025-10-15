@@ -545,6 +545,12 @@ Examples:
   # Custom quality threshold
   python core_workflow_cli.py /path/to/vault auto-promote --quality-threshold 0.8
   
+  # Repair missing metadata (preview)
+  python core_workflow_cli.py /path/to/vault repair-metadata
+  
+  # Repair missing metadata (actually modify files)
+  python core_workflow_cli.py /path/to/vault repair-metadata --execute
+  
   # Generate comprehensive report
   python core_workflow_cli.py /path/to/vault report --export report.json
         """
@@ -636,6 +642,23 @@ Examples:
         help='Output format (default: normal)'
     )
     
+    # Repair-metadata command
+    repair_parser = subparsers.add_parser(
+        'repair-metadata',
+        help='Repair missing frontmatter metadata in Inbox notes'
+    )
+    repair_parser.add_argument(
+        '--execute',
+        action='store_true',
+        help='Actually modify files (default is dry-run preview only)'
+    )
+    repair_parser.add_argument(
+        '--format',
+        choices=['normal', 'json'],
+        default='normal',
+        help='Output format (default: normal)'
+    )
+    
     return parser
 
 
@@ -675,6 +698,11 @@ def main() -> int:
             return cli.auto_promote(
                 dry_run=args.dry_run,
                 quality_threshold=args.quality_threshold,
+                output_format=args.format
+            )
+        elif args.command == 'repair-metadata':
+            return cli.repair_metadata(
+                execute=args.execute,
                 output_format=args.format
             )
         else:
