@@ -33,6 +33,19 @@ from src.ai.workflow_integration_utils import (
     PerformanceMetricsCollector
 )
 
+# ADR-002 Phase 1-11: All coordinator imports
+from src.ai.note_lifecycle_manager import NoteLifecycleManager
+from src.ai.connection_coordinator import ConnectionCoordinator
+from src.ai.analytics_coordinator import AnalyticsCoordinator
+from src.ai.promotion_engine import PromotionEngine
+from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+from src.ai.note_processing_coordinator import NoteProcessingCoordinator
+from src.ai.safe_image_processing_coordinator import SafeImageProcessingCoordinator
+from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
+from src.ai.fleeting_analysis_coordinator import FleetingAnalysisCoordinator
+from src.ai.workflow_reporting_coordinator import WorkflowReportingCoordinator
+from src.ai.batch_processing_coordinator import BatchProcessingCoordinator
+
 # ADR-002 Phase 12b: Fleeting note management coordinator
 from src.ai.fleeting_note_coordinator import FleetingNoteCoordinator
 
@@ -99,6 +112,80 @@ class ConfigurationCoordinator:
         # Store reference to workflow_manager for future coordinator initialization
         self._workflow_manager = workflow_manager
         
+        # ADR-002 Phase 1: Lifecycle manager extraction
+        self.lifecycle_manager = NoteLifecycleManager()
+        
+        # ADR-002 Phase 2: Connection coordinator extraction
+        self.connection_coordinator = ConnectionCoordinator(
+            str(self.base_dir),
+            min_similarity=0.7,
+            max_suggestions=5
+        )
+        
+        # ADR-002 Phase 3: Analytics coordinator extraction
+        self.analytics_coordinator = AnalyticsCoordinator(self.base_dir)
+        
+        # ADR-002 Phase 4: Promotion engine extraction
+        self.promotion_engine = PromotionEngine(
+            self.base_dir,
+            self.lifecycle_manager,
+            config=None  # Use default config for now
+        )
+        
+        # ADR-002 Phase 5: Review/Triage coordinator extraction
+        # Note: process_callback will be set by WorkflowManager after initialization
+        self.review_triage_coordinator = ReviewTriageCoordinator(
+            self.base_dir,
+            workflow_manager=None  # Will be set by WorkflowManager
+        )
+        
+        # ADR-002 Phase 6: Note processing coordinator extraction
+        self.note_processing_coordinator = NoteProcessingCoordinator(
+            tagger=self.tagger,
+            summarizer=self.summarizer,
+            enhancer=self.enhancer,
+            connection_coordinator=self.connection_coordinator,
+            config=None  # Will use default config
+        )
+        
+        # ADR-002 Phase 7: Safe image processing coordinator extraction
+        self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
+            safe_workflow_processor=self.safe_workflow_processor,
+            atomic_workflow_engine=self.atomic_workflow_engine,
+            integrity_monitoring_manager=self.integrity_monitoring_manager,
+            concurrent_session_manager=self.concurrent_session_manager,
+            performance_metrics_collector=self.performance_metrics_collector,
+            safe_image_processor=self.safe_image_processor,
+            image_integrity_monitor=self.image_integrity_monitor,
+            inbox_dir=self.inbox_dir,
+            process_note_callback=None,  # Will be set by WorkflowManager
+            batch_process_callback=None  # Will be set by WorkflowManager
+        )
+        
+        # ADR-002 Phase 8: Orphan remediation coordinator extraction
+        self.orphan_remediation_coordinator = OrphanRemediationCoordinator(
+            base_dir=str(self.base_dir),
+            analytics_coordinator=self.analytics_coordinator
+        )
+        
+        # ADR-002 Phase 9: Fleeting analysis coordinator extraction
+        self.fleeting_analysis_coordinator = FleetingAnalysisCoordinator(
+            fleeting_dir=self.fleeting_dir
+        )
+        
+        # ADR-002 Phase 10: Workflow reporting coordinator extraction
+        self.reporting_coordinator = WorkflowReportingCoordinator(
+            base_dir=self.base_dir,
+            analytics=self.analytics
+        )
+        
+        # ADR-002 Phase 11: Batch processing coordinator extraction
+        # Note: process_callback will be set by WorkflowManager after initialization
+        self.batch_processing_coordinator = BatchProcessingCoordinator(
+            inbox_dir=self.inbox_dir,
+            process_callback=None  # Will be set by WorkflowManager
+        )
+        
         # ADR-002 Phase 12b: Initialize FleetingNoteCoordinator
         # Note: process_callback will be set by WorkflowManager after initialization
         self.fleeting_note_coordinator = FleetingNoteCoordinator(
@@ -109,20 +196,6 @@ class ConfigurationCoordinator:
             process_callback=None,  # Will be set by WorkflowManager
             default_quality_threshold=0.7
         )
-        
-        # Placeholder for coordinators that will be created by WorkflowManager
-        # These will be set after WorkflowManager creates them
-        self.lifecycle_manager = None
-        self.connection_coordinator = None
-        self.analytics_coordinator = None
-        self.promotion_engine = None
-        self.review_triage_coordinator = None
-        self.note_processing_coordinator = None
-        self.safe_image_processing_coordinator = None
-        self.orphan_remediation_coordinator = None
-        self.fleeting_analysis_coordinator = None
-        self.reporting_coordinator = None
-        self.batch_processing_coordinator = None
         
         # Session management for concurrent processing (legacy compatibility)
         self.active_sessions = {}

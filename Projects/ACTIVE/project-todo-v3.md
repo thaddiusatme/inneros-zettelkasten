@@ -1,18 +1,18 @@
 ---
 type: project-manifest
 created: 2025-10-12 17:59
-updated: 2025-10-12 21:21
+updated: 2025-10-13 08:25
 status: active
 priority: P0
-tags: [testing, infrastructure, performance, tdd, integration-tests, smoke-tests]
+tags: [note-lifecycle, status-management, workflow-automation, directory-integration, tdd]
 ---
 
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-12 21:21 PDT  
-**Status**: ✅ **TESTING INFRASTRUCTURE COMPLETE** - 300x improvement achieved  
+**Last Updated**: 2025-10-14 17:25 PDT  
+**Status**: 🚧 **SPRINT IN PROGRESS** - PBI-001 COMPLETE, PBI-002-004 pending  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
-**Latest**: Testing Infrastructure Week 1-2 complete (300x integration test improvement)
+**Latest**: PBI-001 Status Update Bug Fix ✅ - NoteLifecycleManager extracted (ADR-002)
 
 ---
 
@@ -70,18 +70,31 @@ tags: [testing, infrastructure, performance, tdd, integration-tests, smoke-tests
 
 ### Current Architectural Concerns
 
-✅ **ALL CLEAR** - No classes exceeding architectural thresholds!
+⚠️ **1 ACTIVE VIOLATION** - WorkflowManager exceeds architectural thresholds
+
+**Current State:**
+- ❌ **WorkflowManager**: 2,420 LOC (484% over 500 LOC limit), 59 methods (295% over 20 method limit)
+  - Status: Active god class requiring decomposition
+  - Pattern established: NoteLifecycleManager extraction (ADR-002, Oct 14, 2025)
+  - Plan: P1 project scheduled post-sprint (Nov 2025)
+  - Target: Extract ConnectionManager, AnalyticsCoordinator, PromotionEngine
 
 **Recent Victory:**
-- ✅ **WorkflowManager**: Refactored from 2,374 LOC god class → 4 focused managers (Oct 5, 2025)
-  - CoreWorkflowManager, AnalyticsManager, AIEnhancementManager, ConnectionManager
-  - Adapter pattern enables zero-risk migration (1-line import change)
-  - 52 tests passing, zero regressions
-  - **ADR**: `Projects/ACTIVE/adr-001-workflow-manager-refactoring.md` ✅
+- ✅ **NoteLifecycleManager**: Extracted from WorkflowManager (ADR-002, Oct 14, 2025)
+  - Single responsibility: Status lifecycle management
+  - 222 LOC, 4 methods (well under limits)
+  - 16/16 tests passing, zero regressions
+  - Proves extraction pattern works
 
 ### Refactoring Queue
 
-**Empty** - All P1 architectural issues resolved! 🎉
+**P1 - WorkflowManager Decomposition** (Planned - Post Sprint):
+- ConnectionManager extraction (~300 LOC)
+- AnalyticsCoordinator extraction (~400 LOC)
+- PromotionEngine extraction (~200 LOC)
+- WorkflowManagerAdapter for migration
+- Timeline: 3-4 sprints (12-16 hours)
+- Target: End of November 2025
 
 ### Architectural Guardrails Status
 
@@ -95,13 +108,27 @@ tags: [testing, infrastructure, performance, tdd, integration-tests, smoke-tests
 
 ### Success Metrics
 
-- **Current Classes >500 LOC**: **0** ✅ (Target achieved Oct 5, 2025!)
-- **Current Classes >20 methods**: **0** ✅ (Target achieved Oct 5, 2025!)
+- **Current Classes >500 LOC**: **1** ⚠️ (WorkflowManager: 2,420 LOC)
+  - NoteLifecycleManager extracted Oct 14, 2025 (pattern proven)
+  - Decomposition plan: Nov 2025 (3 more extractions)
+- **Current Classes >20 methods**: **1** ⚠️ (WorkflowManager: 59 methods)
 - **CLI Monoliths >2000 LOC**: **0** ✅ (workflow_demo.py extracted Oct 11, 2025!)
 - **Dedicated CLIs**: **10** (avg 400 LOC each)
-- **Original Target**: Zero classes exceeding limits by Nov 2, 2025
-- **Actual Achievement**: **27 days ahead of schedule!** 🏆
-- **ADRs Created**: 2 (ADR-001: WorkflowManager ✅ COMPLETE, ADR-004: CLI extraction ✅ COMPLETE)
+- **Target**: Zero classes exceeding limits by Nov 30, 2025
+- **Progress**: 1 extraction complete (NoteLifecycleManager), 3 planned
+- **ADRs Created**: 2 (ADR-002: NoteLifecycleManager ✅ COMPLETE Oct 14, 2025, ADR-003: WorkflowManager Decomposition 📋 PLANNED)
+
+---
+
+## CI/CD & DevOps Plan (Oct 13, 2025)
+
+- **P0 PR CI (today)**: Add `.github/workflows/ci.yml` running ruff, black, isort, pyright, and fast `pytest` with coverage on `ubuntu-latest` and `macos-latest` (Python 3.11). Configure tests to use fast-mode/dry-run to avoid network/AI calls.
+- **P0 Security Automation**: Add `.github/workflows/codeql.yml` (CodeQL), `.github/dependabot.yml` (weekly pip updates), and add `pip-audit` to CI to fail on high-severity vulnerabilities.
+- **P1 Nightly Jobs**: Add `.github/workflows/nightly.yml` to run heavy/integration tests, a link-integrity scan for `[[wiki-links]]`, and a performance smoke test with regression thresholds.
+- **P1 Developer Hygiene**: Add `.pre-commit-config.yaml` (ruff, black, isort, pyupgrade, yamllint, markdownlint, EOF/trailing whitespace) and enable branch protection rules requiring CI checks to pass before merge.
+- **P2 Release Automation (optional)**: Tag-driven release workflow to build artifacts and generate GitHub Releases with notes.
+
+These guardrails will catch lifecycle regressions (like `status: inbox` not transitioning), protect link integrity during promotions, and maintain performance as the codebase evolves.
 
 ---
 
@@ -151,6 +178,374 @@ tags: [testing, infrastructure, performance, tdd, integration-tests, smoke-tests
 ## 🎯 Active Projects (ARCHITECTURAL PIVOT)
 
 *Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
+
+### 🔴 P0 CRITICAL: Note Lifecycle Status Management (Oct 14, 2025)
+
+**Status**: 🚧 **PBI-001 COMPLETE** - Status update bug fixed, auto-promotion pending  
+**Priority**: P0 - **ENABLES COMPLETE WORKFLOW AUTOMATION**  
+**Timeline**: 6-8 hours total (2h complete, 4-6h remaining)  
+**Branch**: `fix/note-lifecycle-status-management` ✅ CREATED  
+**User Decision**: "I really want auto-promotion, to enable flow" - Oct 14, 2025
+
+#### ✅ PBI-001: Status Update Bug Fix (COMPLETE - 2h)
+- **Architecture**: Extracted NoteLifecycleManager (ADR-002) ✅
+- **Tests**: 16/16 passing (10 lifecycle + 6 integration) ✅
+- **Bug Fixed**: Notes now transition inbox → promoted with processed_date ✅
+- **Error Handling**: Status only updates if AI processing succeeds ✅
+- **Lessons**: `Projects/COMPLETED-2025-10/pbi-001-note-lifecycle-status-management-lessons-learned.md` ✅
+
+#### The Critical Bug
+
+**Issue Identified**: Notes are being AI-processed but status field never updates
+- ✅ AI adds metadata (tags, quality scores, connections)
+- ❌ Status remains `status: inbox` (should be `status: promoted`)
+- ❌ Notes accumulate in Inbox/ indefinitely
+- ❌ Weekly review shows same notes repeatedly
+- ❌ No clear progression through workflow
+
+**Impact**: **77 notes in Inbox/** with this issue right now
+- All have `ai_processed: true` and quality scores
+- All still show `status: inbox`
+- Can't be distinguished from unprocessed notes
+- Breaks entire workflow automation chain
+
+#### Root Cause Analysis
+
+**File**: `development/src/ai/workflow_manager.py::process_inbox_note()`  
+**Location**: After line ~400 (after all AI processing)  
+**Missing Code**: 3 lines to update status field
+
+```python
+# CURRENT: AI processing completes but status never updated
+if not results.get("error"):
+    updated_content = build_frontmatter(frontmatter, body)
+    safe_write(note_path, updated_content)
+    results["file_updated"] = True
+    # ❌ MISSING: frontmatter["status"] = "promoted"
+
+# SHOULD BE:
+if not results.get("error"):
+    frontmatter["status"] = "promoted"  # ✅ ADD THIS
+    frontmatter["processed_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    updated_content = build_frontmatter(frontmatter, body)
+    safe_write(note_path, updated_content)
+    results["file_updated"] = True
+    results["status_updated"] = "promoted"  # ✅ ADD THIS
+```
+
+#### Complete Implementation Plan - FULL SCOPE ✅
+
+**Sequencing**: Fix code first → Enable auto-promotion → Clean up files
+
+**PBI-001 (P0) - Critical Bug Fix** (60 minutes):
+- [ ] Add status update in `process_inbox_note()` (3 lines)
+- [ ] Add `processed_date` timestamp
+- [ ] Write unit tests for status transition (offline-safe, <2s)
+- [ ] Add error handling (status only updates on success)
+- [ ] Verify idempotence (re-running doesn't duplicate timestamps)
+- [ ] Integration test with real vault
+
+**PBI-002 (P1) - Complete Directory Integration** (90 minutes):
+- [ ] Add `self.literature_dir` to `__init__()`
+- [ ] Update `promote_note()` to accept `target_type` parameter
+- [ ] Handle all 3 types consistently (permanent/literature/fleeting)
+- [ ] All promotions set `status: published` + `promoted_date`
+- [ ] DirectoryOrganizer integration for backup/rollback
+- [ ] Unit tests for each promotion path
+
+**PBI-004 (P2) - Auto-Promotion System** ⭐ (2-3 hours):
+- [ ] Implement `auto_promote_ready_notes(min_quality=0.7, preview=False)`
+- [ ] Select notes with `status: promoted` + quality >= threshold
+- [ ] Preview mode shows candidates with reasons
+- [ ] Execute mode moves files + sets `status: published`
+- [ ] CLI integration: `--auto-promote --quality 0.7 --preview`
+- [ ] Offline-safe (uses existing metadata, no AI calls)
+- [ ] Unit tests for filtering logic
+- [ ] Integration test for end-to-end flow
+
+**PBI-003 (P1) - Execute Safe File Moves** (30 minutes):
+- [ ] Preview command shows detailed move plan (30 files, 0 conflicts)
+- [ ] Create backup at `~/backups/knowledge/knowledge-YYYYMMDD-HHMMSS/`
+- [ ] Execute moves to correct directories based on `type:` field
+- [ ] Post-move validation (file system + link integrity)
+- [ ] Document backup path and results
+
+**PBI-005 (P3) - Repair Orphaned Notes** (60 minutes):
+- [ ] Create `repair_orphaned_status.py` script
+- [ ] Identify 77 orphaned notes (ai_processed: true, status: inbox)
+- [ ] Update status to `promoted` + add `processed_date`
+- [ ] Dry-run mode shows changes before applying
+- [ ] Validation confirms all repairs successful
+
+#### Complete Lifecycle Documentation
+
+**Files Created**:
+- ✅ `note-lifecycle-status-management.md` - Complete lifecycle documentation
+- ✅ `workflow-diagrams/10-note-lifecycle-complete.md` - Visual flowcharts
+- ✅ `workflow-enhancement-directory-integration.md` - Implementation plan
+
+**Flowcharts Created** (4 visualizations):
+1. **Main Lifecycle Flowchart** - All pathways from creation → final state
+2. **Status State Diagram** - Clean state transitions (inbox → promoted → published)
+3. **Type-Based Pathways** - Fleeting/Literature/Permanent paths side-by-side
+4. **Bug Impact Visualization** - Current (broken) vs Fixed (working) behavior
+
+#### Directory Integration Analysis
+
+**Already Working** ✅:
+- `promote_note()` - Moves notes between directories
+- `promote_fleeting_note()` - Uses DirectoryOrganizer with backup
+- Directory paths defined (Inbox, Fleeting Notes, Permanent Notes, Archive)
+- CLI commands available (`--promote-note`)
+
+**Missing** ❌:
+- Status update after AI processing (CRITICAL)
+- Literature directory initialization
+- Auto-promotion based on quality
+
+#### Success Metrics
+
+**Before Sprint**:
+- Notes with `status: inbox`: 77 (stuck)
+- Notes with `status: promoted`: <5
+- Notes in correct directories: ~80%
+- Weekly review effectiveness: Low (shows same notes)
+- **Manual intervention required**: Every promotion
+
+**After Sprint (Target)**:
+- Notes with `status: inbox`: ~10 (new captures only)
+- Notes with `status: promoted`: 10-20 (processed, awaiting promotion)
+- Notes with `status: published`: 60-70 (in correct directories)
+- Notes in correct directories: 100%
+- Weekly review effectiveness: High (accurate triage)
+- **Auto-promotion enabled**: High-quality notes (≥0.7) automatically moved ⭐
+
+**Flow Achievement**:
+- Inbox processing → AI enhancement → Status update → **Auto-promotion** ← NEW!
+- True workflow flow with minimal manual intervention
+- Quality-gated automation (threshold: 0.7)
+
+#### Deliverables
+
+- [ ] Status update fix in workflow_manager.py
+- [ ] Literature directory initialization
+- [ ] Enhanced promote_note() for all types
+- [ ] auto_promote_ready_notes() method
+- [ ] CLI integration (--auto-promote)
+- [ ] Repair script for orphaned notes
+- [ ] Unit tests for all transitions
+- [ ] Integration tests for complete flow
+- [ ] Updated workflow diagrams
+- [ ] Migration guide for users
+
+#### Why FULL Scope (Including Auto-Promotion)
+
+1. **User Priority**: "I really want auto-promotion, to enable flow" - Oct 14, 2025
+2. **Blocks Workflow Automation**: Notes can't progress through system
+3. **Manual Bottleneck**: Every promotion requires human intervention
+4. **Accumulating Backlog**: 77 notes stuck in inbox right now
+5. **Complete Flow Broken**: Weekly review, triage, promotion all impacted
+6. **Foundation Ready**: DirectoryOrganizer (P0+P1), quality scoring, promotion methods all complete
+
+**Value Proposition**: Auto-promotion transforms InnerOS from semi-automated tool → true flow system
+
+**ROI**: 6-8 hours enables complete hands-off knowledge processing pipeline
+
+---
+
+### 🔵 P2: Source Code Reorganization (Planned)
+
+**Status**: 📋 **PLANNED** - Medium/Low Priority, Gradual Implementation  
+**Priority**: P2 - **DEVELOPER EXPERIENCE & MAINTAINABILITY**  
+**Timeline**: 4-6 weeks (gradual, ~20 hours total)  
+**Risk**: LOW - Python imports easily refactorable, strong test coverage  
+**Manifest**: `Projects/ACTIVE/source-code-reorganization-manifest.md` ✅
+
+#### Problem Statement
+
+**Current Pain Points:**
+- `src/ai/` - **56 Python files** (impossible to navigate)
+- `src/cli/` - **44 Python files** (cognitive overload)
+- 20+ minutes to find related code
+- 15+ scattered `_utils.py` files
+- Difficult onboarding for contributors
+
+**Goal**: Domain-driven organization with <2 minute code discovery (90% improvement)
+
+#### 80/20 High-Impact Changes
+
+**#1: Split `ai/` into 7 domains** (40% of value)
+- `core/`, `connections/`, `tags/`, `enhancement/`, `analytics/`, `media/`, `imports/`
+- 56 files → 7 packages with 2-12 files each
+
+**#2: Split `cli/` into 7 features** (30% of value)
+- `core/`, `screenshots/`, `connections/`, `tags/`, `workflows/`, `monitoring/`, `media/`
+- 44 files → 7 packages with 2-8 files each
+
+**#3: Consolidate utilities** (20% of value)
+- Group `_utils.py` files with their primary modules
+- Create `utils/` subdirectories where appropriate
+
+**#4: Create `models/` package** (10% of value)
+- Extract shared data structures (Note, Connection, Tag, Schema models)
+- Single source of truth for data models
+
+#### Implementation Plan
+
+**Week 1 (Proof of Concept)**:
+- Extract `ai/connections/` (12 files, 2 hours)
+- Extract `ai/tags/` (10 files, 2 hours)
+- Validate tests pass, document lessons
+- Go/No-Go decision point
+
+**Week 2 (AI Package Completion)**:
+- Extract remaining 5 domains from `ai/`
+- Update imports, test validation
+
+**Week 3-4 (CLI Package)**:
+- Reorganize 44 CLI files into 7 feature packages
+- Test all CLI commands
+
+**Week 5-6 (Polish)**:
+- Consolidate utilities
+- Create models package
+- Documentation updates
+
+#### Success Metrics
+
+**Before**: 56 files in `ai/`, 44 in `cli/`, 20+ min code discovery  
+**After**: <12 files per directory, <2 min code discovery (90% improvement)
+
+#### Why P2 Priority
+
+**Timing Considerations:**
+- Not urgent, but high long-term value
+- Best done during maintenance periods
+- Can be paused/resumed anytime
+- Low risk with strong test coverage
+- Enables future contributor onboarding
+
+**Recommended Start**: After Note Lifecycle sprint complete, during lower-intensity period
+
+---
+
+### 🟡 P1: WorkflowManager Deprecation & Decomposition (Post-Sprint)
+
+**Status**: 📋 **PLANNED** - Extract after Note Lifecycle sprint complete  
+**Priority**: P1 - **ARCHITECTURAL DEBT REDUCTION**  
+**Timeline**: 3-4 sprints (12-16 hours total)  
+**Trigger**: Current sprint completion (PBI-001 through PBI-005)  
+**Goal**: Deprecate monolithic WorkflowManager while maintaining 100% functionality
+
+#### Current State (Architectural Violation)
+
+**WorkflowManager god class metrics:**
+```
+LOC: 2,420 (limit: 500) - 384% over limit
+Methods: 59 (limit: 20) - 295% over limit
+Responsibilities: 8+ (should be 1)
+```
+
+**Violations:**
+- ❌ Exceeds 500 LOC hard limit by 1,920 lines
+- ❌ Exceeds 20 methods hard limit by 39 methods
+- ❌ Multiple unrelated responsibilities
+- ❌ High coupling (imported by 10+ files)
+- ❌ Difficult to test (extensive mocking required)
+
+#### Decomposition Strategy (ADR-003 Required)
+
+**Phase 1: Extract Managers (~8 hours over 2 sprints)**
+
+1. **ConnectionManager** (~300 LOC extraction)
+   - Responsibility: Connection discovery and link suggestions
+   - Extract from: Lines 329-356 + related methods
+   - Benefits: Reusable by smart link system
+   - Tests: 15+ unit tests
+   - Pattern: Follow NoteLifecycleManager (ADR-002)
+
+2. **AnalyticsCoordinator** (~400 LOC extraction)
+   - Responsibility: Analytics and metrics aggregation
+   - Extract from: Analytics methods + weekly review logic
+   - Benefits: Reusable by reporting systems
+   - Tests: 20+ unit tests
+
+3. **PromotionEngine** (~200 LOC extraction)
+   - Responsibility: Quality-gated note promotion
+   - Extract from: Promotion methods + auto-promote logic
+   - Benefits: Clear separation of promotion concerns
+   - Tests: 12+ unit tests
+   - Depends on: NoteLifecycleManager integration
+
+**Phase 2: Create Facade/Adapter (~4 hours)**
+
+4. **WorkflowManagerAdapter** (Deprecation wrapper)
+   - Purpose: Maintain backward compatibility during migration
+   - Pattern: Facade that delegates to new managers
+   - Migration path: Change imports gradually
+   - Timeline: 1-2 releases to fully deprecate
+
+**Phase 3: Migration & Deprecation (~4 hours)**
+
+5. **Update Imports** across codebase
+   - CLI files: Use specific managers directly
+   - Tests: Update to test managers, not god class
+   - Documentation: Migration guide for any external users
+
+6. **Deprecate WorkflowManager**
+   - Add `@deprecated` decorator
+   - Emit warnings when used
+   - Document migration path
+   - Remove in Phase 6 (multi-user foundation)
+
+#### Success Metrics
+
+**Architectural Compliance:**
+- [ ] Zero classes >500 LOC
+- [ ] Zero classes >20 methods
+- [ ] All managers follow single responsibility principle
+- [ ] Test coverage maintained >95%
+
+**Functionality Preservation:**
+- [ ] 100% backward compatibility during migration
+- [ ] Zero regressions in existing tests
+- [ ] All CLI commands work identically
+- [ ] Performance maintained or improved
+
+**Migration Completion:**
+- [ ] All internal imports updated
+- [ ] Deprecation warnings active
+- [ ] Migration guide published
+- [ ] WorkflowManagerAdapter tested
+
+#### Timeline & Dependencies
+
+**Prerequisites:**
+- ✅ Note Lifecycle sprint complete (PBI-001 through PBI-005)
+- ✅ NoteLifecycleManager pattern proven (ADR-002)
+- ✅ TDD methodology established
+
+**Sprint Breakdown:**
+- **Sprint 1** (Week 1): Extract ConnectionManager + AnalyticsCoordinator
+- **Sprint 2** (Week 2): Extract PromotionEngine + Create Adapter
+- **Sprint 3** (Week 3): Migration + Deprecation + Testing
+- **Sprint 4** (Week 4): Buffer + Documentation + Lessons Learned
+
+**Completion Target:** End of November 2025
+
+#### References & Documentation
+
+**Pattern Established:**
+- ADR-002: NoteLifecycleManager extraction (completed Oct 14, 2025)
+- Lessons: `Projects/COMPLETED-2025-10/pbi-001-note-lifecycle-status-management-lessons-learned.md`
+- Constraints: `.windsurf/rules/architectural-constraints.md`
+
+**To Be Created:**
+- ADR-003: WorkflowManager Decomposition Strategy
+- ADR-004: Migration & Deprecation Path
+- Lessons: Complete after each extraction
+
+---
 
 ### ✅ Testing Infrastructure Revamp - Week 1-2 (Oct 12-16, 2025)
 
@@ -769,12 +1164,27 @@ tags: [testing, infrastructure, performance, tdd, integration-tests, smoke-tests
   - Lessons: `Projects/COMPLETED-2025-10/quality-audit-bug-remediation-lessons-learned-2025-10-12.md`
 
 ### Immediate Actions
-1. **Circuit Breaker & Rate Limit Protection** (4-5 days)
+
+1. **Note Lifecycle Status Management - FULL SPRINT** (P0 - ACTIVE) 🚀
+   - **Sprint Scope**: FULL (PBI-001 through PBI-005 including auto-promotion)
+   - **Timeline**: 6-8 hours total
+   - **Deliverables**:
+     - PBI-001: Status update bug fix (60 min)
+     - PBI-002: Directory integration (90 min)
+     - PBI-004: Auto-promotion system ⭐ (2-3 hours)
+     - PBI-003: Safe file moves (30 min)
+     - PBI-005: Repair orphaned notes (60 min)
+   - **Planning**: `Projects/ACTIVE/PBI-PLANNING-SESSION-2025-10-14.md` ✅
+   - **Manifest**: `Projects/ACTIVE/note-lifecycle-status-management.md` ✅
+   - **Flowcharts**: `Projects/ACTIVE/workflow-diagrams/10-note-lifecycle-complete.md` ✅
+   - **Implementation**: `Projects/ACTIVE/workflow-enhancement-directory-integration.md` ✅
+
+2. **Circuit Breaker & Rate Limit Protection** (4-5 days)
    - Prevents catastrophic incidents (like YouTube IP ban)
    - Multi-layer protection: circuit breakers, budget enforcer, anomaly detection
    - Manifest: `Projects/ACTIVE/circuit-breaker-rate-limit-protection-manifest.md`
 
-2. **Streaming Validation** (Ongoing)
+3. **Streaming Validation** (Ongoing)
    - Demonstrate InnerOS during live coding streams
    - Organic discovery strategy (see `Projects/ACTIVE/streaming-validation-manifest.md`)
    - Build audience organically through authentic use

@@ -59,6 +59,7 @@ class WorkflowManager:
         self.base_dir = self._config_coordinator.base_dir
         self.inbox_dir = self._config_coordinator.inbox_dir
         self.fleeting_dir = self._config_coordinator.fleeting_dir
+        self.literature_dir = self._config_coordinator.literature_dir
         self.permanent_dir = self._config_coordinator.permanent_dir
         self.archive_dir = self._config_coordinator.archive_dir
         
@@ -77,6 +78,25 @@ class WorkflowManager:
         self.integrity_monitoring_manager = self._config_coordinator.integrity_monitoring_manager
         self.concurrent_session_manager = self._config_coordinator.concurrent_session_manager
         self.performance_metrics_collector = self._config_coordinator.performance_metrics_collector
+        
+        # ADR-002 Phase 1-11: Expose all coordinators
+        self.lifecycle_manager = self._config_coordinator.lifecycle_manager
+        self.connection_coordinator = self._config_coordinator.connection_coordinator
+        self.analytics_coordinator = self._config_coordinator.analytics_coordinator
+        self.promotion_engine = self._config_coordinator.promotion_engine
+        self.review_triage_coordinator = self._config_coordinator.review_triage_coordinator
+        self.note_processing_coordinator = self._config_coordinator.note_processing_coordinator
+        self.safe_image_processing_coordinator = self._config_coordinator.safe_image_processing_coordinator
+        self.orphan_remediation_coordinator = self._config_coordinator.orphan_remediation_coordinator
+        self.fleeting_analysis_coordinator = self._config_coordinator.fleeting_analysis_coordinator
+        self.reporting_coordinator = self._config_coordinator.reporting_coordinator
+        self.batch_processing_coordinator = self._config_coordinator.batch_processing_coordinator
+        
+        # Set callbacks for coordinators that need them
+        self.review_triage_coordinator.workflow_manager = self
+        self.safe_image_processing_coordinator.process_note_callback = self.process_inbox_note
+        self.safe_image_processing_coordinator.batch_process_callback = self.batch_process_inbox
+        self.batch_processing_coordinator.process_callback = self.process_inbox_note
         
         # ADR-002 Phase 12b: Expose FleetingNoteCoordinator and set process_callback
         self.fleeting_note_coordinator = self._config_coordinator.fleeting_note_coordinator
