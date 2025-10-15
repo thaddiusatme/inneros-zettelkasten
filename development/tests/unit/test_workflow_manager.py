@@ -597,7 +597,7 @@ Content 3""")
         for filename, content in notes_data:
             self.create_test_note("Permanent Notes", filename, content)
         
-        usage_stats = self.workflow._analyze_ai_usage()
+        usage_stats = self.workflow.reporting_coordinator._analyze_ai_usage()
         
         assert usage_stats["total_analyzed"] == 3
         assert usage_stats["notes_with_ai_summaries"] == 1
@@ -619,7 +619,7 @@ Content 3""")
             "notes_with_ai_processing": 15
         }
         
-        recommendations = self.workflow._generate_workflow_recommendations(
+        recommendations = self.workflow.reporting_coordinator._generate_workflow_recommendations(
             directory_counts, ai_usage
         )
         

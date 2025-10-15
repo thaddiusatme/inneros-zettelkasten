@@ -25,6 +25,7 @@ from .note_processing_coordinator import NoteProcessingCoordinator
 from .safe_image_processing_coordinator import SafeImageProcessingCoordinator
 from .orphan_remediation_coordinator import OrphanRemediationCoordinator
 from .fleeting_analysis_coordinator import FleetingAnalysisCoordinator, FleetingAnalysis
+from .workflow_reporting_coordinator import WorkflowReportingCoordinator
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -151,6 +152,12 @@ class WorkflowManager:
         # ADR-002 Phase 9: Fleeting analysis coordinator extraction
         self.fleeting_analysis_coordinator = FleetingAnalysisCoordinator(
             fleeting_dir=self.fleeting_dir
+        )
+        
+        # ADR-002 Phase 10: Workflow reporting coordinator extraction
+        self.reporting_coordinator = WorkflowReportingCoordinator(
+            base_dir=self.base_dir,
+            analytics=self.analytics
         )
         
         # Session management for concurrent processing (legacy compatibility)
@@ -456,124 +463,15 @@ class WorkflowManager:
         return results
     
     def generate_workflow_report(self) -> Dict:
-        """Generate a comprehensive workflow status report."""
-        # Get analytics for the entire collection
-        analytics_report = self.analytics.generate_report()
+        """
+        Generate a comprehensive workflow status report.
         
-        # Count notes by directory
-        directory_counts = {}
-        for dir_name, dir_path in [
-            ("Inbox", self.inbox_dir),
-            ("Fleeting Notes", self.fleeting_dir),
-            ("Permanent Notes", self.permanent_dir),
-            ("Archive", self.archive_dir)
-        ]:
-            if dir_path.exists():
-                directory_counts[dir_name] = len(list(dir_path.glob("*.md")))
-            else:
-                directory_counts[dir_name] = 0
+        ADR-002 Phase 10: Delegates to WorkflowReportingCoordinator.
         
-        # Workflow health metrics
-        inbox_count = directory_counts["Inbox"]
-        fleeting_count = directory_counts["Fleeting Notes"]
-        permanent_count = directory_counts["Permanent Notes"]
-        
-        workflow_health = "healthy"
-        if inbox_count > 20:
-            workflow_health = "needs_attention"
-        elif inbox_count > 50:
-            workflow_health = "critical"
-        
-        # AI feature usage
-        ai_usage = self._analyze_ai_usage()
-        
-        return {
-            "workflow_status": {
-                "health": workflow_health,
-                "directory_counts": directory_counts,
-                "total_notes": sum(directory_counts.values())
-            },
-            "ai_features": ai_usage,
-            "analytics": analytics_report,
-            "recommendations": self._generate_workflow_recommendations(
-                directory_counts, ai_usage
-            )
-        }
-    
-    def _analyze_ai_usage(self) -> Dict:
-        """Analyze usage of AI features across the collection."""
-        usage_stats = {
-            "notes_with_ai_tags": 0,
-            "notes_with_ai_summaries": 0,
-            "notes_with_ai_processing": 0,
-            "total_analyzed": 0
-        }
-        
-        # Scan all notes for AI features
-        for md_file in self.base_dir.rglob("*.md"):
-            try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                frontmatter, _ = parse_frontmatter(content)
-                usage_stats["total_analyzed"] += 1
-                
-                if "ai_summary" in frontmatter:
-                    usage_stats["notes_with_ai_summaries"] += 1
-                
-                if "ai_processed" in frontmatter:
-                    usage_stats["notes_with_ai_processing"] += 1
-                
-                # Check if tags were likely AI-generated (heuristic)
-                tags = frontmatter.get("tags", [])
-                if isinstance(tags, list) and len(tags) >= 3:
-                    # Look for AI-style kebab-case tags
-                    ai_style_tags = [t for t in tags if '-' in t and len(t) > 5]
-                    if len(ai_style_tags) >= 2:
-                        usage_stats["notes_with_ai_tags"] += 1
-                
-            except Exception:
-                continue
-        
-        return usage_stats
-    
-    def _generate_workflow_recommendations(self, directory_counts: Dict, 
-                                         ai_usage: Dict) -> List[str]:
-        """Generate workflow improvement recommendations."""
-        recommendations = []
-        
-        # Inbox management
-        inbox_count = directory_counts.get("Inbox", 0)
-        if inbox_count > 20:
-            recommendations.append(
-                f"Process {inbox_count} notes in inbox - consider batch processing"
-            )
-        
-        # AI feature adoption
-        total_notes = ai_usage.get("total_analyzed", 0)
-        if total_notes > 0:
-            ai_summary_rate = ai_usage["notes_with_ai_summaries"] / total_notes
-            if ai_summary_rate < 0.3:
-                recommendations.append(
-                    "Consider enabling auto-summarization for long notes"
-                )
-            
-            ai_processing_rate = ai_usage["notes_with_ai_processing"] / total_notes
-            if ai_processing_rate < 0.5:
-                recommendations.append(
-                    "Enable AI processing for inbox notes to improve workflow efficiency"
-                )
-        
-        # Balance between note types
-        permanent_count = directory_counts.get("Permanent Notes", 0)
-        fleeting_count = directory_counts.get("Fleeting Notes", 0)
-        
-        if fleeting_count > permanent_count * 2:
-            recommendations.append(
-                "Consider promoting more fleeting notes to permanent status"
-            )
-        
-        return recommendations
+        Returns:
+            Dict with workflow_status, ai_features, analytics, and recommendations
+        """
+        return self.reporting_coordinator.generate_workflow_report()
     
     # NOTE: _load_notes_corpus() extracted to ConnectionCoordinator (ADR-002 Phase 2)
     
