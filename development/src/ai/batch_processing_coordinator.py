@@ -5,22 +5,28 @@ Extracts batch processing logic from WorkflowManager to reduce god class size.
 """
 
 from pathlib import Path
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 import sys
 
 
 class BatchProcessingCoordinator:
     """Coordinates batch processing of inbox notes with progress tracking."""
     
-    def __init__(self, inbox_dir: Path, process_callback: Callable[[str], Dict]):
-        """Initialize the batch processing coordinator."""
+    def __init__(self, inbox_dir: Path, process_callback: Optional[Callable[[str], Dict]] = None):
+        """Initialize the batch processing coordinator.
+        
+        Args:
+            inbox_dir: Path to inbox directory
+            process_callback: Optional callback for processing notes (can be set later)
+        """
         if not isinstance(inbox_dir, Path):
             inbox_dir = Path(inbox_dir)
         
         if not inbox_dir.exists():
             raise ValueError(f"Inbox directory does not exist: {inbox_dir}")
         
-        if not callable(process_callback):
+        # Callback can be None initially and set later by WorkflowManager
+        if process_callback is not None and not callable(process_callback):
             raise TypeError("process_callback must be a callable function")
         
         self.inbox_dir = inbox_dir

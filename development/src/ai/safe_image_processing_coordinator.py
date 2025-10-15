@@ -15,7 +15,7 @@ GREEN PHASE: Minimal implementation to pass all tests.
 """
 
 from pathlib import Path
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 from datetime import datetime
 
 
@@ -37,8 +37,8 @@ class SafeImageProcessingCoordinator:
         safe_image_processor,
         image_integrity_monitor,
         inbox_dir: Path,
-        process_note_callback: Callable[[str], Dict],
-        batch_process_callback: Callable[[], Dict]
+        process_note_callback: Optional[Callable[[str], Dict]] = None,
+        batch_process_callback: Optional[Callable[[], Dict]] = None
     ):
         """
         Initialize coordinator with dependency injection.
@@ -55,7 +55,7 @@ class SafeImageProcessingCoordinator:
             process_note_callback: Callback for processing single notes
             batch_process_callback: Callback for batch processing
         """
-        # Validate required dependencies
+        # Validate required dependencies (callbacks can be None and set later)
         if not all([
             safe_workflow_processor,
             atomic_workflow_engine,
@@ -64,9 +64,7 @@ class SafeImageProcessingCoordinator:
             performance_metrics_collector,
             safe_image_processor,
             image_integrity_monitor,
-            inbox_dir,
-            process_note_callback,
-            batch_process_callback
+            inbox_dir
         ]):
             raise ValueError("All dependencies must be provided (no None values)")
         
