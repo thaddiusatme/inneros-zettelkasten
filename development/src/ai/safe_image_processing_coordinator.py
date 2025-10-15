@@ -99,6 +99,9 @@ class SafeImageProcessingCoordinator:
         note_file = Path(note_path)
         
         # Use extracted SafeWorkflowProcessor for modular processing
+        if not self.process_note_callback:
+            raise ValueError("process_note_callback not configured")
+        
         result = self.safe_workflow_processor.process_note_safely(
             note_file,
             lambda path: self.process_note_callback(str(path), **kwargs),
@@ -145,6 +148,8 @@ class SafeImageProcessingCoordinator:
         
         if result.success:
             # Perform actual processing
+            if not self.process_note_callback:
+                raise ValueError("process_note_callback not configured")
             processing_result = self.process_note_callback(note_path)
             return {
                 'processing_successful': True,
@@ -216,6 +221,8 @@ class SafeImageProcessingCoordinator:
         Returns:
             Dict with enhanced processing results
         """
+        if not self.process_note_callback:
+            raise ValueError("process_note_callback not configured")
         result = self.process_note_callback(note_path, **kwargs)
         
         if enable_monitoring:
@@ -325,6 +332,9 @@ class SafeImageProcessingCoordinator:
         note_file = Path(note_path)
         
         # Use modular session manager for processing
+        if not self.process_note_callback:
+            raise ValueError("process_note_callback not configured")
+        
         result = self.concurrent_session_manager.process_note_in_session(
             session_id,
             note_file,
