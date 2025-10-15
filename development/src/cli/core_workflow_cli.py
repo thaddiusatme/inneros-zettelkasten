@@ -450,6 +450,74 @@ class CoreWorkflowCLI:
             print(f"❌ Error in auto-promotion: {e}", file=sys.stderr)
             logger.exception("Error in auto_promote command")
             return 1
+    
+    def repair_metadata(self, execute: bool = False, output_format: str = 'normal') -> int:
+        """
+        Repair missing frontmatter metadata in Inbox notes
+        
+        Fixes critical issue where notes missing 'type:' field block auto-promotion.
+        Delegates to WorkflowManager.repair_inbox_metadata() following ADR-002 Phase 13.
+        
+        Args:
+            execute: If True, actually modify files. If False (default), preview only.
+            output_format: Output format ('normal' or 'json')
+            
+        Returns:
+            Exit code (0=success, 1=errors occurred)
+        """
+        try:
+            quiet = self._is_quiet_mode(output_format)
+            
+            if not quiet:
+                mode_str = " (DRY RUN - Preview Only)" if not execute else ""
+                print(f"🔧 Repairing inbox metadata{mode_str}...")
+            
+            # Call backend
+            results = self.workflow_manager.repair_inbox_metadata(execute=execute)
+            
+            # Format and display output
+            if quiet:
+                print(json.dumps(results, indent=2, default=str))
+            else:
+                self._print_header("METADATA REPAIR RESULTS")
+                
+                # Summary statistics
+                scanned = results.get('notes_scanned', 0)
+                needed = results.get('repairs_needed', 0)
+                made = results.get('repairs_made', 0)
+                errors = results.get('errors', [])
+                
+                print(f"   📊 Notes scanned: {scanned}")
+                print(f"   🔍 Repairs needed: {needed}")
+                
+                if execute:
+                    print(f"   ✅ Repairs made: {made}")
+                else:
+                    print(f"   📝 Would repair: {needed} notes (dry-run mode)")
+                
+                if errors:
+                    print(f"   🚨 Errors: {len(errors)}")
+                    self._print_section("ERROR DETAILS")
+                    for error in errors[:5]:  # Show first 5 errors
+                        note = error.get('note', 'Unknown')
+                        error_msg = error.get('error', 'Unknown error')
+                        print(f"   ❌ {note}: {error_msg}")
+                
+                # Helpful message
+                if needed > 0 and not execute:
+                    print(f"\n💡 Tip: Add --execute flag to apply repairs")
+                elif needed == 0:
+                    print(f"\n✨ All notes have valid metadata!")
+            
+            # Exit code based on errors
+            if len(results.get('errors', [])) > 0:
+                return 1  # Errors occurred
+            return 0  # Success
+            
+        except Exception as e:
+            print(f"❌ Error repairing metadata: {e}", file=sys.stderr)
+            logger.exception("Error in repair_metadata command")
+            return 1
 
 
 def create_parser() -> argparse.ArgumentParser:
