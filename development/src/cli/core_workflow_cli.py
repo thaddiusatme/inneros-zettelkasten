@@ -66,6 +66,67 @@ class CoreWorkflowCLI:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == 'json'
     
+    def _format_auto_promote_preview(self, results: dict) -> None:
+        """Format and display auto-promotion preview (dry-run mode)."""
+        self._print_header("AUTO-PROMOTION PREVIEW (DRY RUN)")
+        would_promote = results.get('would_promote_count', 0)
+        print(f"   Would promote: {would_promote} notes")
+        
+        # Show preview list
+        if results.get('preview'):
+            self._print_section("NOTES TO BE PROMOTED")
+            for item in results['preview']:
+                note_name = item.get('note', 'Unknown')
+                note_type = item.get('type', 'Unknown')
+                quality = item.get('quality', 0.0)
+                target = item.get('target', 'Unknown')
+                print(f"   📄 {note_name}")
+                print(f"      Type: {note_type} → {target}")
+                print(f"      Quality: {quality:.2f}")
+    
+    def _format_auto_promote_results(self, results: dict) -> None:
+        """Format and display auto-promotion results."""
+        self._print_header("AUTO-PROMOTION RESULTS")
+        
+        # Summary statistics
+        total = results.get('total_candidates', 0)
+        promoted = results.get('promoted_count', 0)
+        skipped = results.get('skipped_count', 0)
+        errors = results.get('error_count', 0)
+        
+        print(f"   📊 Candidates: {total} notes")
+        print(f"   ✅ Promoted: {promoted} notes")
+        print(f"   ⚠️  Skipped: {skipped} notes (below threshold)")
+        print(f"   🚨 Errors: {errors} notes")
+        
+        # By-type breakdown
+        if results.get('by_type'):
+            self._print_section("BY TYPE")
+            for note_type, counts in results['by_type'].items():
+                promoted_count = counts.get('promoted', 0)
+                skipped_count = counts.get('skipped', 0)
+                print(f"   {note_type.title()}:")
+                print(f"      ✅ Promoted: {promoted_count}")
+                print(f"      ⚠️  Skipped: {skipped_count}")
+        
+        # Show skipped notes
+        if results.get('skipped_notes'):
+            self._print_section("SKIPPED NOTES")
+            for skip in results['skipped_notes'][:5]:  # Show first 5
+                note_path = skip.get('path', 'Unknown')
+                quality = skip.get('quality', 0.0)
+                note_type = skip.get('type', 'Unknown')
+                print(f"   📄 {note_path}")
+                print(f"      Type: {note_type}, Quality: {quality:.2f}")
+        
+        # Show errors
+        if results.get('errors'):
+            self._print_section("ERRORS")
+            for error in results['errors']:
+                note = error.get('note', 'Unknown')
+                error_msg = error.get('error', 'Unknown error')
+                print(f"   🚨 {note}: {error_msg}")
+    
     def status(self, output_format: str = 'normal') -> int:
         """
         Show workflow status
@@ -366,66 +427,11 @@ class CoreWorkflowCLI:
             if quiet:
                 print(json.dumps(results, indent=2, default=str))
             else:
-                # Dry-run preview mode
+                # Dry-run preview mode or actual results
                 if results.get('dry_run'):
-                    self._print_header("AUTO-PROMOTION PREVIEW (DRY RUN)")
-                    would_promote = results.get('would_promote_count', 0)
-                    print(f"   Would promote: {would_promote} notes")
-                    
-                    # Show preview list
-                    if results.get('preview'):
-                        self._print_section("NOTES TO BE PROMOTED")
-                        for item in results['preview']:
-                            note_name = item.get('note', 'Unknown')
-                            note_type = item.get('type', 'Unknown')
-                            quality = item.get('quality', 0.0)
-                            target = item.get('target', 'Unknown')
-                            print(f"   📄 {note_name}")
-                            print(f"      Type: {note_type} → {target}")
-                            print(f"      Quality: {quality:.2f}")
-                
-                # Actual promotion results
+                    self._format_auto_promote_preview(results)
                 else:
-                    self._print_header("AUTO-PROMOTION RESULTS")
-                    
-                    # Summary statistics
-                    total = results.get('total_candidates', 0)
-                    promoted = results.get('promoted_count', 0)
-                    skipped = results.get('skipped_count', 0)
-                    errors = results.get('error_count', 0)
-                    
-                    print(f"   📊 Candidates: {total} notes")
-                    print(f"   ✅ Promoted: {promoted} notes")
-                    print(f"   ⚠️  Skipped: {skipped} notes (below threshold)")
-                    print(f"   🚨 Errors: {errors} notes")
-                    
-                    # By-type breakdown
-                    if results.get('by_type'):
-                        self._print_section("BY TYPE")
-                        for note_type, counts in results['by_type'].items():
-                            promoted_count = counts.get('promoted', 0)
-                            skipped_count = counts.get('skipped', 0)
-                            print(f"   {note_type.title()}:")
-                            print(f"      ✅ Promoted: {promoted_count}")
-                            print(f"      ⚠️  Skipped: {skipped_count}")
-                    
-                    # Show skipped notes
-                    if results.get('skipped_notes'):
-                        self._print_section("SKIPPED NOTES")
-                        for skip in results['skipped_notes'][:5]:  # Show first 5
-                            note_path = skip.get('path', 'Unknown')
-                            quality = skip.get('quality', 0.0)
-                            note_type = skip.get('type', 'Unknown')
-                            print(f"   📄 {note_path}")
-                            print(f"      Type: {note_type}, Quality: {quality:.2f}")
-                    
-                    # Show errors
-                    if results.get('errors'):
-                        self._print_section("ERRORS")
-                        for error in results['errors']:
-                            note = error.get('note', 'Unknown')
-                            error_msg = error.get('error', 'Unknown error')
-                            print(f"   🚨 {note}: {error_msg}")
+                    self._format_auto_promote_results(results)
             
             # Exit code based on results
             if results.get('error_count', 0) > 0:
