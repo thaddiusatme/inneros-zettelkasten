@@ -18,6 +18,7 @@ from .enhancer import AIEnhancer
 from .analytics import NoteAnalytics
 from .safe_image_processor import SafeImageProcessor
 from .image_integrity_monitor import ImageIntegrityMonitor
+from .note_lifecycle_manager import NoteLifecycleManager
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -82,6 +83,9 @@ class WorkflowManager:
         self.connections = AIConnections()
         self.enhancer = AIEnhancer()
         self.analytics = NoteAnalytics(str(self.base_dir))
+        
+        # Initialize lifecycle manager (ADR-002: Extracted from god class)
+        self.lifecycle_manager = NoteLifecycleManager()
         
         # Initialize image safety components (GREEN phase)
         self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
@@ -255,6 +259,9 @@ class WorkflowManager:
 
             return results
         
+        # Track if any AI processing errors occurred (prevents status update on partial failure)
+        ai_processing_errors = []
+        
         # Auto-tag if enabled (use body content only, frontmatter is processed separately)
         if self.config["auto_tag_inbox"]:
             try:
@@ -279,6 +286,7 @@ class WorkflowManager:
                 results["processing"]["ai_tags"] = merged_tags
             except Exception as e:
                 results["processing"]["tags"] = {"error": str(e)}
+                ai_processing_errors.append(("tagging", str(e)))
         # Ensure ai_tags key is always present based on current frontmatter state
         current_tags = sanitize_tags(frontmatter.get("tags", []))
         if "ai_tags" not in results["processing"]:
@@ -316,6 +324,7 @@ class WorkflowManager:
                 })
         except Exception as e:
             results["processing"]["quality"] = {"error": str(e)}
+            ai_processing_errors.append(("quality", str(e)))
         
         # Find potential connections (use body content only)
         try:
@@ -385,6 +394,20 @@ class WorkflowManager:
                     
                     # Use atomic write to prevent partial writes on interruption
                     safe_write(note_file, updated_content)
+                    
+                    # PBI-001: Delegate status update to NoteLifecycleManager (ADR-002)
+                    # Only update status if AI processing succeeded without errors
+                    if needs_ai_update and not ai_processing_errors:
+                        quality_score = results["processing"].get("quality", {}).get("score", 0.0)
+                        status_result = self.lifecycle_manager.update_status(
+                            note_file,
+                            new_status="promoted",
+                            reason="AI processing completed",
+                            metadata={"quality_score": quality_score}
+                        )
+                        
+                        if status_result.get("status_updated"):
+                            results["status_updated"] = status_result["status_updated"]
                     
                     results["file_updated"] = True
                 except Exception as e:

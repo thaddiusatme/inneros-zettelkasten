@@ -1,8 +1,8 @@
 # ACTIVE Projects Directory
 
-**Last Updated**: 2025-10-10 19:45 PDT  
+**Last Updated**: 2025-10-13 08:30 PDT  
 **Purpose**: Current active projects and immediate priorities  
-**Status**: 🏗️ **ARCHITECTURAL PIVOT** - ADR-004 CLI extraction prioritized over bug fixes
+**Status**: 🔴 **CRITICAL BUG** - Note lifecycle status management blocking workflow automation
 
 ---
 
@@ -31,26 +31,44 @@
 
 ---
 
-## 🏗️ CURRENT STATE (Oct 10, 2025)
+## 🔴 CURRENT STATE (Oct 13, 2025)
 
-**READ THIS FIRST**: `adr-004-cli-layer-extraction.md` 🔴 **CRITICAL**  
-**CONTEXT**: `audit-report-2025-10-10.md` ✅ (Found bugs in wrong architectural layer)
+**READ THIS FIRST**: `note-lifecycle-status-management.md` 🔴 **P0 CRITICAL**  
+**CONTEXT**: `PROJECT-STATUS-UPDATE-2025-10-13.md` ✅ (Complete discovery and analysis)
 
-**Architectural Discovery** (Oct 10):
-- ✅ ADR-001 complete: Backend refactored (WorkflowManager → 4 managers)
-- ❌ ADR-001 HALF DONE: Frontend still monolithic (workflow_demo.py at 2,074 LOC)
-- 🐛 Quality audit found bugs in deprecated monolithic CLI
-- 🎯 Decision: Complete architecture BEFORE fixing bugs
+**Critical Bug Identified** (Oct 13):
+- 🐛 **Issue**: Notes processed by AI but `status` field never updates
+- 📊 **Impact**: 77 notes stuck in inbox with `status: inbox` despite having AI metadata
+- 🔍 **Root Cause**: Missing 3 lines in `workflow_manager.py::process_inbox_note()`
+- ⚠️ **Blocks**: Entire workflow automation chain
 
-**Priority Pivot** (APPROVED):
-- ❌ ~~Bug fixes in monolithic code~~ (deferred)
-- 🏗️ **P0**: ADR-004 CLI extraction (2 weeks, Oct 11-25)
-- 📊 **Status**: 28% complete (7/25 commands extracted)
-- 🎯 **Goal**: Extract remaining 18 commands to dedicated CLIs
-- 🎨 **P1**: Fix bugs in dedicated CLIs (after extraction)
+**Complete Documentation Created**:
+- ✅ `note-lifecycle-status-management.md` - Full lifecycle documentation (11KB)
+- ✅ `workflow-diagrams/10-note-lifecycle-complete.md` - 4 visual flowcharts (17KB)
+- ✅ `workflow-enhancement-directory-integration.md` - Implementation plan (17KB)
+- ✅ `PROJECT-STATUS-UPDATE-2025-10-13.md` - Status update
+
+**Priority** (URGENT):
+- 🔴 **P0**: Note Lifecycle Status Management (5-7 hours total)
+  - Phase 1: Critical bug fix (30 min) ⚡
+  - Phase 2: Directory integration (1-2 hours)
+  - Phase 3: Auto-promotion (2-3 hours)
+  - Phase 4: Repair 77 orphaned notes (1 hour)
 - 🖥️ **P1**: Build retro TUI (after clean architecture complete)
 
 **Current Focus**: CLI layer extraction sprint (completes ADR-001 vision)
+
+---
+
+## 🛠️ CI/CD & DevOps Direction
+
+- **P0 PR CI (today)**: Add `.github/workflows/ci.yml` to run ruff, black, isort, pyright, and fast `pytest` with coverage on macOS + Ubuntu. Use fast-mode/dry-run to avoid external AI/network.
+- **P0 Security**: Add CodeQL workflow and Dependabot; include `pip-audit` in CI to fail on high-severity vulnerabilities.
+- **P1 Nightly**: Add a nightly workflow for heavy/integration tests, `[[wiki-link]]` integrity scan, and performance smoke tests with thresholds.
+- **P1 Hygiene**: Introduce `.pre-commit-config.yaml` (ruff, black, isort, pyupgrade, yamllint, markdownlint) and enable branch protection requiring CI checks.
+- **P2 Release (optional)**: Tag-driven release workflow to build artifacts and generate release notes.
+
+This guardrail suite reduces regressions (like lifecycle status), preserves link integrity during promotions, and maintains performance.
 
 ---
 

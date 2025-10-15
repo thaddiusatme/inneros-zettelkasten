@@ -1,12 +1,32 @@
 # InnerOS Workflow Diagrams
 
-**Purpose**: Visual documentation of all InnerOS workflows with Mermaid flowcharts  
-**Created**: 2025-10-12  
-**Total Workflows**: 8
+**Purpose**: Visual documentation of all InnerOS workflows and processes  
+**Status**: Production Ready  
+**Last Updated**: 2025-10-13
 
 ---
 
-## 📊 Overview
+## Available Diagrams
+
+### **Core Workflows**
+1. **[Core Workflow](./01-core-workflow.md)** - Complete system overview and orchestration
+2. **[Weekly Review](./02-weekly-review-workflow.md)** - AI-powered review and metrics
+3. **[Fleeting Notes Lifecycle](./03-fleeting-notes-lifecycle.md)** - Health, triage, and promotion
+10. **[Complete Note Lifecycle](./10-note-lifecycle-complete.md)**  - Full lifecycle with status transitions 
+
+### **Specialized Workflows**
+4. **[YouTube Processing](./04-youtube-processing-workflow.md)** - Video transcript capture and enhancement
+5. **[Connection Discovery](./05-connection-discovery-workflow.md)** - Semantic link suggestions
+6. **[Tag Enhancement](./06-tag-enhancement-workflow.md)** - AI-powered tag improvement
+
+### **Infrastructure**
+7. **[Backup Workflow](./07-backup-workflow.md)** - Safety-first backup and rollback
+8. **[Daemon Automation](./08-daemon-automation-workflow.md)** - Automated background processing
+9. **[Inbox Processing](./09-inbox-processing-workflow.md)** - Batch AI enhancement pipeline
+
+---
+
+## Overview
 
 This directory contains comprehensive flowcharts and documentation for all major InnerOS workflows. Each diagram includes:
 
@@ -19,7 +39,7 @@ This directory contains comprehensive flowcharts and documentation for all major
 
 ---
 
-## 📁 Workflow Index
+## Workflow Index
 
 ### 1. [Core Workflow](./01-core-workflow.md)
 **CLI**: `core_workflow_cli.py`  
@@ -220,6 +240,37 @@ inneros daemon logs    # View logs
 
 ---
 
+### 9. [Inbox Processing Workflow](./09-inbox-processing-workflow.md) ⭐ **NEW**
+**CLI**: `core_workflow_cli.py --process-inbox`  
+**Purpose**: Detailed AI-enhanced batch processing of inbox notes
+
+**Processing Pipeline (Per Note)**:
+1. **Load & Parse**: Extract frontmatter and content
+2. **Tag Generation**: AI-powered semantic tagging (3-8 tags)
+3. **Quality Scoring**: Multi-factor analysis (0.0-1.0 score)
+4. **Connection Discovery**: Embedding-based similarity search
+5. **Summary Generation**: Abstractive summarization (≥500 words)
+6. **Metadata Update**: Write enriched frontmatter
+
+**Key Features**:
+- Complete AI enrichment pipeline
+- Error handling with fallbacks
+- Progress tracking with ETA
+- Skip already-processed notes
+- Dry-run mode for preview
+
+**Performance**:
+- Average: 8-10s per note
+- Batch processing rate: 7.3 notes/minute
+- Success rate: ≥95%
+
+**Use Cases**:
+- Daily inbox processing ritual
+- Weekly review preparation
+- Initial system setup with bulk processing
+
+---
+
 ## 🎯 Workflow Categories
 
 ### Daily Operations
@@ -277,6 +328,7 @@ Daemon → FeatureHandlers → CLIs/Managers
 | Workflow | Typical Duration | Success Rate |
 |----------|-----------------|--------------|
 | Core Workflow | <10s per note | 98% |
+| **Inbox Processing** | **8-10s per note** | **≥95%** |
 | Weekly Review | <5s for 100+ notes | 100% |
 | Fleeting Health | <2s for 100+ notes | 100% |
 | YouTube Processing | 5-10s per video | 93% |
@@ -366,6 +418,7 @@ Flowcharts use consistent color coding:
 ---
 
 **Created**: 2025-10-12  
+**Updated**: 2025-10-12 (Added Inbox Processing Workflow)  
 **Author**: Development Team  
 **Status**: Complete ✅  
-**Total Files**: 8 workflows + README
+**Total Files**: 9 workflows + README
