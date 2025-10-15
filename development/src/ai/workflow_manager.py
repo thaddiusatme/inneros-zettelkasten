@@ -665,6 +665,25 @@ class WorkflowManager:
         return self.promotion_engine.promote_fleeting_notes_batch(
             quality_threshold, target_type, preview_mode
         )
+    
+    def auto_promote_ready_notes(self, dry_run: bool = False, quality_threshold: float = 0.7) -> Dict:
+        """
+        Automatically promote notes that meet quality threshold.
+        
+        ADR-002 Phase 11: Delegates to PromotionEngine.auto_promote_ready_notes().
+        Follows established delegation pattern from promote_note() and promote_fleeting_notes_batch().
+        
+        Args:
+            dry_run: If True, preview promotions without making changes
+            quality_threshold: Minimum quality score required (default: 0.7)
+            
+        Returns:
+            Dict: Auto-promotion results with counts and details
+        """
+        return self.promotion_engine.auto_promote_ready_notes(
+            dry_run=dry_run,
+            quality_threshold=quality_threshold
+        )
 
     # ============================================================================
     # GREEN PHASE: Safe Image Processing Integration Methods
