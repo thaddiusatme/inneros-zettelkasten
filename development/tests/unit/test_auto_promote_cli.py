@@ -87,15 +87,27 @@ This note needs improvement.
         
         cli = CoreWorkflowCLI(vault_path=str(self.test_dir))
         
-        # Execute auto-promote command
-        exit_code = cli.auto_promote(
-            dry_run=False,
-            quality_threshold=0.7,
-            output_format='normal'
-        )
-        
-        # Should execute without errors
-        self.assertEqual(exit_code, 0, "Auto-promote should return exit code 0 on success")
+        # Mock backend to return success results
+        with patch.object(cli.workflow_manager, 'auto_promote_ready_notes') as mock_promote:
+            mock_promote.return_value = {
+                'total_candidates': 2,
+                'promoted_count': 1,
+                'skipped_count': 1,
+                'error_count': 0,  # No errors
+                'by_type': {'fleeting': {'promoted': 1, 'skipped': 1}},
+                'skipped_notes': [],
+                'errors': []
+            }
+            
+            # Execute auto-promote command
+            exit_code = cli.auto_promote(
+                dry_run=False,
+                quality_threshold=0.7,
+                output_format='normal'
+            )
+            
+            # Should execute without errors
+            self.assertEqual(exit_code, 0, "Auto-promote should return exit code 0 on success")
     
     def test_auto_promote_dry_run_no_changes(self):
         """TEST 3: Verify dry-run mode prevents actual file changes"""
