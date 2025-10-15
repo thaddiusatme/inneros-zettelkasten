@@ -503,6 +503,9 @@ This is a note for fleeting promotion."""
             }
         ]
         
+        # ADR-002 Phase 11: Update coordinator's callback to use mock
+        self.workflow.batch_processing_coordinator.process_callback = mock_process
+        
         result = self.workflow.batch_process_inbox()
         
         assert result["total_files"] == 3

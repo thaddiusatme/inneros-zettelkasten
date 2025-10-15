@@ -26,6 +26,7 @@ from .safe_image_processing_coordinator import SafeImageProcessingCoordinator
 from .orphan_remediation_coordinator import OrphanRemediationCoordinator
 from .fleeting_analysis_coordinator import FleetingAnalysisCoordinator, FleetingAnalysis
 from .workflow_reporting_coordinator import WorkflowReportingCoordinator
+from .batch_processing_coordinator import BatchProcessingCoordinator
 from .workflow_integration_utils import (
     SafeWorkflowProcessor,
     AtomicWorkflowEngine,
@@ -158,6 +159,12 @@ class WorkflowManager:
         self.reporting_coordinator = WorkflowReportingCoordinator(
             base_dir=self.base_dir,
             analytics=self.analytics
+        )
+        
+        # ADR-002 Phase 11: Batch processing coordinator extraction
+        self.batch_processing_coordinator = BatchProcessingCoordinator(
+            inbox_dir=self.inbox_dir,
+            process_callback=self.process_inbox_note
         )
         
         # Session management for concurrent processing (legacy compatibility)
@@ -397,70 +404,15 @@ class WorkflowManager:
         """
         Process all notes in the inbox.
         
+        ADR-002 Phase 11: Delegates to BatchProcessingCoordinator.
+        
         Args:
             show_progress: If True, print progress to stderr (for dashboard display)
+        
+        Returns:
+            Dict with total_files, processed, failed, results, and summary
         """
-        inbox_files = list(self.inbox_dir.glob("*.md"))
-        total = len(inbox_files)
-        
-        results = {
-            "total_files": total,
-            "processed": 0,
-            "failed": 0,
-            "results": [],
-            "summary": {
-                "promote_to_permanent": 0,
-                "move_to_fleeting": 0,
-                "needs_improvement": 0
-            }
-        }
-        
-        for idx, note_file in enumerate(inbox_files, 1):
-            # Show progress (to stderr so it doesn't interfere with JSON output)
-            if show_progress:
-                import sys
-                filename = note_file.name
-                # Truncate long filenames
-                if len(filename) > 50:
-                    filename = filename[:47] + "..."
-                progress_pct = int((idx / total) * 100)
-                sys.stderr.write(f"\r[{idx}/{total}] {progress_pct}% - {filename}...")
-                sys.stderr.flush()
-            
-            try:
-                result = self.process_inbox_note(str(note_file))
-                
-                if "error" not in result:
-                    results["processed"] += 1
-                    
-                    # Categorize recommendations
-                    for rec in result.get("recommendations", []):
-                        action = rec.get("action", "")
-                        if action == "promote_to_permanent":
-                            results["summary"]["promote_to_permanent"] += 1
-                        elif action == "move_to_fleeting":
-                            results["summary"]["move_to_fleeting"] += 1
-                        elif action == "improve_or_archive":
-                            results["summary"]["needs_improvement"] += 1
-                else:
-                    results["failed"] += 1
-                
-                results["results"].append(result)
-                
-            except Exception as e:
-                results["failed"] += 1
-                results["results"].append({
-                    "original_file": str(note_file),
-                    "error": str(e)
-                })
-        
-        # Clear progress line
-        if show_progress and total > 0:
-            import sys
-            sys.stderr.write("\r" + " " * 80 + "\r")
-            sys.stderr.flush()
-        
-        return results
+        return self.batch_processing_coordinator.batch_process_inbox(show_progress=show_progress)
     
     def generate_workflow_report(self) -> Dict:
         """
