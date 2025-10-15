@@ -61,8 +61,11 @@ class TestWorkflowManager:
         assert self.workflow.analytics is not None
     
     def test_load_config_default(self):
-        """Test loading default configuration."""
-        config = self.workflow._load_config()
+        """Test loading default configuration.
+        
+        ADR-002 Phase 12a: Configuration now loaded via ConfigurationCoordinator.
+        """
+        config = self.workflow.config
         
         assert config["auto_tag_inbox"] is True
         assert config["auto_summarize_long_notes"] is True

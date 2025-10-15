@@ -11,19 +11,11 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
-from .tagger import AITagger
-from .summarizer import AISummarizer
-from .connections import AIConnections
-from .enhancer import AIEnhancer
-from .analytics import NoteAnalytics
-from .safe_image_processor import SafeImageProcessor
-from .image_integrity_monitor import ImageIntegrityMonitor
+# ADR-002 Phase 12a: Configuration coordinator extraction
+from .configuration_coordinator import ConfigurationCoordinator
+
+# Keep direct imports for type hints and backwards compatibility
 from .workflow_integration_utils import (
-    SafeWorkflowProcessor,
-    AtomicWorkflowEngine,
-    IntegrityMonitoringManager,
-    ConcurrentSessionManager,
-    PerformanceMetricsCollector,
     WorkflowProcessingResult,
     BatchProcessingStats
 )
@@ -53,82 +45,42 @@ class WorkflowManager:
     def __init__(self, base_directory: str | None = None):
         """Initialize workflow manager.
 
+        ADR-002 Phase 12a: Delegates configuration and initialization to ConfigurationCoordinator.
+
         Args:
             base_directory: Explicit path to the Zettelkasten root. If ``None`` the
                 resolver in ``utils.vault_path`` is used. Raises ``ValueError`` if
                 no valid directory can be resolved.
         """
-        if base_directory is None:
-            from src.utils.vault_path import get_default_vault_path
-            resolved = get_default_vault_path()
-            if resolved is None:
-                raise ValueError(
-                    "No vault path supplied and none could be resolved via "
-                    "INNEROS_VAULT_PATH or .inneros.* config files."
-                )
-            self.base_dir = resolved
-        else:
-            self.base_dir = Path(base_directory).expanduser()
+        # ADR-002 Phase 12a: Delegate initialization to ConfigurationCoordinator
+        self._config_coordinator = ConfigurationCoordinator(base_directory=base_directory, workflow_manager=self)
         
-        # Define workflow directories
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.archive_dir = self.base_dir / "Archive"
+        # Expose coordinator properties for backwards compatibility
+        self.base_dir = self._config_coordinator.base_dir
+        self.inbox_dir = self._config_coordinator.inbox_dir
+        self.fleeting_dir = self._config_coordinator.fleeting_dir
+        self.permanent_dir = self._config_coordinator.permanent_dir
+        self.archive_dir = self._config_coordinator.archive_dir
         
-        # Initialize AI components
-        self.tagger = AITagger()
-        self.summarizer = AISummarizer()
-        self.connections = AIConnections()
-        self.enhancer = AIEnhancer()
-        self.analytics = NoteAnalytics(str(self.base_dir))
+        # Expose AI components
+        self.tagger = self._config_coordinator.tagger
+        self.summarizer = self._config_coordinator.summarizer
+        self.connections = self._config_coordinator.connections
+        self.enhancer = self._config_coordinator.enhancer
+        self.analytics = self._config_coordinator.analytics
         
-        # Initialize image safety components (GREEN phase)
-        self.safe_image_processor = SafeImageProcessor(str(self.base_dir))
-        self.image_integrity_monitor = ImageIntegrityMonitor(str(self.base_dir))
+        # Expose image safety components
+        self.safe_image_processor = self._config_coordinator.safe_image_processor
+        self.image_integrity_monitor = self._config_coordinator.image_integrity_monitor
+        self.safe_workflow_processor = self._config_coordinator.safe_workflow_processor
+        self.atomic_workflow_engine = self._config_coordinator.atomic_workflow_engine
+        self.integrity_monitoring_manager = self._config_coordinator.integrity_monitoring_manager
+        self.concurrent_session_manager = self._config_coordinator.concurrent_session_manager
+        self.performance_metrics_collector = self._config_coordinator.performance_metrics_collector
         
-        # REFACTOR: Initialize extracted utility classes for modular architecture
-        self.safe_workflow_processor = SafeWorkflowProcessor(
-            self.safe_image_processor, 
-            self.image_integrity_monitor
-        )
-        self.atomic_workflow_engine = AtomicWorkflowEngine(self.safe_image_processor)
-        self.integrity_monitoring_manager = IntegrityMonitoringManager(
-            self.image_integrity_monitor, 
-            self.safe_image_processor
-        )
-        self.concurrent_session_manager = ConcurrentSessionManager(self.safe_workflow_processor)
-        self.performance_metrics_collector = PerformanceMetricsCollector(self.safe_image_processor)
-        
-        # Session management for concurrent processing (legacy compatibility)
-        self.active_sessions = {}
-        
-        # Workflow configuration
-        self.config = self._load_config()
-    
-    def _load_config(self) -> Dict:
-        """Load workflow configuration."""
-        config_file = self.base_dir / ".ai_workflow_config.json"
-        
-        default_config = {
-            "auto_tag_inbox": True,
-            "auto_summarize_long_notes": True,
-            "auto_enhance_permanent_notes": False,
-            "min_words_for_summary": 500,
-            "max_tags_per_note": 8,
-            "similarity_threshold": 0.7,
-            "archive_after_days": 90
-        }
-        
-        if config_file.exists():
-            try:
-                with open(config_file, 'r') as f:
-                    user_config = json.load(f)
-                default_config.update(user_config)
-            except Exception:
-                pass
-        
-        return default_config
+        # Legacy compatibility
+        self.active_sessions = self._config_coordinator.active_sessions
+        self.config = self._config_coordinator.config
     
     def process_inbox_note(self, note_path: str, dry_run: bool = False, fast: bool | None = None) -> Dict:
         """
