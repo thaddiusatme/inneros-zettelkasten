@@ -505,9 +505,9 @@ class CoreWorkflowCLI:
                 
                 # Helpful message
                 if needed > 0 and not execute:
-                    print(f"\n💡 Tip: Add --execute flag to apply repairs")
+                    print("\n💡 Tip: Add --execute flag to apply repairs")
                 elif needed == 0:
-                    print(f"\n✨ All notes have valid metadata!")
+                    print("\n✨ All notes have valid metadata!")
             
             # Exit code based on errors
             if len(results.get('errors', [])) > 0:
