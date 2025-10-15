@@ -353,6 +353,82 @@ if not results.get("error"):
 
 ---
 
+### 🔵 P2: Source Code Reorganization (Planned)
+
+**Status**: 📋 **PLANNED** - Medium/Low Priority, Gradual Implementation  
+**Priority**: P2 - **DEVELOPER EXPERIENCE & MAINTAINABILITY**  
+**Timeline**: 4-6 weeks (gradual, ~20 hours total)  
+**Risk**: LOW - Python imports easily refactorable, strong test coverage  
+**Manifest**: `Projects/ACTIVE/source-code-reorganization-manifest.md` ✅
+
+#### Problem Statement
+
+**Current Pain Points:**
+- `src/ai/` - **56 Python files** (impossible to navigate)
+- `src/cli/` - **44 Python files** (cognitive overload)
+- 20+ minutes to find related code
+- 15+ scattered `_utils.py` files
+- Difficult onboarding for contributors
+
+**Goal**: Domain-driven organization with <2 minute code discovery (90% improvement)
+
+#### 80/20 High-Impact Changes
+
+**#1: Split `ai/` into 7 domains** (40% of value)
+- `core/`, `connections/`, `tags/`, `enhancement/`, `analytics/`, `media/`, `imports/`
+- 56 files → 7 packages with 2-12 files each
+
+**#2: Split `cli/` into 7 features** (30% of value)
+- `core/`, `screenshots/`, `connections/`, `tags/`, `workflows/`, `monitoring/`, `media/`
+- 44 files → 7 packages with 2-8 files each
+
+**#3: Consolidate utilities** (20% of value)
+- Group `_utils.py` files with their primary modules
+- Create `utils/` subdirectories where appropriate
+
+**#4: Create `models/` package** (10% of value)
+- Extract shared data structures (Note, Connection, Tag, Schema models)
+- Single source of truth for data models
+
+#### Implementation Plan
+
+**Week 1 (Proof of Concept)**:
+- Extract `ai/connections/` (12 files, 2 hours)
+- Extract `ai/tags/` (10 files, 2 hours)
+- Validate tests pass, document lessons
+- Go/No-Go decision point
+
+**Week 2 (AI Package Completion)**:
+- Extract remaining 5 domains from `ai/`
+- Update imports, test validation
+
+**Week 3-4 (CLI Package)**:
+- Reorganize 44 CLI files into 7 feature packages
+- Test all CLI commands
+
+**Week 5-6 (Polish)**:
+- Consolidate utilities
+- Create models package
+- Documentation updates
+
+#### Success Metrics
+
+**Before**: 56 files in `ai/`, 44 in `cli/`, 20+ min code discovery  
+**After**: <12 files per directory, <2 min code discovery (90% improvement)
+
+#### Why P2 Priority
+
+**Timing Considerations:**
+- Not urgent, but high long-term value
+- Best done during maintenance periods
+- Can be paused/resumed anytime
+- Low risk with strong test coverage
+- Enables future contributor onboarding
+
+**Recommended Start**: After Note Lifecycle sprint complete, during lower-intensity period
+
+---
+
 ### 🟡 P1: WorkflowManager Deprecation & Decomposition (Post-Sprint)
 
 **Status**: 📋 **PLANNED** - Extract after Note Lifecycle sprint complete  
