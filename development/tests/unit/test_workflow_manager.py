@@ -1491,3 +1491,81 @@ This note should preserve all metadata except the created field."""
         created_value = frontmatter.get("created")
         import re
         assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+    
+    # ============================================================================
+    # ADR-002 Phase 13: Metadata Repair Engine Delegation Tests
+    # ============================================================================
+    
+    def test_repair_inbox_metadata_delegates_to_engine(self):
+        """Test that repair_inbox_metadata properly delegates to MetadataRepairEngine."""
+        # Arrange: Create note with missing type field
+        content = """---
+status: inbox
+created: 2025-10-15 14:00
+---
+
+# Test Note
+
+Some content here.
+"""
+        self.create_test_note("Inbox", "fleeting-20251015-1400-test.md", content)
+        
+        # Act: Call delegation method in preview mode
+        result = self.workflow.repair_inbox_metadata(execute=False)
+        
+        # Assert: Should detect notes needing repair
+        assert result['notes_scanned'] == 1
+        assert result['repairs_needed'] == 1
+        assert result['repairs_made'] == 0  # Preview mode, no changes
+        assert len(result['errors']) == 0
+    
+    def test_repair_inbox_metadata_execute_mode(self):
+        """Test that repair_inbox_metadata actually modifies files in execute mode."""
+        # Arrange: Create note with missing type field
+        content = """---
+status: inbox
+created: 2025-10-15 14:00
+---
+
+# Test Note
+
+Some content here.
+"""
+        note_path = self.create_test_note("Inbox", "lit-20251015-1400-article.md", content)
+        
+        # Act: Call delegation method in execute mode
+        result = self.workflow.repair_inbox_metadata(execute=True)
+        
+        # Assert: Should repair the note
+        assert result['notes_scanned'] == 1
+        assert result['repairs_needed'] == 1
+        assert result['repairs_made'] == 1
+        assert len(result['errors']) == 0
+        
+        # Verify file was actually modified
+        updated_content = note_path.read_text()
+        assert 'type: literature' in updated_content
+    
+    def test_repair_inbox_metadata_handles_errors_gracefully(self):
+        """Test that repair_inbox_metadata handles errors without crashing."""
+        # Arrange: Create valid note (no repairs needed)
+        content = """---
+type: fleeting
+status: inbox
+created: 2025-10-15 14:00
+---
+
+# Complete Note
+
+This note has all required fields.
+"""
+        self.create_test_note("Inbox", "complete-note.md", content)
+        
+        # Act: Call repair method
+        result = self.workflow.repair_inbox_metadata(execute=False)
+        
+        # Assert: Should scan but not need repairs
+        assert result['notes_scanned'] == 1
+        assert result['repairs_needed'] == 0
+        assert result['repairs_made'] == 0
+        assert len(result['errors']) == 0
