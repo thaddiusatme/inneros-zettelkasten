@@ -681,9 +681,9 @@ class WorkflowManager:
         quality_threshold: float = 0.7
     ) -> Dict:
         """
-        Automatically promote notes that are ready (status=promoted, quality >= threshold).
+        Automatically promote notes that meet quality threshold.
         
-        Scans Inbox/ for notes with status='promoted' and quality_score >= threshold,
+        Scans Inbox/ for notes with quality_score >= threshold,
         then promotes them to appropriate directories based on type field.
         
         Args:
@@ -701,9 +701,14 @@ class WorkflowManager:
             "promoted_count": 0,
             "skipped_count": 0,
             "error_count": 0,
-            "skipped_notes": {},
-            "errors": {},
-            "by_type": {"fleeting": 0, "literature": 0, "permanent": 0},
+            "promoted": [],  # List of promoted note details
+            "skipped_notes": [],
+            "errors": [],
+            "by_type": {
+                "fleeting": {"promoted": 0, "skipped": 0},
+                "literature": {"promoted": 0, "skipped": 0},
+                "permanent": {"promoted": 0, "skipped": 0}
+            },
             "dry_run": dry_run,
         }
         
@@ -726,12 +731,18 @@ class WorkflowManager:
                 content = note_path.read_text(encoding="utf-8")
                 frontmatter, _ = parse_frontmatter(content)
                 
-                # Only process notes with status='promoted'
-                if frontmatter.get("status") != "promoted":
+                # Skip notes without quality scores
+                quality_score = frontmatter.get("quality_score")
+                if quality_score is None:
+                    continue
+                
+                # Skip notes that don't have inbox status
+                status = frontmatter.get("status", "inbox")
+                if status not in ["inbox", "promoted"]:
                     continue
                 
                 results["total_candidates"] += 1
-                logger.debug(f"Evaluating candidate: {note_path.name}")
+                logger.debug(f"Evaluating candidate: {note_path.name} (quality: {quality_score})")
                 
                 # Validate note eligibility
                 is_valid, note_type, error_msg = self._validate_note_for_promotion(
@@ -740,10 +751,19 @@ class WorkflowManager:
                 
                 if not is_valid:
                     results["skipped_count"] += 1
-                    results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
+                    results["skipped_notes"].append({
+                        "path": note_path.name,
+                        "quality": frontmatter.get("quality_score", 0.0),
+                        "type": frontmatter.get("type", "unknown"),
+                        "reason": error_msg or "Validation failed"
+                    })
+                    # Track by type for skipped notes
+                    note_type_for_skip = frontmatter.get("type", "permanent")
+                    if note_type_for_skip in results["by_type"]:
+                        results["by_type"][note_type_for_skip]["skipped"] += 1
                     if error_msg and "type" in error_msg.lower():
                         results["error_count"] += 1
-                        results["errors"][note_path.name] = error_msg
+                        results["errors"].append({"note": note_path.name, "error": error_msg})
                     logger.debug(f"Skipped {note_path.name}: {error_msg}")
                     continue
                 
@@ -768,16 +788,34 @@ class WorkflowManager:
                 
                 if success:
                     results["promoted_count"] += 1
-                    results["by_type"][note_type] += 1
+                    results["by_type"][note_type]["promoted"] += 1
+                    results["promoted"].append({
+                        "title": note_path.name,
+                        "type": note_type,
+                        "quality": frontmatter.get("quality_score", 0.0),
+                        "target": f"{note_type.title()} Notes/"
+                    })
+                    logger.info(f"Promoted: {note_path.name} → {note_type.title()} Notes/")
                 else:
                     results["error_count"] += 1
-                    results["errors"][note_path.name] = error_msg
+                    results["errors"].append({"note": note_path.name, "error": error_msg})
+                    logger.error(f"Promotion failed for {note_path.name}: {error_msg}")
                 
             except Exception as e:
                 results["error_count"] += 1
-                error_msg = f"Exception during processing: {str(e)}"
-                results["errors"][note_path.name] = error_msg
+                results["errors"].append({
+                    "note": note_path.name,
+                    "error": str(e)
+                })
                 logger.exception(f"Error processing {note_path.name}: {e}")
+        
+        # Add summary section for JSON output compatibility
+        results["summary"] = {
+            "total_candidates": results["total_candidates"],
+            "promoted_count": results["promoted_count"],
+            "skipped_count": results["skipped_count"],
+            "error_count": results["error_count"]
+        }
         
         # Summary logging
         logger.info(

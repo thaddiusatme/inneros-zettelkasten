@@ -410,6 +410,14 @@ class CoreWorkflowCLI:
                       file=sys.stderr)
                 return 2
             
+            # Validate vault path exists
+            from pathlib import Path
+            vault_path_obj = Path(self.vault_path)
+            if not vault_path_obj.exists():
+                print(f"❌ Error: Vault path does not exist: {self.vault_path}",
+                      file=sys.stderr)
+                return 1
+            
             quiet = self._is_quiet_mode(output_format)
             
             if not quiet:
