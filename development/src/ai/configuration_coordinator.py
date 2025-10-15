@@ -33,6 +33,9 @@ from src.ai.workflow_integration_utils import (
     PerformanceMetricsCollector
 )
 
+# ADR-002 Phase 12b: Fleeting note management coordinator
+from src.ai.fleeting_note_coordinator import FleetingNoteCoordinator
+
 
 class ConfigurationCoordinator:
     """
@@ -95,6 +98,17 @@ class ConfigurationCoordinator:
         
         # Store reference to workflow_manager for future coordinator initialization
         self._workflow_manager = workflow_manager
+        
+        # ADR-002 Phase 12b: Initialize FleetingNoteCoordinator
+        # Note: process_callback will be set by WorkflowManager after initialization
+        self.fleeting_note_coordinator = FleetingNoteCoordinator(
+            fleeting_dir=self.fleeting_dir,
+            inbox_dir=self.inbox_dir,
+            permanent_dir=self.permanent_dir,
+            literature_dir=self.base_dir / "Literature Notes",
+            process_callback=None,  # Will be set by WorkflowManager
+            default_quality_threshold=0.7
+        )
         
         # Placeholder for coordinators that will be created by WorkflowManager
         # These will be set after WorkflowManager creates them
