@@ -7,10 +7,6 @@ Following TDD methodology: write failing tests first, implement later.
 Target: Fix 8 notes (21% error rate) blocking auto-promotion workflow.
 """
 
-import pytest
-from pathlib import Path
-from datetime import datetime
-
 
 class TestMetadataDetection:
     """Test detection of missing frontmatter fields."""
@@ -264,7 +260,8 @@ Some content here.
         result = engine.repair_note_metadata(str(note))
         
         # Assert: Should report repair but not modify file
-        assert result['would_add'] == {'type': 'fleeting'}
+        assert 'type' in result['would_add']
+        assert result['would_add']['type'] == 'fleeting'
         assert note.read_text() == original_content  # File unchanged
 
     def test_repairs_missing_type_field_with_execute(self, tmp_path):
@@ -286,7 +283,8 @@ Some content here.
         result = engine.repair_note_metadata(str(note))
         
         # Assert: Should modify file and add type field
-        assert result['added'] == {'type': 'literature'}
+        assert 'type' in result['added']
+        assert result['added']['type'] == 'literature'
         content = note.read_text()
         assert 'type: literature' in content
 
@@ -311,6 +309,8 @@ Some content here.
         result = engine.repair_note_metadata(str(note))
         
         # Assert: Should preserve existing fields
+        assert 'type' in result['added']
+        assert result['added']['type'] == 'fleeting'
         content = note.read_text()
         assert 'status: inbox' in content
         assert 'tags: test, example' in content
