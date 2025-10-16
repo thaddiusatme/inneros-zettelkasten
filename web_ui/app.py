@@ -21,11 +21,21 @@ from ai.analytics import NoteAnalytics
 from ai.workflow_manager import WorkflowManager
 from cli.weekly_review_formatter import WeeklyReviewFormatter
 
+# Import monitoring modules
+from monitoring.metrics_collector import MetricsCollector
+from monitoring.metrics_storage import MetricsStorage
+from monitoring.metrics_endpoint import MetricsEndpoint
+
 app = Flask(__name__)
 app.secret_key = 'inneros-zettelkasten-demo-key'  # Change in production
 
 # Global configuration
 DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten")
+
+# Initialize metrics infrastructure
+metrics_collector = MetricsCollector()
+metrics_storage = MetricsStorage()
+metrics_endpoint = MetricsEndpoint(metrics_collector, metrics_storage)
 
 @app.route('/')
 def index():
@@ -131,6 +141,34 @@ def process_note():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/api/metrics')
+def api_metrics():
+    """API endpoint for real-time metrics data.
+    
+    Returns JSON with current metrics and history for dashboard display.
+    """
+    try:
+        # Get metrics from endpoint
+        metrics_data = metrics_endpoint.get_metrics()
+        
+        # Create response with CORS headers for local development
+        response = jsonify(metrics_data)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+        
+    except Exception as e:
+        # Graceful fallback when metrics unavailable
+        return jsonify({
+            'status': 'success',
+            'timestamp': datetime.now().isoformat(),
+            'current': {
+                'counters': {},
+                'gauges': {},
+                'histograms': {}
+            },
+            'history': []
+        })
 
 @app.route('/settings')
 def settings():
