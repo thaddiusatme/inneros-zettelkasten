@@ -161,16 +161,19 @@ class TableRenderer:
     - Table structure creation
     - Row formatting
     - Title and styling
+    - Metrics display (Phase 3.1)
     """
     
-    def __init__(self, formatter: StatusFormatter):
+    def __init__(self, formatter: StatusFormatter, metrics_collector=None):
         """
         Initialize table renderer.
         
         Args:
             formatter: StatusFormatter instance
+            metrics_collector: Optional MetricsCollector for metrics display
         """
         self.formatter = formatter
+        self.metrics_collector = metrics_collector
     
     def create_status_table(self, health_data: Dict[str, Any]) -> Optional['Table']:
         """
@@ -227,6 +230,51 @@ class TableRenderer:
             handler_metrics = self.formatter.format_metrics(handler_data)
             
             table.add_row(f"  {handler_name}", handler_status, handler_metrics)
+    
+    def create_metrics_table(self) -> Optional['Table']:
+        """
+        Create Rich Table from metrics collector data.
+        Phase 3.1: Real-time metrics display
+        
+        Returns:
+            Rich Table instance with metrics or None if no metrics collector
+        """
+        if not RICH_AVAILABLE or not self.metrics_collector:
+            return None
+        
+        table = Table(
+            title="📊 System Metrics",
+            show_header=True,
+            header_style="bold green"
+        )
+        table.add_column("Metric", style="cyan", no_wrap=True)
+        table.add_column("Type", style="magenta")
+        table.add_column("Value", style="yellow")
+        
+        # Get all metrics
+        metrics = self.metrics_collector.get_all_metrics()
+        
+        # Add counter metrics
+        for name, value in metrics.get("counters", {}).items():
+            table.add_row(name, "counter", f"{value:,}")
+        
+        # Add gauge metrics
+        for name, value in metrics.get("gauges", {}).items():
+            table.add_row(name, "gauge", f"{value:.2f}")
+        
+        # Add histogram metrics (show avg/min/max)
+        for name, values in metrics.get("histograms", {}).items():
+            if values:
+                avg = sum(values) / len(values)
+                min_val = min(values)
+                max_val = max(values)
+                table.add_row(
+                    name,
+                    "histogram",
+                    f"avg: {avg:.1f}ms (min: {min_val:.0f}, max: {max_val:.0f})"
+                )
+        
+        return table
 
 
 class DashboardOrchestrator:
@@ -283,7 +331,15 @@ class DashboardOrchestrator:
                         content = f"ERROR: {health_data.get('message')}"
                 else:
                     # Status table for healthy connection
-                    content = self.renderer.create_status_table(health_data)
+                    status_table = self.renderer.create_status_table(health_data)
+                    metrics_table = self.renderer.create_metrics_table()
+                    
+                    # Combine tables if metrics available
+                    if RICH_AVAILABLE and metrics_table:
+                        from rich.console import Group
+                        content = Group(status_table, metrics_table)
+                    else:
+                        content = status_table
                 
                 # Update display
                 on_update(content)
