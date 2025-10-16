@@ -1,188 +1,223 @@
-# Next Session: System Observability Phase 2.2 - Dashboard-Daemon Integration
+# Next Session: Phase 3.2 P1 - Dashboard Metrics Cards Integration
 
 ## The Prompt
 
-Let's create a new branch for the next feature: **System Observability Phase 2.2 - Dashboard-Daemon Integration**. We want to perform TDD framework with red, green, refactor phases, followed by git commit and lessons learned documentation. This equals one iteration.
+Let's create a new branch for the next feature: **Phase 3.2 P1 - Dashboard Metrics Cards Integration**. We want to perform TDD framework with red, green, refactor phases, followed by git commit and lessons learned documentation. This equals one iteration.
 
 ### Updated Execution Plan (focused P0/P1)
 
-**Context:** Just completed Phase 2.1: Daemon Management Enhancement (60 minutes, 12/12 tests passing, ADR-001 compliant). Successfully delivered `inneros daemon start/stop/status/logs` commands with PID management and graceful shutdown. Now integrating daemon status detection into dashboard launcher for unified system control.
+**Context:** Just completed Phase 3.2 TDD Iteration 1: Web Dashboard Metrics Integration (45 minutes, 12/12 tests passing, production-ready). Successfully delivered `/api/metrics` HTTP endpoint with CORS support, graceful fallback, and <100ms response time. Now building the frontend dashboard cards to visualize these metrics for end users.
 
 **Assets Available:**
-- Daemon Management CLI (94 LOC main, 158 LOC utils, production ready)
-- Dashboard Launcher from Phase 2 (185 LOC main, 218 LOC utils, 14/14 tests)
-- Status CLI from Phase 1 (209 LOC, DaemonDetector utility)
-- Enhanced status checking with uptime calculation
-- Proven TDD patterns (RED→GREEN→REFACTOR, 60min cycle achieved)
 
-I'm following the guidance in `.windsurf/rules/updated-development-workflow.md` and `architectural-constraints.md` (critical path: Complete dashboard-daemon integration for intelligent system control).
+- `/api/metrics` HTTP endpoint (production-ready, 12/12 tests passing)
+- 3 utility classes: WebMetricsFormatter, MetricsCoordinatorIntegration, WebMetricsErrorHandler
+- MetricsEndpoint infrastructure (Phase 3.1, 11/11 tests passing)
+- Flask web app framework (`web_ui/app.py`, ADR-001 compliant)
+- Proven TDD patterns (RED→GREEN→REFACTOR, 45min cycle achieved in Phase 3.2)
+
+I'm following the guidance in `.windsurf/rules/updated-development-workflow.md`, `architectural-constraints.md`, and `automation-monitoring-requirements.md` (critical path: Make system metrics visible to users through web dashboard).
 
 ### Current Status
 
 **Completed:**
-- ✅ Phase 1: System Status CLI (8/8 tests passing)
-- ✅ Phase 2: Dashboard Launcher (14/14 tests passing)
-- ✅ Phase 2.1: Daemon Management Enhancement (12/12 tests passing)
-- Branch: `feat/system-observability-phase-2.1-daemon-management` merged to main
+- ✅ Phase 3.1: Metrics Collection Infrastructure (11/11 tests passing)
+- ✅ Phase 3.1 P1: Dashboard Integration (14/14 tests passing)
+- ✅ Phase 3.2 TDD Iteration 1: Web Metrics Endpoint (12/12 tests passing)
+- Branch: `feat/phase-3.2-web-dashboard-metrics-integration` merged to main
 
 **In progress:**
-- Phase 2.2: Dashboard-Daemon Integration (planning stage)
-- Location: `development/src/cli/dashboard_cli.py` (needs daemon status detection)
-- Location: `development/src/cli/dashboard_utils.py` (needs integration utilities)
+- Phase 3.2 P1: Dashboard Metrics Cards (planning stage)
+- Location: `web_ui/templates/dashboard.html` (needs metrics cards section)
+- Location: `web_ui/static/js/metrics.js` (NEW - needs JavaScript fetch logic)
+- Location: `web_ui/static/css/dashboard.css` (needs card styling)
 
 **Lessons from last iteration:**
-- TDD discipline enables 33% faster development (60min vs 90min previous phases)
-- Utility extraction maintains ADR-001 compliance (<200 LOC)
-- PID file management requires robust process existence checking
-- Dictionary return patterns provide consistent interfaces
-- Graceful error handling creates better UX than exceptions
-- Integration-first approach delivers immediate value
+- Test-first development delivers clarity (12 tests defined exact requirements)
+- Minimal GREEN implementation was fast (15 minutes, 38 lines)
+- REFACTOR added value without risk (55% code reduction via utilities)
+- Building on existing infrastructure 4x faster than greenfield
+- CORS headers critical for frontend integration
+- Graceful fallback prevents user errors
 
-### P0 — Critical System Control (Dashboard-Daemon Integration)
+### P0 — Critical Dashboard Visualization (Metrics Cards)
 
-**Extend Dashboard CLI** (`development/src/cli/dashboard_cli.py`):
-- Auto-detect daemon status before launching live dashboard
-- Display daemon status in dashboard header/footer
-- Show helpful messages if daemon not running
-- Provide quick-start suggestion (`inneros daemon start`)
+**Create Dashboard Metrics Cards** (`web_ui/templates/dashboard.html`):
+- Add metrics cards section below existing content
+- Display counters, gauges, and histograms in card format
+- Mobile-responsive card grid layout
+- Auto-refresh every 2 seconds using JavaScript fetch
 
 **Implementation Details:**
-- Reuse `EnhancedDaemonStatus` from Phase 2.1 `daemon_cli_utils.py`
-- Add status check to `DashboardLauncher.launch_live()` method
-- Create `DashboardDaemonIntegration` utility class
-- Display daemon PID, uptime in dashboard UI
-- Color-coded status indicators (green=running, red=stopped)
+- Create new template section for metrics cards
+- Add card components: Counter Card, Gauge Card, Histogram Card
+- Implement JavaScript `MetricsUpdater` class for fetch logic
+- Display metrics with icons, values, and trend indicators
+- Error handling for failed fetch requests
+- Loading states during initial fetch
 
-**Error Handling:**
-- Graceful degradation when daemon not running
-- Clear instructions for starting daemon
-- Option to continue without daemon (with warnings)
-- Exit code handling for automation scripts
+**JavaScript Fetch Integration:**
 
-**Acceptance Criteria:**
-- ✅ Dashboard auto-checks daemon status on launch
-- ✅ Status displayed in dashboard UI with color coding
-- ✅ Helpful error messages if daemon not running
-- ✅ Main file remains <200 LOC (ADR-001 compliant)
-- ✅ 8-10 comprehensive tests designed and passing
-- ✅ Zero breaking changes to existing commands
-- ✅ Complete TDD cycle in 60-75 minutes
-
-### P1 — Enhanced Observability (Post-Integration)
-
-**Enhanced Logging Display:**
-- Log filtering by level (`--level INFO|WARNING|ERROR`)
-- Component-based filtering (`--component daemon|automation`)
-- Tail mode with auto-refresh (`--follow` flag)
-- Structured log parsing (timestamp, level, component, message)
-
-**Health Monitoring Integration:**
-- Daemon health check endpoint
-- Resource usage display (CPU, memory)
-- Process tree visualization
-- Alert if daemon crashed/restarted
-
-**Dashboard Enhancements:**
-- Real-time daemon status updates in live mode
-- Process metrics in dashboard cards
-- Log streaming in dashboard panel
-- Quick actions: start/stop/restart from dashboard
+```javascript
+class MetricsUpdater {
+  constructor(endpoint = '/api/metrics', interval = 2000) {
+    this.endpoint = endpoint;
+    this.interval = interval;
+  }
+  
+  async fetchMetrics() {
+    // Fetch from /api/metrics
+    // Update DOM elements
+    // Handle errors gracefully
+  }
+}
+```
 
 **Acceptance Criteria:**
-- ✅ Log filtering works with multiple criteria
-- ✅ Health metrics displayed accurately
-- ✅ Dashboard shows real-time updates
-- ✅ Integration tests validate all features
+- ✅ Metrics cards visible on dashboard page
+- ✅ JavaScript fetch calls `/api/metrics` endpoint
+- ✅ Cards update every 2 seconds automatically
+- ✅ Mobile-responsive grid layout (1 column mobile, 3 columns desktop)
+- ✅ Graceful error handling (shows "Unavailable" if fetch fails)
+- ✅ 10-12 comprehensive tests designed and passing
+- ✅ Zero breaking changes to existing dashboard
+- ✅ Complete TDD cycle in 60-90 minutes
 
-### P2 — Future System Observability (Backlog)
+### P1 — Enhanced Metrics Visualization (Post-Cards)
 
-**Automation Controls:**
-- `inneros automation enable/disable` - Toggle automation jobs
-- `inneros automation schedule` - View/modify cron schedule
-- `inneros automation status` - Show job execution history
+**Chart.js Integration:**
+- Histogram distribution charts (bar charts for processing times)
+- Time series trends (line charts for 24h history)
+- Sparklines for counter/gauge trends
+- Interactive tooltips with detailed metrics
 
-**Notifications System:**
-- macOS notifications for processing completion
-- Desktop notifications for errors/warnings
-- Configurable notification preferences
+**Export Functionality:**
+- JSON export button on dashboard
+- CSV export for spreadsheet analysis
+- Download metrics data with timestamp
+- Export current view or historical data
 
-**Remote Monitoring:**
-- Optional web dashboard for remote access
-- API endpoints for external monitoring tools
-- Prometheus/Grafana integration support
+**Time Range Filtering:**
+- Dropdown selector: 1h, 6h, 24h, 7d
+- Update charts and cards based on selection
+- API query parameter: `/api/metrics?range=24h`
+- Local storage for user preference
+
+**Acceptance Criteria:**
+- ✅ Charts render correctly with real data
+- ✅ Export downloads work in all browsers
+- ✅ Time filtering updates all visualizations
+- ✅ User preferences persist across sessions
+
+### P2 — Advanced Dashboard Features (Backlog)
+
+**Real-time Alerts:**
+- Browser notifications for metric thresholds
+- Visual alerts in dashboard (red/yellow indicators)
+- Configurable alert rules
+
+**Metrics Comparison:**
+- Side-by-side comparison views
+- Diff highlighting for metric changes
+- Performance regression detection
+
+**Custom Dashboards:**
+- User-configurable card layouts
+- Drag-and-drop card arrangement
+- Save custom dashboard configurations
 
 ### Task Tracker
 
-- ✅ Phase 1: System Status CLI (COMPLETED)
-- ✅ Phase 2: Dashboard Launcher (COMPLETED)
-- ✅ Phase 2.1: Daemon Management Enhancement (COMPLETED)
-- **[In progress]** Phase 2.2: Dashboard-Daemon Integration
-- [Pending] P1: Enhanced Logging Features
-- [Pending] P1: Health Monitoring Integration
-- [Pending] P1: Real-time Dashboard Updates
-- [Pending] P2: Automation Controls
-- [Pending] P2: Notifications System
+- ✅ Phase 3.1: Metrics Collection Infrastructure (COMPLETED)
+- ✅ Phase 3.1 P1: Dashboard Integration (COMPLETED)
+- ✅ Phase 3.2 TDD Iteration 1: Web Metrics Endpoint (COMPLETED)
+- **[In progress]** Phase 3.2 P1: Dashboard Metrics Cards
+- [Pending] P1: Chart.js Integration
+- [Pending] P1: Export Functionality
+- [Pending] P1: Time Range Filtering
+- [Pending] P2: Real-time Alerts
+- [Pending] P2: Custom Dashboards
 
 ### TDD Cycle Plan
 
-**Red Phase (20-25 minutes):**
+**Red Phase (25-30 minutes):**
 
-Create `development/tests/unit/cli/test_dashboard_daemon_integration.py`:
-- Write 8-10 failing tests:
-  - `test_dashboard_detects_daemon_running`
-  - `test_dashboard_detects_daemon_stopped`
-  - `test_dashboard_displays_daemon_status`
-  - `test_dashboard_shows_uptime_in_ui`
-  - `test_dashboard_handles_missing_pid_file`
-  - `test_dashboard_provides_start_instructions`
-  - `test_dashboard_color_codes_status`
-  - `test_integration_orchestrator_status_check`
+Create `development/tests/unit/web/test_dashboard_metrics_cards.py`:
+- Write 10-12 failing tests:
+  - `test_dashboard_has_metrics_section`
+  - `test_metrics_section_has_card_grid`
+  - `test_counter_card_displays_value`
+  - `test_gauge_card_displays_value`
+  - `test_histogram_card_displays_summary`
+  - `test_javascript_fetches_from_api`
+  - `test_cards_update_on_fetch_success`
+  - `test_cards_show_error_on_fetch_failure`
+  - `test_mobile_responsive_layout`
+  - `test_auto_refresh_interval_configurable`
+  - `test_loading_state_during_initial_fetch`
+  - `test_cards_display_timestamps`
 
-Create stub implementations in `dashboard_cli.py` and `dashboard_utils.py`
-Verify all stubs raise `NotImplementedError`
+Create stub HTML template and JavaScript file
+Verify tests fail with clear error messages
 
-**Green Phase (25-30 minutes):**
+**Green Phase (30-40 minutes):**
 
-Implement core classes:
-- `DashboardDaemonIntegration` - Status checking and UI display
-- `DaemonStatusFormatter` - Color-coded status messages
-- `DashboardHealthMonitor` - Combined system health view
-- Extend `DashboardLauncher` with status check on launch
-- Add daemon status to dashboard header/footer
-- Implement graceful error handling
+Implement core components:
+- HTML: Add metrics cards section to `dashboard.html`
+- CSS: Card grid layout with responsive breakpoints
+- JavaScript: `MetricsUpdater` class with fetch logic
+- JavaScript: DOM update methods for each card type
+- Error handling: Display "Unavailable" on fetch errors
+- Loading states: Show spinners during initial load
 
-Verify pragmatic tests passing (aim for 8/10+ passing)
+Verify pragmatic tests passing (aim for 10/12+ passing)
 
 **Refactor Phase (20-25 minutes):**
 
-Extract utilities to `dashboard_daemon_utils.py` if needed
-Ensure main file <200 LOC (ADR-001 compliance)
-Apply facade pattern for clean architecture
-Optimize status checking performance
-Add performance logging
-Run verification: `python3 tests/verify_refactor_phase.py`
+Extract reusable components:
+- Card template component (reusable HTML structure)
+- Metric formatter utilities (format numbers, timestamps)
+- Error display component (consistent error UI)
+- Optimize fetch logic (avoid duplicate requests)
+- Add CSS variables for theming
+- Minify/bundle JavaScript if needed
+
+Run verification: All 12 tests passing, responsive design validated
 
 ### Next Action (for this session)
 
 **Option 1 - New branch (recommended):**
-- Create branch: `feat/system-observability-phase-2.2-dashboard-daemon-integration`
-- Start RED phase for dashboard-daemon integration
-- Create test file: `development/tests/unit/cli/test_dashboard_daemon_integration.py`
-- Write 8-10 failing tests for status detection and UI display
+- Create branch: `feat/phase-3.2-p1-dashboard-metrics-cards`
+- Start RED phase for dashboard metrics cards
+- Create test file: `development/tests/unit/web/test_dashboard_metrics_cards.py`
+- Write 10-12 failing tests for cards, fetch, and responsive layout
+
+**Files to create:**
+- `web_ui/static/js/metrics.js` (NEW - JavaScript fetch and DOM update logic)
+- `web_ui/static/css/dashboard.css` (NEW - card styling and grid layout)
+- `development/tests/unit/web/test_dashboard_metrics_cards.py` (NEW - test suite)
 
 **Files to modify:**
-- `development/src/cli/dashboard_cli.py` (add daemon status detection)
-- `development/src/cli/dashboard_utils.py` (add integration utilities)
-- `development/tests/unit/cli/test_dashboard_daemon_integration.py` (new test suite)
+- `web_ui/templates/dashboard.html` (add metrics cards section)
+- `web_ui/app.py` (add route for dashboard page if not exists)
 
 **Files to reference:**
-- `development/src/cli/daemon_cli_utils.py` (reuse EnhancedDaemonStatus)
-- `development/src/cli/status_utils.py` (existing DaemonDetector pattern)
+- `web_ui/web_metrics_utils.py` (existing WebMetricsFormatter patterns)
+- `web_ui/templates/base.html` (existing template structure)
+- Phase 3.2 documentation (`Projects/ACTIVE/phase-3.2-web-dashboard-metrics-tdd-iteration-1-complete.md`)
 
-**Expected imports:**
-```python
-from development.src.cli.daemon_cli_utils import EnhancedDaemonStatus
-from development.src.cli.dashboard_utils import DashboardLauncher
+**Expected API usage:**
+```javascript
+// Fetch metrics from endpoint
+fetch('/api/metrics')
+  .then(response => response.json())
+  .then(data => {
+    // data.current.counters
+    // data.current.gauges
+    // data.current.histograms
+    updateCards(data);
+  })
+  .catch(error => showError(error));
 ```
 
-Would you like me to implement the RED phase now (8-10 failing tests for dashboard-daemon integration)?
+Would you like me to implement the RED phase now (10-12 failing tests for dashboard metrics cards)?
