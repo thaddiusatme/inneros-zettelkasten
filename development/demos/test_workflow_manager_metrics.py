@@ -53,16 +53,16 @@ def test_workflow_manager_metrics():
     print(f"✓ Created test vault: {vault}")
     print(f"✓ Created test note: {test_note.name}\n")
     
-    # Initialize WorkflowManager (has built-in metrics)
+    # Initialize WorkflowManager (has built-in metrics coordinator)
     print("🔧 Initializing WorkflowManager with metrics...\n")
     wm = WorkflowManager(base_directory=str(vault))
     
-    # Verify metrics collector exists
-    assert hasattr(wm, 'metrics'), "WorkflowManager should have metrics attribute"
-    print("✓ WorkflowManager.metrics initialized")
+    # Verify metrics coordinator exists
+    assert hasattr(wm, 'metrics_coordinator'), "WorkflowManager should have metrics_coordinator attribute"
+    print("✓ WorkflowManager.metrics_coordinator initialized")
     
     # Check initial metrics state
-    initial_metrics = wm.metrics.get_all_metrics()
+    initial_metrics = wm.metrics_coordinator.get_metrics()
     print(f"✓ Initial counters: {initial_metrics['counters']}")
     print(f"✓ Initial gauges: {initial_metrics['gauges']}")
     print(f"✓ Initial histograms: {initial_metrics['histograms']}\n")
@@ -79,7 +79,7 @@ def test_workflow_manager_metrics():
     print(f"✓ Note processed: {result.get('status', 'unknown')}\n")
     
     # Check updated metrics
-    updated_metrics = wm.metrics.get_all_metrics()
+    updated_metrics = wm.metrics_coordinator.get_metrics()
     
     print("=" * 60)
     print("📊 METRICS AFTER PROCESSING")
@@ -136,7 +136,7 @@ def test_workflow_manager_metrics():
     
     storage = MetricsStorage()
     storage.store(updated_metrics)
-    display = MetricsDisplayFormatter(wm.metrics, storage)
+    display = MetricsDisplayFormatter(wm.metrics_coordinator.collector, storage)
     
     print(display.format_metrics_summary())
     

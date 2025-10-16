@@ -41,7 +41,7 @@ from .workflow_integration_utils import (
 from src.utils.tags import sanitize_tags
 from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 from src.utils.io import safe_write
-from src.monitoring import MetricsCollector
+from .workflow_metrics_coordinator import WorkflowMetricsCoordinator
 
 
 class WorkflowManager:
@@ -133,8 +133,9 @@ class WorkflowManager:
         self.concurrent_session_manager = ConcurrentSessionManager(self.safe_workflow_processor)
         self.performance_metrics_collector = PerformanceMetricsCollector(self.safe_image_processor)
         
-        # Phase 3.1: Real-time metrics collection
-        self.metrics = MetricsCollector()
+        # ADR-002 Phase 13: Metrics coordination extraction
+        # Phase 3.1: Real-time metrics collection via coordinator
+        self.metrics_coordinator = WorkflowMetricsCoordinator()
         
         # ADR-002 Phase 7: Safe image processing coordinator extraction
         self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
@@ -246,11 +247,10 @@ class WorkflowManager:
             corpus_dir=self.permanent_dir
         )
         
-        # Phase 3.1: Record metrics
+        # ADR-002 Phase 13: Record metrics via coordinator
+        # Phase 3.1: Real-time metrics collection
         elapsed_ms = (time.time() - start_time) * 1000
-        self.metrics.increment_counter("notes_processed")
-        self.metrics.record_histogram("processing_time_ms", elapsed_ms)
-        self.metrics.set_gauge("daemon_status", 1)  # 1 = running
+        self.metrics_coordinator.record_note_processing(elapsed_ms, success=True)
         
         # ADR-002 Phase 6 Note: Automatic status updates removed during extraction
         # The original code updated status via lifecycle_manager here, but it was tightly

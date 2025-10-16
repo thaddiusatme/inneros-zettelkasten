@@ -86,28 +86,31 @@ class TestTerminalDashboardMetricsDisplay:
 class TestWorkflowManagerMetricsInstrumentation:
     """Test WorkflowManager collects metrics during operations."""
     
-    def test_workflow_manager_has_metrics_collector(self, vault_dir):
-        """Test that WorkflowManager initializes with MetricsCollector."""
+    def test_workflow_manager_has_metrics_coordinator(self, vault_dir):
+        """Test that WorkflowManager initializes with WorkflowMetricsCoordinator."""
         from src.ai.workflow_manager import WorkflowManager
+        from src.ai.workflow_metrics_coordinator import WorkflowMetricsCoordinator
         
         wm = WorkflowManager(base_directory=str(vault_dir))
         
-        # Should have metrics attribute
-        assert hasattr(wm, 'metrics')
-        assert isinstance(wm.metrics, MetricsCollector)
+        # Should have metrics_coordinator attribute
+        assert hasattr(wm, 'metrics_coordinator')
+        assert isinstance(wm.metrics_coordinator, WorkflowMetricsCoordinator)
     
     def test_workflow_manager_increments_notes_processed(self, vault_dir):
         """Test that processing a note increments notes_processed counter."""
         from src.ai.workflow_manager import WorkflowManager
         
         wm = WorkflowManager(base_directory=str(vault_dir))
-        initial_count = wm.metrics.get_counter("notes_processed")
+        initial_metrics = wm.metrics_coordinator.get_metrics()
+        initial_count = initial_metrics.get("counters", {}).get("notes_processed", 0)
         
         # Process a note (mocked) - mock the coordinator's process_note method
         with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
             wm.process_inbox_note("test_note.md")
         
-        final_count = wm.metrics.get_counter("notes_processed")
+        final_metrics = wm.metrics_coordinator.get_metrics()
+        final_count = final_metrics.get("counters", {}).get("notes_processed", 0)
         assert final_count == initial_count + 1
     
     def test_workflow_manager_records_processing_time(self, vault_dir):
@@ -115,17 +118,19 @@ class TestWorkflowManagerMetricsInstrumentation:
         from src.ai.workflow_manager import WorkflowManager
         
         wm = WorkflowManager(base_directory=str(vault_dir))
-        initial_samples = len(wm.metrics.get_histogram("processing_time_ms"))
+        initial_metrics = wm.metrics_coordinator.get_metrics()
+        initial_samples = len(initial_metrics.get("histograms", {}).get("processing_time_ms", []))
         
         # Process a note (mocked)
         with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
             wm.process_inbox_note("test_note.md")
         
-        final_samples = len(wm.metrics.get_histogram("processing_time_ms"))
+        final_metrics = wm.metrics_coordinator.get_metrics()
+        final_samples = len(final_metrics.get("histograms", {}).get("processing_time_ms", []))
         assert final_samples == initial_samples + 1
         
         # Should record a positive time value
-        times = wm.metrics.get_histogram("processing_time_ms")
+        times = final_metrics.get("histograms", {}).get("processing_time_ms", [])
         assert times[-1] > 0  # Last recorded time should be positive
     
     def test_workflow_manager_updates_daemon_status_gauge(self, vault_dir):
@@ -138,7 +143,8 @@ class TestWorkflowManagerMetricsInstrumentation:
         with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
             wm.process_inbox_note("test_note.md")
         
-        status = wm.metrics.get_gauge("daemon_status")
+        final_metrics = wm.metrics_coordinator.get_metrics()
+        status = final_metrics.get("gauges", {}).get("daemon_status", 0)
         assert status == 1
 
 
