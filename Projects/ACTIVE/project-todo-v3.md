@@ -9,10 +9,10 @@ tags: [note-lifecycle, status-management, workflow-automation, directory-integra
 
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-14 17:25 PDT  
-**Status**: 🚧 **SPRINT IN PROGRESS** - PBI-001 COMPLETE, PBI-002-004 pending  
+**Last Updated**: 2025-10-15 19:58 PDT  
+**Status**: 🚧 **SPRINT IN PROGRESS** - System Observability Phase 1 COMPLETE ✅  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
-**Latest**: PBI-001 Status Update Bug Fix ✅ - NoteLifecycleManager extracted (ADR-002)
+**Latest**: System Status CLI (v2.2.0) - Phase 1 complete, Phase 2 Dashboard Launcher next
 
 ---
 
@@ -138,6 +138,20 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 **Total**: 14 major projects completed September-October 2025
 
 ### Most Recent Completions
+
+#### ✅ System Observability Phase 1: Status Command (Oct 15, 2025)
+- **Duration**: 2 hours (RED: 30min, GREEN: 60min, REFACTOR: 30min)
+- **Status**: 🎉 **COMPLETE** - TDD Iteration 1 (8/8 tests, 576 LOC)
+- **Release**: v2.2.0-status-command ✅
+- **Deliverables**:
+  - ✅ `inneros status` command with daemon/cron/activity/inbox detection
+  - ✅ 209 LOC main file (status_cli.py) - ADR-001 compliant
+  - ✅ 367 LOC utilities (5 reusable classes)
+  - ✅ Beautiful emoji-enhanced terminal output (🟢/🔴/⚠️)
+  - ✅ <5 second performance target (estimated ~3-4s)
+- **User Impact**: Solved critical usability gap - zero visibility → complete system status
+- **Next**: Phase 2 Dashboard Launcher (dashboard wrapper + live terminal UI)
+- **Lessons**: `Projects/ACTIVE/system-observability-phase1-lessons-learned.md` ✅
 
 #### ✅ Testing Infrastructure Revamp (Oct 12-16, 2025)
 - **300x faster** integration tests (5-10min → 1.35s)
@@ -1250,7 +1264,44 @@ Responsibilities: 8+ (should be 1)
 
 ## 🔁 Backlog (Future Phases)
 
-### YouTube CLI: User Context Integration 🎯 P1 (High Value, Low Effort)
+### Model Migration: llama3 → gpt-oss:20b 🎯 P1 (High Value, Medium Effort)
+**Status**: 📋 BACKLOG - Research Complete, Manifest Ready  
+**Manifest**: `Projects/ACTIVE/model-migration-gpt-oss-20b-manifest.md` ✅  
+**Effort**: ~8-10 hours (JSON hardening + validation)  
+**Impact**: Better AI quality (2.5x parameters), improved auto-promotion accuracy
+
+**User Story**: "Upgrade to 20B model for better tagging, quote extraction, and quality assessment"
+
+**Key Benefits**:
+- 2.5x larger model (20B vs 8B) → better instruction following
+- Native JSON mode → eliminates regex parsing failures (~15% reduction)
+- Extended context (8K) → handles longer YouTube transcripts
+- Local/private → maintains privacy-first architecture
+- Instant rollback → environment variable switching
+
+**Critical Components**:
+- 🔴 `tagger.py` - JSON mode hardening required
+- 🔴 `youtube_quote_extractor.py` - Schema-constrained outputs required
+- 🟡 `enhancer.py` - JSON mode recommended
+- 🟢 `summarizer.py` - No changes needed
+
+**Why Medium Effort**:
+- ✅ Environment variable foundation (1 hour)
+- ⚠️ JSON mode hardening for brittle components (3 hours)
+- ✅ Extended context Modelfile creation (1 hour)
+- ✅ Per-component configuration system (1 hour)
+- ⚠️ Comprehensive testing & validation (3 hours)
+
+**Prerequisites**:
+- 16GB+ VRAM or unified memory
+- Ollama installed and running
+- `ollama pull gpt-oss:20b`
+
+**Next Steps**: TDD implementation when prioritized (post-sprint)
+
+---
+
+### YouTube CLI: User Context Integration 🎯 P2 (High Value, Low Effort)
 **Status**: 📋 BACKLOG - Feature Spec Complete  
 **Manifest**: `Projects/ACTIVE/youtube-cli-user-context-feature.md` ✅  
 **Effort**: ~4 hours (Low complexity, existing infrastructure)  
