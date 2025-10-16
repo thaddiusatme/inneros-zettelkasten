@@ -6,6 +6,7 @@ tags: [afteranalyzingtheprovidedtext, andbusinesscommunication, andcommunication
   andtheroleofsocialproofinmarketingandbranding]
 quality_score: 0.6000000000000001
 ai_processed: '2025-10-12T20:40:13.115750'
+type: fleeting
 ---
 # The "Hammer Point" Technique: How Personal Stories Anchor Ideas and Build Intimacy
 
