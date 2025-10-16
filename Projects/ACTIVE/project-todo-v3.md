@@ -353,6 +353,126 @@ if not results.get("error"):
 
 ---
 
+### 🟡 P1: Inbox Metadata Repair System (Jan 8, 2025)
+
+**Status**: 📋 **PLANNED** - Ready for TDD implementation  
+**Priority**: P1 - **UNBLOCKS AUTO-PROMOTION WORKFLOW**  
+**Timeline**: 3-4 hours (follows proven TDD patterns)  
+**Branch**: `feat/inbox-metadata-repair` (to be created)  
+**Manifest**: `Projects/ACTIVE/inbox-metadata-repair-system-manifest.md` ✅  
+**Depends On**: Auto-promotion system (PBI-002 complete ✅)
+
+#### Problem Statement
+
+**8 notes in Inbox cannot be auto-promoted** due to missing `type:` frontmatter:
+- Auto-promotion error rate: 21% (8/40 notes)
+- Notes with high quality (0.85) blocked from workflow
+- Manual frontmatter editing required
+- **Root Cause**: Bulk import on Oct 12, 2024 without validation
+
+```
+🚨 ERRORS
+------
+   voice-note-prompts-for-knowledge-capture.md: Missing 'type' field
+   Study link between price risk and trust...md: Missing 'type' field
+   sprint 2 8020.md: Missing 'type' field
+   newsletter-generator-prompt.md: Missing 'type' field
+   zettelkasten-voice-prompts-v1.md: Missing 'type' field
+   Progress-8-26.md: Missing 'type' field
+   enhanced-connections-live-data-analysis-report.md: Missing 'type' field
+   voice-prompts-quick-reference-card.md: Missing 'type' field
+```
+
+#### Solution: Automated Template System (Option B)
+
+**New Component**: `MetadataRepairEngine` (ADR-002 Pattern)
+
+**Responsibilities**:
+1. Detect notes missing required frontmatter (`type`, `created`)
+2. Infer type from filename patterns (`lit-`, `fleeting-`, `capture-`)
+3. Repair frontmatter while preserving existing fields
+4. Integrate with backup system for safety
+5. Support dry-run preview mode
+
+**Architecture Integration**:
+```
+CoreWorkflowCLI --repair-metadata
+  ↓
+WorkflowManager.repair_inbox_metadata()  [delegation only]
+  ↓
+MetadataRepairEngine.repair_batch()
+  ↓
+BackupSystem (existing)
+```
+
+#### Implementation Plan (5 PBIs)
+
+**PBI-001: Detection System (RED Phase)** - 45 min
+- Create 8-10 failing tests for metadata detection
+- Test fixtures for 8 actual error notes
+- Pattern matching test cases
+
+**PBI-002: Repair Engine (GREEN Phase)** - 60 min
+- Implement `MetadataRepairEngine` class (250-300 LOC)
+- Filename pattern matching (lit-, fleeting-, capture-)
+- Content-based inference (fallback)
+- Preserve existing frontmatter fields
+- All 10 tests passing
+
+**PBI-003: WorkflowManager Integration (REFACTOR)** - 30 min
+- Add delegation method following ADR-002 patterns
+- 3 new delegation tests
+- Total: 13/13 tests passing
+
+**PBI-004: CLI Integration** - 30 min
+- Add `--repair-metadata` command
+- Dry-run and execute modes
+- Rich output formatting
+
+**PBI-005: Real Data Validation** - 20 min
+- Test on 8 actual error notes
+- Verify auto-promotion runs with 0 errors
+- Document results
+
+#### Success Metrics
+
+**Before Repair**:
+- Inbox errors: 8 notes (21%)
+- Auto-promotion error rate: 21%
+- Manual intervention: Required
+
+**After Repair (Target)**:
+- Inbox errors: 0 notes (0%)
+- Auto-promotion error rate: 0%
+- Manual intervention: Not required
+- Additional notes promoted: 5+ (high-quality notes that were blocked)
+
+#### Why P1 Priority
+
+**Immediate Value**:
+- Unblocks 8 high-quality notes (quality: 0.85)
+- Reduces auto-promotion errors to 0%
+- Enables complete hands-off workflow
+- Proves pattern for future bulk imports
+
+**Prevention Strategy**:
+- Documents inference rules for manual imports
+- Foundation for Phase 2: Import Validation Pipeline
+- Prevents recurring metadata issues
+
+#### Timeline & Dependencies
+
+**Prerequisites**:
+- ✅ Auto-promotion system working (PBI-002, Jan 8, 2025)
+- ✅ ADR-002 delegation patterns proven
+- ✅ TDD infrastructure established
+
+**Estimated Completion**: 3-4 hours (single focused session)
+
+**Completion Target**: Within 1 week of auto-promotion deployment
+
+---
+
 ### 🔵 P2: Source Code Reorganization (Planned)
 
 **Status**: 📋 **PLANNED** - Medium/Low Priority, Gradual Implementation  
