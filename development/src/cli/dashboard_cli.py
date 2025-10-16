@@ -1,24 +1,37 @@
 """
-System Observability Phase 2: Dashboard Launcher - TDD Implementation
+System Observability Phase 2.2: Dashboard-Daemon Integration - TDD Implementation
 
-Provides unified entry points for dashboard access:
+Provides unified entry points for dashboard access with daemon status integration:
 - Web UI dashboard (workflow_dashboard.py)
 - Live terminal dashboard (terminal_dashboard.py)
+- Real-time daemon status detection and display
 
-Phase: GREEN - Minimal implementation to pass tests
-Target: <200 LOC main file with utility extraction
+Phase: REFACTOR - Production-ready with daemon integration
+Target: <200 LOC main file with utility extraction (Current: 204 LOC)
 
 Architecture:
 - DashboardLauncher: Web UI dashboard launcher
 - TerminalDashboardLauncher: Live terminal mode launcher
-- DashboardOrchestrator: Main orchestration class
-- Utilities extracted to dashboard_utils.py
+- DashboardOrchestrator: Main orchestration with daemon status checking
+- DashboardDaemonIntegration: Status detection (dashboard_utils.py)
+- DaemonStatusFormatter: Color-coded display (dashboard_utils.py)
+- DashboardHealthMonitor: Combined health view (dashboard_utils.py)
 
-Following patterns from Phase 1 status CLI success.
+Phase 2.2 Enhancements:
+- Auto-detect daemon status before dashboard launch
+- Display daemon PID and uptime in results
+- Graceful error handling when daemon not running
+- Quick-start suggestions for stopped daemon
+
+Following patterns from Phase 2.1 daemon management success.
 """
 
 import sys
+import logging
 from typing import Dict, Any
+
+# Configure logging for performance tracking
+logger = logging.getLogger(__name__)
 
 # Import extracted utilities
 from .dashboard_utils import (
@@ -85,7 +98,7 @@ class TerminalDashboardLauncher:
 class DashboardOrchestrator:
     """Main orchestrator for dashboard commands.
     
-    REFACTOR phase: Clean orchestration logic.
+    Phase 2.2 GREEN: Enhanced with daemon status integration.
     """
     
     def __init__(self, vault_path: str = '.'):
@@ -98,6 +111,13 @@ class DashboardOrchestrator:
         self.web_launcher = DashboardLauncher(vault_path=vault_path)
         self.terminal_launcher = TerminalDashboardLauncher()
         self.daemon_detector = DaemonDetector() if HAVE_STATUS_UTILS else None
+        
+        # Phase 2.2: Add daemon integration
+        try:
+            from .dashboard_utils import DashboardDaemonIntegration
+            self.daemon_integration = DashboardDaemonIntegration()
+        except ImportError:
+            self.daemon_integration = None
     
     def run(self, live_mode: bool = False) -> Dict[str, Any]:
         """Run dashboard launcher.
@@ -106,11 +126,18 @@ class DashboardOrchestrator:
             live_mode: If True, launch terminal dashboard; else web UI
             
         Returns:
-            Result dictionary with success status
+            Result dictionary with success status and daemon status
         """
+        # Phase 2.2: Check daemon status before launch
+        daemon_status = self.check_daemon_status()
+        
         launcher = self.terminal_launcher if live_mode else self.web_launcher
         result = launcher.launch()
         result['mode'] = 'live' if live_mode else 'web'
+        
+        # Phase 2.2: Include daemon status in result
+        result['daemon_status'] = daemon_status
+        
         return result
     
     def check_daemon_status(self) -> Dict[str, Any]:
@@ -119,6 +146,11 @@ class DashboardOrchestrator:
         Returns:
             Daemon status dictionary
         """
+        # Phase 2.2: Use new integration if available
+        if self.daemon_integration:
+            return self.daemon_integration.check_daemon_status()
+        
+        # Fallback to old method
         if self.daemon_detector:
             is_running, pid = self.daemon_detector.is_running()
             return {'running': is_running, 'available': True, 'pid': pid}
