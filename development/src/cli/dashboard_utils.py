@@ -142,10 +142,18 @@ class LiveDashboardLauncher:
             }
         
         try:
-            # Launch terminal dashboard with blocking subprocess
+            # Launch terminal dashboard as module (fixes relative imports)
+            # Set PYTHONPATH to development directory for module resolution
+            import os
+            env = os.environ.copy()
+            dev_dir = self.dashboard_script.parent.parent.parent  # src/cli -> src -> development
+            env['PYTHONPATH'] = str(dev_dir)
+            
             result = subprocess.run(
-                [sys.executable, str(self.dashboard_script), '--url', self.daemon_url],
-                check=False
+                [sys.executable, '-m', 'src.cli.terminal_dashboard', '--url', self.daemon_url],
+                check=False,
+                env=env,
+                cwd=str(dev_dir)
             )
             
             return {

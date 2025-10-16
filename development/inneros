@@ -1,0 +1,40 @@
+#!/bin/bash
+# InnerOS CLI Wrapper
+# Provides easy access to all CLI commands during development
+
+REPO_ROOT="/Users/thaddius/repos/inneros-zettelkasten"
+DEV_DIR="$REPO_ROOT/development"
+
+export PYTHONPATH="$DEV_DIR"
+
+case "$1" in
+    daemon)
+        shift
+        python3 -m src.cli.daemon_cli "$@"
+        ;;
+    dashboard)
+        shift
+        python3 -m src.cli.dashboard_cli "$@"
+        ;;
+    status)
+        shift
+        python3 -m src.cli.status_cli "$@"
+        ;;
+    *)
+        echo "InnerOS Development CLI"
+        echo ""
+        echo "Usage: inneros <command> [options]"
+        echo ""
+        echo "Commands:"
+        echo "  daemon      Manage automation daemon (start|stop|status|logs)"
+        echo "  dashboard   Launch dashboard (add --live for terminal mode)"
+        echo "  status      Show system status"
+        echo ""
+        echo "Examples:"
+        echo "  inneros daemon start"
+        echo "  inneros daemon status"
+        echo "  inneros dashboard"
+        echo "  inneros dashboard --live"
+        echo "  inneros status"
+        ;;
+esac
