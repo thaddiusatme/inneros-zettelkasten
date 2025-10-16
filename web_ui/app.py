@@ -21,11 +21,33 @@ from ai.analytics import NoteAnalytics
 from ai.workflow_manager import WorkflowManager
 from cli.weekly_review_formatter import WeeklyReviewFormatter
 
+# Import monitoring modules
+from monitoring.metrics_collector import MetricsCollector
+from monitoring.metrics_storage import MetricsStorage
+from monitoring.metrics_endpoint import MetricsEndpoint
+
+# Import web metrics utilities
+from web_metrics_utils import (
+    WebMetricsFormatter,
+    MetricsCoordinatorIntegration,
+    WebMetricsErrorHandler
+)
+
 app = Flask(__name__)
 app.secret_key = 'inneros-zettelkasten-demo-key'  # Change in production
 
 # Global configuration
 DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten")
+
+# Initialize metrics infrastructure
+metrics_collector = MetricsCollector()
+metrics_storage = MetricsStorage()
+metrics_endpoint = MetricsEndpoint(metrics_collector, metrics_storage)
+
+# Initialize web metrics utilities
+metrics_formatter = WebMetricsFormatter(enable_cors=True)
+metrics_coordinator = MetricsCoordinatorIntegration(metrics_endpoint)
+metrics_error_handler = WebMetricsErrorHandler()
 
 @app.route('/')
 def index():
@@ -131,6 +153,26 @@ def process_note():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/api/metrics')
+def api_metrics():
+    """API endpoint for real-time metrics data.
+    
+    Returns JSON with current metrics and history for dashboard display.
+    Uses WebMetricsFormatter for response formatting and error handling.
+    """
+    try:
+        # Get combined metrics from endpoint and coordinator
+        metrics_data = metrics_coordinator.get_combined_metrics()
+        
+        # Format response with CORS headers
+        return metrics_formatter.format_metrics_response(metrics_data)
+        
+    except Exception as e:
+        # Log error and return graceful fallback
+        metrics_error_handler.handle_metrics_error(e, "api_metrics")
+        fallback_data = metrics_formatter.format_fallback_response(e)
+        return metrics_formatter.format_metrics_response(fallback_data)
 
 @app.route('/settings')
 def settings():

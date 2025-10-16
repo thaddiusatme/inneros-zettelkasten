@@ -25,6 +25,9 @@ from .terminal_dashboard_utils import (
     RICH_AVAILABLE
 )
 
+# Phase 3.1: Import metrics for dashboard integration
+from src.monitoring import MetricsCollector, MetricsStorage, MetricsDisplayFormatter
+
 try:
     from rich.console import Console
     from rich.live import Live
@@ -75,23 +78,28 @@ def create_status_table(health_data: Dict[str, Any]) -> Optional[Any]:
     return renderer.create_status_table(health_data)
 
 
-def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1):
+def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1, metrics_collector=None):
     """
     Run live-updating terminal dashboard.
     
     Args:
         url: Base URL of daemon
         refresh_interval: Seconds between refreshes
+        metrics_collector: Optional MetricsCollector for metrics display
     """
     if not RICH_AVAILABLE:
         print("Error: 'rich' library required for dashboard")
         print("Install with: pip install rich")
         return
     
+    # Phase 3.1: Initialize metrics if not provided
+    if metrics_collector is None:
+        metrics_collector = MetricsCollector()
+    
     # Initialize components
     poller = HealthPoller(url)
     formatter = StatusFormatter()
-    renderer = TableRenderer(formatter)
+    renderer = TableRenderer(formatter, metrics_collector=metrics_collector)
     orchestrator = DashboardOrchestrator(poller, renderer, refresh_interval)
     
     # Setup display
