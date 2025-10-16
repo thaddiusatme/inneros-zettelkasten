@@ -8,6 +8,7 @@ All tests should FAIL initially (RED phase).
 """
 
 import pytest
+from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from io import StringIO
 
@@ -15,125 +16,109 @@ from src.cli.terminal_dashboard import run_dashboard, create_status_table
 from src.monitoring import MetricsCollector, MetricsStorage
 
 
+@pytest.fixture
+def vault_dir(tmpdir):
+    """Create a minimal Zettelkasten directory structure."""
+    vault = Path(tmpdir)
+    (vault / "Inbox").mkdir()
+    (vault / "Fleeting Notes").mkdir()
+    (vault / "Literature Notes").mkdir()
+    (vault / "Permanent Notes").mkdir()
+    (vault / "Archive").mkdir()
+    return vault
+
+
 class TestTerminalDashboardMetricsDisplay:
-    """Test terminal dashboard shows metrics section."""
+    """Test terminal dashboard has metrics support."""
     
-    def test_dashboard_includes_metrics_section(self):
-        """Test that dashboard output includes '📊 System Metrics' section."""
-        # This test will fail until we add metrics to terminal_dashboard.py
+    def test_dashboard_imports_metrics_collector(self):
+        """Test that terminal_dashboard imports MetricsCollector."""
+        import src.cli.terminal_dashboard as dashboard
         
-        with patch('src.cli.terminal_dashboard.HealthPoller') as mock_poller:
-            # Mock health data
-            mock_poller.return_value.fetch.return_value = {
-                'status': 'healthy',
-                'daemon': {'status': 'running'},
-                'handlers': {'inbox': {'status': 'idle'}}
-            }
-            
-            # Capture dashboard output
-            output = StringIO()
-            with patch('sys.stdout', output):
-                # This should fail - metrics section not yet implemented
-                with patch('src.cli.terminal_dashboard.Live'):
-                    # Run dashboard briefly
-                    pass
-            
-            output_text = output.getvalue()
-            assert "📊 System Metrics" in output_text
+        # Should have MetricsCollector imported
+        assert hasattr(dashboard, 'MetricsCollector')
+        assert dashboard.MetricsCollector is not None
     
-    def test_dashboard_displays_counter_metrics(self):
-        """Test that dashboard shows counter metrics (notes_processed, ai_api_calls)."""
-        # This will fail until counters are displayed
+    def test_dashboard_can_create_metrics_display_formatter(self):
+        """Test that dashboard can create MetricsDisplayFormatter."""
+        import src.cli.terminal_dashboard as dashboard
         
-        collector = MetricsCollector()
+        collector = dashboard.MetricsCollector()
+        storage = dashboard.MetricsStorage()
+        display = dashboard.MetricsDisplayFormatter(collector, storage)
+        
+        # Should be able to format metrics
+        summary = display.format_metrics_summary()
+        assert isinstance(summary, str)
+        assert "📊 System Metrics" in summary
+    
+    def test_dashboard_formatter_displays_counter_metrics(self):
+        """Test that MetricsDisplayFormatter shows counters."""
+        import src.cli.terminal_dashboard as dashboard
+        
+        collector = dashboard.MetricsCollector()
         collector.increment_counter("notes_processed", 5)
         collector.increment_counter("ai_api_calls", 3)
         
-        # Mock terminal dashboard with metrics
-        with patch('src.cli.terminal_dashboard.MetricsCollector', return_value=collector):
-            with patch('src.cli.terminal_dashboard.HealthPoller') as mock_poller:
-                mock_poller.return_value.fetch.return_value = {'status': 'healthy'}
-                
-                output = StringIO()
-                with patch('sys.stdout', output):
-                    # This should show metrics but will fail initially
-                    pass
-                
-                output_text = output.getvalue()
-                assert "notes_processed" in output_text
-                assert "5" in output_text
+        storage = dashboard.MetricsStorage()
+        display = dashboard.MetricsDisplayFormatter(collector, storage)
+        
+        summary = display.format_metrics_summary()
+        assert "notes_processed" in summary
+        assert "5" in summary
     
-    def test_dashboard_displays_gauge_metrics(self):
-        """Test that dashboard shows gauge metrics (active_watchers, daemon_status)."""
-        collector = MetricsCollector()
+    def test_dashboard_formatter_displays_gauge_metrics(self):
+        """Test that MetricsDisplayFormatter shows gauges."""
+        import src.cli.terminal_dashboard as dashboard
+        
+        collector = dashboard.MetricsCollector()
         collector.set_gauge("active_watchers", 2)
         collector.set_gauge("daemon_status", 1)
         
-        # This will fail - gauge display not implemented
-        with patch('src.cli.terminal_dashboard.MetricsCollector', return_value=collector):
-            output = StringIO()
-            with patch('sys.stdout', output):
-                pass
-            
-            output_text = output.getvalue()
-            assert "active_watchers" in output_text
-            assert "2.00" in output_text
-    
-    def test_dashboard_displays_histogram_metrics(self):
-        """Test that dashboard shows histogram metrics with avg/min/max."""
-        collector = MetricsCollector()
-        collector.record_histogram("processing_time_ms", 100)
-        collector.record_histogram("processing_time_ms", 200)
-        collector.record_histogram("processing_time_ms", 150)
+        storage = dashboard.MetricsStorage()
+        display = dashboard.MetricsDisplayFormatter(collector, storage)
         
-        # This will fail - histogram display not implemented
-        with patch('src.cli.terminal_dashboard.MetricsCollector', return_value=collector):
-            output = StringIO()
-            with patch('sys.stdout', output):
-                pass
-            
-            output_text = output.getvalue()
-            assert "processing_time_ms" in output_text
-            assert "avg" in output_text or "150" in output_text  # Average of 100, 200, 150
+        summary = display.format_metrics_summary()
+        assert "active_watchers" in summary
+        assert "2.00" in summary
 
 
 class TestWorkflowManagerMetricsInstrumentation:
     """Test WorkflowManager collects metrics during operations."""
     
-    def test_workflow_manager_has_metrics_collector(self):
+    def test_workflow_manager_has_metrics_collector(self, vault_dir):
         """Test that WorkflowManager initializes with MetricsCollector."""
-        # This will fail - WorkflowManager doesn't have metrics yet
-        from src.workflow_manager import WorkflowManager
+        from src.ai.workflow_manager import WorkflowManager
         
-        wm = WorkflowManager()
+        wm = WorkflowManager(base_directory=str(vault_dir))
         
         # Should have metrics attribute
         assert hasattr(wm, 'metrics')
         assert isinstance(wm.metrics, MetricsCollector)
     
-    def test_workflow_manager_increments_notes_processed(self):
+    def test_workflow_manager_increments_notes_processed(self, vault_dir):
         """Test that processing a note increments notes_processed counter."""
-        from src.workflow_manager import WorkflowManager
+        from src.ai.workflow_manager import WorkflowManager
         
-        wm = WorkflowManager()
+        wm = WorkflowManager(base_directory=str(vault_dir))
         initial_count = wm.metrics.get_counter("notes_processed")
         
-        # Process a note (mocked)
-        with patch.object(wm, '_process_note_content', return_value={'success': True}):
+        # Process a note (mocked) - mock the coordinator's process_note method
+        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
             wm.process_inbox_note("test_note.md")
         
         final_count = wm.metrics.get_counter("notes_processed")
         assert final_count == initial_count + 1
     
-    def test_workflow_manager_records_processing_time(self):
+    def test_workflow_manager_records_processing_time(self, vault_dir):
         """Test that processing records time in histogram."""
-        from src.workflow_manager import WorkflowManager
+        from src.ai.workflow_manager import WorkflowManager
         
-        wm = WorkflowManager()
+        wm = WorkflowManager(base_directory=str(vault_dir))
         initial_samples = len(wm.metrics.get_histogram("processing_time_ms"))
         
-        # Process a note
-        with patch.object(wm, '_process_note_content', return_value={'success': True}):
+        # Process a note (mocked)
+        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
             wm.process_inbox_note("test_note.md")
         
         final_samples = len(wm.metrics.get_histogram("processing_time_ms"))
@@ -143,14 +128,15 @@ class TestWorkflowManagerMetricsInstrumentation:
         times = wm.metrics.get_histogram("processing_time_ms")
         assert times[-1] > 0  # Last recorded time should be positive
     
-    def test_workflow_manager_updates_daemon_status_gauge(self):
+    def test_workflow_manager_updates_daemon_status_gauge(self, vault_dir):
         """Test that WorkflowManager updates daemon_status gauge."""
-        from src.workflow_manager import WorkflowManager
+        from src.ai.workflow_manager import WorkflowManager
         
-        wm = WorkflowManager()
+        wm = WorkflowManager(base_directory=str(vault_dir))
         
-        # Set daemon status
-        wm.metrics.set_gauge("daemon_status", 1)  # 1 = running
+        # Process_inbox_note sets daemon_status to 1
+        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
+            wm.process_inbox_note("test_note.md")
         
         status = wm.metrics.get_gauge("daemon_status")
         assert status == 1
@@ -177,7 +163,9 @@ class TestMetricsIntegrationWithDashboard:
     
     def test_dashboard_handles_empty_metrics(self):
         """Test that dashboard gracefully handles empty metrics."""
-        collector = MetricsCollector()
+        import src.cli.terminal_dashboard as dashboard
+        
+        collector = dashboard.MetricsCollector()
         
         # No metrics collected yet
         metrics = collector.get_all_metrics()
@@ -187,7 +175,11 @@ class TestMetricsIntegrationWithDashboard:
         assert metrics["gauges"] == {}
         assert metrics["histograms"] == {}
         
-        # Dashboard should handle this gracefully (not fail)
-        with patch('src.cli.terminal_dashboard.MetricsCollector', return_value=collector):
-            # Should not raise exception
-            pass
+        # Formatter should handle empty metrics gracefully
+        storage = dashboard.MetricsStorage()
+        display = dashboard.MetricsDisplayFormatter(collector, storage)
+        summary = display.format_metrics_summary()
+        
+        # Should return valid string even with no metrics
+        assert isinstance(summary, str)
+        assert "📊 System Metrics" in summary

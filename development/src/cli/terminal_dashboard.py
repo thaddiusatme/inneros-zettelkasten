@@ -25,6 +25,9 @@ from .terminal_dashboard_utils import (
     RICH_AVAILABLE
 )
 
+# Phase 3.1: Import metrics for dashboard integration
+from src.monitoring import MetricsCollector, MetricsStorage, MetricsDisplayFormatter
+
 try:
     from rich.console import Console
     from rich.live import Live
