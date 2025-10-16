@@ -27,7 +27,14 @@ class DaemonStarter:
     
     def __init__(self, pid_file_path: Optional[Path] = None, daemon_script: Optional[str] = None):
         self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
-        self.daemon_script = daemon_script or "automation/daemon.py"
+        # Default to the actual daemon location in development
+        if daemon_script is None:
+            # Find daemon relative to this file: cli/daemon_cli_utils.py -> automation/daemon.py
+            cli_dir = Path(__file__).parent
+            daemon_path = cli_dir.parent / "automation" / "daemon.py"
+            self.daemon_script = str(daemon_path) if daemon_path.exists() else "automation/daemon.py"
+        else:
+            self.daemon_script = daemon_script
     
     def start(self) -> Dict:
         """Start the daemon process."""
@@ -43,11 +50,21 @@ class DaemonStarter:
             self.pid_file.parent.mkdir(parents=True, exist_ok=True)
             
             if self.daemon_script and Path(self.daemon_script).exists():
+                # Run daemon as module with proper PYTHONPATH
+                import os as os_module
+                env = os_module.environ.copy()
+                daemon_path = Path(self.daemon_script)
+                # Find development directory (daemon.py is in src/automation/)
+                dev_dir = daemon_path.parent.parent.parent  # automation -> src -> development
+                env['PYTHONPATH'] = str(dev_dir)
+                
                 proc = subprocess.Popen(
-                    [sys.executable, self.daemon_script],
+                    [sys.executable, '-m', 'src.automation.daemon'],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
-                    start_new_session=True
+                    start_new_session=True,
+                    env=env,
+                    cwd=str(dev_dir)
                 )
                 pid = proc.pid
             else:

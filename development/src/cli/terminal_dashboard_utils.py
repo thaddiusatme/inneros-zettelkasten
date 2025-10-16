@@ -172,7 +172,7 @@ class TableRenderer:
         """
         self.formatter = formatter
     
-    def create_status_table(self, health_data: Dict[str, Any]) -> Optional[Table]:
+    def create_status_table(self, health_data: Dict[str, Any]) -> Optional['Table']:
         """
         Create Rich Table from health data.
         
@@ -202,7 +202,7 @@ class TableRenderer:
         
         return table
     
-    def _add_daemon_row(self, table: Table, health_data: Dict[str, Any]):
+    def _add_daemon_row(self, table: 'Table', health_data: Dict[str, Any]):
         """Add daemon status row to table."""
         daemon = health_data.get('daemon', {})
         is_healthy = daemon.get('is_healthy', False)
@@ -212,7 +212,7 @@ class TableRenderer:
         
         table.add_row("Daemon", status_str, metrics_str)
     
-    def _add_handler_rows(self, table: Table, health_data: Dict[str, Any]):
+    def _add_handler_rows(self, table: 'Table', health_data: Dict[str, Any]):
         """Add handler status rows to table."""
         handlers = health_data.get('handlers', {})
         

@@ -508,3 +508,41 @@ class AutomationDaemon:
             datefmt='%Y-%m-%d %H:%M:%S'
         ))
         self.logger.addHandler(handler)
+
+
+def main():
+    """Main entry point for daemon module execution."""
+    import sys
+    import signal
+    
+    # Create daemon instance
+    daemon = AutomationDaemon()
+    
+    # Handle shutdown gracefully
+    def handle_shutdown(signum, frame):
+        print("Shutting down daemon...")
+        daemon.stop()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
+    
+    try:
+        # Start daemon
+        daemon.start()
+        print(f"Daemon started successfully")
+        
+        # Keep daemon running
+        while daemon.state == DaemonState.RUNNING:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Daemon interrupted by user")
+        daemon.stop()
+    except Exception as e:
+        print(f"Daemon error: {e}")
+        daemon.stop()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
