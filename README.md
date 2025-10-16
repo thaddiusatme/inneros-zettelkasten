@@ -317,6 +317,7 @@ python3 test_real_analytics.py
 ### 🚀 **Getting Started with AI Features**
 
 1. **Ensure Ollama is running**: `ollama serve` (with llama3:latest model)
+   - **Upgrade option**: `gpt-oss:20b` for 2.5x better quality (see [model migration guide](Projects/ACTIVE/model-migration-gpt-oss-20b-manifest.md))
 2. **Quick analysis**: `inneros analytics`
 3. **Check workflow status**: `inneros workflow --status`
 4. **Process inbox**: `inneros workflow --process-inbox`
@@ -329,6 +330,21 @@ python3 test_real_analytics.py
 - **Production performance**: <10s summarization, <5s similarity
 - **100% success rate** in inbox processing
 - **Graceful fallbacks** when AI services unavailable
+
+### 🔄 **Model Upgrade Path** (Optional)
+**Current**: `llama3:latest` (8B parameters) - Fast, reliable baseline  
+**Upgrade**: `gpt-oss:20b` (20B parameters) - 2.5x better quality
+
+**Benefits of upgrading**:
+- ✅ **Better instruction following** → More accurate tagging and quote extraction
+- ✅ **Native JSON mode** → Eliminates ~15% parsing failures
+- ✅ **Extended context (8K)** → Handles longer YouTube transcripts
+- ✅ **Instant rollback** → Environment variable switching
+- ✅ **Local/private** → Same privacy-first architecture
+
+**Requirements**: 16GB+ VRAM or unified memory
+
+**See**: [Model Migration Guide](Projects/ACTIVE/model-migration-gpt-oss-20b-manifest.md) for complete implementation plan (8-10 hours with TDD approach)
 
 ### 🏗️ **Architecture** (ADR-002 Complete - Oct 2025)
 - **WorkflowManager**: 812 LOC (66% reduction from 2,397 LOC)

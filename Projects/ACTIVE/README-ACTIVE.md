@@ -1,9 +1,9 @@
 # ACTIVE Projects Directory
 
-**Last Updated**: 2025-10-15 18:25 PDT  
+**Last Updated**: 2025-10-15 19:16 PDT  
 **Current Branch**: `main`  
 **Latest Release**: `v2.1-auto-promotion` ✅  
-**Status**: ✅ **CLEAN SLATE** - Auto-promotion complete, ready for next epic
+**Status**: 🔄 **NEW PRIORITY** - System observability integration planned
 
 ---
 
@@ -47,6 +47,29 @@
 ## 🎯 Next Epic Options
 
 **Choose one to start**:
+
+### Option 0: 🔍 System Observability Integration (P0, 6 hours) ⭐ **NEW**
+**Status**: Manifest complete, ready to start  
+**Value**: Know what's running, when it ran, if it's working  
+**File**: `system-observability-integration-manifest.md`
+
+**Problem**: You have sophisticated automation but ZERO visibility into it
+- ❌ Can't tell if daemon is running
+- ❌ Don't know when automation last ran
+- ❌ Can't access 3 production-ready dashboards
+- ❌ Cron jobs disabled (6 days inactive)
+
+**Solution**: Integrate existing assets
+- ✅ Workflow Dashboard (392 LOC, 21 tests) - already built
+- ✅ Terminal Dashboard (136 LOC) - already built
+- ✅ Automation Daemon (511 LOC) - already built
+- ✅ Health System (145 LOC) - already built
+
+**4 Phases**: Status Command → Dashboard Launcher → Daemon Controls → Automation Toggle
+
+**Why P0**: Critical usability issue - can't use what you can't see
+
+---
 
 ### Option 1: 🎬 YouTube Integration (P1, 5-7 hours)
 **Status**: Complete manifest ready  
@@ -94,7 +117,7 @@
 
 ---
 
-## 📁 Active Files (8 total)
+## 📁 Active Files (9 total)
 
 ### **Planning & Tracking**
 1. **`NEXT-EPIC-PLANNING-2025-10-15.md`** ⭐ **START HERE**
@@ -113,28 +136,34 @@
    - Organization rules
 
 ### **Future Work Manifests**
-4. **`youtube-auto-promotion-integration-manifest.md`** (P1, 5-7 hours)
+4. **`system-observability-integration-manifest.md`** ⭐ (P0, 6 hours)
+   - NEW: Critical usability improvement
+   - Integrate 3 existing dashboards
+   - Add `inneros status` command
+   - Ready to start immediately
+
+5. **`youtube-auto-promotion-integration-manifest.md`** (P1, 5-7 hours)
    - Complete 6-phase implementation plan
    - All design decisions documented
    - Ready to start when prioritized
 
-5. **`source-code-reorganization-manifest.md`** (P1, gradual)
+6. **`source-code-reorganization-manifest.md`** (P1, gradual)
    - Domain-driven directory structure
    - Migration strategy
    - Improves code discoverability
 
-6. **`retro-tui-design-manifest.md`** (P1, 1 week)
+7. **`retro-tui-design-manifest.md`** (P1, 1 week)
    - Unified terminal interface design
    - ASCII-based, nostalgic aesthetic
    - Single `inneros` command
 
 ### **Reference & Architecture**
-7. **`adr-003-distribution-architecture.md`** (Reference)
+8. **`adr-003-distribution-architecture.md`** (Reference)
    - Two-repository pattern
    - Distribution system design
    - v0.1.0-alpha implementation
 
-8. **`adr-004-cli-layer-extraction.md`** (Reference)
+9. **`adr-004-cli-layer-extraction.md`** (Reference)
    - CLI layer extraction strategy
    - May be superseded by TUI work
    - Keep for historical context
@@ -189,18 +218,25 @@
 
 ## 🎯 Next Actions
 
-### **Immediate** (Choose One)
+### **Immediate** - START THIS ⭐
+**System Observability Integration** - Phase 1 (Status Command)
+
+**Why P0**:
+- Critical usability gap - can't tell what's running
+- Reuses 100% existing code (~1,184 LOC already built)
+- 6 hours total, 2 hours for Phase 1 visibility
+- Unblocks daily usage of automation
+
+**Quick Win**: In 2 hours you'll have:
+```bash
+inneros status  # See everything at a glance
+```
+
+### **Alternative Options** (Lower Priority)
 1. **YouTube Integration** - Start Phase 1 (metadata schema)
 2. **Bug Fixes** - Fix 5 known bugs (2-3 hours)
 3. **Code Reorganization** - Begin gradual refactor
 4. **Retro TUI** - Design unified interface
-
-### **Recommended**: YouTube Integration
-**Why**:
-- Complete manifest ready (no planning needed)
-- Builds on v2.1 auto-promotion success
-- Clear 6-phase implementation path
-- High user value (unified video workflow)
 
 ### **After Next Epic**
 1. Trim `project-todo-v3.md` (remove completed items)
@@ -212,9 +248,9 @@
 ## 📈 Directory Health
 
 **Status**: ✅ **EXCELLENT** - Clean and organized  
-**Active Files**: 8 files (down from 29)  
+**Active Files**: 9 files (down from 29, +1 new priority)  
 **Completed Work**: Properly archived (18 files moved)  
-**Current State**: Clean slate, ready for next epic  
+**Current State**: New P0 observability project ready to start  
 
 **Latest Release**: v2.1-auto-promotion (Oct 15, 2025)  
 **Test Status**: 34/34 passing (100%)  
@@ -223,4 +259,5 @@
 ---
 
 **Last Cleanup**: 2025-10-15 18:25 PDT  
-**Next Review**: After completing next epic
+**Last Update**: 2025-10-15 19:16 PDT (Added observability project)  
+**Next Review**: After completing observability integration
