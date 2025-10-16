@@ -8,10 +8,12 @@ tags: [epic-planning, architecture, next-steps]
 
 # Next Epic Planning - October 15, 2025
 
+**Last Updated**: 2025-10-15 19:16 PDT
+
 **Current State**: ADR-002 Complete (Phases 1-12) ✅  
 **WorkflowManager**: 812 LOC (within architectural limits) ✅  
-**Test Status**: 53/55 passing (96%) ✅  
-**Branch**: `feat/adr-002-phase-12b-fleeting-note-coordinator`
+**Test Status**: 34/34 passing (100%) ✅ - Auto-promotion complete  
+**Branch**: `main` (v2.1-auto-promotion released)
 
 ---
 
@@ -31,37 +33,64 @@ tags: [epic-planning, architecture, next-steps]
 
 ## 🎯 Epic Options (Priority Order)
 
-### Option 1: 🟢 MERGE & STABILIZE (Recommended First)
-**Duration**: 2-4 hours  
-**Value**: Locks in architectural gains, enables future work
+### Option 0: 🔍 System Observability Integration (P0, 6 hours) ⭐ **RECOMMENDED**
+**Duration**: 6 hours (2h + 1h + 1h + 2h phases)  
+**Value**: Critical usability - know what's running, when, and if it's working  
+**File**: `system-observability-integration-manifest.md`
 
-**Tasks**:
-1. ✅ Fix 2 failing test assertions (30 min)
-   - `test_promote_note_to_permanent` - Summary generation expectation
-   - `test_promote_note_to_fleeting` - Status field expectation
-2. ✅ Fix SafeImageProcessingCoordinator lint warnings (30 min)
-   - Add runtime checks for Optional callbacks
-   - Or document that callbacks are set post-init
-3. ✅ Update documentation (1 hour)
-   - Update project-todo-v3.md with current 812 LOC reality
-   - Archive ADR-002 as complete
-   - Update README with new architecture
-4. ✅ Merge to main (1 hour)
-   - Final validation
-   - Create release notes
-   - Tag as v2.0 (architectural milestone)
+**The Problem You Discovered**:
+> "I don't have much visibility on what's running or not? When it ran? If it's currently running too."
+
+**What Already Exists** (discovered 2025-10-15):
+- ✅ **Workflow Dashboard** (392 LOC, 21 tests) - Production ready
+- ✅ **Terminal Dashboard** (136 LOC) - Live daemon monitoring
+- ✅ **Automation Daemon** (511 LOC) - APScheduler + health checks
+- ✅ **Health System** (145 LOC) - Metrics collection
+- ✅ **~1,184 LOC** of production infrastructure you forgot existed!
+
+**The Gap**:
+- ❌ No unified CLI entry point (`inneros status`)
+- ❌ Can't tell if daemon running or automation active
+- ❌ Cron jobs disabled 6 days (last activity: Oct 9)
+- ❌ Zero documentation on accessing dashboards
+
+**4 Phases** (Integration, not development):
+1. **Phase 1** (2h, P0): Status Command - `inneros status` shows everything
+2. **Phase 2** (1h, P1): Dashboard Launcher - `inneros dashboard`
+3. **Phase 3** (1h, P1): Daemon Controls - `inneros daemon start/stop/status`
+4. **Phase 4** (2h, P2): Automation Toggle - `inneros automation enable/disable`
 
 **Success Criteria**:
-- 55/55 tests passing (100%)
-- Zero lint warnings
-- Documentation accurate
-- Clean main branch for next epic
+- ✅ Single command shows system state (<5s)
+- ✅ Reuses 100% existing code
+- ✅ Adds <300 LOC thin CLI wrappers
+- ✅ Immediate usability improvement
 
-**Why First**: Don't start new work on unstable foundation
+**Why P0 First**:
+- Unblocks daily usage (can't use what you can't see)
+- Quick win: 2 hours → complete visibility
+- No new development, just integration
+- Foundation for all other work
 
 ---
 
-### Option 2: ✅ COMPLETE - Note Lifecycle Auto-Promotion
+### Option 1: 🟢 MERGE & STABILIZE (Completed)
+**Duration**: 2-4 hours  
+**Status**: ✅ **COMPLETED** (2025-10-15)
+
+**What Was Completed**:
+1. ✅ All test assertions fixed
+2. ✅ SafeImageProcessingCoordinator lint warnings resolved
+3. ✅ Documentation updated
+4. ✅ Merged to main as **v2.1-auto-promotion**
+5. ✅ 34/34 tests passing (100%)
+6. ✅ Real data validation: 8 notes promoted, 0 errors
+
+**Outcome**: Clean foundation ready for next work
+
+---
+
+### Option 2: ✅ COMPLETED - Note Lifecycle Auto-Promotion
 **Duration**: 4-6 hours  
 **Status**: ✅ **PRODUCTION READY** (Completed 2025-10-15)
 
@@ -92,11 +121,29 @@ tags: [epic-planning, architecture, next-steps]
 - ✅ True workflow flow enabled
 - ✅ Zero manual intervention required
 
-**Next**: Merge & Stabilize, then choose next epic
+**Status**: ✅ Complete and merged to main
 
 ---
 
-### Option 3: 🟡 P1 - Source Code Reorganization
+### Option 3: 🎬 YouTube Integration (P1, 5-7 hours)
+**Duration**: 5-7 hours  
+**Value**: Unified workflow for video knowledge capture  
+**File**: `youtube-auto-promotion-integration-manifest.md`
+
+**Features**:
+- User approval workflow (`ready_to_process` flag)
+- AI processing preserves user notes
+- Quality scoring for video content
+- Auto-promotion to `Literature Notes/YouTube/`
+- Migration for 37 existing YouTube notes
+
+**6 Phases**: Metadata → YouTube Processor → Auto-Promotion → Migration → CLI → Testing
+
+**Why After Observability**: Need to see automation working first
+
+---
+
+### Option 4: 🟡 P1 - Source Code Reorganization
 **Duration**: 4-6 weeks (gradual)  
 **Value**: Developer experience, code discoverability
 
