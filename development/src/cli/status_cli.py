@@ -1,158 +1,69 @@
-"""
-System Status CLI - TDD Implementation
+"""System Status CLI - TDD Implementation
 
 Provides system observability through status command.
 Detects daemon status, cron jobs, activity, and inbox state.
 
-Phase: GREEN - Minimal implementation for passing tests
-Target: 8/8 tests passing
+Phase: REFACTOR - Clean implementation using extracted utilities
+Target: <150 LOC main file, utilities in status_utils.py
 
 Architecture:
-- StatusDetector: Daemon and cron detection
-- ActivityReader: Log timestamp extraction
-- InboxStatusReader: Note counting and quality assessment
-- StatusFormatter: Display formatting
+- StatusDetector: Facade for utility classes
+- ActivityReader: Facade for LogTimestampReader
+- InboxStatusReader: Facade for InboxAnalyzer
+- StatusFormatter: Display formatting with TimeFormatter
 - get_system_status(): Orchestration function
 """
 
 import os
-import subprocess
-import yaml
 from typing import Dict, Tuple, Optional
 from datetime import datetime
-from pathlib import Path
+
+from .status_utils import (
+    DaemonDetector,
+    CronParser,
+    LogTimestampReader,
+    InboxAnalyzer,
+    TimeFormatter
+)
 
 
 class StatusDetector:
-    """Detects daemon and cron job status.
+    """Facade for daemon and cron detection utilities.
     
-    RED phase: Empty implementation - tests will fail.
+    REFACTOR phase: Delegates to DaemonDetector and CronParser.
     """
     
     def __init__(self):
-        """Initialize status detector."""
-        pass
+        """Initialize status detector with utility instances."""
+        self.daemon_detector = DaemonDetector()
+        self.cron_parser = CronParser()
     
     def detect_daemon_status(self) -> Tuple[bool, Optional[int]]:
         """Detect if automation daemon is running.
         
         Returns:
             Tuple of (is_running, pid)
-            - is_running: True if daemon process active
-            - pid: Process ID if running, None otherwise
         """
-        # Check for PID file first
-        pid_file = Path.home() / ".inneros" / "daemon.pid"
-        
-        if pid_file.exists():
-            try:
-                pid = int(pid_file.read_text().strip())
-                # Check if process is actually running
-                os.kill(pid, 0)  # Signal 0 just checks existence
-                return True, pid
-            except (ValueError, ProcessLookupError, OSError):
-                # PID file exists but process is dead
-                return False, None
-        
-        # Fallback: Check ps aux for daemon process
-        try:
-            result = subprocess.run(
-                ["ps", "aux"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
-            for line in result.stdout.splitlines():
-                if "automation/daemon.py" in line or "run_daemon.py" in line:
-                    # Extract PID (second column)
-                    parts = line.split()
-                    if len(parts) > 1:
-                        try:
-                            pid = int(parts[1])
-                            return True, pid
-                        except ValueError:
-                            pass
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-            pass
-        
-        return False, None
+        return self.daemon_detector.is_running()
     
     def parse_cron_status(self) -> Dict:
         """Parse crontab for automation job status.
         
         Returns:
-            Dictionary with:
-            - automation_disabled: True if #DISABLED# markers found
-            - enabled_jobs_count: Number of active cron jobs
-            - schedule_info: Cron schedule details
+            Dictionary with automation status and job counts
         """
-        try:
-            result = subprocess.run(
-                ["crontab", "-l"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            
-            if result.returncode != 0:
-                # No crontab installed
-                return {
-                    'automation_disabled': True,
-                    'enabled_jobs_count': 0,
-                    'schedule_info': []
-                }
-            
-            crontab_content = result.stdout
-            lines = crontab_content.splitlines()
-            
-            disabled_count = 0
-            enabled_count = 0
-            schedule_info = []
-            
-            for line in lines:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    # Check if it's a disabled job
-                    if '#DISABLED#' in line:
-                        disabled_count += 1
-                        # Extract schedule info from disabled job
-                        clean_line = line.replace('#DISABLED#', '').strip()
-                        if clean_line and not clean_line.startswith('#'):
-                            schedule_info.append({'schedule': clean_line, 'enabled': False})
-                    continue
-                
-                # Active job
-                enabled_count += 1
-                schedule_info.append({'schedule': line, 'enabled': True})
-            
-            # Automation is disabled if we have disabled markers or no enabled jobs
-            automation_disabled = disabled_count > 0 or enabled_count == 0
-            
-            return {
-                'automation_disabled': automation_disabled,
-                'enabled_jobs_count': enabled_count,
-                'disabled_jobs_count': disabled_count,
-                'schedule_info': schedule_info
-            }
-            
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
-            # Error running crontab
-            return {
-                'automation_disabled': True,
-                'enabled_jobs_count': 0,
-                'error': str(e)
-            }
+        return self.cron_parser.get_status()
 
 
 class ActivityReader:
-    """Reads activity timestamps from logs.
+    """Facade for log timestamp reading utility.
     
-    RED phase: Empty implementation - tests will fail.
+    REFACTOR phase: Delegates to LogTimestampReader.
     """
     
     def __init__(self):
-        """Initialize activity reader."""
-        pass
+        """Initialize activity reader with utility instance."""
+        self.log_reader = LogTimestampReader()
     
     def get_last_activity(self, vault_root: str) -> Optional[datetime]:
         """Get timestamp of most recent automation activity.
@@ -163,33 +74,18 @@ class ActivityReader:
         Returns:
             Datetime of last activity, None if no logs exist
         """
-        logs_dir = Path(vault_root) / ".automation" / "logs"
-        
-        if not logs_dir.exists():
-            return None
-        
-        # Find all log files
-        log_files = list(logs_dir.glob("*.log"))
-        
-        if not log_files:
-            return None
-        
-        # Get most recent based on modification time
-        most_recent_file = max(log_files, key=lambda f: f.stat().st_mtime)
-        
-        # Return modification time as datetime
-        return datetime.fromtimestamp(most_recent_file.stat().st_mtime)
+        return self.log_reader.get_last_activity(vault_root)
 
 
 class InboxStatusReader:
-    """Reads inbox status and quality metrics.
+    """Facade for inbox analysis utility.
     
-    RED phase: Empty implementation - tests will fail.
+    REFACTOR phase: Delegates to InboxAnalyzer.
     """
     
     def __init__(self):
-        """Initialize inbox status reader."""
-        pass
+        """Initialize inbox status reader with utility instance."""
+        self.inbox_analyzer = InboxAnalyzer(quality_threshold=0.7)
     
     def get_inbox_status(self, vault_root: str) -> Dict:
         """Count inbox notes and quality scores.
@@ -198,66 +94,15 @@ class InboxStatusReader:
             vault_root: Path to vault root directory
             
         Returns:
-            Dictionary with:
-            - total_notes: Total count in Inbox/
-            - high_quality_count: Notes with quality_score >= 0.7
-            - promotion_ready: Percentage ready for promotion
+            Dictionary with total_notes, high_quality_count, promotion_ready
         """
-        inbox_dir = Path(vault_root) / "Inbox"
-        
-        if not inbox_dir.exists():
-            return {
-                'total_notes': 0,
-                'high_quality_count': 0,
-                'promotion_ready': 0.0
-            }
-        
-        # Count markdown files
-        md_files = list(inbox_dir.glob("*.md"))
-        total_notes = len(md_files)
-        
-        if total_notes == 0:
-            return {
-                'total_notes': 0,
-                'high_quality_count': 0,
-                'promotion_ready': 0.0
-            }
-        
-        # Count high quality notes (quality_score >= 0.7)
-        high_quality_count = 0
-        
-        for md_file in md_files:
-            try:
-                content = md_file.read_text(encoding='utf-8')
-                
-                # Extract YAML frontmatter
-                if content.startswith('---'):
-                    parts = content.split('---', 2)
-                    if len(parts) >= 3:
-                        frontmatter = parts[1]
-                        metadata = yaml.safe_load(frontmatter)
-                        
-                        if metadata and isinstance(metadata, dict):
-                            quality_score = metadata.get('quality_score', 0)
-                            if quality_score >= 0.7:
-                                high_quality_count += 1
-            except (IOError, yaml.YAMLError):
-                # Skip files we can't read
-                continue
-        
-        promotion_ready = (high_quality_count / total_notes * 100) if total_notes > 0 else 0.0
-        
-        return {
-            'total_notes': total_notes,
-            'high_quality_count': high_quality_count,
-            'promotion_ready': round(promotion_ready, 1)
-        }
+        return self.inbox_analyzer.get_status(vault_root)
 
 
 class StatusFormatter:
     """Formats status information for terminal display.
     
-    RED phase: Empty implementation - tests will fail.
+    REFACTOR phase: Uses TimeFormatter utility for timestamps.
     """
     
     def __init__(self):
@@ -301,7 +146,7 @@ class StatusFormatter:
         last_activity = activity_info.get('last_activity')
         
         if last_activity:
-            time_ago = self._format_time_ago(last_activity)
+            time_ago = TimeFormatter.format_time_ago(last_activity)
             lines.append(f"📅 Last Activity: {time_ago}")
         else:
             lines.append("📅 Last Activity: No logs found")
@@ -323,28 +168,12 @@ class StatusFormatter:
             lines.append(f"   • Promote {high_quality} high-quality notes")
         
         return "\n".join(lines)
-    
-    def _format_time_ago(self, timestamp: datetime) -> str:
-        """Format timestamp as human-readable 'time ago' string."""
-        now = datetime.now()
-        diff = now - timestamp
-        
-        if diff.days > 0:
-            return f"{diff.days} day{'s' if diff.days != 1 else ''} ago"
-        elif diff.seconds >= 3600:
-            hours = diff.seconds // 3600
-            return f"{hours} hour{'s' if hours != 1 else ''} ago"
-        elif diff.seconds >= 60:
-            minutes = diff.seconds // 60
-            return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
-        else:
-            return "just now"
 
 
 def get_system_status(vault_root: Optional[str] = None) -> Dict:
     """Orchestrate complete system status check.
     
-    GREEN phase: Minimal implementation to pass tests.
+    REFACTOR phase: Clean implementation using utility facades.
     
     Args:
         vault_root: Path to vault root (defaults to current directory)
