@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ super() }}{% endblock %}
+
+{% block extra_head %}
+<!-- Dashboard-specific CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>System Dashboard</h1>
+    <p class="text-muted">Real-time metrics from InnerOS Zettelkasten automation system</p>
+    
+    <!-- Metrics Cards Section -->
+    <section id="metrics-cards" class="metrics-cards mt-4">
+        <div class="row g-3 metrics-grid">
+            
+            <!-- Counter Cards -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card metric-card counter-card" data-metric-type="counter">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-muted">Total Notes Processed</h6>
+                                <h3 class="metric-value" data-metric-value="notes_processed">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                                    <span class="value-display">--</span>
+                                </h3>
+                            </div>
+                            <div class="metric-icon">📝</div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card metric-card counter-card" data-metric-type="counter">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-muted">Workflow Runs</h6>
+                                <h3 class="metric-value" data-metric-value="workflow_runs">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                                    <span class="value-display">--</span>
+                                </h3>
+                            </div>
+                            <div class="metric-icon">🔄</div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gauge Cards -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card metric-card gauge-card" data-metric-type="gauge">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-muted">Success Rate</h6>
+                                <h3 class="metric-value" data-metric-value="success_rate">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                                    <span class="value-display">--</span>%
+                                </h3>
+                            </div>
+                            <div class="metric-icon">📊</div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card metric-card gauge-card" data-metric-type="gauge">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-subtitle mb-2 text-muted">System Health</h6>
+                                <h3 class="metric-value" data-metric-value="system_health">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                                    <span class="value-display">--</span>
+                                </h3>
+                            </div>
+                            <div class="metric-icon">💚</div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Histogram Cards -->
+            <div class="col-12 col-lg-6">
+                <div class="card metric-card histogram-card" data-metric-type="histogram">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Processing Time Distribution</h6>
+                        <div class="metric-value histogram-summary" data-metric-value="processing_time">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                            <div class="value-display">
+                                <p class="mb-1">Average: <strong>--</strong>s</p>
+                                <p class="mb-1">P95: <strong>--</strong>s</p>
+                            </div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-lg-6">
+                <div class="card metric-card histogram-card" data-metric-type="histogram">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Quality Score Distribution</h6>
+                        <div class="metric-value histogram-summary" data-metric-value="quality_scores">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" data-loading></span>
+                            <div class="value-display">
+                                <p class="mb-1">Average: <strong>--</strong></p>
+                                <p class="mb-1">High Quality: <strong>--</strong>%</p>
+                            </div>
+                        </div>
+                        <small class="text-muted timestamp" data-timestamp>Last updated: --</small>
+                        <div class="error-message text-danger d-none" data-error-message>Unavailable</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+    
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Metrics JavaScript -->
+<script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
+<script>
+    // Initialize MetricsUpdater with 2-second refresh interval
+    document.addEventListener('DOMContentLoaded', function() {
+        const updater = new MetricsUpdater('/api/metrics', 2000);
+        updater.start();
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            updater.stop();
+        });
+    });
+</script>
+{% endblock %}

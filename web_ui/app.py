@@ -56,6 +56,16 @@ def index():
                          title="InnerOS Zettelkasten",
                          current_time=datetime.now().strftime("%Y-%m-%d %H:%M"))
 
+@app.route('/dashboard')
+def dashboard():
+    """System dashboard with real-time metrics visualization.
+    
+    STUB for TDD RED phase - will be implemented in GREEN phase.
+    """
+    return render_template('dashboard.html',
+                         title="Dashboard",
+                         current_time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 @app.route('/analytics')
 def analytics():
     """Analytics dashboard showing note collection insights."""
