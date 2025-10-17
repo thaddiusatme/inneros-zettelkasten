@@ -6,7 +6,7 @@ visibility: private
 tags: [80-20-rule, 8020-principle, 8020-rule, fleeting, gap-analysis, inbox, note-taking,
   note-taking-systems]
 quality_score: 0.7
-ai_processed: '2025-09-24T14:31:29.466013'
+ai_processed: '2025-10-16T21:03:51.458371'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

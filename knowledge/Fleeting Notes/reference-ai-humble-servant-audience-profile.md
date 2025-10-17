@@ -2,10 +2,10 @@
 created: '2025-07-02'
 type: fleeting
 status: inbox
-tags: [agreeableness, calm-urgency, conscientiousness, consumer-psychographics, disc-dynamics,
-  extraversion, fleeting, herearetheextractedtagspersonal-growth]
+tags: [actionable, agreeableness, bullets, calm-urgency, conscientiousness, consumer-psychographics,
+  demographics, disc-dynamics]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:16:03.753106'
+ai_processed: '2025-10-16T21:16:20.480541'
 ---
 
 

@@ -3,10 +3,10 @@ created: 2025-08-23 19:15
 type: fleeting
 status: inbox
 visibility: private
-tags: [content-remixing, content-replication, engagement-analysis, engagement-metrics,
-  fleeting, herearetheextractedtagscontent-marketing, inbox, marketing-analytics]
-quality_score: 0.7
-ai_processed: '2025-09-24T14:26:24.098096'
+tags: [content-analysis, content-remixing, content-replication, engagement-analysis,
+  engagement-metrics, fleeting, herearetheextractedtagscontent-marketing, inbox]
+quality_score: 0.75
+ai_processed: '2025-10-16T20:43:53.534504'
 ---
 
 <!--

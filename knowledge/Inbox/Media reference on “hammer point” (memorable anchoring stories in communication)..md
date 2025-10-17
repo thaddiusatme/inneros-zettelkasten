@@ -1,12 +1,12 @@
 ---
 created: 2025-09-21 16:02
+type: fleeting
 tags: [afteranalyzingtheprovidedtext, andbusinesscommunication, andcommunication2narrativepsychologythistagisrelatedtothestudyofhowstoriesshapeourunderstandingofourselvesandothers3socialproofthetexthighlightstheimportanceofsocialproofinmarketing,
   andpersuasioninmarketingandbranding, andtheimportanceofbrandingandmarketinginbusiness,
   andtheimportanceofnarrativestructureinmarketingandbusinesscommunication, andtheimportanceofpurposeandmotivationinbusinessandmarketing,
   andtheroleofsocialproofinmarketingandbranding]
-quality_score: 0.6000000000000001
-ai_processed: '2025-10-12T20:40:13.115750'
-type: fleeting
+quality_score: 0.75
+ai_processed: '2025-10-16T21:12:28.524402'
 ---
 # The "Hammer Point" Technique: How Personal Stories Anchor Ideas and Build Intimacy
 

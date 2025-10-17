@@ -2,11 +2,11 @@
 created: 2025-08-21 13:21
 type: fleeting
 status: inbox
-tags: [acceptance-criteria, andthemeschatgpt-prompt, chatgpt, filename, fleeting,
-  frontmatter, frontmatter-management, hereare3-8highlyrelevanttagsthatcapturethekeyconcepts]
+tags: [acceptance-criteria, andthemeschatgpt-prompt, chatgpt, filename, filename-convention,
+  fleeting, frontmatter, frontmatter-management]
 quality_score: 0.75
 modified: '2025-08-22'
-ai_processed: '2025-09-24T14:24:16.359555'
+ai_processed: '2025-10-16T20:42:38.319666'
 ---
 # One-prompt template survey
 

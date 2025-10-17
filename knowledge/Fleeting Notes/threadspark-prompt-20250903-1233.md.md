@@ -3,10 +3,10 @@ created: 2025-09-03 12:33
 type: fleeting
 status: inbox
 visibility: private
-tags: [brainstorming, brand-management, business, chatgpt, content-creation, inbox,
-  marketing-strategy, prompt]
+tags: [brainstorming, brand-management, business, business-boundaries, chatgpt, content-creation,
+  content-strategy, inbox]
 quality_score: 0.7
-ai_processed: '2025-09-24T14:30:05.857723'
+ai_processed: '2025-10-16T21:01:20.127255'
 ---
 
 ## The prompt

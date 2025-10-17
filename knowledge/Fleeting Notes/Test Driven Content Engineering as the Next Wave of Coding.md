@@ -5,7 +5,7 @@ status: inbox
 tags: [10k_mrr_goal, active, audience-needs, automation, claude, claude-make-zapier,
   consistency, content-engineering]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:28:57.445152'
+ai_processed: '2025-10-16T20:45:20.025743'
 ---
 
 

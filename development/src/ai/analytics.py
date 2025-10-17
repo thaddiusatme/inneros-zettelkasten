@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 try:
     import matplotlib.pyplot as plt
     import networkx as nx
@@ -132,6 +132,18 @@ class NoteAnalytics:
     def _parse_date(self, date_str: str) -> Optional[datetime]:
         """Parse date string to datetime object."""
         if not date_str:
+            return None
+        
+        # Handle if already a datetime object (from YAML parser)
+        if isinstance(date_str, datetime):
+            return date_str
+        
+        # Handle if it's a date object (convert to datetime)
+        if isinstance(date_str, date):
+            return datetime.combine(date_str, datetime.min.time())
+        
+        # Handle string parsing
+        if not isinstance(date_str, str):
             return None
         
         # Try common date formats

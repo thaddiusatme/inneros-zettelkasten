@@ -1,0 +1,157 @@
+/**
+ * Dashboard Metrics Cards Styling
+ * Phase 3.2 P1 - Dashboard Metrics Visualization
+ */
+
+/* Metrics Cards Section */
+.metrics-cards {
+    width: 100%;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+/* Card Styling */
+.metric-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    height: 100%;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Metric Value Styling */
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--primary-color, #2563eb);
+}
+
+.metric-value .value-display {
+    display: inline-block;
+}
+
+.metric-icon {
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+/* Card Type Specific Styling */
+.counter-card {
+    border-left: 4px solid var(--primary-color, #2563eb);
+}
+
+.gauge-card {
+    border-left: 4px solid var(--success-color, #10b981);
+}
+
+.histogram-card {
+    border-left: 4px solid var(--warning-color, #f59e0b);
+}
+
+/* Histogram Summary */
+.histogram-summary p {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.histogram-summary strong {
+    color: var(--primary-color, #2563eb);
+    font-size: 1.1rem;
+}
+
+/* Loading State */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+[data-loading] {
+    margin-right: 0.5rem;
+}
+
+/* Error State */
+.error-message {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Timestamp */
+.timestamp {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Responsive Design */
+
+/* Tablet (768px and up) */
+@media (min-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .metric-value {
+        font-size: 2.25rem;
+    }
+}
+
+/* Desktop (992px and up) */
+@media (min-width: 992px) {
+    .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .histogram-card {
+        grid-column: span 2;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+    }
+}
+
+/* Large Desktop (1200px and up) */
+@media (min-width: 1200px) {
+    .metric-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .metric-icon {
+        font-size: 3rem;
+    }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .metric-value {
+        font-size: 1.75rem;
+    }
+    
+    .metric-icon {
+        font-size: 2rem;
+    }
+    
+    .metric-card .card-body {
+        padding: 1rem;
+    }
+}

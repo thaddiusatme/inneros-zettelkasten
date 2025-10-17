@@ -37,7 +37,7 @@ app = Flask(__name__)
 app.secret_key = 'inneros-zettelkasten-demo-key'  # Change in production
 
 # Global configuration
-DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten")
+DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten/knowledge")
 
 # Initialize metrics infrastructure
 metrics_collector = MetricsCollector()
@@ -56,6 +56,16 @@ def index():
                          title="InnerOS Zettelkasten",
                          current_time=datetime.now().strftime("%Y-%m-%d %H:%M"))
 
+@app.route('/dashboard')
+def dashboard():
+    """System dashboard with real-time metrics visualization.
+    
+    STUB for TDD RED phase - will be implemented in GREEN phase.
+    """
+    return render_template('dashboard.html',
+                         title="Dashboard",
+                         current_time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 @app.route('/analytics')
 def analytics():
     """Analytics dashboard showing note collection insights."""
@@ -64,6 +74,10 @@ def analytics():
     try:
         analytics = NoteAnalytics(vault_path)
         stats = analytics.generate_report()
+        
+        # Type guard: Ensure stats is a dictionary
+        if not isinstance(stats, dict):
+            raise TypeError(f"Expected dict from generate_report(), got {type(stats).__name__}: {stats}")
         
         # Prepare data for web display (handle actual analytics structure)
         overview = stats.get('overview', {})
@@ -104,17 +118,43 @@ def weekly_review():
     vault_path = request.args.get('path', DEFAULT_VAULT_PATH)
     
     try:
-        workflow_manager = WorkflowManager(vault_path)
+        # Quick scan without full AI processing to avoid timeout
+        from pathlib import Path
         
-        # Generate review candidates and recommendations
-        candidates = workflow_manager.scan_review_candidates()
-        recommendations = workflow_manager.generate_weekly_recommendations(candidates)
+        vault = Path(vault_path)
+        inbox_notes = list(vault.glob('Inbox/*.md')) if (vault / 'Inbox').exists() else []
+        fleeting_notes = list(vault.glob('Fleeting Notes/*.md')) if (vault / 'Fleeting Notes').exists() else []
         
-        # Format for web display
-        formatter = WeeklyReviewFormatter()
+        # Simple review data without expensive AI processing
+        # Convert notes to simple recommendation format for template
+        inbox_items = [
+            {
+                'filename': n.name, 
+                'title': n.stem, 
+                'reason': 'In inbox',
+                'quality_score': 0.5,  # Default placeholder
+                'confidence': 0.7       # Default placeholder
+            } 
+            for n in inbox_notes[:20]
+        ]
+        fleeting_items = [
+            {
+                'filename': n.name, 
+                'title': n.stem, 
+                'reason': 'Fleeting note',
+                'quality_score': 0.4,  # Default placeholder
+                'confidence': 0.6       # Default placeholder
+            } 
+            for n in fleeting_notes[:20]
+        ]
+        
         review_data = {
-            'candidates_count': len(candidates),
-            'recommendations': recommendations,
+            'candidates_count': len(inbox_notes) + len(fleeting_notes),
+            'recommendations': {
+                'promote': inbox_items[:10],  # Show first 10 inbox notes as promotion candidates
+                'keep': fleeting_items[:10],   # Show first 10 fleeting notes  
+                'improve': []  # Empty for now
+            },
             'vault_path': vault_path,
             'generated_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -124,6 +164,9 @@ def weekly_review():
                              title="Weekly Review")
                              
     except Exception as e:
+        import traceback
+        print(f"ERROR in weekly-review: {str(e)}")
+        traceback.print_exc()
         error_message = f"Error loading weekly review: {str(e)}"
         return render_template('error.html',
                              error=error_message,

@@ -3,12 +3,12 @@ created: 2025-10-03 09:24
 type: literature
 status: inbox
 visibility: private
-tags: [ai, ai-slop, artificial-intelligence, dead-internet-theory, literature, plagiarism,
-  sci-fi]
+tags: [ai, ai-slop, artificial-intelligence, dead-internet-theory, literature, literature-note,
+  plagiarism, sci-fi]
 source: null
 quality_score: 0.65
 author: null
-ai_processed: '2025-10-12T12:54:53.782462'
+ai_processed: '2025-10-16T21:14:29.554728'
 ---
 
 

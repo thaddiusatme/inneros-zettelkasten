@@ -1,12 +1,15 @@
 ---
-type: fleeting
 created: 2025-09-30 20:56
+type: fleeting
 status: inbox
 visibility: private
-tags: ["daily-screenshots", "samsung-s23", "social-media", "visual-knowledge"]
+tags: [android-device, daily-screenshots, onedrive, samsung-s23, samsungs23, screenshot-analysis,
+  screenshot_analysis, social-media]
+source: samsung_s23_onedrive
+quality_score: 0.8
 screenshot_count: 1
 processing_date: 2025-09-30
-source: samsung_s23_onedrive
+ai_processed: '2025-10-16T21:35:44.737909'
 ---
 ## Daily Screenshot Summary
 

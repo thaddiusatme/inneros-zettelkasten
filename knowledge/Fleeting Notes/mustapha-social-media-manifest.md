@@ -3,10 +3,10 @@ created: 2025-08-22 15:39
 type: fleeting
 status: inbox
 tags: [30-day-calendar, access-and-setup, ai-powered-content, audience-avatars, audience-research,
-  brand-positioning, calendar, caption-generator-prompt]
+  brand-positioning, calendar, caption-generator]
 quality_score: 0.8
 modified: '2025-08-22'
-ai_processed: '2025-09-24T14:23:03.570208'
+ai_processed: '2025-10-16T20:41:59.159701'
 ---
 # Project Charter
 

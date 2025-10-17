@@ -1,15 +1,17 @@
 ---
-type: literature
 created: 2025-10-06 17:06
+type: literature
 status: inbox
-tags: [youtube, video-content]
 visibility: private
+tags: [agentics-checkout, agents, ai-writing-code, api-updates, app-sdk, apps-sdk,
+  artificial-intelligence, chatgpt]
 source: youtube
 url: https://www.youtube.com/watch?v=hS1YqcewH0c
+quality_score: 0.85
 video_id: hS1YqcewH0c
 author: Sam Altman
 channel: OpenAI
-ai_processed: false
+ai_processed: '2025-10-16T21:13:19.015969'
 ---
 
 

@@ -1,12 +1,16 @@
 ---
+created: 2025-10-01 19:05
 type: fleeting
 status: inbox
-created: 2025-10-01 19:05
-tags: [screenshot, visual-capture, innerview, individual-processing]
+tags: [ai-vision-analysis, calendar-view, herearetheextractedrelevanttagsscheduling,
+  herearetheextractedtagsscheduling, individual-processing, innerview, innerview-app,
+  punch-tracking]
+quality_score: 0.75
 device_type: Samsung Galaxy S23
 app_name: Innerview
 processing_mode: individual
 screenshot_source: Screenshot_20250926_095442_Innerview.jpg
+ai_processed: '2025-10-16T21:15:22.827335'
 ---
 
 # 20250926 0954 Management

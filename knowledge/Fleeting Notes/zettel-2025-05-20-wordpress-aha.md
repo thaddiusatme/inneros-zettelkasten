@@ -3,9 +3,9 @@ created: '2025-05-20'
 type: fleeting
 status: inbox
 tags: [fleeting, funnel-building, goal-setting, herearetheextractedtagspersonal-knowledge-management,
-  inbox, productivity, scaling, website-funnels]
+  inbox, productivity, productivity-systems, scaling]
 quality_score: 0.7
-ai_processed: '2025-09-24T14:30:25.051251'
+ai_processed: '2025-10-16T21:01:29.638409'
 ---
 
 

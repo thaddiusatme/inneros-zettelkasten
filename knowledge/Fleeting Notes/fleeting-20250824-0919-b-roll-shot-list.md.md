@@ -3,10 +3,10 @@ created: 2025-08-24 09:19
 type: fleeting
 status: inbox
 visibility: private
-tags: [fleeting, inbox, note-taking, personal-knowledge-management, productivity,
-  productivity-systems, thought-management, thought-recording]
-quality_score: 0.7
-ai_processed: '2025-09-24T14:27:26.722759'
+tags: [creative-thinking, fleeting, idea-generation, inbox, note-taking, personal-knowledge-management,
+  productivity, productivity-systems]
+quality_score: 0.75
+ai_processed: '2025-10-16T20:44:29.721225'
 ---
 
 <!--
