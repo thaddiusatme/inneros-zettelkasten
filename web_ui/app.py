@@ -37,7 +37,7 @@ app = Flask(__name__)
 app.secret_key = 'inneros-zettelkasten-demo-key'  # Change in production
 
 # Global configuration
-DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten")
+DEFAULT_VAULT_PATH = os.path.expanduser("~/repos/inneros-zettelkasten/knowledge")
 
 # Initialize metrics infrastructure
 metrics_collector = MetricsCollector()
@@ -74,6 +74,10 @@ def analytics():
     try:
         analytics = NoteAnalytics(vault_path)
         stats = analytics.generate_report()
+        
+        # Type guard: Ensure stats is a dictionary
+        if not isinstance(stats, dict):
+            raise TypeError(f"Expected dict from generate_report(), got {type(stats).__name__}: {stats}")
         
         # Prepare data for web display (handle actual analytics structure)
         overview = stats.get('overview', {})
