@@ -209,11 +209,17 @@
                         <div class="list-group list-group-flush">
                             {% for rec in data.recommendations[:5] %}
                                 <div class="list-group-item px-0">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ rec.get('title', 'Recommendation') }}</h6>
-                                        <small class="text-muted">{{ rec.get('priority', 'medium') }}</small>
-                                    </div>
-                                    <p class="mb-1">{{ rec.get('description', 'No description') }}</p>
+                                    {% if rec is string %}
+                                        {# Handle string recommendations #}
+                                        <p class="mb-1">{{ rec }}</p>
+                                    {% else %}
+                                        {# Handle dict recommendations #}
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ rec.get('title', 'Recommendation') }}</h6>
+                                            <small class="text-muted">{{ rec.get('priority', 'medium') }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ rec.get('description', 'No description') }}</p>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         </div>
