@@ -235,5 +235,43 @@ class TestAnalyticsDataTypeGuards:
             overview = bad_stats.get('overview', {})
 
 
+class TestAnalyticsDateHandling:
+    """Tests for date/datetime handling in analytics."""
+    
+    def test_parse_date_handles_datetime_object(self):
+        """Test that _parse_date handles datetime objects from YAML parser."""
+        from datetime import datetime, date
+        
+        # Import NoteAnalytics for testing _parse_date
+        import sys
+        from pathlib import Path
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        src_dir = project_root / 'development' / 'src'
+        sys.path.insert(0, str(src_dir))
+        
+        from ai.analytics import NoteAnalytics
+        
+        # Create temp vault for testing
+        analytics = NoteAnalytics("/tmp/test_vault")
+        
+        # Test datetime object (already parsed by YAML)
+        dt = datetime(2025, 10, 16, 19, 43)
+        result = analytics._parse_date(dt)
+        assert result == dt
+        
+        # Test date object (from YAML date field)
+        d = date(2025, 10, 16)
+        result = analytics._parse_date(d)
+        assert result is not None
+        assert result.year == 2025
+        assert result.month == 10
+        assert result.day == 16
+        
+        # Test string (traditional parsing)
+        result = analytics._parse_date("2025-10-16")
+        assert result is not None
+        assert result.year == 2025
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
