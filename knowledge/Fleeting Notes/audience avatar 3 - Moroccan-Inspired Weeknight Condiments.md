@@ -6,7 +6,7 @@ tags: [authentic-flavors, chef-tested-recipes, chermoula, clean-label, clean-lab
   clear-use-it-tonight-recipes, co-op-stories, coastal-metros]
 quality_score: 0.85
 modified: '2025-08-22'
-ai_processed: '2025-09-24T14:26:00.227239'
+ai_processed: '2025-10-16T20:43:42.224238'
 ---
 # Customer Avatar Profile: Moroccan-Inspired Weeknight Condiments
 

@@ -3,10 +3,10 @@ created: 2025-08-23 22:27
 type: fleeting
 status: inbox
 visibility: private
-tags: [andthemesagile-methodology, andthemessprint-planning, case-studies, client-work,
-  fleeting, freelance-portfoliio, freelance-portfolio, funnel-validation]
+tags: [andthemesagile-methodology, andthemesproduct-goals, andthemessprint-planning,
+  case-studies, client-reliability, client-work, fleeting, freelance-portfoliio]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:18:00.528419'
+ai_processed: '2025-10-16T21:18:21.646785'
 ---
 
 <!--

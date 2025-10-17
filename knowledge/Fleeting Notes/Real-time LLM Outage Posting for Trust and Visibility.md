@@ -2,10 +2,10 @@
 created: '2025-07-01'
 type: fleeting
 status: inbox
-tags: [content-curation, downdetector, fleeting, google-alerts, herearetheextractedtagsnatural-language-processing,
-  inbox, large-language-models, linkedin]
+tags: [automation, content-curation, content-strategy, crisis-communication, digital-outreach,
+  downdetector, fleeting, google-alerts]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:29:45.331513'
+ai_processed: '2025-10-16T21:01:09.197851'
 ---
 
 

@@ -5,7 +5,7 @@ status: inbox
 tags: [10k-mrr-goal, automation, best-practices, fleeting, growth2025, herearetheextractedtagsprompt-engineering,
   inbox, lovable-dev]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:21:14.902035'
+ai_processed: '2025-10-16T20:40:44.811441'
 ---
 
 

@@ -2,10 +2,10 @@
 created: '2025-05-20'
 type: fleeting
 status: inbox
-tags: [charting, data-visualization, dataview, fleeting, herearetheextractedtagsobsidian,
-  inbox, note-taking, obsidian]
-quality_score: 0.75
-ai_processed: '2025-09-24T14:19:42.799345'
+tags: [charting, data-visualization, dataview, fleeting, growth-tracking, herearetheextractedtagsobsidian,
+  inbox, momentjs]
+quality_score: 1.0
+ai_processed: '2025-10-16T21:40:20.691445'
 ---
 
 

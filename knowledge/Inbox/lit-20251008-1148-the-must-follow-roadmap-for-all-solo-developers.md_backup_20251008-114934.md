@@ -3,12 +3,14 @@ created: 2025-10-08 11:48
 type: literature
 status: inbox
 visibility: private
-tags: [youtube, video-content]
+tags: [community-building, consistency, continuous-learning, game-development, improvement,
+  marketing, passion, polishing]
 source: youtube
+quality_score: 0.75
 author: DevWorm
 video_id: IeVxir50Q2Q
 channel: DevWorm
-ai_processed: true
+ai_processed: '2025-10-16T21:40:32.826078'
 processed_at: 2025-10-08 11:49
 quote_count: 3
 processing_time_seconds: 0.0

@@ -3,10 +3,10 @@ created: 2025-07-24 21:02
 type: fleeting
 status: inbox
 visibility: private
-tags: [ai, ai-personalities, demographic-targeting, free-version, marketing-strategy,
-  personality-types, rim-world, soulful-ai]
+tags: [ai, ai-personalities, demographic-targeting, free-version, herearetheextractedtagsartificial-intelligence,
+  herearetheextractedtagsthought-management, marketing-strategy, personality-types]
 quality_score: 0.7
-ai_processed: '2025-09-24T14:20:20.335113'
+ai_processed: '2025-10-16T21:39:55.361948'
 ---
 <!--
 NOTE: This file uses a static date for validation. For new notes, use:

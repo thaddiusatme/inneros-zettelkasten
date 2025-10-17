@@ -4,9 +4,9 @@ type: fleeting
 status: inbox
 visibility: private
 tags: [40-to-60-percent-tracker-template, channel-roles, channel-roles-routing-rules,
-  content-marketing, cta-bank, daily-slot-template, fleeting, herearetheextractedtagscontent-calendar]
+  content-marketing, cta-bank, daily-slot-template, fleeting, format-stacking]
 quality_score: 0.85
-ai_processed: '2025-09-24T14:28:32.882257'
+ai_processed: '2025-10-16T20:45:05.512986'
 ---
 
 <!--

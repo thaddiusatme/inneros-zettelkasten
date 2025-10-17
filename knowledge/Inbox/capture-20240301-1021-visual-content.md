@@ -1,13 +1,16 @@
 ---
+created: 2025-10-01 20:15
 type: fleeting
 status: inbox
-created: 2025-10-01 20:15
-tags: [screenshot, visual-capture, facebook, individual-processing]
+tags: [facebook, herearetheextractedrelevanttags, herearetheextractedrelevanttagssamsung_s23,
+  individual-processing, individual_processing_session, k_lab, klab, samsung_s23]
+quality_score: 0.75
 device_type: samsung_s23
 device_name: Samsung Galaxy S23
 app_name: Facebook
 processing_mode: individual
 screenshot_source: Screenshot_20240301_102157_Facebook.jpg
+ai_processed: '2025-10-16T21:14:56.434041'
 ---
 
 # 20240301 1021 Visual Content

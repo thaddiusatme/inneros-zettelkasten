@@ -4,10 +4,10 @@ type: fleeting
 status: inbox
 visibility: private
 tags: [audience-engagement, business-coaching, business-strategy, coaching, demonstration,
-  entrepreneurship, goal-setting, marketing-strategy]
-quality_score: 0.7
+  demonstration-presentation, entrepreneurship, goal-setting]
+quality_score: 0.75
 modified: '2025-08-20'
-ai_processed: '2025-09-24T14:20:01.395578'
+ai_processed: '2025-10-16T21:35:47.923765'
 '{ date: YYYY-MM-DD HH:mm }': null
 ---
 <!--
