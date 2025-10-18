@@ -515,6 +515,11 @@ class YouTubeFeatureHandler:
             self.logger.info("Rate limit handler initialized with exponential backoff")
         else:
             self.rate_limit_handler = None
+        
+        # GREEN PHASE: Initialize transcript saver for archival
+        from src.ai.youtube_transcript_saver import YouTubeTranscriptSaver
+        self.transcript_saver = YouTubeTranscriptSaver(self.vault_path)
+        self.logger.info("Transcript saver initialized for automatic archival")
     
     def can_handle(self, event) -> bool:
         """
@@ -613,6 +618,14 @@ class YouTubeFeatureHandler:
             # 1. Fetch transcript
             transcript_result = self._fetch_transcript(video_id)
             
+            # REFACTOR: Save transcript to archive BEFORE quote extraction
+            transcript_file, transcript_wikilink = self._save_transcript_with_metadata(
+                video_id=video_id,
+                transcript_result=transcript_result,
+                frontmatter=frontmatter,
+                file_path=file_path
+            )
+            
             # Format for LLM
             from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
             fetcher = YouTubeTranscriptFetcher()
@@ -672,10 +685,13 @@ class YouTubeFeatureHandler:
                 
                 self.logger.info(f"Successfully processed {file_path.name}: {result.quote_count} quotes added in {processing_time:.2f}s")
                 
+                # GREEN PHASE: Include transcript info in results
                 return {
                     'success': True,
                     'quotes_added': result.quote_count,
-                    'processing_time': processing_time
+                    'processing_time': processing_time,
+                    'transcript_file': transcript_file,
+                    'transcript_wikilink': transcript_wikilink
                 }
             else:
                 # Record failure
@@ -685,10 +701,13 @@ class YouTubeFeatureHandler:
                 error_msg = result.error_message or "Unknown error"
                 self.logger.error(f"Failed to process {file_path.name}: {error_msg}")
                 
+                # GREEN PHASE: Include transcript info even on failure
                 return {
                     'success': False,
                     'error': error_msg,
-                    'processing_time': processing_time
+                    'processing_time': processing_time,
+                    'transcript_file': transcript_file,
+                    'transcript_wikilink': transcript_wikilink
                 }
         
         except Exception as e:
@@ -701,11 +720,74 @@ class YouTubeFeatureHandler:
             error_msg = str(e)
             self.logger.error(f"Exception processing {file_path.name}: {error_msg}")
             
+            # GREEN PHASE: Even on exception, try to indicate if transcript was saved
             return {
                 'success': False,
                 'error': error_msg,
-                'processing_time': processing_time
+                'processing_time': processing_time,
+                'transcript_file': None,
+                'transcript_wikilink': None
             }
+    
+    def _save_transcript_with_metadata(
+        self,
+        video_id: str,
+        transcript_result: Dict[str, Any],
+        frontmatter: Dict[str, Any],
+        file_path: Path
+    ) -> tuple[Optional[Path], Optional[str]]:
+        """
+        REFACTOR: Helper method to save transcript with metadata preparation.
+        
+        Extracts metadata from frontmatter and transcript result, then saves
+        transcript file. Gracefully handles failures to avoid blocking quote
+        extraction workflow.
+        
+        Args:
+            video_id: YouTube video ID
+            transcript_result: Result dict from _fetch_transcript()
+            frontmatter: Note frontmatter dict
+            file_path: Path to parent note file
+            
+        Returns:
+            Tuple of (transcript_file_path, transcript_wikilink) or (None, None) on failure
+        """
+        try:
+            # Prepare metadata for transcript saver
+            video_url = frontmatter.get('video_url', f"https://youtube.com/watch?v={video_id}")
+            video_title = frontmatter.get('video_title', file_path.stem)
+            duration = transcript_result.get('duration', 0.0)
+            language = transcript_result.get('language', 'en')
+            
+            metadata = {
+                'video_id': video_id,
+                'video_url': video_url,
+                'video_title': video_title,
+                'duration': duration,
+                'language': language
+            }
+            
+            # Save transcript with parent note name for bidirectional linking
+            parent_note_name = file_path.stem
+            transcript_file = self.transcript_saver.save_transcript(
+                video_id=video_id,
+                transcript_data=transcript_result["transcript"],
+                metadata=metadata,
+                parent_note_name=parent_note_name
+            )
+            
+            # Generate wikilink for result dict
+            from datetime import datetime
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            transcript_wikilink = f"[[youtube-{video_id}-{date_str}]]"
+            
+            self.logger.info(f"Transcript saved: {transcript_file}")
+            return transcript_file, transcript_wikilink
+            
+        except Exception as e:
+            # Log error but continue processing - transcript save shouldn't block quote extraction
+            self.logger.warning(f"Failed to save transcript for {video_id}: {e}")
+            return None, None
     
     def _setup_logging(self) -> None:
         """Setup logging for YouTube handler."""
