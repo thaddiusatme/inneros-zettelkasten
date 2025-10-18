@@ -516,7 +516,7 @@ class YouTubeFeatureHandler:
         else:
             self.rate_limit_handler = None
         
-        # GREEN PHASE: Initialize transcript saver for archival
+        # Phase 2: Initialize transcript saver for automatic archival
         from src.ai.youtube_transcript_saver import YouTubeTranscriptSaver
         self.transcript_saver = YouTubeTranscriptSaver(self.vault_path)
         self.logger.info("Transcript saver initialized for automatic archival")
@@ -685,7 +685,7 @@ class YouTubeFeatureHandler:
                 
                 self.logger.info(f"Successfully processed {file_path.name}: {result.quote_count} quotes added in {processing_time:.2f}s")
                 
-                # GREEN PHASE Phase 3: Add transcript links to parent note
+                # Phase 3: Add bidirectional transcript links to parent note
                 transcript_link_added = False
                 if transcript_wikilink:
                     transcript_link_added = self._add_transcript_links_to_note(
@@ -693,7 +693,7 @@ class YouTubeFeatureHandler:
                         transcript_wikilink=transcript_wikilink
                     )
                 
-                # GREEN PHASE: Include transcript info in results
+                # Include transcript info and linking status in results
                 return {
                     'success': True,
                     'quotes_added': result.quote_count,
@@ -710,7 +710,7 @@ class YouTubeFeatureHandler:
                 error_msg = result.error_message or "Unknown error"
                 self.logger.error(f"Failed to process {file_path.name}: {error_msg}")
                 
-                # GREEN PHASE: Include transcript info even on failure
+                # Include transcript info even on failure for debugging
                 return {
                     'success': False,
                     'error': error_msg,
@@ -729,7 +729,7 @@ class YouTubeFeatureHandler:
             error_msg = str(e)
             self.logger.error(f"Exception processing {file_path.name}: {error_msg}")
             
-            # GREEN PHASE: Even on exception, try to indicate if transcript was saved
+            # Even on exception, try to indicate if transcript was saved
             return {
                 'success': False,
                 'error': error_msg,
@@ -804,18 +804,21 @@ class YouTubeFeatureHandler:
         transcript_wikilink: str
     ) -> bool:
         """
-        GREEN PHASE Phase 3: Add transcript links to parent note.
+        Add transcript links to parent note (Phase 3: Note Linking Integration).
         
         Updates both frontmatter and body with bidirectional transcript links:
         1. Adds transcript_file field to frontmatter
         2. Inserts transcript link in body after title
+        
+        This enables seamless bidirectional navigation between notes and transcripts
+        in the knowledge graph.
         
         Args:
             file_path: Path to parent note file
             transcript_wikilink: Wikilink to transcript (e.g., [[youtube-{id}-{date}]])
             
         Returns:
-            True if linking succeeded, False if it failed
+            True if linking succeeded, False if it failed (non-blocking)
         """
         try:
             # Read note content
@@ -850,10 +853,11 @@ class YouTubeFeatureHandler:
         transcript_wikilink: str
     ) -> str:
         """
-        GREEN PHASE Phase 3: Update note frontmatter with transcript field.
+        Update note frontmatter with transcript field.
         
         Adds transcript_file: [[youtube-{id}-{date}]] to frontmatter while
-        preserving all existing fields and ordering.
+        preserving all existing fields and ordering. Uses centralized
+        frontmatter utilities for YAML safety.
         
         Args:
             content: Original note content
@@ -879,10 +883,11 @@ class YouTubeFeatureHandler:
         transcript_wikilink: str
     ) -> str:
         """
-        GREEN PHASE Phase 3: Insert transcript link in note body.
+        Insert transcript link in note body.
         
         Inserts "**Full Transcript**: [[youtube-{id}-{date}]]" after the first
-        heading (or at start of body if no heading found).
+        H1 heading (or at start of body if no heading found). This provides
+        immediate visual access to the full transcript from the note.
         
         Args:
             content: Note content (with updated frontmatter)
