@@ -685,13 +685,22 @@ class YouTubeFeatureHandler:
                 
                 self.logger.info(f"Successfully processed {file_path.name}: {result.quote_count} quotes added in {processing_time:.2f}s")
                 
+                # GREEN PHASE Phase 3: Add transcript links to parent note
+                transcript_link_added = False
+                if transcript_wikilink:
+                    transcript_link_added = self._add_transcript_links_to_note(
+                        file_path=file_path,
+                        transcript_wikilink=transcript_wikilink
+                    )
+                
                 # GREEN PHASE: Include transcript info in results
                 return {
                     'success': True,
                     'quotes_added': result.quote_count,
                     'processing_time': processing_time,
                     'transcript_file': transcript_file,
-                    'transcript_wikilink': transcript_wikilink
+                    'transcript_wikilink': transcript_wikilink,
+                    'transcript_link_added': transcript_link_added
                 }
             else:
                 # Record failure
@@ -788,6 +797,129 @@ class YouTubeFeatureHandler:
             # Log error but continue processing - transcript save shouldn't block quote extraction
             self.logger.warning(f"Failed to save transcript for {video_id}: {e}")
             return None, None
+    
+    def _add_transcript_links_to_note(
+        self,
+        file_path: Path,
+        transcript_wikilink: str
+    ) -> bool:
+        """
+        GREEN PHASE Phase 3: Add transcript links to parent note.
+        
+        Updates both frontmatter and body with bidirectional transcript links:
+        1. Adds transcript_file field to frontmatter
+        2. Inserts transcript link in body after title
+        
+        Args:
+            file_path: Path to parent note file
+            transcript_wikilink: Wikilink to transcript (e.g., [[youtube-{id}-{date}]])
+            
+        Returns:
+            True if linking succeeded, False if it failed
+        """
+        try:
+            # Read note content
+            content = file_path.read_text(encoding='utf-8')
+            
+            # Update frontmatter
+            updated_content = self._update_note_frontmatter(
+                content=content,
+                transcript_wikilink=transcript_wikilink
+            )
+            
+            # Insert body link
+            updated_content = self._insert_transcript_link_in_body(
+                content=updated_content,
+                transcript_wikilink=transcript_wikilink
+            )
+            
+            # Write updated content
+            file_path.write_text(updated_content, encoding='utf-8')
+            
+            self.logger.info(f"Added transcript links to {file_path.name}")
+            return True
+            
+        except Exception as e:
+            # Log error but don't crash - quote insertion already succeeded
+            self.logger.warning(f"Failed to add transcript links to {file_path.name}: {e}")
+            return False
+    
+    def _update_note_frontmatter(
+        self,
+        content: str,
+        transcript_wikilink: str
+    ) -> str:
+        """
+        GREEN PHASE Phase 3: Update note frontmatter with transcript field.
+        
+        Adds transcript_file: [[youtube-{id}-{date}]] to frontmatter while
+        preserving all existing fields and ordering.
+        
+        Args:
+            content: Original note content
+            transcript_wikilink: Wikilink to transcript
+            
+        Returns:
+            Updated content with modified frontmatter
+        """
+        from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+        
+        # Parse existing frontmatter
+        metadata, body = parse_frontmatter(content)
+        
+        # Add transcript field
+        metadata['transcript_file'] = transcript_wikilink
+        
+        # Rebuild content
+        return build_frontmatter(metadata, body)
+    
+    def _insert_transcript_link_in_body(
+        self,
+        content: str,
+        transcript_wikilink: str
+    ) -> str:
+        """
+        GREEN PHASE Phase 3: Insert transcript link in note body.
+        
+        Inserts "**Full Transcript**: [[youtube-{id}-{date}]]" after the first
+        heading (or at start of body if no heading found).
+        
+        Args:
+            content: Note content (with updated frontmatter)
+            transcript_wikilink: Wikilink to transcript
+            
+        Returns:
+            Updated content with transcript link in body
+        """
+        from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+        
+        # Parse to separate frontmatter from body
+        metadata, body = parse_frontmatter(content)
+        
+        # Create transcript link line
+        transcript_line = f"\n**Full Transcript**: {transcript_wikilink}\n"
+        
+        # Find first heading
+        lines = body.split('\n')
+        insert_index = 0
+        
+        for i, line in enumerate(lines):
+            if line.strip().startswith('# '):
+                # Found heading - insert after it
+                insert_index = i + 1
+                break
+        
+        # Insert transcript link
+        if insert_index == 0:
+            # No heading found - insert at start
+            updated_body = transcript_line + body
+        else:
+            # Insert after heading
+            lines.insert(insert_index, transcript_line)
+            updated_body = '\n'.join(lines)
+        
+        # Rebuild with frontmatter
+        return build_frontmatter(metadata, updated_body)
     
     def _setup_logging(self) -> None:
         """Setup logging for YouTube handler."""
