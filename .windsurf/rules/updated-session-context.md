@@ -2,122 +2,240 @@
 trigger: manual
 ---
 
-# Session Context & Core Principles
+---
+type: context
+updated: 2025-10-17
+priority: critical
+tags: [session-context, project-status, current-state]
+---
 
-> **Purpose**: Session management, required reads, and critical path guidance  
-> **Updated**: 2025-10-12
+# Session Context - InnerOS Zettelkasten
 
-## 🎯 Core Session Principles
+> **Last Updated**: 2025-10-17 20:15 PDT  
+> **Current Branch**: main  
+> **Last Commit**: b891ea3 (Phase 3.2 P1: Dashboard + Analytics + Weekly Review)
 
-### Context-First Development
-Required Reads (Priority Order):
-1. **Projects/ACTIVE/PROJECT-STATUS-UPDATE-2025-10-12.md** - Latest 48-hour progress summary
-2. Projects/ACTIVE/project-todo-v3.md - Current priorities and next development steps  
-3. Projects/REFERENCE/inneros-manifest-v3.md - Comprehensive project overview and architecture
-4. README.md - Updated project structure and AI features documentation
-5. Projects/REFERENCE/windsurf-project-changelog.md - Detailed development history
+---
 
-Session Actions:
-- Always ground actions in project context using ACTIVE/ and REFERENCE/ directories
-- Check Projects/ACTIVE/ for current priorities before starting development
-- Reference completed work in Projects/COMPLETED-2025-XX/ for patterns and lessons
-- Consult Projects/DEPRECATED/ only for historical context on superseded approaches
-- When in doubt, prioritize ACTIVE manifests over deprecated integration analyses
+## 🎯 Current Project State
 
-## 🎉 Recent Completions (Oct 10-12, 2025)
+**Status**: ✅ **Production Ready** - All October 2025 milestones complete  
+**Architecture**: Healthy (ADR-002 complete, WorkflowManager 812 LOC)  
+**Test Suite**: 100% passing (72+ tests across all systems)  
+**Technical Debt**: Low (only 1 architectural exception documented)
 
-### ✅ ADR-004 CLI Layer Extraction - 100% COMPLETE
-- **Duration**: 8.5 hours over 2 days (vs 40 hours estimated = 4.7x faster)
-- **Achievement**: Extracted 25/25 commands into 10 dedicated CLIs
-- **Impact**: Eliminated 2,074 LOC monolith, clean architecture achieved
-- **Bug Fix**: Bug #3 (fleeting-health AttributeError) fixed during Iteration 2
-- **Documentation**: 5 iteration lessons learned + complete ADR
+---
 
-### ✅ UX Regression Prevention - 13/13 Tests Passing
-- **File**: `tests/integration/test_dashboard_progress_ux.py`
-- **Impact**: Prevents dashboard appearing frozen, silent completions, unclear progress
-- **Documentation**: [development/TEST-STATUS-SUMMARY.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/TEST-STATUS-SUMMARY.md:0:0-0:0)
+## ✅ Recently Completed (October 2025)
 
-### ✅ Contract Testing - 7/7 Tests Passing
-- **File**: `tests/unit/test_workflow_cli_contract.py`
-- **Impact**: Prevents interface mismatches between WorkflowManager ↔ CLI
-- **Documentation**: [development/TDD-CONTRACT-TEST-LESSONS.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/TDD-CONTRACT-TEST-LESSONS.md:0:0-0:0)
+### Week of Oct 14-17, 2025
 
-### 🔄 Workflow Dashboard - Iteration 1 Complete
-- **Achievement**: Inbox Status Panel with health indicators
-- **Tests**: 9/9 passing (45-minute TDD cycle)
-- **Next**: Additional panels, navigation, keyboard shortcuts
+**Phase 3.2 P1: Dashboard + Analytics + Weekly Review** (Oct 16) ✅
+- Dashboard metrics cards (18 tests, real-time auto-refresh)
+- Analytics route fixes (16 tests, type safety)
+- Weekly review optimization (19 tests, 30x performance improvement)
+- **Result**: Complete web UI with metrics visualization
 
-## 🎯 Current Focus (October 2025)
+**Auto-Promotion System** (Oct 15) ✅
+- PromotionEngine.auto_promote_ready_notes() (34 tests)
+- CLI integration: `inneros auto-promote --dry-run --quality-threshold 0.7`
+- Production validated: 8 notes promoted, 0 errors
+- **Result**: True workflow automation enabled
 
-### Immediate Priorities
-1. **Bug Fixes Unblocked**: Fix bugs #1, #2, #4, #5 in dedicated CLIs (~50 min total)
-2. **Documentation Updates**: CLI-REFERENCE.md, MIGRATION-GUIDE.md
-3. **Dashboard Development**: Continue TUI Iteration 2+
+**Inbox Metadata Repair** (Oct 15) ✅
+- MetadataRepairEngine (14 tests)
+- CLI integration: `inneros repair-metadata`
+- Fixed 8 notes missing type field
+- **Result**: Unblocked auto-promotion for all inbox notes
 
-### Active Work
-- **Dashboard TUI**: Building retro-styled terminal interface (MS-DOS/BBS aesthetic)
-- **Bug Resolution**: Systematic fixes in correct architectural layer
-- **Quality Assurance**: Re-run audit after bug fixes to confirm 100% reliability
+**System Status CLI** (Oct 15) ✅
+- `inneros status` command (8 tests)
+- Real-time daemon/cron/activity detection
+- <5 second performance
+- **Result**: Complete system observability
 
-### Strategic Context
-- **Architecture**: 🟢 CLEAN - Both ADR-001 (backend) and ADR-004 (frontend) complete
-- **Technical Debt**: ELIMINATED (0 god classes, 0 CLI monoliths)
-- **Test Coverage**: 100% (all tests passing)
-- **Velocity**: Proven TDD methodology delivering 4-5x faster than estimates
+**Flask Web Dashboard** ✅
+- web_ui/app.py (251 lines) - Production ready
+- Routes: /dashboard, /analytics, /weekly-review, /api/metrics
+- Dashboard CLI launcher (218 lines) - `inneros dashboard`
+- **Result**: Beautiful web UI for system monitoring
 
-## 🔧 Critical Path Management
+### Week of Oct 7-11, 2025
 
-### Architecture Status (October 2025)
-- **ADR-001**: WorkflowManager refactor COMPLETE ✅
-- **ADR-004**: CLI layer extraction COMPLETE ✅
-- **Bug #3**: Fleeting Health AttributeError FIXED ✅
-- **Bugs #1,2,4,5**: Ready to fix in dedicated CLIs (unblocked)
-- **Dashboard**: Iteration 1 complete, Iteration 2+ in progress
+**ADR-004 CLI Layer Extraction** (Oct 10-11) ✅
+- 10 dedicated CLIs extracted from monolith
+- 2,074 LOC eliminated (workflow_demo.py deprecated)
+- 4.7x faster than estimated (8.5h vs 40h)
+- **Result**: Clean CLI architecture
 
-### Integration Patterns
-- **Integration-First**: New features must leverage existing CLI/Manager infrastructure
-- **TDD Methodology**: RED → GREEN → REFACTOR proven at scale
-- **Wrapping Pattern**: 3.3x faster when wrapping existing utilities vs building from scratch
-- **Discovery Phase**: Upfront analysis delivers 2000%+ ROI by preventing duplicate work
+**Testing Infrastructure Revamp** (Oct 12-16) ✅
+- 300x faster integration tests (5-10min → 1.35s)
+- 88 tests, production-safe smoke test infrastructure
+- **Result**: Fast, reliable test suite
 
-### Performance Benchmarks
-- **Maintained**: <10s summarization, <5s similarity, <30s processing
-- **Achieved**: Sub-second CLI operations, 296 tags/second processing
-- **Target**: Continue meeting or exceeding all performance targets
+---
 
-### Data Preservation & Ethics
-- Never overwrite or destructively edit notes unless explicitly instructed
-- Always retain metadata and maintain complete audit trail
-- Backup considerations before any structural changes
-- Respect privacy and visibility tags at all times
-- Preserve user decision-making in AI workflows
-- Confirm destructive actions with user
-- Provide rollback options for structural changes
+## 📋 Active Priorities (Next Work)
 
-### Workflow Compliance
-- Follow note promotion and triage flows as defined in templates and manifest
-- Use Templater scripts and LLM/AI integration points as described in manifest
-- Respect all privacy and visibility tags (private/shared/team/public)
-- Maintain backward compatibility with existing workflows
-- Log all major actions in Changelog and notify user
-- Follow project lifecycle management: ACTIVE → Implementation → COMPLETED → DEPRECATED
-- Maintain clean architecture: no god classes, no CLI monoliths
+### Priority 1: YouTube Integration (5-7 hours)
+**File**: [Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md:0:0-0:0)
+- User approval workflow for YouTube notes
+- AI processing integration
+- Auto-promotion to Literature Notes/YouTube/
+- Migration for 37 existing YouTube notes
 
-## 📚 Key Documentation References
+### Priority 2: Source Code Reorganization (Gradual, 4-6 weeks)
+**File**: [Projects/ACTIVE/source-code-reorganization-manifest.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/source-code-reorganization-manifest.md:0:0-0:0)
+- Split ai/ directory (56 files → 7 domains)
+- Split cli/ directory (44 files → 7 features)
+- Improve code discovery time 90% (20min → 2min)
 
-### Active Development
-- [Projects/ACTIVE/PROJECT-STATUS-UPDATE-2025-10-12.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/PROJECT-STATUS-UPDATE-2025-10-12.md:0:0-0:0) - Latest progress
-- [Projects/ACTIVE/adr-004-cli-layer-extraction.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/adr-004-cli-layer-extraction.md:0:0-0:0) - CLI extraction complete
-- [Projects/ACTIVE/retro-tui-design-manifest.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/retro-tui-design-manifest.md:0:0-0:0) - Dashboard vision
-- [Projects/ACTIVE/AUDIT-SESSION-SUMMARY-2025-10-10.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/AUDIT-SESSION-SUMMARY-2025-10-10.md:0:0-0:0) - Quality audit results
+### Priority 3: Quality Audit Bug Fixes (2-3 hours)
+- 5 known bugs from October audit
+- Connection Discovery import error (5 min fix)
+- Quick wins, low effort
 
-### Architecture Decisions
-- [Projects/ACTIVE/adr-001-workflow-manager-refactoring.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/adr-001-workflow-manager-refactoring.md:0:0-0:0) - Backend complete
-- [Projects/ACTIVE/adr-004-cli-layer-extraction.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/adr-004-cli-layer-extraction.md:0:0-0:0) - Frontend complete
-- `.windsurf/rules/architectural-constraints.md` - Constraints and guardrails
+---
 
-### Testing & Quality
-- [development/TEST-STATUS-SUMMARY.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/TEST-STATUS-SUMMARY.md:0:0-0:0) - UX regression tests
-- [development/TDD-CONTRACT-TEST-LESSONS.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/TDD-CONTRACT-TEST-LESSONS.md:0:0-0:0) - Contract testing
-- [Projects/ACTIVE/bug-fix-execution-plan-2025-10-10.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/bug-fix-execution-plan-2025-10-10.md:0:0-0:0) - Bug resolution plan
+## 🏗️ Architecture Status
+
+**ADR-002: WorkflowManager Decomposition** ✅ COMPLETE
+- All 12 coordinators extracted
+- WorkflowManager: 812 LOC (within 500 LOC limit + exception)
+- Clean delegation pattern established
+
+**ADR-004: CLI Layer Extraction** ✅ COMPLETE
+- 10 dedicated CLIs (avg 400 LOC each)
+- Zero monoliths >2000 LOC
+- Clean separation: CLI ← Manager ← Utilities
+
+**Current Violations**: 1 documented exception
+- WorkflowManager: 812 LOC (ADR-003 exception approved)
+
+---
+
+## 🧪 Test Infrastructure
+
+**Status**: Excellent
+- Fast test suite: 1.56s (200-400x faster than legacy)
+- Integration tests: 1.35s (300x improvement)
+- Total coverage: 72+ tests passing
+- TDD methodology: Proven across 14+ major iterations
+
+---
+
+## 🎯 Product Vision
+
+**Primary Purpose**: Personal knowledge management for developer power users
+- CLI-first, local files, privacy-preserving
+- Fills gaps in existing solutions (Obsidian, etc.)
+- Built for developer workflow
+
+**Validation Strategy**: Streaming + Organic Discovery
+- Demonstrate tool during live streams
+- Let viewers discover naturally
+- GitHub link in stream description
+- Target: 5-10 power users initially
+
+**NOT Building** (Explicitly Ruled Out):
+- ❌ Web application (browser-based, Notion-like)
+- ❌ Cloud database storage
+- ❌ Mass-market consumer product
+- ❌ Multi-user SaaS (Phase 1)
+
+---
+
+## 🚫 NOT Next (Already Complete)
+
+These are DONE - don't suggest them again:
+- ❌ Auto-promotion system → Complete Oct 15
+- ❌ Dashboard metrics cards → Complete Oct 16
+- ❌ Inbox metadata repair → Complete Oct 15
+- ❌ System status CLI → Complete Oct 15
+- ❌ Flask web dashboard → Complete
+- ❌ Dashboard CLI launcher → Complete
+- ❌ Note lifecycle status management → Complete Oct 14-15
+- ❌ ADR-002 extraction → Complete
+- ❌ ADR-004 CLI extraction → Complete Oct 10-11
+
+---
+
+## 🔧 Technology Stack
+
+**Core**:
+- Python 3.11+ (currently using 3.14.0)
+- Markdown, YAML frontmatter
+- Virtual environment: .venv (Flask 3.1.2 installed)
+
+**AI** (Optional):
+- Ollama with llama3:latest
+- Future: gpt-oss:20b upgrade planned
+
+**Testing**:
+- pytest (TDD methodology)
+- 1.35s integration test suite
+
+**Web**:
+- Flask 3.1.2 (web_ui/)
+- JavaScript fetch API
+- Bootstrap + custom CSS
+
+**CLI**:
+- Rich terminal output
+- Emoji indicators (🟢/🔴/⚠️)
+- JSON output support for automation
+
+---
+
+## 📊 Success Metrics
+
+**Development Velocity**:
+- ADR-004: 4.7x faster than estimated
+- TDD iterations: 45-120 minutes per feature
+- Zero regressions maintained
+
+**System Performance**:
+- Status command: <5s target ✅
+- Integration tests: <2s ✅
+- AI processing: <10s for inbox notes ✅
+- Dashboard auto-refresh: 2s interval ✅
+
+**Code Quality**:
+- Test coverage: 100% for new features
+- Architectural limits: 1 exception only
+- CLI commands: All under 500 LOC
+- Fast test suite: 1.35s for integration
+
+---
+
+## 🗂️ Key File Locations
+
+**Project Documentation**:
+- [Projects/ACTIVE/project-todo-v3.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/project-todo-v3.md:0:0-0:0) - Main project manifest
+- [Projects/ACTIVE/NEXT-EPIC-PLANNING-2025-10-15.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/NEXT-EPIC-PLANNING-2025-10-15.md:0:0-0:0) - Next work options
+- `Projects/COMPLETED-2025-10/` - Archived completed work (140+ files)
+
+**Architecture Decisions**:
+- [Projects/ACTIVE/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md:0:0-0:0)
+- [Projects/ACTIVE/adr-003-distribution-architecture.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/adr-003-distribution-architecture.md:0:0-0:0)
+
+**Core Systems**:
+- [development/src/ai/workflow_manager.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/ai/workflow_manager.py:0:0-0:0) (812 LOC)
+- [development/src/ai/promotion_engine.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/ai/promotion_engine.py:0:0-0:0) (626 LOC)
+- [development/src/cli/core_workflow_cli.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/cli/core_workflow_cli.py:0:0-0:0) (722 LOC)
+- [web_ui/app.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/web_ui/app.py:0:0-0:0) (251 LOC)
+
+---
+
+## ⚠️ Important Notes
+
+1. **Always check COMPLETED-2025-10/** before planning new work
+2. **Virtual environment required**: `source .venv/bin/activate`
+3. **Flask is installed**: Flask 3.1.2 in .venv
+4. **Main branch is clean**: All Oct 15-16 work merged
+5. **Next work**: Choose from NEXT-EPIC-PLANNING options
+
+---
+
+**Context Last Validated**: 2025-10-17 20:15 PDT  
+**Next Review Due**: When starting new epic or after major milestone
