@@ -9,10 +9,10 @@ tags: [note-lifecycle, status-management, workflow-automation, directory-integra
 
 # InnerOS Zettelkasten - Project Todo v3.0
 
-**Last Updated**: 2025-10-15 19:58 PDT  
-**Status**: 🚧 **SPRINT IN PROGRESS** - System Observability Phase 1 COMPLETE ✅  
+**Last Updated**: 2025-10-17 22:56 PDT  
+**Status**: 🚧 **ACTIVE PLANNING** - YouTube Automation Projects Added  
 **Reference**: `Projects/inneros-manifest-v3.md` for comprehensive context  
-**Latest**: System Status CLI (v2.2.0) - Phase 1 complete, Phase 2 Dashboard Launcher next
+**Latest**: YouTube API Trigger System & Transcript Archival manifests complete
 
 ---
 
@@ -192,6 +192,147 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 ## 🎯 Active Projects (ARCHITECTURAL PIVOT)
 
 *Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
+
+### 🔴 P0 NEW: YouTube API Trigger System (Oct 17, 2025)
+
+**Status**: 🟡 **PLANNING** - Manifest complete, ready for implementation  
+**Priority**: P0 - **ENABLES API-FIRST YOUTUBE WORKFLOW**  
+**Timeline**: 4.5 hours (2h API, 1h Templater, 1h Dashboard, 0.5h Testing)  
+**Branch**: `feat/youtube-api-trigger-system` (to be created)  
+**Manifest**: `Projects/ACTIVE/youtube-api-trigger-system-manifest.md` ✅  
+**Parent Epic**: YouTube Processing Automation
+
+#### Vision
+
+Transform YouTube note processing from file-watcher-based to **API-first architecture** enabling:
+- Templater-triggered automatic processing on note creation
+- External tool integration (mobile apps, browser extensions, webhooks)
+- Real-time dashboard monitoring of processing queue
+- Foundation for future API-driven features
+
+#### Key Components
+
+**Phase 1: API Foundation** (2 hours)
+- Create `youtube_api.py` with REST endpoints
+- POST `/api/youtube/process` - Trigger processing for specific note
+- GET `/api/youtube/queue` - Get processing queue status
+- Wire into existing `http_server.py` Flask app
+- Update daemon config with `http_server` section
+
+**Phase 2: Templater Integration** (1 hour)
+- Create `.obsidian/scripts/trigger_youtube_processing.js`
+- Update YouTube template with automatic hook
+- Test template → API call flow
+- Error handling for offline daemon
+
+**Phase 3: Dashboard Enhancement** (1 hour)
+- Add queue status to YouTube handler
+- Create queue table in terminal dashboard
+- Show current/queued/completed counts
+- Real-time updates (1s refresh)
+
+**Phase 4: Testing & Docs** (30 min)
+- Integration tests (API → Handler → Processing)
+- Error handling tests
+- Update documentation
+
+#### Success Criteria
+
+- ✅ Template creation triggers processing automatically
+- ✅ API accepts external processing requests
+- ✅ Dashboard shows real-time queue status
+- ✅ Processing completes within 30 seconds
+- ✅ Graceful error handling when daemon offline
+
+#### Why P0 Priority
+
+**Immediate Value**:
+- Zero-friction YouTube note creation
+- Foundation for all future API integrations
+- Enables mobile/web/automation tool access
+- Natural workflow (create template → auto-process)
+
+**Strategic Value**:
+- API-first architecture for future features
+- External tool integration capability
+- Scalable processing infrastructure
+
+---
+
+### 🟡 P1 NEW: YouTube Transcript Archival System (Oct 17, 2025)
+
+**Status**: 🟡 **PLANNING** - Manifest complete, ready for implementation  
+**Priority**: P1 - **ENHANCES YOUTUBE PROCESSING**  
+**Timeline**: 90 minutes (30min saver, 20min integration, 20min linking, 20min testing)  
+**Branch**: `feat/youtube-transcript-archival` (to be created)  
+**Manifest**: `Projects/ACTIVE/youtube-transcript-archival-manifest.md` ✅  
+**Parent**: YouTube API Trigger System (can be implemented independently)
+
+#### Vision
+
+Automatically save complete YouTube video transcripts as separate, searchable markdown files with bidirectional links to parent notes. Creates comprehensive archive while keeping notes focused on curated insights.
+
+#### Key Components
+
+**Phase 1: Core Transcript Saver** (30 min)
+- Create `youtube_transcript_saver.py` utility
+- Save transcripts to `Media/Transcripts/youtube-{id}-{date}.md`
+- Format with timestamps (MM:SS) and frontmatter
+- Include video metadata and parent note link
+
+**Phase 2: Handler Integration** (20 min)
+- Add transcript saver to `YouTubeFeatureHandler`
+- Call `save_transcript()` after fetching
+- Generate wikilink for saved transcript
+- No changes to existing quote extraction flow
+
+**Phase 3: Note Linking** (20 min)
+- Add `transcript_file` to note frontmatter
+- Insert "Full Transcript: [[...]]" link in note body
+- Bidirectional linking (note ↔ transcript)
+- Test in Obsidian graph view
+
+**Phase 4: Testing & Polish** (20 min)
+- Unit tests for `YouTubeTranscriptSaver`
+- Integration tests with handler
+- Test with various video lengths
+- Documentation updates
+
+#### File Structure
+
+```
+knowledge/
+  Media/
+    Transcripts/
+      youtube-dQw4w9WgXcQ-2025-10-17.md  ← Full transcript
+  Inbox/
+    YouTube/
+      ai-coding-tutorial.md  ← Note with link to transcript
+```
+
+#### Success Criteria
+
+- ✅ Transcript saved for every processed video
+- ✅ Bidirectional links work in both directions
+- ✅ Timestamps properly formatted (MM:SS)
+- ✅ Transcript searchable via Obsidian search
+- ✅ No duplicate transcripts created
+
+#### Why P1 Priority
+
+**Immediate Value**:
+- Full context preservation (transcripts archived)
+- Searchable across all video content
+- One-click access from note to full transcript
+- No loss if video deleted or cache expires
+
+**Future Capabilities**:
+- Search across all transcripts
+- Regenerate quotes without re-fetching
+- Transcript quality analytics
+- Multi-format export (JSON, SRT, TXT)
+
+---
 
 ### 🔴 P0 CRITICAL: Note Lifecycle Status Management (Oct 14, 2025)
 
