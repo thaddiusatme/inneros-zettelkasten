@@ -4,10 +4,17 @@ daemon:
   check_interval: 60
   log_level: INFO
 
+# HTTP server for monitoring and API triggers (TDD Iteration: YouTube API)
+http_server:
+  enabled: true
+  host: 127.0.0.1
+  port: 8080
+  debug: false
+
 # File watching configuration
 file_watching:
   enabled: true  # Enable to watch YouTube notes
-  watch_path: ./knowledge/Inbox
+  watch_path: ../knowledge/Inbox  # Fixed: relative to development/ dir
   debounce_seconds: 2.0
   ignore_patterns:
     - "*.tmp"
@@ -31,7 +38,7 @@ smart_link_handler:
 # YouTube handler (TDD Iteration 9 + Rate Limit Mitigation)
 youtube_handler:
   enabled: true
-  vault_path: ./knowledge
+  vault_path: ../knowledge  # Fixed: relative to development/ dir
   max_quotes: 7
   min_quality: 0.7
   processing_timeout: 300
