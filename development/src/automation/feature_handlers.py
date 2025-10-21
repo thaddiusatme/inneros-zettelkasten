@@ -521,12 +521,72 @@ class YouTubeFeatureHandler:
         self.transcript_saver = YouTubeTranscriptSaver(self.vault_path)
         self.logger.info("Transcript saver initialized for automatic archival")
     
+    def _is_ready_for_processing(self, frontmatter: dict) -> tuple[bool, str]:
+        """
+        Check if note has user approval for processing.
+        
+        Handles various edge cases for user-friendly template compatibility:
+        - Boolean true: ready_for_processing: true ✅
+        - String "true": ready_for_processing: "true" ✅
+        - String "yes": ready_for_processing: "yes" ✅
+        - Numeric 1: ready_for_processing: 1 ✅
+        - Boolean false: ready_for_processing: false ❌
+        - Missing field: (no ready_for_processing) ❌
+        - Any other value: ready_for_processing: "pending" ❌
+        
+        Args:
+            frontmatter: Parsed YAML frontmatter dictionary
+        
+        Returns:
+            Tuple of (is_ready: bool, reason: str) for diagnostic logging
+            
+        Examples:
+            >>> self._is_ready_for_processing({'ready_for_processing': True})
+            (True, 'approved')
+            
+            >>> self._is_ready_for_processing({'ready_for_processing': 'true'})
+            (True, 'approved (string value)')
+            
+            >>> self._is_ready_for_processing({'ready_for_processing': False})
+            (False, 'explicitly set to false')
+            
+            >>> self._is_ready_for_processing({'source': 'youtube'})
+            (False, 'field missing')
+        """
+        if 'ready_for_processing' not in frontmatter:
+            return (False, 'field missing')
+        
+        value = frontmatter['ready_for_processing']
+        
+        # Handle boolean True
+        if value is True:
+            return (True, 'approved')
+        
+        # Handle string representations of true (case-insensitive)
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in ('true', 'yes', 'y', '1'):
+                return (True, 'approved (string value)')
+            return (False, f'unsupported string value: "{value}"')
+        
+        # Handle numeric 1
+        if isinstance(value, (int, float)) and value == 1:
+            return (True, 'approved (numeric value)')
+        
+        # Handle explicit false
+        if value is False:
+            return (False, 'explicitly set to false')
+        
+        # All other cases
+        return (False, f'unsupported value type: {type(value).__name__} = {value}')
+    
     def can_handle(self, event) -> bool:
         """
         Check if this handler can process the given event.
         
         Criteria:
         - File must have 'source: youtube' in frontmatter
+        - File must have 'ready_for_processing: true' (user approval)
         - File must NOT have 'ai_processed: true'
         - Frontmatter must be valid YAML
         
@@ -563,11 +623,26 @@ class YouTubeFeatureHandler:
             if frontmatter.get('source') != 'youtube':
                 return False
             
-            # Check if already processed
+            # OPTIMIZATION: Check approval BEFORE ai_processed (fail fast for drafts)
+            # Most notes will be drafts, so check this first to avoid unnecessary processing
+            is_ready, reason = self._is_ready_for_processing(frontmatter)
+            if not is_ready:
+                self.logger.debug(
+                    f"Skipping note awaiting approval: {file_path.name} "
+                    f"(ready_for_processing: {reason})"
+                )
+                return False
+            
+            # Check if already processed (only after confirming user approval)
             if frontmatter.get('ai_processed') is True:
                 self.logger.debug(f"Skipping already processed note: {file_path.name}")
                 return False
             
+            # All checks passed - ready for processing
+            self.logger.debug(
+                f"YouTube note approved for processing: {file_path.name} "
+                f"(approval: {reason})"
+            )
             return True
             
         except Exception as e:

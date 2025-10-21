@@ -71,14 +71,14 @@ class TestYouTubeEventDetection:
         config_dict = {'vault_path': '/test/vault'}
         
         from src.automation.feature_handlers import YouTubeFeatureHandler
-        handler = YouTubeFeatureHandler(config=config_dict)
         
-        # Create mock event with YouTube note
+        # Create mock event with YouTube note (with user approval)
         note_content = """---
 type: literature
 status: inbox
 source: youtube
 video_id: FLpS7OfD5-s
+ready_for_processing: true
 ---
 
 # Video Notes
@@ -88,8 +88,10 @@ User notes here...
         mock_event = Mock()
         mock_event.src_path = '/test/vault/Inbox/youtube-note.md'
         
-        with patch('pathlib.Path.exists', return_value=True), \
+        with patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver'), \
+             patch('pathlib.Path.exists', return_value=True), \
              patch('pathlib.Path.read_text', return_value=note_content):
+            handler = YouTubeFeatureHandler(config=config_dict)
             result = handler.can_handle(mock_event)
         
         assert result is True
@@ -99,7 +101,6 @@ User notes here...
         config_dict = {'vault_path': '/test/vault'}
         
         from src.automation.feature_handlers import YouTubeFeatureHandler
-        handler = YouTubeFeatureHandler(config=config_dict)
         
         # Note without YouTube source
         note_content = """---
@@ -114,7 +115,10 @@ Some content
         mock_event = Mock()
         mock_event.src_path = '/test/vault/Permanent Notes/regular-note.md'
         
-        with patch('pathlib.Path.read_text', return_value=note_content):
+        with patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver'), \
+             patch('pathlib.Path.exists', return_value=True), \
+             patch('pathlib.Path.read_text', return_value=note_content):
+            handler = YouTubeFeatureHandler(config=config_dict)
             result = handler.can_handle(mock_event)
         
         assert result is False
@@ -124,7 +128,6 @@ Some content
         config_dict = {'vault_path': '/test/vault'}
         
         from src.automation.feature_handlers import YouTubeFeatureHandler
-        handler = YouTubeFeatureHandler(config=config_dict)
         
         # Already processed YouTube note
         note_content = """---
@@ -145,7 +148,10 @@ Already enhanced...
         mock_event = Mock()
         mock_event.src_path = '/test/vault/Inbox/youtube-note.md'
         
-        with patch('pathlib.Path.read_text', return_value=note_content):
+        with patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver'), \
+             patch('pathlib.Path.exists', return_value=True), \
+             patch('pathlib.Path.read_text', return_value=note_content):
+            handler = YouTubeFeatureHandler(config=config_dict)
             result = handler.can_handle(mock_event)
         
         assert result is False
@@ -155,7 +161,6 @@ Already enhanced...
         config_dict = {'vault_path': '/test/vault'}
         
         from src.automation.feature_handlers import YouTubeFeatureHandler
-        handler = YouTubeFeatureHandler(config=config_dict)
         
         # Malformed frontmatter
         note_content = """---
@@ -168,7 +173,10 @@ Content
         mock_event = Mock()
         mock_event.src_path = '/test/vault/Inbox/malformed.md'
         
-        with patch('pathlib.Path.read_text', return_value=note_content):
+        with patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver'), \
+             patch('pathlib.Path.exists', return_value=True), \
+             patch('pathlib.Path.read_text', return_value=note_content):
+            handler = YouTubeFeatureHandler(config=config_dict)
             result = handler.can_handle(mock_event)
         
         # Should return False for malformed notes instead of crashing
