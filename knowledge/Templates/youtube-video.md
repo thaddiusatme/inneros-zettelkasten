@@ -88,7 +88,8 @@ try {
 tR += `---
 type: literature
 created: ${tp.date.now("YYYY-MM-DD HH:mm")}
-status: inbox
+status: draft
+ready_for_processing: false
 tags: [youtube, video-content]
 visibility: private
 source: youtube
@@ -134,6 +135,14 @@ channel: ${channelName}
 
 ## Related Notes
 <!-- Add [[wiki-links]] as you make connections -->
+
+## AI Processing Approval
+
+> **📋 Action Required**: Check this box when you're ready for AI processing  
+> This will trigger automatic transcript extraction, quote generation, and tag enhancement.  
+> Keep unchecked while you're still taking notes to avoid interrupting your workflow.
+
+- [ ] Ready for AI processing #youtube-process
 
 ## Video Metadata
 <!-- Auto-filled for future reference -->
