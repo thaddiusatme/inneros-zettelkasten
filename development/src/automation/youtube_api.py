@@ -115,7 +115,7 @@ def check_cooldown(note_path: Path, handler: 'YouTubeFeatureHandler', force: boo
     """
     if not force:
         note_str = str(note_path)
-        last_time = handler.last_processed_time.get(note_str, 0)
+        last_time = handler._last_processed.get(note_str, 0)
         cooldown = handler.cooldown_seconds
         elapsed = time.time() - last_time
         

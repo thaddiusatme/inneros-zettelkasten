@@ -1,3 +1,4 @@
+# Existing entries (preserve current content first)
 # InnerOS .gitignore file
 
 # System files
@@ -113,9 +114,11 @@ tag-cleanup-backup-*/
 
 # CRITICAL: Protect personal knowledge from public release
 # Exclude entire personal knowledge directory
-knowledge/
 # Exception: Keep starter pack for public distribution
 !knowledge-starter-pack/
+# Exception: Keep Templater scripts for automation
+!knowledge/scripts/
+knowledge/
 
 # Test artifacts and output
 development/demos/**/test_output/
@@ -128,3 +131,10 @@ development/demos/**/test_output/
 .automation/cache/
 .automation/logs/
 .automation/tmp/
+
+# YouTube processing cache
+.automation/cache/youtube_transcripts.json
+development/.automation/cache/youtube_transcripts.json
+
+# Generated transcripts
+Media/Transcripts/
