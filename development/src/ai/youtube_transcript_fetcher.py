@@ -103,16 +103,18 @@ class YouTubeTranscriptFetcher:
             for entry in transcript_data
         ]
     
-    def fetch_transcript(self, video_id: str, prefer_manual: bool = True) -> Dict[str, Any]:
+    def fetch_transcript(self, video_id: str, prefer_manual: bool = True, preferred_languages: list = None) -> Dict[str, Any]:
         """
         Fetch transcript for YouTube video.
         
         Fetches transcript using youtube-transcript-api and converts to
-        clean dictionary format. Prefers manual transcripts for quality.
+        clean dictionary format. Prefers manual transcripts for quality
+        and prioritizes English language by default.
         
         Args:
             video_id: YouTube video ID (typically 11 characters, e.g., "dQw4w9WgXcQ")
             prefer_manual: If True, prefer manual transcripts over auto-generated
+            preferred_languages: List of language codes to prefer (default: ['en'])
             
         Returns:
             Dictionary containing:
@@ -131,7 +133,10 @@ class YouTubeTranscriptFetcher:
             >>> print(f"Language: {result['language']}")
             >>> print(f"Entries: {len(result['transcript'])}")
         """
-        logger.info(f"Fetching transcript for video: {video_id}")
+        if preferred_languages is None:
+            preferred_languages = ['en']
+        
+        logger.info(f"Fetching transcript for video: {video_id} (preferred languages: {preferred_languages})")
         
         # Validate video ID format
         if not video_id or not isinstance(video_id, str):
@@ -151,8 +156,23 @@ class YouTubeTranscriptFetcher:
             transcript_list = self.api.list(video_id)
             
             if prefer_manual:
-                # Try to get manual transcript first (higher quality)
-                logger.debug(f"Looking for manual transcript for video: {video_id}")
+                # Try to get manual transcript in preferred language first (higher quality)
+                logger.debug(f"Looking for manual transcript in preferred languages: {preferred_languages}")
+                for lang in preferred_languages:
+                    for transcript in transcript_list:
+                        if not transcript.is_generated and transcript.language_code.startswith(lang):
+                            transcript_data = transcript.fetch()
+                            transcript_entries = self._convert_transcript_to_dict(transcript_data.snippets)
+                            logger.info(f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}")
+                            return {
+                                "video_id": video_id,
+                                "transcript": transcript_entries,
+                                "is_manual": True,
+                                "language": transcript.language_code
+                            }
+                
+                # If no preferred manual found, try any manual
+                logger.debug(f"No manual transcript in preferred languages, trying any manual")
                 for transcript in transcript_list:
                     if not transcript.is_generated:
                         transcript_data = transcript.fetch()
@@ -165,8 +185,23 @@ class YouTubeTranscriptFetcher:
                             "language": transcript.language_code
                         }
                 
-                # If no manual found, use auto-generated
-                logger.debug(f"No manual transcript found, using auto-generated for video: {video_id}")
+                # If no manual found, use auto-generated in preferred language
+                logger.debug(f"No manual transcript found, looking for auto-generated in preferred languages")
+                for lang in preferred_languages:
+                    for transcript in transcript_list:
+                        if transcript.is_generated and transcript.language_code.startswith(lang):
+                            transcript_data = transcript.fetch()
+                            transcript_entries = self._convert_transcript_to_dict(transcript_data.snippets)
+                            logger.info(f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}")
+                            return {
+                                "video_id": video_id,
+                                "transcript": transcript_entries,
+                                "is_manual": False,
+                                "language": transcript.language_code
+                            }
+                
+                # Last resort: any auto-generated
+                logger.debug(f"Using any available auto-generated transcript")
                 for transcript in transcript_list:
                     if transcript.is_generated:
                         transcript_data = transcript.fetch()

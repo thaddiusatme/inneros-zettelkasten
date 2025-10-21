@@ -365,4 +365,30 @@ assert 'processing_started_at' in first_call_metadata
 
 ---
 
+## 🐛 Bug Fix: Language Preference (2025-10-20 21:20 PDT)
+
+**Issue**: Transcript fetcher was grabbing first available transcript without language prioritization, resulting in Arabic transcripts being fetched for English videos.
+
+**Root Cause**: `fetch_transcript()` method iterated through transcripts without checking language preference first.
+
+**Solution**: Added language prioritization logic to prefer English transcripts:
+1. ✅ Manual English transcripts (highest quality)
+2. ✅ Manual other languages (fallback)
+3. ✅ Auto-generated English transcripts
+4. ✅ Auto-generated other languages (last resort)
+
+**Implementation**:
+- Added `preferred_languages` parameter to `fetch_transcript()` (default: `['en']`)
+- Updated transcript selection logic with language filtering
+- Preserved backward compatibility with existing API
+
+**File Changed**: `development/src/ai/youtube_transcript_fetcher.py`
+**Lines Modified**: ~50 lines (added language preference logic)
+
+**Testing**: Real-world validation with video `aircAruvnKk` (3Blue1Brown) now correctly fetches English transcript instead of Arabic.
+
+**Impact**: All future YouTube notes will prioritize English transcripts by default, with configurable language preferences for multilingual support.
+
+---
+
 **TDD Methodology Proven**: Systematic test-first development delivered production-ready status synchronization in 45 minutes with 100% test success and zero regressions. The state machine provides clear visibility, enables monitoring, and supports future error recovery enhancements.
