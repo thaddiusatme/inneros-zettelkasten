@@ -193,6 +193,104 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 
 *Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
 
+### 🔴 P0 NEW: YouTube Checkbox Approval Automation (Oct 20, 2025)
+
+**Status**: 🟡 **PLANNING** - Technical design complete, ready for TDD implementation  
+**Priority**: P0 - **TRANSFORMS YOUTUBE WORKFLOW TO USER-CONTROLLED**  
+**Timeline**: 3.5 hours (1h template, 1h handler, 1h sync, 0.5h testing)  
+**Branch**: `feat/youtube-checkbox-approval-automation` (to be created)  
+**Manifest**: `Projects/ACTIVE/youtube-checkbox-approval-automation-manifest.md` ✅  
+**Parent Epic**: YouTube Processing Automation
+
+#### Problem
+
+**Current**: YouTube notes process automatically on creation (no user control)
+- Processing interrupts note-taking flow
+- Can't add context before AI extraction
+- No draft state for incomplete notes
+- Wastes API calls on unfinished work
+
+**Solution**: Checkbox-driven approval system
+- User adds notes/context first
+- Checks box when ready (one click)
+- Processing starts automatically within 30 seconds
+- YAML properties sync through state transitions
+
+#### Key Components
+
+**PBI-001: Template Update** (60 min)
+- Add `ready_for_processing: false` to frontmatter
+- Add `status: draft` for initial state
+- Add checkbox: `[ ] Ready for AI processing #youtube-process`
+- Visual instructions for user
+
+**PBI-002: Handler Approval Detection** (60 min)
+- Modify `YouTubeFeatureHandler.can_handle()` to check approval
+- Add `_is_ready_for_processing()` helper method
+- Return False if `ready_for_processing: false`
+- 5 unit tests (approved/draft/missing/processed/cooldown)
+
+**PBI-003: Status Synchronization** (60 min)
+- Update status: draft → ready → processing → processed
+- Sync YAML through all transitions
+- Preserve approval flag after processing
+- 6 integration tests for full workflow
+
+**PBI-004: Testing & Documentation** (30 min)
+- End-to-end validation with real notes
+- Daemon detection latency (<30s)
+- Error scenarios (daemon offline, failures)
+- User documentation in README
+
+#### State Machine
+
+```yaml
+# Created → draft
+status: draft
+ready_for_processing: false
+
+# User approved → ready
+status: ready
+ready_for_processing: true  # ← Triggers processing
+
+# Processing → active
+status: processing
+
+# Complete → done
+status: processed
+ai_processed: true
+processed_at: 2025-10-20 19:46
+```
+
+#### Success Criteria
+
+- ✅ User controls when processing happens (one-click checkbox)
+- ✅ Draft notes don't trigger processing
+- ✅ YAML syncs automatically through states
+- ✅ Processing starts within 30 seconds of approval
+- ✅ Already-processed notes skipped (idempotent)
+- ✅ Backward compatible with existing notes
+
+#### Why P0 Priority
+
+**User Experience**:
+- Transforms annoying auto-processing → empowering user control
+- Natural workflow: create → add context → approve
+- Prevents wasted API calls on incomplete notes
+
+**Strategic Value**:
+- Establishes approval pattern for other automation
+- Proves checkbox → YAML sync architecture
+- Foundation for multi-step workflows
+
+**Low Risk**:
+- 3.5 hour implementation
+- Zero breaking changes
+- Backward compatible
+- Easy rollback if needed
+
+---
+
 ### 🔴 P0 NEW: YouTube API Trigger System (Oct 17, 2025)
 
 **Status**: 🟡 **PLANNING** - Manifest complete, ready for implementation  
