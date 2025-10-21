@@ -651,14 +651,26 @@ class YouTubeFeatureHandler:
     
     def handle(self, event) -> Dict[str, Any]:
         """
-        Process YouTube note with AI quote extraction.
+        Process YouTube note with AI quote extraction and status synchronization.
+        
+        State Machine (PBI-003):
+            draft (ready_for_processing: false)
+              ↓ [user checks checkbox]
+            draft (ready_for_processing: true)
+              ↓ [handle() starts]
+            processing (ready_for_processing: true, processing_started_at)
+              ↓ [handle() completes successfully]
+            processed (ready_for_processing: true, processing_completed_at, ai_processed: true)
+              ↓ [handle() fails]
+            processing (ready_for_processing: true) [remains for retry detection]
         
         Workflow:
-        1. Read video_id from frontmatter
-        2. Fetch transcript using YouTubeTranscriptFetcher
-        3. Extract quotes using ContextAwareQuoteExtractor
-        4. Use YouTubeNoteEnhancer to insert quotes (preserving user content)
-        5. Update frontmatter with ai_processed flag
+        1. Update status to 'processing' with timestamp
+        2. Read video_id from frontmatter
+        3. Fetch transcript using YouTubeTranscriptFetcher
+        4. Extract quotes using ContextAwareQuoteExtractor
+        5. Use YouTubeNoteEnhancer to insert quotes (preserving user content)
+        6. Update status to 'processed' with completion timestamp and ai_processed flag
         
         Args:
             event: File system event
@@ -679,6 +691,22 @@ class YouTubeFeatureHandler:
             # Read note to get video_id
             content = file_path.read_text(encoding='utf-8')
             from src.utils.frontmatter import parse_frontmatter
+            frontmatter, _ = parse_frontmatter(content)
+            
+            # PBI-003: Update status to 'processing' at start
+            from datetime import datetime
+            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
+            enhancer = YouTubeNoteEnhancer()
+            
+            content = self._update_processing_state(
+                file_path=file_path,
+                content=content,
+                enhancer=enhancer,
+                state='processing',
+                metadata={'processing_started_at': datetime.now().isoformat()}
+            )
+            
+            # Re-parse after status update
             frontmatter, _ = parse_frontmatter(content)
             
             video_id = frontmatter.get('video_id')
@@ -738,9 +766,7 @@ class YouTubeFeatureHandler:
             )
             
             # 4. Use YouTubeNoteEnhancer to insert quotes
-            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
-            enhancer = YouTubeNoteEnhancer()
-            
+            # Note: enhancer already instantiated at start for status update
             result = enhancer.enhance_note(
                 note_path=file_path,
                 quotes_data=quotes_data,
@@ -750,6 +776,21 @@ class YouTubeFeatureHandler:
             processing_time = time.time() - start_time
             
             if result.success:
+                # PBI-003: Update status to 'processed' on success
+                # Re-read to get latest content (after enhance_note modified it)
+                final_content = file_path.read_text(encoding='utf-8')
+                
+                self._update_processing_state(
+                    file_path=file_path,
+                    content=final_content,
+                    enhancer=enhancer,
+                    state='processed',
+                    metadata={
+                        'processing_completed_at': datetime.now().isoformat(),
+                        'ai_processed': True
+                    }
+                )
+                
                 # Record success metrics
                 self.metrics_tracker.record_success(
                     filename=file_path.name,
@@ -812,6 +853,80 @@ class YouTubeFeatureHandler:
                 'transcript_file': None,
                 'transcript_wikilink': None
             }
+    
+    def _update_processing_state(
+        self,
+        file_path: Path,
+        content: str,
+        enhancer: 'YouTubeNoteEnhancer',
+        state: str,
+        metadata: Dict[str, Any]
+    ) -> str:
+        """
+        Update note processing state with status transition tracking.
+        
+        PBI-003: Status Synchronization Helper
+        
+        This method centralizes status updates during YouTube note processing,
+        ensuring consistent state transitions and comprehensive error handling.
+        
+        State transitions:
+        - 'processing': Set at start with processing_started_at timestamp
+        - 'processed': Set at completion with processing_completed_at and ai_processed
+        
+        Note: ready_for_processing field is NOT modified (preserved for manual reprocessing)
+        
+        Args:
+            file_path: Path to the note file
+            content: Current note content
+            enhancer: YouTubeNoteEnhancer instance for frontmatter updates
+            state: Target state ('processing' or 'processed')
+            metadata: Additional metadata fields to update (timestamps, flags)
+        
+        Returns:
+            Updated note content string
+        
+        Raises:
+            IOError: If file write fails
+            ValueError: If frontmatter update fails
+        
+        Example:
+            >>> content = self._update_processing_state(
+            ...     file_path=note_path,
+            ...     content=current_content,
+            ...     enhancer=enhancer,
+            ...     state='processing',
+            ...     metadata={'processing_started_at': datetime.now().isoformat()}
+            ... )
+        """
+        try:
+            # Prepare complete metadata with status
+            full_metadata = {'status': state, **metadata}
+            
+            # Update frontmatter
+            updated_content = enhancer.update_frontmatter(content, full_metadata)
+            
+            # Write to file
+            file_path.write_text(updated_content, encoding='utf-8')
+            
+            # Log state transition
+            self.logger.info(
+                f"Status transition: {file_path.name} → {state} "
+                f"(metadata: {', '.join(metadata.keys())})"
+            )
+            
+            return updated_content
+            
+        except IOError as e:
+            self.logger.error(
+                f"Failed to write status update ({state}) to {file_path.name}: {e}"
+            )
+            raise
+        except Exception as e:
+            self.logger.error(
+                f"Failed to update frontmatter for {file_path.name}: {e}"
+            )
+            raise ValueError(f"Frontmatter update failed: {e}")
     
     def _save_transcript_with_metadata(
         self,
