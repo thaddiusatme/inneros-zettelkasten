@@ -17,8 +17,8 @@ module.exports = async (tp) => {
     const TIMEOUT_MS = 5000; // 5 second timeout
     
     try {
-        // Get absolute note path
-        const notePath = tp.file.path(true);
+        // Get absolute note path (add 'knowledge/' prefix since vault is subdirectory)
+        const notePath = "knowledge/" + tp.file.path(true);
         
         console.log('[Templater] Triggering YouTube processing...');
         console.log('[Templater] Note path:', notePath);

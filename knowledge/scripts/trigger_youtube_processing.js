@@ -18,7 +18,7 @@ module.exports = async (tp) => {
     
     try {
         // Get absolute note path
-        const notePath = tp.file.path(true);
+        const notePath = "knowledge/" + tp.file.path(true);
         
         console.log('[Templater] Triggering YouTube processing...');
         console.log('[Templater] Note path:', notePath);
