@@ -33,7 +33,8 @@ from youtube_transcript_api._errors import (
     NoTranscriptFound,
     VideoUnavailable,
     YouTubeRequestFailed,
-    RequestBlocked
+    RequestBlocked,
+    IpBlocked
 )
 
 logger = logging.getLogger(__name__)
@@ -146,7 +147,7 @@ class YouTubeTranscriptFetcher:
             raise InvalidVideoIdError(error_msg)
         
         try:
-            # Fetch transcript using youtube-transcript-api
+            # Fetch transcript using youtube-transcript-api v1.2.3+
             transcript_list = self.api.list(video_id)
             
             if prefer_manual:
@@ -155,7 +156,7 @@ class YouTubeTranscriptFetcher:
                 for transcript in transcript_list:
                     if not transcript.is_generated:
                         transcript_data = transcript.fetch()
-                        transcript_entries = self._convert_transcript_to_dict(transcript_data)
+                        transcript_entries = self._convert_transcript_to_dict(transcript_data.snippets)
                         logger.info(f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}")
                         return {
                             "video_id": video_id,
@@ -169,7 +170,7 @@ class YouTubeTranscriptFetcher:
                 for transcript in transcript_list:
                     if transcript.is_generated:
                         transcript_data = transcript.fetch()
-                        transcript_entries = self._convert_transcript_to_dict(transcript_data)
+                        transcript_entries = self._convert_transcript_to_dict(transcript_data.snippets)
                         logger.info(f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}")
                         return {
                             "video_id": video_id,
@@ -182,7 +183,7 @@ class YouTubeTranscriptFetcher:
                 logger.debug(f"Fetching first available transcript for video: {video_id}")
                 for transcript in transcript_list:
                     transcript_data = transcript.fetch()
-                    transcript_entries = self._convert_transcript_to_dict(transcript_data)
+                    transcript_entries = self._convert_transcript_to_dict(transcript_data.snippets)
                     is_manual = not transcript.is_generated
                     logger.info(f"Fetched transcript: {len(transcript_entries)} entries, manual: {is_manual}, language: {transcript.language_code}")
                     return {
@@ -192,7 +193,7 @@ class YouTubeTranscriptFetcher:
                         "language": transcript.language_code
                     }
                 
-        except (YouTubeRequestFailed, RequestBlocked) as e:
+        except (YouTubeRequestFailed, RequestBlocked, IpBlocked) as e:
             raise RateLimitError(
                 f"Rate limit exceeded. Please retry later. Details: {str(e)}"
             )
