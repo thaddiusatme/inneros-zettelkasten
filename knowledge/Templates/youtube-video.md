@@ -70,7 +70,7 @@ const slug = videoTitle.toLowerCase()
   .substring(0, 60); // Limit length
 
 const stamp = tp.date.now("YYYYMMDD-HHmm");
-const fname = `lit-${stamp}-${slug}.md`;
+const fname = `lit-${stamp}-${slug}`;
 const target = `Inbox/YouTube/${fname}`;
 
 // 6. Default tags
