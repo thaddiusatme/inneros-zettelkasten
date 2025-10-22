@@ -1,16 +1,18 @@
 """
 HTTP Monitoring Server - Thin Flask app for daemon health and metrics endpoints.
 
-TDD Iteration 6: HTTP Monitoring Endpoints
+TDD Iteration 6: HTTP Monitoring Endpoints + YouTube API Integration
 Provides /health and /metrics endpoints for external monitoring.
+Integrates YouTube API trigger system for Templater-based processing.
 
 Architecture:
 - Thin HTTP layer with zero business logic
 - Delegates all work to AutomationDaemon methods
+- YouTube API Blueprint for REST triggers
 - CORS-enabled for monitoring dashboards
 - Error handling with proper HTTP status codes
 
-Size: ~100 LOC (ADR-001 compliant)
+Size: ~130 LOC (ADR-001 compliant)
 """
 
 from flask import Flask, jsonify, Response
@@ -35,25 +37,38 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
     """
     app = Flask(__name__)
     
-    # Enable CORS for monitoring dashboards
+    # Register YouTube API blueprint if handler available
+    if daemon.youtube_handler:
+        from .youtube_api import create_youtube_blueprint
+        youtube_bp = create_youtube_blueprint(daemon.youtube_handler)
+        app.register_blueprint(youtube_bp, url_prefix='/api/youtube')
+    
+    # Enable CORS for monitoring dashboards and API endpoints
     @app.after_request
     def add_cors_headers(response):
         response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         return response
     
     @app.route('/')
     def root():
         """Server info and available endpoints."""
+        endpoints = {
+            '/': 'Server information',
+            '/health': 'Daemon and handler health status (JSON)',
+            '/metrics': 'Prometheus metrics (text)'
+        }
+        
+        # Add YouTube API endpoints if available
+        if daemon.youtube_handler:
+            endpoints['/api/youtube/process'] = 'POST - Trigger YouTube note processing'
+            endpoints['/api/youtube/queue'] = 'GET - Check processing queue status'
+        
         return jsonify({
             'name': 'InnerOS Automation Daemon Monitoring',
-            'version': '1.0.0',
-            'endpoints': {
-                '/': 'Server information',
-                '/health': 'Daemon and handler health status (JSON)',
-                '/metrics': 'Prometheus metrics (text)'
-            }
+            'version': '1.1.0',
+            'endpoints': endpoints
         })
     
     @app.route('/health')

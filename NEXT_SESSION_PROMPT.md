@@ -1,223 +1,265 @@
-# Next Session: Phase 3.2 P1 - Dashboard Metrics Cards Integration
+---
+type: session-prompt
+created: 2025-10-17
+updated: 2025-10-17
+priority: critical
+---
 
-## The Prompt
+# Next Session: Choose Your Adventure (Oct 17, 2025)
 
-Let's create a new branch for the next feature: **Phase 3.2 P1 - Dashboard Metrics Cards Integration**. We want to perform TDD framework with red, green, refactor phases, followed by git commit and lessons learned documentation. This equals one iteration.
+> **⚠️ Context Check**: If you're reading this after Oct 20, 2025, this prompt may be outdated.  
+> **Last Validated**: 2025-10-17 20:50 PDT
 
-### Updated Execution Plan (focused P0/P1)
+---
 
-**Context:** Just completed Phase 3.2 TDD Iteration 1: Web Dashboard Metrics Integration (45 minutes, 12/12 tests passing, production-ready). Successfully delivered `/api/metrics` HTTP endpoint with CORS support, graceful fallback, and <100ms response time. Now building the frontend dashboard cards to visualize these metrics for end users.
+## ✅ Current State Summary
 
-**Assets Available:**
+**Branch**: main (clean, up to date)  
+**Last Commit**: b891ea3 (Phase 3.2 P1: Dashboard + Analytics + Weekly Review)  
+**Test Status**: 100% passing (72+ tests)  
+**Architecture**: Healthy (ADR-002 complete, 1 documented exception)
 
-- `/api/metrics` HTTP endpoint (production-ready, 12/12 tests passing)
-- 3 utility classes: WebMetricsFormatter, MetricsCoordinatorIntegration, WebMetricsErrorHandler
-- MetricsEndpoint infrastructure (Phase 3.1, 11/11 tests passing)
-- Flask web app framework (`web_ui/app.py`, ADR-001 compliant)
-- Proven TDD patterns (RED→GREEN→REFACTOR, 45min cycle achieved in Phase 3.2)
+**All October 2025 Work COMPLETE**:
+- ✅ Auto-promotion system (Oct 15) - 34/34 tests
+- ✅ Dashboard metrics cards (Oct 16) - 18/18 tests
+- ✅ Inbox metadata repair (Oct 15) - 14/14 tests
+- ✅ System status CLI (Oct 15) - 8/8 tests
+- ✅ Flask web dashboard - Production ready
+- ✅ Dashboard CLI launcher - Production ready
 
-I'm following the guidance in `.windsurf/rules/updated-development-workflow.md`, `architectural-constraints.md`, and `automation-monitoring-requirements.md` (critical path: Make system metrics visible to users through web dashboard).
+---
 
-### Current Status
+## 🎯 Choose Your Next Epic
 
-**Completed:**
-- ✅ Phase 3.1: Metrics Collection Infrastructure (11/11 tests passing)
-- ✅ Phase 3.1 P1: Dashboard Integration (14/14 tests passing)
-- ✅ Phase 3.2 TDD Iteration 1: Web Metrics Endpoint (12/12 tests passing)
-- Branch: `feat/phase-3.2-web-dashboard-metrics-integration` merged to main
+### Option 1: 🎬 YouTube Integration (P1, 5-7 hours) ⭐ RECOMMENDED
 
-**In progress:**
-- Phase 3.2 P1: Dashboard Metrics Cards (planning stage)
-- Location: `web_ui/templates/dashboard.html` (needs metrics cards section)
-- Location: `web_ui/static/js/metrics.js` (NEW - needs JavaScript fetch logic)
-- Location: `web_ui/static/css/dashboard.css` (needs card styling)
+**Why This**: Natural extension of auto-promotion system, 37 YouTube notes waiting
 
-**Lessons from last iteration:**
-- Test-first development delivers clarity (12 tests defined exact requirements)
-- Minimal GREEN implementation was fast (15 minutes, 38 lines)
-- REFACTOR added value without risk (55% code reduction via utilities)
-- Building on existing infrastructure 4x faster than greenfield
-- CORS headers critical for frontend integration
-- Graceful fallback prevents user errors
+**Manifest**: `Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md`
 
-### P0 — Critical Dashboard Visualization (Metrics Cards)
+**What You'll Build**:
+1. User approval workflow (`ready_to_process: true` flag)
+2. AI processing that preserves user notes
+3. Quality scoring for video content
+4. Auto-promotion to `Literature Notes/YouTube/`
+5. Migration script for 37 existing YouTube notes
+6. CLI integration: `inneros youtube process --approve`
 
-**Create Dashboard Metrics Cards** (`web_ui/templates/dashboard.html`):
-- Add metrics cards section below existing content
-- Display counters, gauges, and histograms in card format
-- Mobile-responsive card grid layout
-- Auto-refresh every 2 seconds using JavaScript fetch
+**6 Implementation Phases**:
+- Phase 1 (1h): Metadata schema update
+- Phase 2 (1.5h): YouTube-specific AI processor
+- Phase 3 (1h): Auto-promotion integration
+- Phase 4 (1h): Migration script
+- Phase 5 (1h): CLI commands
+- Phase 6 (1.5h): Testing & validation
 
-**Implementation Details:**
-- Create new template section for metrics cards
-- Add card components: Counter Card, Gauge Card, Histogram Card
-- Implement JavaScript `MetricsUpdater` class for fetch logic
-- Display metrics with icons, values, and trend indicators
-- Error handling for failed fetch requests
-- Loading states during initial fetch
+**Success Criteria**:
+- YouTube notes flow through complete workflow
+- User maintains control via approval flag
+- Existing user notes preserved
+- All 37 notes successfully migrated
 
-**JavaScript Fetch Integration:**
+**Dependencies**: None (auto-promotion complete)
 
-```javascript
-class MetricsUpdater {
-  constructor(endpoint = '/api/metrics', interval = 2000) {
-    this.endpoint = endpoint;
-    this.interval = interval;
-  }
-  
-  async fetchMetrics() {
-    // Fetch from /api/metrics
-    // Update DOM elements
-    // Handle errors gracefully
-  }
-}
+---
+
+### Option 2: 🟡 Source Code Reorganization (P1, Gradual 4-6 weeks)
+
+**Why This**: Improve developer experience, 90% faster code discovery
+
+**Manifest**: `Projects/ACTIVE/source-code-reorganization-manifest.md`
+
+**The Problem**:
+- `src/ai/` - 56 Python files (impossible to navigate)
+- `src/cli/` - 44 Python files (cognitive overload)
+- Current: 20+ minutes to find related code
+- Target: <2 minutes (90% improvement)
+
+**80/20 Approach** (Proof of Concept - Week 1):
+1. **Phase 1** (2h): Extract `ai/connections/` (12 files)
+2. **Phase 2** (2h): Extract `ai/tags/` (10 files)
+3. **Phase 3** (1h): Validate all tests still pass
+4. **Phase 4** (1h): Go/No-Go decision
+
+**If Successful, Continue With**:
+- Week 2-3: Remaining ai/ domains (5 more)
+- Week 4-5: CLI feature splitting (7 features)
+- Week 6: Consolidate utilities + create models/ package
+
+**Success Criteria**:
+- Zero test regressions (100% passing throughout)
+- <2 minute average code discovery time
+- Clear domain boundaries
+- Import paths still work
+
+**Dependencies**: None (can start anytime)
+
+**Risk**: Medium (affects many files, but comprehensive test suite protects)
+
+---
+
+### Option 3: 🐛 Quality Audit Bug Fixes (P2, 2-3 hours)
+
+**Why This**: Quick wins, low effort, improves stability
+
+**Known Bugs** (From October 2025 quality audit):
+1. **Connection Discovery Import Error** (5 min)
+   - Simple import path fix
+   - Low impact (feature still works)
+   
+2. **4 Minor Bugs in Monolithic CLI** (2 hours)
+   - Deferred during ADR-004 extraction
+   - Low priority, cosmetic issues
+   - Details in quality audit report
+
+**Success Criteria**:
+- All 5 bugs fixed
+- Zero regressions
+- Update quality audit status
+
+**Dependencies**: None
+
+**Risk**: Low (isolated fixes, good test coverage)
+
+---
+
+### Option 4: 🔵 Distribution System (P1, 2-3 weeks)
+
+**Why This**: Make InnerOS installable by others, enable user testing
+
+**Manifest**: `Projects/ACTIVE/adr-003-distribution-architecture.md`
+
+**Current State**: Only works in development environment
+
+**Goal**: pip-installable package with proper CLI entry points
+
+**5 Implementation Phases**:
+1. **Phase 1** (3 days): Package structure (setup.py, pyproject.toml)
+2. **Phase 2** (2 days): CLI entry points (inneros command globally available)
+3. **Phase 3** (3 days): Configuration management (vault path detection)
+4. **Phase 4** (3 days): Installation documentation + quick start
+5. **Phase 5** (3 days): Release automation (GitHub Actions)
+
+**Success Criteria**:
+- `pip install inneros-zettelkasten` works
+- `inneros status` works from anywhere
+- Documentation for new users
+- Automated releases to PyPI
+
+**Dependencies**: None (code organization helps but not required)
+
+**Risk**: Medium (packaging complexity, path resolution)
+
+---
+
+## 📊 Decision Matrix
+
+| Epic | Duration | Risk | Value | Dependencies | Momentum |
+|------|----------|------|-------|--------------|----------|
+| YouTube Integration | 5-7h | Low | High | None | ⭐ Natural next step |
+| Code Reorganization | 4-6w | Medium | Medium | None | Improves DX |
+| Bug Fixes | 2-3h | Low | Low | None | Quick wins |
+| Distribution | 2-3w | Medium | High | None | Enables users |
+
+---
+
+## 💡 Recommendations
+
+### If You Want Quick Value (Today):
+→ **Option 3: Bug Fixes** (2-3 hours)
+- Clean up known issues
+- Build momentum
+- Low risk, immediate satisfaction
+
+### If You Want Natural Continuation (This Week):
+→ **Option 1: YouTube Integration** ⭐ (5-7 hours)
+- Completes auto-promotion story
+- 37 YouTube notes waiting
+- Proven patterns from previous work
+
+### If You Want Long-Term Investment (This Month):
+→ **Option 2: Code Reorganization** (4-6 weeks gradual)
+- Improves daily development experience
+- Makes future work faster
+- Start with proof of concept (6 hours)
+
+### If You Want User Testing (This Month):
+→ **Option 4: Distribution System** (2-3 weeks)
+- Enables sharing with others
+- Validates product hypothesis
+- Required for streaming validation
+
+---
+
+## 🚫 NOT Next (Already Complete)
+
+Don't suggest these - they're done:
+- ❌ Auto-promotion system (Oct 15)
+- ❌ Dashboard metrics cards (Oct 16)
+- ❌ Inbox metadata repair (Oct 15)
+- ❌ System status CLI (Oct 15)
+- ❌ Flask web dashboard
+- ❌ Dashboard CLI launcher
+- ❌ System Observability Phase 1-2 (status + dashboard)
+
+---
+
+## 🎬 How to Start
+
+### For YouTube Integration:
+```bash
+git checkout -b feat/youtube-auto-promotion-integration
+# Read: Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md
+# Start with Phase 1: Metadata schema update
 ```
 
-**Acceptance Criteria:**
-- ✅ Metrics cards visible on dashboard page
-- ✅ JavaScript fetch calls `/api/metrics` endpoint
-- ✅ Cards update every 2 seconds automatically
-- ✅ Mobile-responsive grid layout (1 column mobile, 3 columns desktop)
-- ✅ Graceful error handling (shows "Unavailable" if fetch fails)
-- ✅ 10-12 comprehensive tests designed and passing
-- ✅ Zero breaking changes to existing dashboard
-- ✅ Complete TDD cycle in 60-90 minutes
-
-### P1 — Enhanced Metrics Visualization (Post-Cards)
-
-**Chart.js Integration:**
-- Histogram distribution charts (bar charts for processing times)
-- Time series trends (line charts for 24h history)
-- Sparklines for counter/gauge trends
-- Interactive tooltips with detailed metrics
-
-**Export Functionality:**
-- JSON export button on dashboard
-- CSV export for spreadsheet analysis
-- Download metrics data with timestamp
-- Export current view or historical data
-
-**Time Range Filtering:**
-- Dropdown selector: 1h, 6h, 24h, 7d
-- Update charts and cards based on selection
-- API query parameter: `/api/metrics?range=24h`
-- Local storage for user preference
-
-**Acceptance Criteria:**
-- ✅ Charts render correctly with real data
-- ✅ Export downloads work in all browsers
-- ✅ Time filtering updates all visualizations
-- ✅ User preferences persist across sessions
-
-### P2 — Advanced Dashboard Features (Backlog)
-
-**Real-time Alerts:**
-- Browser notifications for metric thresholds
-- Visual alerts in dashboard (red/yellow indicators)
-- Configurable alert rules
-
-**Metrics Comparison:**
-- Side-by-side comparison views
-- Diff highlighting for metric changes
-- Performance regression detection
-
-**Custom Dashboards:**
-- User-configurable card layouts
-- Drag-and-drop card arrangement
-- Save custom dashboard configurations
-
-### Task Tracker
-
-- ✅ Phase 3.1: Metrics Collection Infrastructure (COMPLETED)
-- ✅ Phase 3.1 P1: Dashboard Integration (COMPLETED)
-- ✅ Phase 3.2 TDD Iteration 1: Web Metrics Endpoint (COMPLETED)
-- **[In progress]** Phase 3.2 P1: Dashboard Metrics Cards
-- [Pending] P1: Chart.js Integration
-- [Pending] P1: Export Functionality
-- [Pending] P1: Time Range Filtering
-- [Pending] P2: Real-time Alerts
-- [Pending] P2: Custom Dashboards
-
-### TDD Cycle Plan
-
-**Red Phase (25-30 minutes):**
-
-Create `development/tests/unit/web/test_dashboard_metrics_cards.py`:
-- Write 10-12 failing tests:
-  - `test_dashboard_has_metrics_section`
-  - `test_metrics_section_has_card_grid`
-  - `test_counter_card_displays_value`
-  - `test_gauge_card_displays_value`
-  - `test_histogram_card_displays_summary`
-  - `test_javascript_fetches_from_api`
-  - `test_cards_update_on_fetch_success`
-  - `test_cards_show_error_on_fetch_failure`
-  - `test_mobile_responsive_layout`
-  - `test_auto_refresh_interval_configurable`
-  - `test_loading_state_during_initial_fetch`
-  - `test_cards_display_timestamps`
-
-Create stub HTML template and JavaScript file
-Verify tests fail with clear error messages
-
-**Green Phase (30-40 minutes):**
-
-Implement core components:
-- HTML: Add metrics cards section to `dashboard.html`
-- CSS: Card grid layout with responsive breakpoints
-- JavaScript: `MetricsUpdater` class with fetch logic
-- JavaScript: DOM update methods for each card type
-- Error handling: Display "Unavailable" on fetch errors
-- Loading states: Show spinners during initial load
-
-Verify pragmatic tests passing (aim for 10/12+ passing)
-
-**Refactor Phase (20-25 minutes):**
-
-Extract reusable components:
-- Card template component (reusable HTML structure)
-- Metric formatter utilities (format numbers, timestamps)
-- Error display component (consistent error UI)
-- Optimize fetch logic (avoid duplicate requests)
-- Add CSS variables for theming
-- Minify/bundle JavaScript if needed
-
-Run verification: All 12 tests passing, responsive design validated
-
-### Next Action (for this session)
-
-**Option 1 - New branch (recommended):**
-- Create branch: `feat/phase-3.2-p1-dashboard-metrics-cards`
-- Start RED phase for dashboard metrics cards
-- Create test file: `development/tests/unit/web/test_dashboard_metrics_cards.py`
-- Write 10-12 failing tests for cards, fetch, and responsive layout
-
-**Files to create:**
-- `web_ui/static/js/metrics.js` (NEW - JavaScript fetch and DOM update logic)
-- `web_ui/static/css/dashboard.css` (NEW - card styling and grid layout)
-- `development/tests/unit/web/test_dashboard_metrics_cards.py` (NEW - test suite)
-
-**Files to modify:**
-- `web_ui/templates/dashboard.html` (add metrics cards section)
-- `web_ui/app.py` (add route for dashboard page if not exists)
-
-**Files to reference:**
-- `web_ui/web_metrics_utils.py` (existing WebMetricsFormatter patterns)
-- `web_ui/templates/base.html` (existing template structure)
-- Phase 3.2 documentation (`Projects/ACTIVE/phase-3.2-web-dashboard-metrics-tdd-iteration-1-complete.md`)
-
-**Expected API usage:**
-```javascript
-// Fetch metrics from endpoint
-fetch('/api/metrics')
-  .then(response => response.json())
-  .then(data => {
-    // data.current.counters
-    // data.current.gauges
-    // data.current.histograms
-    updateCards(data);
-  })
-  .catch(error => showError(error));
+### For Code Reorganization:
+```bash
+git checkout -b refactor/source-code-reorganization-poc
+# Read: Projects/ACTIVE/source-code-reorganization-manifest.md
+# Start with proof of concept: ai/connections/ extraction
 ```
 
-Would you like me to implement the RED phase now (10-12 failing tests for dashboard metrics cards)?
+### For Bug Fixes:
+```bash
+git checkout -b fix/quality-audit-bugs-oct-2025
+# Review: October 2025 quality audit report
+# Start with Connection Discovery import error (5 min)
+```
+
+### For Distribution:
+```bash
+git checkout -b feat/distribution-system
+# Read: Projects/ACTIVE/adr-003-distribution-architecture.md
+# Start with Phase 1: Package structure
+```
+
+---
+
+## 📝 Pre-Flight Checklist
+
+Before starting any new work:
+- [ ] Virtual environment activated: `source .venv/bin/activate`
+- [ ] On main branch with latest: `git checkout main && git pull`
+- [ ] All tests passing: `pytest development/tests/unit/ -v`
+- [ ] No uncommitted changes: `git status`
+- [ ] Read relevant manifest file in `Projects/ACTIVE/`
+- [ ] Create feature branch with descriptive name
+
+---
+
+## 🔄 Context Refresh Instructions
+
+If this prompt feels outdated (after Oct 20, 2025):
+
+1. Check recent commits: `git log --oneline -20`
+2. Check COMPLETED files: `ls -lt Projects/COMPLETED-2025-10/ | head -20`
+3. Review project status: `cat Projects/ACTIVE/project-todo-v3.md | head -50`
+4. Update this file with current state
+5. Move completed work to appropriate section
+
+---
+
+**Prompt Last Updated**: 2025-10-17 20:50 PDT  
+**Status**: ✅ Accurate as of Oct 17  
+**Next Review**: After completing chosen epic

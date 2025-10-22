@@ -85,6 +85,11 @@ class AutomationDaemon:
         self.smart_link_handler: Optional[SmartLinkEventHandler] = None
         self.youtube_handler: Optional[YouTubeFeatureHandler] = None
     
+    @property
+    def state(self) -> DaemonState:
+        """Get current daemon state."""
+        return self._state
+    
     def start(self) -> None:
         """
         Start daemon with scheduler initialization.

@@ -41,6 +41,37 @@ cd inneros-zettelkasten
 
 ---
 
+## 🎬 YouTube Automation (60-Second Setup)
+
+Automatically process YouTube videos into enhanced notes with AI-extracted quotes:
+
+```bash
+# 1. Copy environment template
+cp .env.sample .env
+
+# 2. Add your API keys to .env
+# YOUTUBE_API_KEY=your_key_here
+# OPENAI_API_KEY=your_key_here
+
+# 3. Run dry-run smoke test
+cd development
+python3 src/cli/youtube_cli.py batch-process --preview
+
+# 4. Process YouTube notes (when ready)
+python3 src/cli/youtube_cli.py batch-process
+```
+
+**Features:**
+- ✅ Automatic transcript fetching
+- ✅ AI-powered quote extraction (key insights, actionable items, definitions)
+- ✅ Status backups before modifications
+- ✅ Metrics tracking for monitoring
+- ✅ Production-ready with CI-lite
+
+**Monitoring:** Metrics saved to `.automation/metrics/youtube_metrics.json`
+
+---
+
 ## 📚 Documentation
 
 - **[INSTALLATION.md](INSTALLATION.md)** — Step-by-step setup guide (~15 minutes)

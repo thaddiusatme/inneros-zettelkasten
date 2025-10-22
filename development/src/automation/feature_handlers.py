@@ -515,6 +515,70 @@ class YouTubeFeatureHandler:
             self.logger.info("Rate limit handler initialized with exponential backoff")
         else:
             self.rate_limit_handler = None
+        
+        # Phase 2: Initialize transcript saver for automatic archival
+        from src.ai.youtube_transcript_saver import YouTubeTranscriptSaver
+        self.transcript_saver = YouTubeTranscriptSaver(self.vault_path)
+        self.logger.info("Transcript saver initialized for automatic archival")
+    
+    def _is_ready_for_processing(self, frontmatter: dict) -> tuple[bool, str]:
+        """
+        Check if note has user approval for processing.
+        
+        Handles various edge cases for user-friendly template compatibility:
+        - Boolean true: ready_for_processing: true ✅
+        - String "true": ready_for_processing: "true" ✅
+        - String "yes": ready_for_processing: "yes" ✅
+        - Numeric 1: ready_for_processing: 1 ✅
+        - Boolean false: ready_for_processing: false ❌
+        - Missing field: (no ready_for_processing) ❌
+        - Any other value: ready_for_processing: "pending" ❌
+        
+        Args:
+            frontmatter: Parsed YAML frontmatter dictionary
+        
+        Returns:
+            Tuple of (is_ready: bool, reason: str) for diagnostic logging
+            
+        Examples:
+            >>> self._is_ready_for_processing({'ready_for_processing': True})
+            (True, 'approved')
+            
+            >>> self._is_ready_for_processing({'ready_for_processing': 'true'})
+            (True, 'approved (string value)')
+            
+            >>> self._is_ready_for_processing({'ready_for_processing': False})
+            (False, 'explicitly set to false')
+            
+            >>> self._is_ready_for_processing({'source': 'youtube'})
+            (False, 'field missing')
+        """
+        if 'ready_for_processing' not in frontmatter:
+            return (False, 'field missing')
+        
+        value = frontmatter['ready_for_processing']
+        
+        # Handle boolean True
+        if value is True:
+            return (True, 'approved')
+        
+        # Handle string representations of true (case-insensitive)
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in ('true', 'yes', 'y', '1'):
+                return (True, 'approved (string value)')
+            return (False, f'unsupported string value: "{value}"')
+        
+        # Handle numeric 1
+        if isinstance(value, (int, float)) and value == 1:
+            return (True, 'approved (numeric value)')
+        
+        # Handle explicit false
+        if value is False:
+            return (False, 'explicitly set to false')
+        
+        # All other cases
+        return (False, f'unsupported value type: {type(value).__name__} = {value}')
     
     def can_handle(self, event) -> bool:
         """
@@ -522,6 +586,7 @@ class YouTubeFeatureHandler:
         
         Criteria:
         - File must have 'source: youtube' in frontmatter
+        - File must have 'ready_for_processing: true' (user approval)
         - File must NOT have 'ai_processed: true'
         - Frontmatter must be valid YAML
         
@@ -558,11 +623,26 @@ class YouTubeFeatureHandler:
             if frontmatter.get('source') != 'youtube':
                 return False
             
-            # Check if already processed
+            # OPTIMIZATION: Check approval BEFORE ai_processed (fail fast for drafts)
+            # Most notes will be drafts, so check this first to avoid unnecessary processing
+            is_ready, reason = self._is_ready_for_processing(frontmatter)
+            if not is_ready:
+                self.logger.debug(
+                    f"Skipping note awaiting approval: {file_path.name} "
+                    f"(ready_for_processing: {reason})"
+                )
+                return False
+            
+            # Check if already processed (only after confirming user approval)
             if frontmatter.get('ai_processed') is True:
                 self.logger.debug(f"Skipping already processed note: {file_path.name}")
                 return False
             
+            # All checks passed - ready for processing
+            self.logger.debug(
+                f"YouTube note approved for processing: {file_path.name} "
+                f"(approval: {reason})"
+            )
             return True
             
         except Exception as e:
@@ -571,14 +651,26 @@ class YouTubeFeatureHandler:
     
     def handle(self, event) -> Dict[str, Any]:
         """
-        Process YouTube note with AI quote extraction.
+        Process YouTube note with AI quote extraction and status synchronization.
+        
+        State Machine (PBI-003):
+            draft (ready_for_processing: false)
+              ↓ [user checks checkbox]
+            draft (ready_for_processing: true)
+              ↓ [handle() starts]
+            processing (ready_for_processing: true, processing_started_at)
+              ↓ [handle() completes successfully]
+            processed (ready_for_processing: true, processing_completed_at, ai_processed: true)
+              ↓ [handle() fails]
+            processing (ready_for_processing: true) [remains for retry detection]
         
         Workflow:
-        1. Read video_id from frontmatter
-        2. Fetch transcript using YouTubeTranscriptFetcher
-        3. Extract quotes using ContextAwareQuoteExtractor
-        4. Use YouTubeNoteEnhancer to insert quotes (preserving user content)
-        5. Update frontmatter with ai_processed flag
+        1. Update status to 'processing' with timestamp
+        2. Read video_id from frontmatter
+        3. Fetch transcript using YouTubeTranscriptFetcher
+        4. Extract quotes using ContextAwareQuoteExtractor
+        5. Use YouTubeNoteEnhancer to insert quotes (preserving user content)
+        6. Update status to 'processed' with completion timestamp and ai_processed flag
         
         Args:
             event: File system event
@@ -601,6 +693,22 @@ class YouTubeFeatureHandler:
             from src.utils.frontmatter import parse_frontmatter
             frontmatter, _ = parse_frontmatter(content)
             
+            # PBI-003: Update status to 'processing' at start
+            from datetime import datetime
+            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
+            enhancer = YouTubeNoteEnhancer()
+            
+            content = self._update_processing_state(
+                file_path=file_path,
+                content=content,
+                enhancer=enhancer,
+                state='processing',
+                metadata={'processing_started_at': datetime.now().isoformat()}
+            )
+            
+            # Re-parse after status update
+            frontmatter, _ = parse_frontmatter(content)
+            
             video_id = frontmatter.get('video_id')
             if not video_id or video_id.strip() == '':
                 # Fallback: Extract from body content
@@ -612,6 +720,14 @@ class YouTubeFeatureHandler:
             
             # 1. Fetch transcript
             transcript_result = self._fetch_transcript(video_id)
+            
+            # REFACTOR: Save transcript to archive BEFORE quote extraction
+            transcript_file, transcript_wikilink = self._save_transcript_with_metadata(
+                video_id=video_id,
+                transcript_result=transcript_result,
+                frontmatter=frontmatter,
+                file_path=file_path
+            )
             
             # Format for LLM
             from src.ai.youtube_transcript_fetcher import YouTubeTranscriptFetcher
@@ -650,9 +766,7 @@ class YouTubeFeatureHandler:
             )
             
             # 4. Use YouTubeNoteEnhancer to insert quotes
-            from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
-            enhancer = YouTubeNoteEnhancer()
-            
+            # Note: enhancer already instantiated at start for status update
             result = enhancer.enhance_note(
                 note_path=file_path,
                 quotes_data=quotes_data,
@@ -662,6 +776,21 @@ class YouTubeFeatureHandler:
             processing_time = time.time() - start_time
             
             if result.success:
+                # PBI-003: Update status to 'processed' on success
+                # Re-read to get latest content (after enhance_note modified it)
+                final_content = file_path.read_text(encoding='utf-8')
+                
+                self._update_processing_state(
+                    file_path=file_path,
+                    content=final_content,
+                    enhancer=enhancer,
+                    state='processed',
+                    metadata={
+                        'processing_completed_at': datetime.now().isoformat(),
+                        'ai_processed': True
+                    }
+                )
+                
                 # Record success metrics
                 self.metrics_tracker.record_success(
                     filename=file_path.name,
@@ -672,10 +801,22 @@ class YouTubeFeatureHandler:
                 
                 self.logger.info(f"Successfully processed {file_path.name}: {result.quote_count} quotes added in {processing_time:.2f}s")
                 
+                # Phase 3: Add bidirectional transcript links to parent note
+                transcript_link_added = False
+                if transcript_wikilink:
+                    transcript_link_added = self._add_transcript_links_to_note(
+                        file_path=file_path,
+                        transcript_wikilink=transcript_wikilink
+                    )
+                
+                # Include transcript info and linking status in results
                 return {
                     'success': True,
                     'quotes_added': result.quote_count,
-                    'processing_time': processing_time
+                    'processing_time': processing_time,
+                    'transcript_file': transcript_file,
+                    'transcript_wikilink': transcript_wikilink,
+                    'transcript_link_added': transcript_link_added
                 }
             else:
                 # Record failure
@@ -685,10 +826,13 @@ class YouTubeFeatureHandler:
                 error_msg = result.error_message or "Unknown error"
                 self.logger.error(f"Failed to process {file_path.name}: {error_msg}")
                 
+                # Include transcript info even on failure for debugging
                 return {
                     'success': False,
                     'error': error_msg,
-                    'processing_time': processing_time
+                    'processing_time': processing_time,
+                    'transcript_file': transcript_file,
+                    'transcript_wikilink': transcript_wikilink
                 }
         
         except Exception as e:
@@ -701,11 +845,276 @@ class YouTubeFeatureHandler:
             error_msg = str(e)
             self.logger.error(f"Exception processing {file_path.name}: {error_msg}")
             
+            # Even on exception, try to indicate if transcript was saved
             return {
                 'success': False,
                 'error': error_msg,
-                'processing_time': processing_time
+                'processing_time': processing_time,
+                'transcript_file': None,
+                'transcript_wikilink': None
             }
+    
+    def _update_processing_state(
+        self,
+        file_path: Path,
+        content: str,
+        enhancer: 'YouTubeNoteEnhancer',
+        state: str,
+        metadata: Dict[str, Any]
+    ) -> str:
+        """
+        Update note processing state with status transition tracking.
+        
+        PBI-003: Status Synchronization Helper
+        
+        This method centralizes status updates during YouTube note processing,
+        ensuring consistent state transitions and comprehensive error handling.
+        
+        State transitions:
+        - 'processing': Set at start with processing_started_at timestamp
+        - 'processed': Set at completion with processing_completed_at and ai_processed
+        
+        Note: ready_for_processing field is NOT modified (preserved for manual reprocessing)
+        
+        Args:
+            file_path: Path to the note file
+            content: Current note content
+            enhancer: YouTubeNoteEnhancer instance for frontmatter updates
+            state: Target state ('processing' or 'processed')
+            metadata: Additional metadata fields to update (timestamps, flags)
+        
+        Returns:
+            Updated note content string
+        
+        Raises:
+            IOError: If file write fails
+            ValueError: If frontmatter update fails
+        
+        Example:
+            >>> content = self._update_processing_state(
+            ...     file_path=note_path,
+            ...     content=current_content,
+            ...     enhancer=enhancer,
+            ...     state='processing',
+            ...     metadata={'processing_started_at': datetime.now().isoformat()}
+            ... )
+        """
+        try:
+            # Prepare complete metadata with status
+            full_metadata = {'status': state, **metadata}
+            
+            # Update frontmatter
+            updated_content = enhancer.update_frontmatter(content, full_metadata)
+            
+            # Write to file
+            file_path.write_text(updated_content, encoding='utf-8')
+            
+            # Log state transition
+            self.logger.info(
+                f"Status transition: {file_path.name} → {state} "
+                f"(metadata: {', '.join(metadata.keys())})"
+            )
+            
+            return updated_content
+            
+        except IOError as e:
+            self.logger.error(
+                f"Failed to write status update ({state}) to {file_path.name}: {e}"
+            )
+            raise
+        except Exception as e:
+            self.logger.error(
+                f"Failed to update frontmatter for {file_path.name}: {e}"
+            )
+            raise ValueError(f"Frontmatter update failed: {e}")
+    
+    def _save_transcript_with_metadata(
+        self,
+        video_id: str,
+        transcript_result: Dict[str, Any],
+        frontmatter: Dict[str, Any],
+        file_path: Path
+    ) -> tuple[Optional[Path], Optional[str]]:
+        """
+        REFACTOR: Helper method to save transcript with metadata preparation.
+        
+        Extracts metadata from frontmatter and transcript result, then saves
+        transcript file. Gracefully handles failures to avoid blocking quote
+        extraction workflow.
+        
+        Args:
+            video_id: YouTube video ID
+            transcript_result: Result dict from _fetch_transcript()
+            frontmatter: Note frontmatter dict
+            file_path: Path to parent note file
+            
+        Returns:
+            Tuple of (transcript_file_path, transcript_wikilink) or (None, None) on failure
+        """
+        try:
+            # Prepare metadata for transcript saver
+            video_url = frontmatter.get('video_url', f"https://youtube.com/watch?v={video_id}")
+            video_title = frontmatter.get('video_title', file_path.stem)
+            duration = transcript_result.get('duration', 0.0)
+            language = transcript_result.get('language', 'en')
+            
+            metadata = {
+                'video_id': video_id,
+                'video_url': video_url,
+                'video_title': video_title,
+                'duration': duration,
+                'language': language
+            }
+            
+            # Save transcript with parent note name for bidirectional linking
+            parent_note_name = file_path.stem
+            transcript_file = self.transcript_saver.save_transcript(
+                video_id=video_id,
+                transcript_data=transcript_result["transcript"],
+                metadata=metadata,
+                parent_note_name=parent_note_name
+            )
+            
+            # Generate wikilink for result dict
+            from datetime import datetime
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            transcript_wikilink = f"[[youtube-{video_id}-{date_str}]]"
+            
+            self.logger.info(f"Transcript saved: {transcript_file}")
+            return transcript_file, transcript_wikilink
+            
+        except Exception as e:
+            # Log error but continue processing - transcript save shouldn't block quote extraction
+            self.logger.warning(f"Failed to save transcript for {video_id}: {e}")
+            return None, None
+    
+    def _add_transcript_links_to_note(
+        self,
+        file_path: Path,
+        transcript_wikilink: str
+    ) -> bool:
+        """
+        Add transcript links to parent note (Phase 3: Note Linking Integration).
+        
+        Updates both frontmatter and body with bidirectional transcript links:
+        1. Adds transcript_file field to frontmatter
+        2. Inserts transcript link in body after title
+        
+        This enables seamless bidirectional navigation between notes and transcripts
+        in the knowledge graph.
+        
+        Args:
+            file_path: Path to parent note file
+            transcript_wikilink: Wikilink to transcript (e.g., [[youtube-{id}-{date}]])
+            
+        Returns:
+            True if linking succeeded, False if it failed (non-blocking)
+        """
+        try:
+            # Read note content
+            content = file_path.read_text(encoding='utf-8')
+            
+            # Update frontmatter
+            updated_content = self._update_note_frontmatter(
+                content=content,
+                transcript_wikilink=transcript_wikilink
+            )
+            
+            # Insert body link
+            updated_content = self._insert_transcript_link_in_body(
+                content=updated_content,
+                transcript_wikilink=transcript_wikilink
+            )
+            
+            # Write updated content
+            file_path.write_text(updated_content, encoding='utf-8')
+            
+            self.logger.info(f"Added transcript links to {file_path.name}")
+            return True
+            
+        except Exception as e:
+            # Log error but don't crash - quote insertion already succeeded
+            self.logger.warning(f"Failed to add transcript links to {file_path.name}: {e}")
+            return False
+    
+    def _update_note_frontmatter(
+        self,
+        content: str,
+        transcript_wikilink: str
+    ) -> str:
+        """
+        Update note frontmatter with transcript field.
+        
+        Adds transcript_file: [[youtube-{id}-{date}]] to frontmatter while
+        preserving all existing fields and ordering. Uses centralized
+        frontmatter utilities for YAML safety.
+        
+        Args:
+            content: Original note content
+            transcript_wikilink: Wikilink to transcript
+            
+        Returns:
+            Updated content with modified frontmatter
+        """
+        from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+        
+        # Parse existing frontmatter
+        metadata, body = parse_frontmatter(content)
+        
+        # Add transcript field
+        metadata['transcript_file'] = transcript_wikilink
+        
+        # Rebuild content
+        return build_frontmatter(metadata, body)
+    
+    def _insert_transcript_link_in_body(
+        self,
+        content: str,
+        transcript_wikilink: str
+    ) -> str:
+        """
+        Insert transcript link in note body.
+        
+        Inserts "**Full Transcript**: [[youtube-{id}-{date}]]" after the first
+        H1 heading (or at start of body if no heading found). This provides
+        immediate visual access to the full transcript from the note.
+        
+        Args:
+            content: Note content (with updated frontmatter)
+            transcript_wikilink: Wikilink to transcript
+            
+        Returns:
+            Updated content with transcript link in body
+        """
+        from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+        
+        # Parse to separate frontmatter from body
+        metadata, body = parse_frontmatter(content)
+        
+        # Create transcript link line
+        transcript_line = f"\n**Full Transcript**: {transcript_wikilink}\n"
+        
+        # Find first heading
+        lines = body.split('\n')
+        insert_index = 0
+        
+        for i, line in enumerate(lines):
+            if line.strip().startswith('# '):
+                # Found heading - insert after it
+                insert_index = i + 1
+                break
+        
+        # Insert transcript link
+        if insert_index == 0:
+            # No heading found - insert at start
+            updated_body = transcript_line + body
+        else:
+            # Insert after heading
+            lines.insert(insert_index, transcript_line)
+            updated_body = '\n'.join(lines)
+        
+        # Rebuild with frontmatter
+        return build_frontmatter(metadata, updated_body)
     
     def _setup_logging(self) -> None:
         """Setup logging for YouTube handler."""

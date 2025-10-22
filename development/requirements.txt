@@ -1,0 +1,32 @@
+# InnerOS Zettelkasten - Python Dependencies
+# Install: pip3 install -r development/requirements.txt
+
+# YouTube Transcript Integration
+# CRITICAL: Version 1.2.3+ required for compatibility
+# - v0.6.2 had .list_transcripts() method (deprecated)
+# - v1.2.3+ uses .list() method and FetchedTranscript objects
+# Breaking changes documented in: development/tests/test_youtube_transcript_api_compat.py
+youtube-transcript-api>=1.2.3,<2.0.0
+
+# XML parsing (required by youtube-transcript-api)
+defusedxml>=0.7.1,<0.8.0
+
+# HTTP requests
+requests>=2.31.0,<3.0.0
+
+# YAML parsing for frontmatter
+PyYAML>=6.0,<7.0
+
+# Testing
+pytest>=7.0.0,<8.0.0
+pytest-cov>=4.0.0,<5.0.0
+
+# File watching (for automation daemon)
+watchdog>=3.0.0,<4.0.0
+
+# Web server (for YouTube API server)
+flask>=3.0.0,<4.0.0
+flask-cors>=4.0.0,<5.0.0
+
+# NOTE: Ollama is installed separately via brew/binary
+# No Python package required - we use HTTP API directly
