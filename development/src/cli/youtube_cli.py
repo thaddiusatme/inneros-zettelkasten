@@ -168,6 +168,16 @@ class YouTubeCLI:
                 print("   ℹ️ Preview mode - no modifications will be made")
             print()
         
+        # Create backup before apply operations (if not preview)
+        if not preview:
+            from src.automation.youtube_monitoring import backup_status_store
+            status_file = Path(self.vault_path) / "youtube_status.json"
+            backup_dir = Path(self.vault_path) / "backups"
+            if status_file.exists():
+                backup_path = backup_status_store(status_file, backup_dir)
+                if backup_path and not quiet_mode:
+                    print(f"💾 Status backup created: {backup_path.name}")
+        
         # Process batch
         stats = self.processor.process_batch(
             preview=preview,

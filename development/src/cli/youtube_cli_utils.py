@@ -80,6 +80,11 @@ class YouTubeCLIProcessor:
         """
         self.vault_path = Path(vault_path)
         self.inbox_dir = self.vault_path / "Inbox"
+        
+        # Initialize monitoring counters for production tracking
+        from src.automation.youtube_monitoring import MonitoringCounters
+        self.counters = MonitoringCounters()
+        
         logger.info(f"Initialized YouTubeCLIProcessor with vault: {self.vault_path}")
     
     def process_single_note(self, note_path: Path, preview: bool = False,
@@ -289,9 +294,11 @@ class YouTubeCLIProcessor:
             if result.success:
                 stats.successful += 1
                 stats.total_quotes += result.quotes_inserted
+                self.counters.increment_success()
                 reporter.report_success(note_path.name, result.quotes_inserted)
             else:
                 stats.failed += 1
+                self.counters.increment_failure()
                 reporter.report_failure(note_path.name, result.error_message or "Unknown error")
         
         stats.total_time = time.time() - start_time
