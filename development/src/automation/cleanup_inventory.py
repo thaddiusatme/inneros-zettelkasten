@@ -14,8 +14,17 @@ from __future__ import annotations
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Iterable, Iterator, Mapping, Sequence
+from fnmatch import fnmatch
 
 ARCHIVE_BUCKET = Path("Projects/COMPLETED-2025-10")
+
+# Patterns of source files to exclude from cleanup inventory.
+# Use Unix shell-style wildcards (fnmatch). Adjust as needed.
+EXCLUDE_PATTERNS = [
+    "Projects/ACTIVE/project-todo-v3.md",
+    "Projects/ACTIVE/cleanup-inventory-2025-10-lessons-learned.md",
+]
+
 REFERENCE_BUCKET = Path("Projects/REFERENCE")
 AUTOMATION_DESTINATION = Path("development/src/automation/tools")
 AUTOMATION_DEFAULT_MONITOR = "cron-log"
@@ -61,6 +70,9 @@ def generate_inventory(
 
 def _build_records(sources: Iterable[str]) -> Iterator["InventoryRecord"]:
     for source in sources:
+        # Skip any source matching exclusion patterns
+        if any(fnmatch(source, pat) for pat in EXCLUDE_PATTERNS):
+            continue
         path = Path(source)
         record = _build_record(path)
         if record is not None:

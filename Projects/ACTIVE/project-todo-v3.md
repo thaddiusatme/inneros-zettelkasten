@@ -139,6 +139,24 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 
 ### Most Recent Completions
 
+#### ✅ Cleanup Workflow Automation System (Oct 22, 2025)
+
+- **Duration**: 6 iterations, ~8 hours total (TDD methodology)
+- **Status**: 🎉 **COMPLETE** - 8/8 tests passing, end-to-end demo working
+- **Branch**: `housekeeping/cleanup-inventory-demo` (commits: b8b5ac8, 59b5a17, 9ad77ef, 634618d, 5c68cb5)
+- **Deliverables**:
+  - ✅ TT-02: Inventory Generator (`cleanup_inventory.py`) - Scans vault for misplaced files
+  - ✅ TT-03: Decision Log (`cleanup_decision_log.py`) - Transforms inventory → pending decisions
+  - ✅ TT-04: CLI Review (`cleanup_cli_review.py`) - User approval interface
+  - ✅ TT-05: Execution Engine (`cleanup_executor.py`) - DirectoryOrganizer integration
+  - ✅ TT-06: End-to-End Demo (`cleanup_workflow_demo.py`) - Complete workflow validation
+  - ✅ 8 utility classes extracted (orchestration, audit trail, execution reporting)
+  - ✅ Metadata flow-through (trigger, monitoring) for daemon integration
+- **User Impact**: Enables safe, auditable file reorganization with backup/rollback
+- **Architecture**: 5-stage workflow (inventory → decision log → review → execution → audit trail)
+- **Next**: Run on real vault to execute "Knowledge Base Cleanup" project
+- **Lessons**: `Projects/ACTIVE/cleanup-inventory-2025-10-lessons-learned.md` + 5 iteration docs ✅
+
 #### ✅ System Observability Phase 1: Status Command (Oct 15, 2025)
 - **Duration**: 2 hours (RED: 30min, GREEN: 60min, REFACTOR: 30min)
 - **Status**: 🎉 **COMPLETE** - TDD Iteration 1 (8/8 tests, 576 LOC)
@@ -192,6 +210,90 @@ These guardrails will catch lifecycle regressions (like `status: inbox` not tran
 ## 🎯 Active Projects (ARCHITECTURAL PIVOT)
 
 *Note: WorkflowManager Refactor, Image Linking System, and YouTube Handler Integration all COMPLETE (Oct 2025)*
+
+### 🔴 P0 NEW: Knowledge Base Cleanup & Directory Harmonization (Oct 22, 2025)
+
+**Status**: 🟡 **PLANNING** – Manifest drafted, awaiting kickoff approval  
+**Priority**: P0 – **UNBLOCKS DAILY USE & REDUCES PROJECT COGNITIVE LOAD**  
+**Timeline**: 2–3 focused sessions (~6–8 hours total)  
+**Branch**: `housekeeping/knowledge-base-cleanup` (to be created)  
+**Manifest**: *This section*  
+**Related Rules**: `.windsurf/rules/updated-file-organization.md`
+
+#### Problem Overview
+
+Knowledge artifacts and automation assets have grown organically during recent sprints. Outcomes:
+
+- Redundant “lessons learned” and status docs scattered across `Projects/ACTIVE`, `Projects/COMPLETED-*`, and `development/docs/`
+- `knowledge/Inbox/` contains legacy captures, eroding trust in the capture → triage workflow spelled out in *Fleeting Notes Manifest*
+- Automation scripts (daemon, templater, CLI demos) live in multiple directories, making onboarding and maintenance slow
+- Repo root has accumulated historical session files (`CURRENT-STATE-*`, `NEXT_SESSION_*`, etc.), increasing cognitive noise
+
+#### Cleanup Scope
+
+1. **Project Documentation Flow** – Decide canonical homes for manifests, lessons, and status notes; move historical docs to archives
+2. **Knowledge Base Entry Points** – Clean the capture pipeline (`Inbox/`, manifests, dashboards) and add a single operational overview note
+3. **Automation Asset Consolidation** – Group templater scripts, demos, and automation docs under `development/` with a unified index
+4. **Repository Hygiene** – Sweep root-level and orphaned files, align with file-organization rules, document future cadence
+
+#### Cleanup Objectives
+
+1. 📁 **Reduce duplication** – Every project artifact has exactly one canonical location with cross-links instead of copies
+2. 🧭 **Clarify navigation** – Provide a “Knowledge Ops Dashboard” summarizing pipeline status, manifests, and automation touchpoints
+3. 🧰 **Consolidate tooling** – Central README + directory structure for automation scripts, demos, and install docs
+4. ♻️ **Regain trust in inbox** – `knowledge/Inbox/` holds only active captures (status: inbox), with aged content triaged or archived
+5. 🧹 **Keep repo tidy** – Root directory limited to onboarding assets; historical ops files archived in Projects/Archive or Completed folders
+
+#### Cleanup Deliverables
+
+- **Project Documentation**
+  - Move historical YouTube lessons and session logs to `Projects/COMPLETED-2025-10/`
+  - Add `Projects/ACTIVE/INDEX.md` listing current manifests + single-line status
+  - Update `README.md` / manifests with new locations for lessons learned
+- **Knowledge Base Operations**
+  - Create `knowledge/Permanent Notes/Knowledge Ops Dashboard.md` capturing metrics (note counts by status), key manifests, and triage cadence
+  - Audit `knowledge/Inbox/` and archive or promote legacy notes; log summary in dashboard
+- **Automation Assets**
+  - Relocate `knowledge/scripts/trigger_youtube_processing.js` under `development/src/automation/templater_scripts/`
+  - Add `development/automation/README.md` describing daemon, templater, CLI demos, and demo scripts with pointers
+  - Cross-link developer docs (`development/docs/*.md`) from README and automation index
+- **Repository Hygiene**
+  - Archive root-level historical files (`CURRENT-STATE-*`, `NEXT_SESSION_*`, `PHASE-*`, etc.) to appropriate `Projects/` archive folders
+  - Document monthly cleanup checklist (include in Knowledge Ops Dashboard and automation README)
+
+#### Cleanup Milestones & Timeline
+
+1. **Inventory & Decision Log** (0.5 session)
+   - Catalog redundant docs and automation scripts
+   - Approve target locations + archival plan
+   - Output: `Projects/ACTIVE/cleanup-inventory-2025-10.md`
+2. **Project Documentation Realignment** (1 session)
+   - Move lessons learned and session logs to `Projects/COMPLETED-2025-10/`
+   - Create `Projects/ACTIVE/INDEX.md`
+   - Update references in README manifests
+3. **Knowledge Base Flow Restoration** (1 session)
+   - Build Knowledge Ops Dashboard note
+   - Triage `knowledge/Inbox/` (archive/promote) and log metrics
+   - Note gaps for future automation (metadata audit script)
+4. **Automation Asset Consolidation** (0.5–1 session)
+   - Relocate templater script + docs under `development/src/automation/`
+   - Create automation README + update quickstart/maintenance guides
+   - Ensure demo scripts referenced from a single index
+5. **Repository Hygiene & Cadence** (0.5 session)
+   - Move root historical files to archive folders
+   - Add cleanup cadence checklist to Knowledge Ops Dashboard
+   - Create reminder task in project backlog / daily review note
+
+#### Cleanup Success Criteria
+
+- ✅ All lessons & session logs live in `Projects/COMPLETED-*`, with ACTIVE folder <10 files
+- ✅ Knowledge Ops Dashboard provides current note counts, manifests, triage cadence, and automation entry points
+- ✅ Automation scripts discoverable within one directory + README index
+- ✅ `knowledge/Inbox/` contains only active captures (<=10 items) with `status: inbox`
+- ✅ Repo root limited to onboarding + active top-level docs
+- ✅ Monthly cleanup checklist exists and is referenced by Knowledge Ops Dashboard
+
+---
 
 ### 🔴 P0 NEW: YouTube Checkbox Approval Automation (Oct 20, 2025)
 
