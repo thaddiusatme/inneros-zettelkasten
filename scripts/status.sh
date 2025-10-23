@@ -64,6 +64,6 @@ fi
 
 echo ""
 echo "═══════════════════════════════════════════════════════════"
-echo "📖 For detailed guide, see: USABILITY-DASHBOARD.md"
+echo "📖 For detailed guide, see: Projects/REFERENCE/USABILITY-DASHBOARD.md"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
