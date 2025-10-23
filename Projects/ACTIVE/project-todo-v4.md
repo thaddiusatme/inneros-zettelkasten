@@ -187,12 +187,55 @@ tags: [project-tracking, priorities, workflow-automation, note-lifecycle]
 - **P1 Nightly**: Heavy tests, link-integrity scan, performance smoke tests
 - **P1 Pre-commit**: Hooks for code style, linting
 
-### 2. Inbox Metadata Repair
+### 2. Git Branch Cleanup Sprint
+**Status**: 🔴 **CRITICAL TECHNICAL DEBT** - 70+ unmerged feature branches  
+**Priority**: P1 - Reducing cognitive overhead and repository complexity  
+**Timeline**: 2-3 hours
+
+#### Problem
+- **70+ feature branches** across local and remote repositories
+- Unclear completion/merge status for many branches
+- Context switching overhead when navigating work
+- Risk of duplicate work or lost progress
+- Repository complexity impacting developer experience
+
+#### Audit & Cleanup Strategy
+1. **Categorize Branches** (30 min)
+   - ✅ **Merged & Complete**: Delete locally and remotely
+   - 🔄 **Ready to Merge**: Review, test, create PRs
+   - 🚧 **In Progress**: Document status, consolidate if possible
+   - ❌ **Abandoned**: Archive/delete with documentation
+
+2. **Priority Branches to Review** (60 min)
+   - `housekeeping/knowledge-base-cleanup-phase2` - Appears complete, merge?
+   - Multiple `feat/adr-002-phase-*` branches (12+ phases) - Consolidate?
+   - `feat/auto-promotion-subdirectory-support` (current HEAD) - Enhancement, not P0
+   - Samsung screenshot workflow branches - Multiple iterations to reconcile
+   - YouTube automation branches - May be superseded by merged work
+
+3. **Create Branch Management Process** (30 min)
+   - Document "Definition of Done" for branches
+   - Establish merge/delete criteria
+   - Add weekly branch audit to workflow
+   - Create `.github/workflows/stale-branches.yml` to auto-flag old branches
+
+#### Success Criteria
+- [ ] Reduce active branches to <20 (from 70+)
+- [ ] All "completed" work either merged or documented as archived
+- [ ] Clear status for remaining in-progress branches
+- [ ] Branch management process documented in workflows/
+
+#### Impact
+- **Before**: 70+ branches, unclear status, high cognitive load
+- **After**: <20 active branches, clear status, reduced context switching
+- **Time Savings**: ~30 min/week reduced navigation overhead
+
+### 3. Inbox Metadata Repair
 - Fix 8 notes missing `type:` frontmatter
 - Auto-infer from filename patterns
 - Enables auto-promotion for remaining notes
 
-### 3. WorkflowManager Decomposition
+### 4. WorkflowManager Decomposition
 - Extract ConnectionManager (~300 LOC)
 - Extract AnalyticsCoordinator (~400 LOC)
 - Extract PromotionEngine (~200 LOC)
