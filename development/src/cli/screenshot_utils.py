@@ -26,7 +26,7 @@ import os
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.ai.llama_vision_ocr import LlamaVisionOCR, VisionAnalysisResult
+from src.ai.llama_vision_ocr import VisionAnalysisResult
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +149,7 @@ class ScreenshotOCRProcessor:
     
     def __init__(self):
         """Initialize Screenshot OCR Processor"""
+        from src.cli.evening_screenshot_utils import LlamaVisionOCR
         self.vision_ocr = LlamaVisionOCR(local_mode=True)
         logger.info("Initialized ScreenshotOCRProcessor with LlamaVisionOCR")
     
