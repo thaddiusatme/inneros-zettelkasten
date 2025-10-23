@@ -243,7 +243,6 @@ def main():
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        default=True,
         help='Preview changes without executing (default: true)'
     )
     parser.add_argument(
@@ -254,8 +253,8 @@ def main():
     
     args = parser.parse_args()
     
-    # Determine execution mode
-    dry_run = not args.execute or args.dry_run
+    # Determine execution mode: execute mode only if --execute flag provided
+    dry_run = not args.execute
     
     print("🔧 Root Directory Archival - InnerOS Zettelkasten")
     print()
