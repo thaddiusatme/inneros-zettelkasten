@@ -380,6 +380,75 @@ quality_score: {quality}
         assert result["by_type"]["permanent"]["promoted"] == 1
         assert result["by_type"]["literature"]["promoted"] == 1
         assert result["by_type"]["fleeting"]["promoted"] == 1
+    
+    def test_auto_promote_scans_subdirectories(self, tmp_path):
+        """
+        RED PHASE TEST: Auto-promotion should scan subdirectories recursively.
+        
+        This test validates that notes in Inbox/YouTube/ (or any subdirectory)
+        are included in auto-promotion candidates. Current implementation uses
+        glob("*.md") which only scans root Inbox/, missing 17 YouTube notes.
+        
+        Expected to FAIL until glob() is replaced with rglob() in GREEN phase.
+        """
+        # Arrange
+        base_dir = tmp_path / "knowledge"
+        inbox_dir = base_dir / "Inbox"
+        youtube_dir = inbox_dir / "YouTube"
+        youtube_dir.mkdir(parents=True)
+        
+        # Create root-level note (should be found with current implementation)
+        root_note = """---
+type: fleeting
+status: promoted
+quality_score: 0.8
+---
+
+# Root Level Note
+"""
+        (inbox_dir / "root-note.md").write_text(root_note)
+        
+        # Create subdirectory notes (SHOULD be found, but currently MISSED)
+        subdirectory_notes = [
+            ("youtube-1.md", "literature", 0.85),
+            ("youtube-2.md", "literature", 0.75),
+            ("youtube-3.md", "fleeting", 0.80),
+        ]
+        
+        for filename, note_type, quality in subdirectory_notes:
+            content = f"""---
+type: {note_type}
+status: promoted
+quality_score: {quality}
+---
+
+# {filename}
+"""
+            (youtube_dir / filename).write_text(content)
+        
+        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        engine = PromotionEngine(base_dir, lifecycle_manager)
+        
+        # Act
+        result = engine.auto_promote_ready_notes(dry_run=True, quality_threshold=0.7)
+        
+        # Assert - Should find ALL 4 notes (1 root + 3 subdirectory)
+        assert result["total_candidates"] == 4, (
+            f"Expected 4 candidates (1 root + 3 subdirectory), "
+            f"got {result['total_candidates']}. "
+            "Current implementation only scans root Inbox/, missing subdirectories."
+        )
+        assert result["would_promote_count"] == 4, (
+            f"Expected 4 promotions, got {result['would_promote_count']}"
+        )
+        
+        # Verify preview includes subdirectory notes
+        assert len(result["preview"]) == 4
+        preview_notes = [note["note"] for note in result["preview"]]
+        assert "root-note.md" in preview_notes
+        assert "youtube-1.md" in preview_notes
+        assert "youtube-2.md" in preview_notes
+        assert "youtube-3.md" in preview_notes
 
 
 class TestPromotionValidation:

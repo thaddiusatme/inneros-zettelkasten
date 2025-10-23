@@ -241,13 +241,13 @@ class PromotionEngine:
             results["preview"] = []
             logger.info("Auto-promotion running in DRY-RUN mode (no changes will be made)")
         
-        # Scan inbox for candidate notes
+        # Scan inbox for candidate notes (including subdirectories)
         if not self.inbox_dir.exists():
             logger.warning(f"Inbox directory does not exist: {self.inbox_dir}")
             return results
         
-        inbox_files = list(self.inbox_dir.glob("*.md"))
-        logger.info(f"Scanning {len(inbox_files)} notes in Inbox/ for auto-promotion candidates")
+        inbox_files = list(self.inbox_dir.rglob("*.md"))
+        logger.info(f"Scanning {len(inbox_files)} notes in Inbox/ (including subdirectories) for auto-promotion candidates")
         
         for note_path in inbox_files:
             try:
