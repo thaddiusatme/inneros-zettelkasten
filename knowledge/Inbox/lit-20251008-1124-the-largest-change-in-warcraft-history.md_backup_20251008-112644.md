@@ -1,15 +1,22 @@
 ---
 created: 2025-10-08 11:23
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [gaming-news, video-content, warcraft-history, world-of-warcraft, youtube, youtube-video]
+tags:
+- gaming-news
+- video-content
+- warcraft-history
+- world-of-warcraft
+- youtube
+- youtube-video
 source: youtube
 quality_score: 0.85
 author: Bellular Warcraft
 video_id: amY90H02qGk
 channel: Bellular Warcraft
 ai_processed: '2025-10-16T21:13:42.778060'
+processed_date: '2025-10-22T17:22:49.692081'
 ---
 
 

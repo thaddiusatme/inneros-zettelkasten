@@ -1,9 +1,16 @@
 ---
 created: 2025-10-01 20:14
 type: fleeting
-status: inbox
-tags: [ai_vision_analysis, c-19-protocols, c-19-regulations, c-19_protocols, c-19_regulations,
-  gmail, herearetheextractedrelevanttagsgmail, individual-processing]
+status: promoted
+tags:
+- ai_vision_analysis
+- c-19-protocols
+- c-19-regulations
+- c-19_protocols
+- c-19_regulations
+- gmail
+- herearetheextractedrelevanttagsgmail
+- individual-processing
 quality_score: 0.85
 device_type: samsung_s23
 device_name: Samsung Galaxy S23
@@ -11,6 +18,7 @@ app_name: Gmail
 processing_mode: individual
 screenshot_source: Screenshot_20240301_002936_Gmail.jpg
 ai_processed: '2025-10-16T21:12:52.724658'
+processed_date: '2025-10-22T17:22:49.690318'
 ---
 
 # 20240301 0029 Visual Content

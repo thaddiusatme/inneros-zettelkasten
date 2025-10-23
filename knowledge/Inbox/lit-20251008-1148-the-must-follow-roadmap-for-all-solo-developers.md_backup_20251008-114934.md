@@ -1,10 +1,17 @@
 ---
 created: 2025-10-08 11:48
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [community-building, consistency, continuous-learning, game-development, improvement,
-  marketing, passion, polishing]
+tags:
+- community-building
+- consistency
+- continuous-learning
+- game-development
+- improvement
+- marketing
+- passion
+- polishing
 source: youtube
 quality_score: 0.75
 author: DevWorm
@@ -14,6 +21,7 @@ ai_processed: '2025-10-16T21:40:32.826078'
 processed_at: 2025-10-08 11:49
 quote_count: 3
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.688224'
 ---
 
 

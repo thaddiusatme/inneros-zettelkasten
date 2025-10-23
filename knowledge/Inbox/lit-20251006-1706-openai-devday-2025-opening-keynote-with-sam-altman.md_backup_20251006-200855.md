@@ -1,10 +1,17 @@
 ---
 created: 2025-10-06 17:06
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [agentics-checkout, agents, ai-writing-code, api-updates, app-sdk, apps-sdk,
-  artificial-intelligence, chatgpt]
+tags:
+- agentics-checkout
+- agents
+- ai-writing-code
+- api-updates
+- app-sdk
+- apps-sdk
+- artificial-intelligence
+- chatgpt
 source: youtube
 url: https://www.youtube.com/watch?v=hS1YqcewH0c
 quality_score: 0.85
@@ -12,6 +19,7 @@ video_id: hS1YqcewH0c
 author: Sam Altman
 channel: OpenAI
 ai_processed: '2025-10-16T21:13:19.015969'
+processed_date: '2025-10-22T17:22:49.691252'
 ---
 
 

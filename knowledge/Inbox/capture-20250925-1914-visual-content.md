@@ -1,16 +1,23 @@
 ---
 created: 2025-10-01 19:07
 type: fleeting
-status: inbox
-tags: [ai-vision-analysis, herearetheextractedrelevanttagssamsung-galaxy-s23, individual-processing,
-  individual-processing-session, metadata-capture, screenshot, screenshot-processing,
-  tdd-iteration-5]
+status: promoted
+tags:
+- ai-vision-analysis
+- herearetheextractedrelevanttagssamsung-galaxy-s23
+- individual-processing
+- individual-processing-session
+- metadata-capture
+- screenshot
+- screenshot-processing
+- tdd-iteration-5
 quality_score: 0.8
 device_type: Samsung Galaxy S23
 app_name: Threads
 processing_mode: individual
 screenshot_source: Screenshot_20250925_191422_Threads.jpg
 ai_processed: '2025-10-16T21:15:48.614677'
+processed_date: '2025-10-22T17:22:49.695932'
 ---
 
 # 20250925 1914 Visual Content
