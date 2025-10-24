@@ -226,25 +226,20 @@ tags: [project-tracking, priorities, workflow-automation, note-lifecycle]
 - **Impact**: Remove fear, increase confidence, enable troubleshooting
 - **Success**: User runs automations without anxiety
 
-**Phase 2: Workflow-Triggering Template System** (P1, 2-3 hours)
-- **Problem**: Manual workflow execution, no template → automation integration
-- **Context**: User already has 13 Templater templates in `knowledge/Templates/`
-- **Solution**: Create NEW templates that trigger InnerOS automations
-  - **Templater Templates** (create in `knowledge/Templates/`):
-    - `youtube-automation-trigger.md` - Creates note that triggers YouTube processing
-    - `evening-screenshots-trigger.md` - Triggers evening screenshot workflow
-    - `weekly-review-trigger.md` - Auto-generates weekly review
-    - `cleanup-trigger.md` - Triggers cleanup/organization workflows
-  - **InnerOS Integration** (`templates_cli.py`):
-    ```bash
-    ./inneros template watch          # File watcher for automation triggers
-    ./inneros template list           # Show workflow templates
-    ./inneros template validate       # Check template → automation linkage
-    ```
-- **Impact**: Seamless Obsidian → InnerOS automation bridge
-- **Success**: User creates note in Obsidian, automation runs automatically
+#### 📋 Backlog (Future Work - Needs Refinement)
 
-**Phase 3: Evening Screenshots Extraction** (P1, 30 min)
+**Workflow-Triggering Template System** (P2, TBD - concept exploration needed)
+- **Concept**: Create templates that trigger InnerOS automations
+- **Context**: User already has 13 Templater templates in `knowledge/Templates/`
+- **Vision**: Templater note creation → InnerOS automation execution
+- **Status**: Concept is close to ideal but specific actions need definition
+- **Next Steps**: 
+  - Define specific workflow triggers needed
+  - Determine automation integration points
+  - Design template → automation handoff mechanism
+- **Deferred**: User needs to explore what specific actions would be most valuable
+
+**Evening Screenshots Extraction** (P2, 30 min)
 - **Problem**: Added to deprecated workflow_demo.py (violates ADR-004)
 - **Solution**: Extract to `evening_screenshots_cli.py`
   - Use existing 5 helper methods
