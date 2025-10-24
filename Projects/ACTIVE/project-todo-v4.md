@@ -181,7 +181,113 @@ tags: [project-tracking, priorities, workflow-automation, note-lifecycle]
 
 ## 🟡 P1: Next Priorities (After P0 Complete)
 
-### 1. CI/CD & DevOps
+### 1. User Experience & Workflow Improvements (NEW - Oct 23, 2025)
+
+**Context**: User feedback session identified key friction points and high-impact improvements  
+**Priority**: P1 - Focus on impact over architectural cleanup  
+**Timeline**: 4-8 hours across 2-3 sessions
+
+#### 🎯 User's Most-Used Workflows
+- **Weekly review** - Used regularly
+- **Screenshots processing** - Used regularly  
+- **YouTube CLI** - Used often
+- **Evening processing** - Priority improvement area
+- **Automation** - Priority improvement area
+
+#### 🔴 Biggest Pain Points
+1. **Visibility Gap**: "Not a lot of visibility into what I am doing"
+   - Don't know what automations are running
+   - Can't see what happened during processing
+   - Hard to troubleshoot when things go wrong
+   
+2. **Automation Friction**: "Automations are scary/friction to run"
+   - Daemons not automatically turned on
+   - Everything is CLI, hard to remember
+   - No quick status check
+   - Fear of breaking things
+
+3. **Note-Taking Friction**: "I wish to take more notes with templates"
+   - No quick template system
+   - Inconsistent structure
+   - Manual setup for each note type
+
+#### 🚀 High-Impact Improvements (Prioritized)
+
+**Phase 1: Automation Visibility CLI** (P1, 1-2 hours) - **HIGHEST IMPACT**
+- **Problem**: User doesn't know what's happening with automations
+- **Solution**: Create `automation_status_cli.py`
+  ```bash
+  ./inneros automation status    # Are daemons running?
+  ./inneros automation last-run  # What happened in last run?
+  ./inneros automation logs      # Show recent logs
+  ./inneros automation start     # Easy daemon startup
+  ./inneros automation stop      # Easy daemon shutdown
+  ```
+- **Impact**: Remove fear, increase confidence, enable troubleshooting
+- **Success**: User runs automations without anxiety
+
+**Phase 2: Template System CLI** (P1, 2-3 hours)
+- **Problem**: Friction creating new notes, inconsistent structure
+- **Solution**: Create `templates_cli.py`
+  ```bash
+  ./inneros template list                    # Show available templates
+  ./inneros template create fleeting "title" # Quick fleeting note
+  ./inneros template create youtube "url"    # YouTube note from URL
+  ./inneros template create literature "src" # Literature note
+  ./inneros template create daily            # Daily journal entry
+  ```
+- **Impact**: Remove friction, encourage more note-taking
+- **Success**: User creates notes faster, more consistently
+
+**Phase 3: Evening Screenshots Extraction** (P1, 30 min)
+- **Problem**: Added to deprecated workflow_demo.py (violates ADR-004)
+- **Solution**: Extract to `evening_screenshots_cli.py`
+  - Use existing 5 helper methods
+  - Add better progress visibility
+  - Show summary of what was processed
+- **Impact**: Clean architecture + better UX
+- **Success**: User sees what happened during processing
+
+**Phase 4: YouTube CLI Improvements** (P1, 1-2 hours)
+- **Problem**: User uses often, wants improvements
+- **Action**: Get specific feedback on pain points
+  - Too slow?
+  - Missing features?
+  - Hard to use?
+- **Solution**: TBD based on user feedback
+
+#### 📊 Workflow Audit Results (28 commands in workflow_demo.py)
+
+**Classification Complete** (Oct 23, 2025):
+- **Core Note Management**: 5 commands
+- **Weekly/Review**: 3 commands
+- **Fleeting Notes**: 2 commands
+- **YouTube**: 2 commands
+- **Orphaned Notes**: 2 commands
+- **Reading Intake**: 2 commands (skeleton)
+- **Backup**: 3 commands
+- **Safe Workflow**: 6 commands
+- **Screenshots**: 2 commands
+
+**Findings**:
+- ADR-004 marked "100% complete" but workflow_demo.py still 2,127 LOC
+- Commands were duplicated to new CLIs but never removed from monolith
+- Need to convert workflow_demo.py to thin router (~800 LOC target)
+
+#### 🎯 Long-Term Vision (Future)
+- **Dashboard/Web UI**: User wants visibility, but this is a bigger project
+- **Focus**: CLI improvements first, dashboard later
+- **Principle**: Impact over perfection
+
+#### Success Criteria
+- [ ] Automation status CLI created and tested
+- [ ] User can check daemon status in <5 seconds
+- [ ] Template CLI created with 4+ templates
+- [ ] Evening screenshots extracted properly
+- [ ] User provides feedback on YouTube improvements
+- [ ] User reports reduced anxiety about automations
+
+### 2. CI/CD & DevOps
 - **P0 PR CI**: Add `.github/workflows/ci.yml` (ruff, black, pyright, pytest)
 - **P0 Security**: Add CodeQL, Dependabot, pip-audit
 - **P1 Nightly**: Heavy tests, link-integrity scan, performance smoke tests
