@@ -32,6 +32,88 @@ from src.cli.screenshot_cli_utils import (
 from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
 
 
+# TDD ITERATION 2 REFACTOR: Evening Screenshot Helper Methods
+
+def _validate_evening_screenshot_config(config, args):
+    """Validate evening screenshot configuration and handle errors."""
+    path_validation = config.get("path_validation", {})
+    if not path_validation.get("valid", False):
+        formatter = CLIOutputFormatter(args.format)
+        error_output = formatter.format_error(
+            path_validation.get("error", "Invalid OneDrive path"),
+            [path_validation.get("suggestion", "")]
+        )
+        print(error_output)
+        return False
+    return True
+
+
+def _execute_evening_screenshot_dry_run(processor, config, progress_reporter):
+    """Execute dry-run mode for evening screenshots."""
+    if progress_reporter:
+        progress_reporter.start_progress(1, "Scanning screenshots")
+    
+    screenshots = processor.scan_todays_screenshots(limit=config.get("max_screenshots"))
+    result = {
+        "screenshots_found": len(screenshots),
+        "onedrive_path": config.get("onedrive_path"),
+        "dry_run": True
+    }
+    
+    if progress_reporter:
+        progress_reporter.update_progress(1, "Scan complete")
+        progress_reporter.complete_progress()
+    
+    return result
+
+
+def _execute_evening_screenshot_processing(processor, config, progress_reporter):
+    """Execute full processing for evening screenshots."""
+    if progress_reporter:
+        progress_reporter.start_progress(4, "Processing screenshots")
+        progress_reporter.update_progress(1, "Initializing processor")
+    
+    result = processor.process_evening_batch(limit=config.get("max_screenshots"))
+    
+    if progress_reporter:
+        progress_reporter.update_progress(4, "Processing complete")
+        metrics = progress_reporter.complete_progress()
+        if config.get("performance_metrics", False):
+            progress_reporter.report_performance_metrics(result)
+    
+    return result
+
+
+def _format_evening_screenshot_output(result, config, args):
+    """Format and display evening screenshot results."""
+    if args.format == "json":
+        print(json.dumps(result, indent=2, default=str))
+    else:
+        print_header("EVENING SCREENSHOTS PROCESSING COMPLETE")
+        if config.get("dry_run", False):
+            print(f"   📊 Screenshots found: {result.get('screenshots_found', 0)}")
+            print(f"   📂 OneDrive path: {result.get('onedrive_path', 'N/A')}")
+            print(f"   🔍 Mode: Dry run (no files created)")
+        else:
+            print(f"   ✅ Processed: {result.get('processed_count', 0)} screenshots")
+            print(f"   📄 Daily note: {result.get('daily_note_path', 'N/A')}")
+            print(f"   🔤 OCR results: {result.get('ocr_results', 0)}")
+            print(f"   ⏱️  Processing time: {result.get('processing_time', 0):.2f}s")
+            if result.get('backup_path'):
+                print(f"   🛡️  Backup: {result.get('backup_path')}")
+
+
+def _handle_evening_screenshot_export(result, args):
+    """Handle evening screenshot result export."""
+    if args.export:
+        export_manager = CLIExportManager()
+        export_success = export_manager.export_results(result, args.export, "json")
+        if export_success:
+            print(f"\n📄 Results exported to: {args.export}")
+        else:
+            print(f"\n❌ Export failed to: {args.export}")
+
+
 def print_header(title: str):
     """Print a formatted header."""
     print(f"\n{'='*60}")
@@ -2109,88 +2191,32 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     elif args.evening_screenshots:
         print("🌆 Processing evening screenshots...")
         try:
-            # Initialize configuration manager
+            # REFACTOR: Use extracted helper methods for clean orchestration
             config_manager = ConfigurationManager()
             config = config_manager.apply_configuration(args)
             
-            # Validate OneDrive path
-            path_validation = config.get("path_validation", {})
-            if not path_validation.get("valid", False):
-                formatter = CLIOutputFormatter(args.format)
-                error_output = formatter.format_error(
-                    path_validation.get("error", "Invalid OneDrive path"),
-                    [path_validation.get("suggestion", "")]
-                )
-                print(error_output)
+            # Validate configuration
+            if not _validate_evening_screenshot_config(config, args):
                 return 1
             
-            # Initialize processor
+            # Initialize processor and progress reporter
             processor = EveningScreenshotProcessor(
                 onedrive_path=config.get("onedrive_path"),
                 knowledge_path=str(base_dir)
             )
-            
-            # Initialize progress reporter if requested
             progress_reporter = CLIProgressReporter() if config.get("progress", False) else None
             
-            # Execute based on mode
+            # Execute based on mode (dry-run or full processing)
             if config.get("dry_run", False):
-                if progress_reporter:
-                    progress_reporter.start_progress(1, "Scanning screenshots")
-                
-                screenshots = processor.scan_todays_screenshots(limit=config.get("max_screenshots"))
-                result = {
-                    "screenshots_found": len(screenshots),
-                    "onedrive_path": config.get("onedrive_path"),
-                    "dry_run": True
-                }
-                
-                if progress_reporter:
-                    progress_reporter.update_progress(1, "Scan complete")
-                    progress_reporter.complete_progress()
+                result = _execute_evening_screenshot_dry_run(processor, config, progress_reporter)
             else:
-                if progress_reporter:
-                    progress_reporter.start_progress(4, "Processing screenshots")
-                    progress_reporter.update_progress(1, "Initializing processor")
-                
-                result = processor.process_evening_batch(limit=config.get("max_screenshots"))
-                
-                if progress_reporter:
-                    progress_reporter.update_progress(4, "Processing complete")
-                    metrics = progress_reporter.complete_progress()
-                    if config.get("performance_metrics", False):
-                        progress_reporter.report_performance_metrics(result)
+                result = _execute_evening_screenshot_processing(processor, config, progress_reporter)
             
             # Format and display output
-            formatter = CLIOutputFormatter(args.format)
-            if args.format == "json":
-                print(json.dumps(result, indent=2, default=str))
-            else:
-                print_header("EVENING SCREENSHOTS PROCESSING COMPLETE")
-                if config.get("dry_run", False):
-                    print(f"   📊 Screenshots found: {result.get('screenshots_found', 0)}")
-                    print(f"   📂 OneDrive path: {result.get('onedrive_path', 'N/A')}")
-                    print(f"   🔍 Mode: Dry run (no files created)")
-                else:
-                    print(f"   ✅ Processed: {result.get('processed_count', 0)} screenshots")
-                    print(f"   📄 Daily note: {result.get('daily_note_path', 'N/A')}")
-                    print(f"   🔤 OCR results: {result.get('ocr_results', 0)}")
-                    print(f"   ⏱️  Processing time: {result.get('processing_time', 0):.2f}s")
-                    if result.get('backup_path'):
-                        print(f"   🛡️  Backup: {result.get('backup_path')}")
+            _format_evening_screenshot_output(result, config, args)
             
             # Export if requested
-            if args.export:
-                export_manager = CLIExportManager()
-                export_success = export_manager.export_results(
-                    result,
-                    args.export,
-                    "json"
-                )
-                if export_success:
-                    print(f"\n📄 Results exported to: {args.export}")
-                else:
-                    print(f"\n❌ Export failed to: {args.export}")
+            _handle_evening_screenshot_export(result, args)
                     
         except Exception as e:
             print(f"❌ Error processing evening screenshots: {e}")
