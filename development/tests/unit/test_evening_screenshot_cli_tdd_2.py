@@ -138,9 +138,9 @@ class TestEveningScreenshotCLIIntegration:
     
     def test_evening_screenshots_processor_integration(self, temp_directories):
         """
-        TEST 5: EveningScreenshotProcessor integration within main() function
+        TEST 5: EveningScreenshotProcessor integration
         
-        EXPECTED TO FAIL: Integration code not implemented in workflow_demo.main()
+        GREEN PHASE: EveningScreenshotProcessor successfully integrated
         """
         with patch('src.cli.workflow_demo.EveningScreenshotProcessor') as mock_processor:
             mock_instance = Mock()
@@ -152,23 +152,36 @@ class TestEveningScreenshotCLIIntegration:
                 'backup_path': '/mock/backup/'
             }
             
-            # This will fail because EveningScreenshotProcessor is not imported/integrated
+            # GREEN: Implementation exists, should execute successfully
             test_args = [temp_directories['knowledge'], "--evening-screenshots"]
             
             with patch('sys.argv', ['workflow_demo.py'] + test_args):
-                with pytest.raises(AttributeError):  # EveningScreenshotProcessor not imported
-                    workflow_demo.main()
+                result = workflow_demo.main()
+                assert result == 0 or result is None  # Successful execution
+                mock_processor.assert_called_once()
+                mock_instance.process_evening_batch.assert_called_once()
     
     def test_real_onedrive_path_validation(self, temp_directories):
         """
         TEST 6: Real OneDrive path validation and error handling
         
-        EXPECTED TO FAIL: OneDrive path validation logic not implemented
+        GREEN PHASE: OneDrive path validation working with ConfigurationManager
         """
         invalid_onedrive = "/nonexistent/onedrive/path"
         
-        with patch('src.cli.workflow_demo.EveningScreenshotProcessor') as mock_processor:
-            # This will fail because validation logic doesn't exist
+        with patch('src.cli.workflow_demo.ConfigurationManager') as mock_config_mgr:
+            mock_config_instance = Mock()
+            mock_config_mgr.return_value = mock_config_instance
+            
+            # Simulate invalid path validation
+            mock_config_instance.apply_configuration.return_value = {
+                'path_validation': {
+                    'valid': False,
+                    'error': 'OneDrive path does not exist',
+                    'suggestion': 'Check path or use default'
+                }
+            }
+            
             test_args = [
                 temp_directories['knowledge'], 
                 "--evening-screenshots",
@@ -176,8 +189,8 @@ class TestEveningScreenshotCLIIntegration:
             ]
             
             with patch('sys.argv', ['workflow_demo.py'] + test_args):
-                with pytest.raises(Exception):  # Should validate and fail gracefully
-                    workflow_demo.main()
+                result = workflow_demo.main()
+                assert result == 1  # Graceful error handling with exit code 1
     
     def test_performance_benchmarking_integration(self):
         """
@@ -247,7 +260,7 @@ class TestEveningScreenshotCLIIntegration:
         """
         TEST 11: Error handling for OCR API failures
         
-        EXPECTED TO FAIL: OCR failure handling not implemented in CLI
+        GREEN PHASE: OCR failure handling implemented with graceful error reporting
         """
         with patch('src.cli.workflow_demo.EveningScreenshotProcessor') as mock_processor:
             mock_instance = Mock()
@@ -258,15 +271,15 @@ class TestEveningScreenshotCLIIntegration:
             test_args = [temp_directories['knowledge'], "--evening-screenshots"]
             
             with patch('sys.argv', ['workflow_demo.py'] + test_args):
-                # Should handle OCR failure gracefully, but will fail because not implemented
-                with pytest.raises(Exception):
-                    workflow_demo.main()
+                # GREEN: Graceful error handling returns exit code 1
+                result = workflow_demo.main()
+                assert result == 1  # Error caught and handled gracefully
     
     def test_evening_screenshots_output_formatting(self, temp_directories):
         """
         TEST 12: Output formatting following established CLI patterns
         
-        EXPECTED TO FAIL: Output formatting for evening screenshots not implemented
+        GREEN PHASE: Output formatting implemented with text/json support
         """
         with patch('src.cli.workflow_demo.EveningScreenshotProcessor') as mock_processor:
             mock_instance = Mock()
@@ -280,13 +293,18 @@ class TestEveningScreenshotCLIIntegration:
                 'suggested_links': 12
             }
             
-            # This will fail because output formatting logic doesn't exist
+            # GREEN: Output formatting implemented
             test_args = [temp_directories['knowledge'], "--evening-screenshots"]
             
             with patch('sys.argv', ['workflow_demo.py'] + test_args):
                 with patch('builtins.print') as mock_print:
-                    with pytest.raises(Exception):  # Integration not implemented
-                        workflow_demo.main()
+                    result = workflow_demo.main()
+                    assert result == 0 or result is None
+                    # Verify output was printed
+                    assert mock_print.call_count > 0
+                    # Verify key information was displayed
+                    printed_output = ' '.join(str(call) for call in mock_print.call_args_list)
+                    assert 'EVENING SCREENSHOTS PROCESSING COMPLETE' in printed_output or 'Processed' in printed_output
 
 
 class TestEveningScreenshotCLIUtilities:
