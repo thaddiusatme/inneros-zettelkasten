@@ -1,0 +1,22 @@
+# Automation Daemon Registry
+# Defines all automation daemons for status monitoring and management
+# Last updated: 2025-10-23
+
+daemons:
+  - name: youtube_watcher
+    script_path: .automation/scripts/automated_screenshot_import.sh
+    log_path: .automation/logs/youtube_watcher.log
+    pid_file: .automation/logs/youtube_watcher.pid
+    description: Monitors YouTube content for processing
+    
+  - name: screenshot_processor
+    script_path: .automation/scripts/process_screenshots.py
+    log_path: .automation/logs/screenshot_processor.log
+    pid_file: .automation/logs/screenshot_processor.pid
+    description: Processes Samsung screenshot imports
+    
+  - name: health_monitor
+    script_path: .automation/scripts/health_monitor.py
+    log_path: .automation/logs/health_monitor.log
+    pid_file: .automation/logs/health_monitor.pid
+    description: System health monitoring daemon
