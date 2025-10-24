@@ -226,18 +226,23 @@ tags: [project-tracking, priorities, workflow-automation, note-lifecycle]
 - **Impact**: Remove fear, increase confidence, enable troubleshooting
 - **Success**: User runs automations without anxiety
 
-**Phase 2: Template System CLI** (P1, 2-3 hours)
-- **Problem**: Friction creating new notes, inconsistent structure
-- **Solution**: Create `templates_cli.py`
-  ```bash
-  ./inneros template list                    # Show available templates
-  ./inneros template create fleeting "title" # Quick fleeting note
-  ./inneros template create youtube "url"    # YouTube note from URL
-  ./inneros template create literature "src" # Literature note
-  ./inneros template create daily            # Daily journal entry
-  ```
-- **Impact**: Remove friction, encourage more note-taking
-- **Success**: User creates notes faster, more consistently
+**Phase 2: Workflow-Triggering Template System** (P1, 2-3 hours)
+- **Problem**: Manual workflow execution, no template → automation integration
+- **Context**: User already has 13 Templater templates in `knowledge/Templates/`
+- **Solution**: Create NEW templates that trigger InnerOS automations
+  - **Templater Templates** (create in `knowledge/Templates/`):
+    - `youtube-automation-trigger.md` - Creates note that triggers YouTube processing
+    - `evening-screenshots-trigger.md` - Triggers evening screenshot workflow
+    - `weekly-review-trigger.md` - Auto-generates weekly review
+    - `cleanup-trigger.md` - Triggers cleanup/organization workflows
+  - **InnerOS Integration** (`templates_cli.py`):
+    ```bash
+    ./inneros template watch          # File watcher for automation triggers
+    ./inneros template list           # Show workflow templates
+    ./inneros template validate       # Check template → automation linkage
+    ```
+- **Impact**: Seamless Obsidian → InnerOS automation bridge
+- **Success**: User creates note in Obsidian, automation runs automatically
 
 **Phase 3: Evening Screenshots Extraction** (P1, 30 min)
 - **Problem**: Added to deprecated workflow_demo.py (violates ADR-004)
