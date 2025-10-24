@@ -1666,7 +1666,6 @@ Examples:
             if not youtube_notes:
                 # Output JSON if requested even when no notes
                 if hasattr(args, 'format') and args.format == 'json':
-                    import json
                     json_output = {
                         'successful': 0,
                         'failed': 0,
@@ -1768,7 +1767,6 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             
             # JSON output if requested
             if hasattr(args, 'format') and args.format == 'json':
-                import json
                 json_output = {
                     'successful': successful,
                     'failed': failed,
