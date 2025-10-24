@@ -58,7 +58,7 @@ trigger: always_on
 - updated-development-workflow.md: 11,985 bytes (11.7KB) ⚠️ (near limit, stable)
 - updated-session-context.md: 11,223 bytes (11.0KB) ⚠️ (near limit, includes guide refs)
 - updated-ai-integration.md: 8,066 bytes (7.9KB) ✅
-- automation-monitoring-requirements.md: 7,066 bytes (6.9KB) ✅
+- automation-monitoring-requirements.md: 11,322 bytes (11.1KB) ✅
 - updated-current-issues.md: 6,938 bytes (6.8KB) ✅
 - updated-file-organization.md: 6,768 bytes (6.6KB) ✅
 - architectural-constraints.md: 5,226 bytes (5.1KB) ✅

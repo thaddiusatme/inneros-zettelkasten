@@ -1,5 +1,19 @@
 # Automation Daemon Registry
 # Defines all automation daemons for status monitoring and management
+# 
+# MAINTENANCE:
+# - When adding new daemons: Copy an existing entry and update all fields
+# - Test with: cd development && pytest tests/unit/cli/test_automation_status_cli.py
+# - Validate schema: All 5 fields (name, script_path, log_path, pid_file, description) are REQUIRED
+# - Keep alphabetically sorted by name for easy discovery
+#
+# SCHEMA:
+#   name: Unique identifier (alphanumeric + underscore, no spaces)
+#   script_path: Relative path from repo root to daemon script
+#   log_path: Relative path from repo root to log file
+#   pid_file: Relative path from repo root to PID file (for future use)
+#   description: Human-readable description (used in status output)
+#
 # Last updated: 2025-10-23
 
 daemons:
