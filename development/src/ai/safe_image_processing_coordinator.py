@@ -26,7 +26,7 @@ class SafeImageProcessingCoordinator:
     Extracted from WorkflowManager (ADR-002 Phase 7) to reduce god class complexity.
     Uses composition pattern with injected dependencies.
     """
-    
+
     def __init__(
         self,
         safe_workflow_processor,
@@ -67,7 +67,7 @@ class SafeImageProcessingCoordinator:
             inbox_dir
         ]):
             raise ValueError("All dependencies must be provided (no None values)")
-        
+
         self.safe_workflow_processor = safe_workflow_processor
         self.atomic_workflow_engine = atomic_workflow_engine
         self.integrity_monitoring_manager = integrity_monitoring_manager
@@ -78,10 +78,10 @@ class SafeImageProcessingCoordinator:
         self.inbox_dir = inbox_dir
         self.process_note_callback = process_note_callback
         self.batch_process_callback = batch_process_callback
-        
+
         # Session management for legacy compatibility
         self.active_sessions = {}
-    
+
     def safe_process_inbox_note(self, note_path: str, preserve_images: bool = True, **kwargs) -> Dict:
         """
         Process inbox note using modular SafeWorkflowProcessor.
@@ -97,17 +97,17 @@ class SafeImageProcessingCoordinator:
             Dict with processing results and image preservation details
         """
         note_file = Path(note_path)
-        
+
         # Use extracted SafeWorkflowProcessor for modular processing
         if not self.process_note_callback:
             raise ValueError("process_note_callback not configured")
-        
+
         result = self.safe_workflow_processor.process_note_safely(
             note_file,
             lambda path: self.process_note_callback(str(path), **kwargs),
             preserve_images
         )
-        
+
         # Convert to legacy format for backward compatibility
         if result.success and result.workflow_result:
             legacy_result = result.workflow_result.copy()
@@ -122,7 +122,7 @@ class SafeImageProcessingCoordinator:
                 'error': result.error_message,
                 'image_preservation': result.image_preservation_details or {}
             }
-    
+
     def process_inbox_note_atomic(self, note_path: str) -> Dict:
         """
         Atomic inbox processing with rollback capability.
@@ -136,16 +136,16 @@ class SafeImageProcessingCoordinator:
             Dict with atomic processing results
         """
         note_file = Path(note_path)
-        
+
         # Extract images for tracking
         images = self.safe_image_processor.image_extractor.extract_images_from_note(note_file)
-        
+
         # Process with atomic operations
         result = self.safe_image_processor.process_note_with_images(
-            note_file, 
+            note_file,
             operation="atomic_inbox_processing"
         )
-        
+
         if result.success:
             # Perform actual processing
             if not self.process_note_callback:
@@ -166,7 +166,7 @@ class SafeImageProcessingCoordinator:
                 'processing_time': result.processing_time,
                 'error': result.error_message
             }
-    
+
     def safe_batch_process_inbox(self) -> Dict:
         """
         Safe batch processing with image preservation and integrity reporting.
@@ -177,19 +177,19 @@ class SafeImageProcessingCoordinator:
             Dict with batch processing results and integrity report
         """
         inbox_files = list(self.inbox_dir.glob("*.md"))
-        
+
         # Process all notes with SafeImageProcessor
         results = self.safe_image_processor.process_notes_batch(
-            inbox_files, 
+            inbox_files,
             operation="safe_batch_inbox_processing"
         )
-        
+
         total_images_preserved = sum(len(r.preserved_images) for r in results)
         successful_processing = sum(1 for r in results if r.success)
-        
+
         # Run standard batch processing for workflow results
         standard_results = self.batch_process_callback()
-        
+
         # Enhance with image preservation data
         standard_results.update({
             'images_preserved_total': total_images_preserved,
@@ -199,14 +199,14 @@ class SafeImageProcessingCoordinator:
                 'failed_image_preservation': len(results) - successful_processing
             }
         })
-        
+
         return standard_results
-    
+
     def process_inbox_note_enhanced(
-        self, 
-        note_path: str, 
+        self,
+        note_path: str,
         enable_monitoring: bool = False,
-        collect_performance_metrics: bool = False, 
+        collect_performance_metrics: bool = False,
         **kwargs
     ) -> Dict:
         """
@@ -224,7 +224,7 @@ class SafeImageProcessingCoordinator:
         if not self.process_note_callback:
             raise ValueError("process_note_callback not configured")
         result = self.process_note_callback(note_path, **kwargs)
-        
+
         if enable_monitoring:
             # Add integrity monitoring
             note_file = Path(note_path)
@@ -233,7 +233,7 @@ class SafeImageProcessingCoordinator:
             # Register images for monitoring
             for image in images:
                 self.image_integrity_monitor.register_image(image, f"monitoring:{note_path}")
-            
+
             result['integrity_report'] = {
                 'images_tracked': len(images),
                 'monitoring_enabled': True,
@@ -242,7 +242,7 @@ class SafeImageProcessingCoordinator:
                     'monitored_images': len(images)
                 }
             }
-        
+
         if collect_performance_metrics:
             # Add performance metrics
             metrics = self.safe_image_processor.get_performance_metrics()
@@ -251,9 +251,9 @@ class SafeImageProcessingCoordinator:
                 'processing_time': metrics.get('processing_time', 0),
                 'image_operations_time': metrics.get('atomic_operations', {}).get('average_execution_time', 0)
             }
-        
+
         return result
-    
+
     def process_inbox_note_safe(self, note_path: str) -> Dict:
         """
         Safe processing with automatic backup/rollback.
@@ -269,10 +269,10 @@ class SafeImageProcessingCoordinator:
         try:
             # Create backup session
             session = self.safe_image_processor.create_backup_session("safe_inbox_processing")
-            
+
             # Process with monitoring
             result = self.process_inbox_note_enhanced(note_path, enable_monitoring=True)
-            
+
             # Check if processing succeeded
             if result.get('error'):
                 # Rollback on error
@@ -289,7 +289,7 @@ class SafeImageProcessingCoordinator:
                     'images_restored': 0,
                     'result': result
                 }
-                
+
         except Exception as e:
             return {
                 'processing_failed': True,
@@ -297,7 +297,7 @@ class SafeImageProcessingCoordinator:
                 'images_restored': 0,
                 'error': str(e)
             }
-    
+
     def start_safe_processing_session(self, operation_name: str) -> str:
         """
         Start concurrent safe processing session.
@@ -309,7 +309,7 @@ class SafeImageProcessingCoordinator:
             Session ID
         """
         session_id = self.concurrent_session_manager.create_processing_session(operation_name)
-        
+
         # Legacy compatibility
         self.active_sessions[session_id] = {
             'operation_name': operation_name,
@@ -317,7 +317,7 @@ class SafeImageProcessingCoordinator:
             'notes_processed': []
         }
         return session_id
-    
+
     def process_note_in_session(self, note_path: str, session_id: str) -> Dict:
         """
         Process note within an active session.
@@ -330,17 +330,17 @@ class SafeImageProcessingCoordinator:
             Dict with processing results
         """
         note_file = Path(note_path)
-        
+
         # Use modular session manager for processing
         if not self.process_note_callback:
             raise ValueError("process_note_callback not configured")
-        
+
         result = self.concurrent_session_manager.process_note_in_session(
             session_id,
             note_file,
             lambda path: self.process_note_callback(str(path))
         )
-        
+
         # Update legacy tracking for compatibility
         if session_id in self.active_sessions:
             self.active_sessions[session_id]['notes_processed'].append({
@@ -348,9 +348,9 @@ class SafeImageProcessingCoordinator:
                 'result': result,
                 'processed_at': datetime.now()
             })
-        
+
         return result
-    
+
     def commit_safe_processing_session(self, session_id: str) -> bool:
         """
         Commit and finalize safe processing session.
@@ -363,9 +363,9 @@ class SafeImageProcessingCoordinator:
         """
         # Finalize using modular session manager
         session_summary = self.concurrent_session_manager.finalize_session(session_id)
-        
+
         # Legacy cleanup
         if session_id in self.active_sessions:
             self.active_sessions.pop(session_id)
-        
+
         return session_summary.get('success', True)

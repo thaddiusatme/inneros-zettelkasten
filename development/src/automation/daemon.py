@@ -62,7 +62,7 @@ class AutomationDaemon:
     
     Size: 290 LOC (ADR-001 compliant: <500 LOC)
     """
-    
+
     def __init__(self, config: Optional[DaemonConfig] = None):
         """Initialize daemon with scheduler and health monitoring."""
         self._state = DaemonState.STOPPED
@@ -70,26 +70,26 @@ class AutomationDaemon:
         self._start_time: Optional[float] = None
         self._job_definitions = []  # Store job definitions for restart
         self._config = config or DaemonConfig()
-        
+
         # Initialize logging first
         self._setup_logging()
-        
+
         # Initialize manager components
         self.scheduler: Optional[SchedulerManager] = None
         self.health: HealthCheckManager = HealthCheckManager(self)  # Always available
         self.file_watcher: Optional[FileWatcher] = None
         self.event_handler: Optional[AutomationEventHandler] = None
-        
+
         # Feature-specific handlers
         self.screenshot_handler: Optional[ScreenshotEventHandler] = None
         self.smart_link_handler: Optional[SmartLinkEventHandler] = None
         self.youtube_handler: Optional[YouTubeFeatureHandler] = None
-    
+
     @property
     def state(self) -> DaemonState:
         """Get current daemon state."""
         return self._state
-    
+
     def start(self) -> None:
         """
         Start daemon with scheduler initialization.
@@ -99,19 +99,19 @@ class AutomationDaemon:
         """
         if self._state == DaemonState.RUNNING:
             raise DaemonError("Daemon is already running")
-        
+
         self._state = DaemonState.STARTING
         self.logger.info("Starting AutomationDaemon...")
-        
+
         try:
             # Create and start BackgroundScheduler
             self._scheduler = BackgroundScheduler()
             self._scheduler.start()
-            
+
             # Initialize scheduler manager with scheduler instance
             self.scheduler = SchedulerManager(self._scheduler, self._on_job_executed)
             # Health manager is already initialized in __init__
-            
+
             # Restore jobs if this is a restart
             for job_def in self._job_definitions:
                 self.scheduler.add_job(
@@ -119,7 +119,7 @@ class AutomationDaemon:
                     job_def["func"],
                     job_def["schedule"]
                 )
-            
+
             # Start file watcher if configured and enabled
             if self._config.file_watching and self._config.file_watching.enabled:
                 watch_path = self._config.file_watching.watch_path
@@ -131,25 +131,25 @@ class AutomationDaemon:
                 )
                 self.file_watcher.register_callback(self._on_file_event)
                 self.file_watcher.start()
-                
+
                 # Create event handler for AI processing integration
                 self.event_handler = AutomationEventHandler(
                     vault_path=str(watch_path),
                     debounce_seconds=self._config.file_watching.debounce_seconds
                 )
-                
+
                 # Initialize and register feature-specific handlers
                 self._setup_feature_handlers(Path(watch_path))
-            
+
             self._start_time = time.time()
             self._state = DaemonState.RUNNING
             self.logger.info("Daemon started successfully")
-            
+
         except Exception as e:
             self._state = DaemonState.ERROR
             self.logger.error(f"Failed to start daemon: {e}", exc_info=True)
             raise DaemonError(f"Failed to start daemon: {e}")
-    
+
     def stop(self) -> None:
         """
         Graceful shutdown with job cleanup.
@@ -158,16 +158,16 @@ class AutomationDaemon:
         """
         if self._state == DaemonState.STOPPED:
             return
-        
+
         self._state = DaemonState.STOPPING
         self.logger.info("Stopping AutomationDaemon...")
-        
+
         try:
             # Stop file watcher BEFORE scheduler (reverse start order)
             if self.file_watcher:
                 self.file_watcher.stop()
                 # Keep reference for status checks, but watcher is stopped
-            
+
             # Save job definitions for potential restart
             if self.scheduler:
                 jobs = self.scheduler.list_jobs()
@@ -179,22 +179,22 @@ class AutomationDaemon:
                     }
                     for job in jobs
                 ]
-            
+
             # Shutdown scheduler gracefully (waits for running jobs)
             if self._scheduler:
                 self._scheduler.shutdown(wait=True)
                 self._scheduler = None
-            
+
             self.scheduler = None
             # Health manager stays available for status checks even when stopped
             self._state = DaemonState.STOPPED
             self.logger.info("Daemon stopped successfully")
-            
+
         except Exception as e:
             self._state = DaemonState.ERROR
             self.logger.error(f"Failed to stop daemon: {e}", exc_info=True)
             raise DaemonError(f"Failed to stop daemon: {e}")
-    
+
     def restart(self) -> None:
         """
         Atomic restart without losing scheduled jobs.
@@ -206,7 +206,7 @@ class AutomationDaemon:
         self.stop()
         # Start will restore job definitions
         self.start()
-    
+
     def status(self) -> DaemonStatus:
         """
         Get current daemon status.
@@ -218,20 +218,20 @@ class AutomationDaemon:
             self._scheduler is not None and
             self._scheduler.running
         )
-        
+
         active_jobs = 0
         if self.scheduler and scheduler_active:
             active_jobs = len(self.scheduler.list_jobs())
-        
+
         uptime_seconds = 0.0
         if self._state == DaemonState.RUNNING and self._start_time:
             uptime_seconds = time.time() - self._start_time
-        
+
         watcher_active = (
             self.file_watcher is not None and
             self.file_watcher.is_running()
         )
-        
+
         return DaemonStatus(
             state=self._state,
             scheduler_active=scheduler_active,
@@ -239,7 +239,7 @@ class AutomationDaemon:
             uptime_seconds=uptime_seconds,
             watcher_active=watcher_active
         )
-    
+
     def is_healthy(self) -> bool:
         """
         Quick health check.
@@ -250,7 +250,7 @@ class AutomationDaemon:
         if self.health:
             return self.health.get_health_status().is_healthy
         return False
-    
+
     def get_daemon_health(self) -> dict:
         """
         Aggregate daemon and handler health for monitoring endpoints.
@@ -264,31 +264,31 @@ class AutomationDaemon:
             'status_code': int(report.status_code) if report else 503,
             'checks': dict(report.checks) if report else {}
         }
-        
+
         handlers: dict = {}
         if self.screenshot_handler is not None:
             if hasattr(self.screenshot_handler, 'get_health_status'):
                 handlers['screenshot'] = self.screenshot_handler.get_health_status()
             elif hasattr(self.screenshot_handler, 'get_health'):
                 handlers['screenshot'] = self.screenshot_handler.get_health()
-        
+
         if self.smart_link_handler is not None:
             if hasattr(self.smart_link_handler, 'get_health_status'):
                 handlers['smart_link'] = self.smart_link_handler.get_health_status()
             elif hasattr(self.smart_link_handler, 'get_health'):
                 handlers['smart_link'] = self.smart_link_handler.get_health()
-        
+
         if self.youtube_handler is not None:
             if hasattr(self.youtube_handler, 'get_health_status'):
                 handlers['youtube'] = self.youtube_handler.get_health_status()
             elif hasattr(self.youtube_handler, 'get_health'):
                 handlers['youtube'] = self.youtube_handler.get_health()
-        
+
         return {
             'daemon': daemon_info,
             'handlers': handlers
         }
-    
+
     def export_handler_metrics(self) -> dict:
         """
         Export metrics for each configured handler as structured dictionaries.
@@ -298,30 +298,30 @@ class AutomationDaemon:
         """
         import json
         metrics: dict = {}
-        
+
         if self.screenshot_handler is not None and hasattr(self.screenshot_handler, 'export_metrics'):
             try:
                 ss_json = self.screenshot_handler.export_metrics()
                 metrics['screenshot'] = json.loads(ss_json)
             except Exception:
                 metrics['screenshot'] = {}
-        
+
         if self.smart_link_handler is not None and hasattr(self.smart_link_handler, 'export_metrics'):
             try:
                 sl_json = self.smart_link_handler.export_metrics()
                 metrics['smart_link'] = json.loads(sl_json)
             except Exception:
                 metrics['smart_link'] = {}
-        
+
         if self.youtube_handler is not None and hasattr(self.youtube_handler, 'export_metrics'):
             try:
                 yt_json = self.youtube_handler.export_metrics()
                 metrics['youtube'] = json.loads(yt_json)
             except Exception:
                 metrics['youtube'] = {}
-        
+
         return metrics
-    
+
     def export_prometheus_metrics(self) -> str:
         """
         Export aggregated Prometheus metrics from all handlers.
@@ -330,7 +330,7 @@ class AutomationDaemon:
             String in Prometheus exposition format with metrics from all enabled handlers
         """
         sections = []
-        
+
         # Aggregate metrics from screenshot handler
         if self.screenshot_handler is not None:
             if hasattr(self.screenshot_handler, 'metrics_tracker'):
@@ -340,7 +340,7 @@ class AutomationDaemon:
                     if prom_text:
                         sections.append("# Screenshot Handler Metrics")
                         sections.append(prom_text)
-        
+
         # Aggregate metrics from smart link handler
         if self.smart_link_handler is not None:
             if hasattr(self.smart_link_handler, 'metrics_tracker'):
@@ -350,7 +350,7 @@ class AutomationDaemon:
                     if prom_text:
                         sections.append("# Smart Link Handler Metrics")
                         sections.append(prom_text)
-        
+
         # Aggregate metrics from YouTube handler
         if self.youtube_handler is not None:
             if hasattr(self.youtube_handler, 'metrics_tracker'):
@@ -360,9 +360,9 @@ class AutomationDaemon:
                     if prom_text:
                         sections.append("# YouTube Handler Metrics")
                         sections.append(prom_text)
-        
+
         return "\n\n".join(sections) if sections else ""
-    
+
     def _on_job_executed(self, job_id: str, success: bool, duration: float) -> None:
         """
         Callback for job execution tracking.
@@ -374,7 +374,7 @@ class AutomationDaemon:
         """
         if self.health:
             self.health.record_job_execution(job_id, success, duration)
-    
+
     def _build_handler_config_dict(self, handler_type: str, vault_path: Optional[Path] = None) -> Optional[dict]:
         """
         Build configuration dictionary for a handler from DaemonConfig.
@@ -395,7 +395,7 @@ class AutomationDaemon:
                     'ocr_enabled': sh_cfg.ocr_enabled,
                     'processing_timeout': sh_cfg.processing_timeout,
                 }
-        
+
         elif handler_type == 'smart_link':
             sl_cfg = self._config.smart_link_handler
             if sl_cfg and sl_cfg.enabled:
@@ -408,14 +408,14 @@ class AutomationDaemon:
                         resolved_vault = Path(self._config.file_watching.watch_path)
                     else:
                         resolved_vault = Path.cwd()
-                
+
                 return {
                     'vault_path': sl_cfg.vault_path or str(resolved_vault),
                     'similarity_threshold': sl_cfg.similarity_threshold,
                     'max_suggestions': sl_cfg.max_suggestions,
                     'auto_insert': sl_cfg.auto_insert,
                 }
-        
+
         elif handler_type == 'youtube':
             yt_cfg = self._config.youtube_handler
             if yt_cfg and yt_cfg.enabled:
@@ -428,16 +428,16 @@ class AutomationDaemon:
                         resolved_vault = Path(self._config.file_watching.watch_path)
                     else:
                         resolved_vault = Path.cwd()
-                
+
                 return {
                     'vault_path': yt_cfg.vault_path or str(resolved_vault),
                     'max_quotes': yt_cfg.max_quotes,
                     'min_quality': yt_cfg.min_quality,
                     'processing_timeout': yt_cfg.processing_timeout,
                 }
-        
+
         return None
-    
+
     def _setup_feature_handlers(self, vault_path: Optional[Path] = None) -> None:
         """
         Initialize and register feature-specific handlers.
@@ -449,7 +449,7 @@ class AutomationDaemon:
         if not self.file_watcher:
             self.logger.warning("File watcher not initialized, skipping feature handlers")
             return
-        
+
         # Initialize screenshot handler if configured
         sh_config = self._build_handler_config_dict('screenshot')
         if sh_config:
@@ -457,7 +457,7 @@ class AutomationDaemon:
             self.screenshot_handler = ScreenshotEventHandler(config=sh_config)
             self.file_watcher.register_callback(self.screenshot_handler.process)
             self.logger.info("Screenshot handler registered successfully")
-        
+
         # Initialize smart link handler if configured
         sl_config = self._build_handler_config_dict('smart_link', vault_path)
         if sl_config:
@@ -465,7 +465,7 @@ class AutomationDaemon:
             self.smart_link_handler = SmartLinkEventHandler(config=sl_config)
             self.file_watcher.register_callback(self.smart_link_handler.process)
             self.logger.info("Smart link handler registered successfully")
-        
+
         # Initialize YouTube handler if configured
         yt_config = self._build_handler_config_dict('youtube', vault_path)
         if yt_config:
@@ -473,7 +473,7 @@ class AutomationDaemon:
             self.youtube_handler = YouTubeFeatureHandler(config=yt_config)
             self.file_watcher.register_callback(self.youtube_handler.process)
             self.logger.info("YouTube handler registered successfully")
-    
+
     def _on_file_event(self, file_path: Path, event_type: str) -> None:
         """
         Callback for file watcher events.
@@ -485,7 +485,7 @@ class AutomationDaemon:
         # Process events through event handler if available
         if self.event_handler:
             self.event_handler.process_file_event(file_path, event_type)
-    
+
     def _setup_logging(self) -> None:
         """
         Setup logging infrastructure with daily log files.
@@ -498,14 +498,14 @@ class AutomationDaemon:
         # Create log directory
         log_dir = Path('.automation/logs')
         log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Create daily log file
         log_file = log_dir / f'daemon_{time.strftime("%Y-%m-%d")}.log'
-        
+
         # Configure logger
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
-        
+
         # Configure file handler
         handler = logging.FileHandler(log_file)
         handler.setFormatter(logging.Formatter(
@@ -519,24 +519,24 @@ def main():
     """Main entry point for daemon module execution."""
     import sys
     import signal
-    
+
     # Create daemon instance
     daemon = AutomationDaemon()
-    
+
     # Handle shutdown gracefully
     def handle_shutdown(signum, frame):
         print("Shutting down daemon...")
         daemon.stop()
         sys.exit(0)
-    
+
     signal.signal(signal.SIGTERM, handle_shutdown)
     signal.signal(signal.SIGINT, handle_shutdown)
-    
+
     try:
         # Start daemon
         daemon.start()
-        print(f"Daemon started successfully")
-        
+        print("Daemon started successfully")
+
         # Keep daemon running
         while daemon.state == DaemonState.RUNNING:
             time.sleep(1)

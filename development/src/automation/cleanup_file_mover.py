@@ -99,7 +99,6 @@ def execute_cleanup_moves(
 
 def _create_backup(vault_root: Path) -> Path:
     """Create timestamped backup of vault."""
-    import os
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     backup_root = Path.home() / "backups"

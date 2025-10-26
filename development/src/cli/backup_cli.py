@@ -51,7 +51,7 @@ class BackupCLI:
     
     Uses DirectoryOrganizer for actual implementation
     """
-    
+
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize Backup CLI
@@ -62,17 +62,17 @@ class BackupCLI:
         self.vault_path = vault_path or "."
         self.organizer = DirectoryOrganizer(vault_root=self.vault_path)
         logger.info(f"Backup CLI initialized with vault: {self.vault_path}")
-    
+
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
         print("\n" + "="*60)
         print(title)
         print("="*60 + "\n")
-    
+
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == 'json'
-    
+
     def prune_backups(self, keep: int = 5, dry_run: bool = False,
                      output_format: str = 'normal') -> int:
         """
@@ -87,16 +87,16 @@ class BackupCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        
+
         try:
             if not quiet:
                 print(f"🗑️  Pruning backups (keeping {keep} most recent)...")
                 if dry_run:
                     print("🔍 Dry run mode - no files will be deleted")
-            
+
             # Execute using DirectoryOrganizer
             prune_result = self.organizer.prune_backups(keep=keep, dry_run=dry_run)
-            
+
             # Format and display output
             if quiet:
                 print(json.dumps(prune_result, indent=2, default=str))
@@ -105,19 +105,19 @@ class BackupCLI:
                 print(f"📊 Total backups found: {prune_result.get('total_backups', 0)}")
                 print(f"✅ Backups to keep: {keep}")
                 print(f"🗑️  Backups to prune: {len(prune_result.get('to_prune', []))}")
-                
+
                 if prune_result.get('to_prune'):
                     print("\nBackups marked for deletion:")
                     for backup in prune_result['to_prune']:
                         print(f"  - {backup}")
-                    
+
                     if dry_run:
                         print("\n💡 Run without --dry-run to actually delete these backups")
                 else:
                     print("\n✅ No backups need pruning")
-            
+
             return 0
-            
+
         except Exception as e:
             print(f"❌ Error pruning backups: {e}", file=sys.stderr)
             logger.exception("Error in prune_backups")
@@ -146,7 +146,7 @@ Examples:
   %(prog)s prune-backups --keep 5 --format json
         """
     )
-    
+
     # Global options
     parser.add_argument(
         '--vault',
@@ -159,10 +159,10 @@ Examples:
         action='store_true',
         help='Enable verbose logging'
     )
-    
+
     # Subcommands
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+
     # prune-backups subcommand
     prune_parser = subparsers.add_parser(
         'prune-backups',
@@ -185,7 +185,7 @@ Examples:
         default='normal',
         help='Output format'
     )
-    
+
     return parser
 
 
@@ -193,23 +193,23 @@ def main():
     """Main entry point for Backup CLI"""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     # Configure logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Check if command was provided
     if not args.command:
         parser.print_help()
         return 1
-    
+
     # Initialize CLI
     try:
         cli = BackupCLI(vault_path=args.vault)
     except Exception as e:
         print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
         return 1
-    
+
     # Execute command
     try:
         if args.command == 'prune-backups':

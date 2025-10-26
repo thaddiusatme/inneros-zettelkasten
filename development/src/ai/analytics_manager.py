@@ -44,7 +44,7 @@ class AnalyticsManager:
     
     NO AI Dependencies - can execute in parallel with ConnectionManager.
     """
-    
+
     def __init__(self, base_dir: Path, config: ConfigDict) -> None:
         """
         Initialize AnalyticsManager.
@@ -55,7 +55,7 @@ class AnalyticsManager:
         """
         self.base_dir = Path(base_dir)
         self.config = config
-        
+
     def assess_quality(self, note_path: str, dry_run: bool = False) -> AnalyticsResult:
         """
         Assess the quality of a note based on multiple metrics.
@@ -164,29 +164,29 @@ class AnalyticsManager:
         # Validation
         if not note_path or note_path.strip() == '':
             raise ValueError("note_path cannot be empty")
-        
+
         # Check file exists
         full_path = self.base_dir / note_path if not Path(note_path).is_absolute() else Path(note_path)
         if not full_path.exists():
             raise FileNotFoundError(f"Note file not found: {note_path}")
-        
+
         # Read note content
         content = full_path.read_text(encoding='utf-8')
-        
+
         # Extract frontmatter
         has_frontmatter = content.startswith('---')
         frontmatter_content = ''
         body_content = content
-        
+
         if has_frontmatter:
             parts = content.split('---', 2)
             if len(parts) >= 3:
                 frontmatter_content = parts[1]
                 body_content = parts[2]
-        
+
         # Calculate metrics
         word_count = len(body_content.split())
-        
+
         # Extract tags from frontmatter and body
         tags = set()
         # Frontmatter tags
@@ -195,17 +195,17 @@ class AnalyticsManager:
             if tag_match:
                 tag_str = tag_match.group(1)
                 tags.update(tag.strip().strip('"\'') for tag in tag_str.split(',') if tag.strip())
-        
+
         # Inline tags (#tag)
         inline_tags = re.findall(r'#([\w-]+)', body_content)
         tags.update(inline_tags)
-        
+
         tag_count = len(tags)
-        
+
         # Count links ([[link]])
         links = re.findall(r'\[\[(.*?)\]\]', body_content)
         link_count = len(links)
-        
+
         # Calculate quality score (weighted)
         weights = self.config.get('analytics', {}).get('quality_weights', {
             'word_count': 0.3,
@@ -213,20 +213,20 @@ class AnalyticsManager:
             'link_count': 0.3,
             'frontmatter': 0.2
         })
-        
+
         # Normalize metrics to 0-1 scale
         word_score = min(word_count / 500.0, 1.0)  # 500 words = max score
         tag_score = min(tag_count / 5.0, 1.0)  # 5 tags = max score
         link_score = min(link_count / 5.0, 1.0)  # 5 links = max score
         frontmatter_score = 1.0 if has_frontmatter else 0.0
-        
+
         quality_score = (
             word_score * weights['word_count'] +
             tag_score * weights['tag_count'] +
             link_score * weights['link_count'] +
             frontmatter_score * weights['frontmatter']
         )
-        
+
         return {
             'success': True,
             'quality_score': round(quality_score, 2),
@@ -241,7 +241,7 @@ class AnalyticsManager:
                 'frontmatter_score': frontmatter_score
             }
         }
-    
+
     def detect_orphaned_notes(self) -> ReviewCandidate:
         """
         Detect notes with no incoming or outgoing links.
@@ -305,12 +305,12 @@ class AnalyticsManager:
         """
         # Build link graph
         link_graph = self._build_link_graph()
-        
+
         orphaned = []
         for note_path, links in link_graph.items():
             incoming = links.get('incoming', [])
             outgoing = links.get('outgoing', [])
-            
+
             # Orphaned = no incoming AND no outgoing
             if len(incoming) == 0 and len(outgoing) == 0:
                 orphaned.append({
@@ -319,9 +319,9 @@ class AnalyticsManager:
                     'incoming_links': 0,
                     'outgoing_links': 0
                 })
-        
+
         return orphaned
-    
+
     def detect_stale_notes(
         self,
         days_threshold: Optional[int] = None
@@ -406,17 +406,17 @@ class AnalyticsManager:
             days_threshold = self.config.get('analytics', {}).get(
                 'stale_threshold_days', 90
             )
-        
+
         threshold_date = datetime.now() - timedelta(days=days_threshold)
         stale_notes = []
-        
+
         # Scan all markdown files
         for md_file in self.base_dir.rglob('*.md'):
             if '.git' in str(md_file) or 'Archive' in str(md_file):
                 continue
-                
+
             modified_time = datetime.fromtimestamp(md_file.stat().st_mtime)
-            
+
             if modified_time < threshold_date:
                 days_since = (datetime.now() - modified_time).days
                 stale_notes.append({
@@ -425,9 +425,9 @@ class AnalyticsManager:
                     'last_modified': modified_time,
                     'days_since_modified': days_since
                 })
-        
+
         return sorted(stale_notes, key=lambda x: x['days_since_modified'], reverse=True)
-    
+
     def generate_workflow_report(self) -> WorkflowReport:
         """
         Generate aggregated workflow metrics across the vault.
@@ -511,52 +511,52 @@ class AnalyticsManager:
             'avg_quality_score': 0.0,
             'quality_scores': []
         }
-        
+
         # Scan all markdown files
         for md_file in self.base_dir.rglob('*.md'):
             if '.git' in str(md_file) or 'Archive' in str(md_file):
                 continue
-            
+
             report['total_notes'] += 1
-            
+
             # Extract metadata
             try:
                 content = md_file.read_text(encoding='utf-8')
-                
+
                 # Parse type
                 type_match = re.search(r'type:\s*(\w+)', content)
                 if type_match:
                     note_type = type_match.group(1)
                     report['notes_by_type'][note_type] = report['notes_by_type'].get(note_type, 0) + 1
-                
+
                 # Parse status
                 status_match = re.search(r'status:\s*(\w+)', content)
                 if status_match:
                     status = status_match.group(1)
                     report['notes_by_status'][status] = report['notes_by_status'].get(status, 0) + 1
-                
+
                 # Calculate quality score
                 try:
                     quality_result = self.assess_quality(str(md_file.relative_to(self.base_dir)))
                     report['quality_scores'].append(quality_result['quality_score'])
                 except:
                     pass
-                    
+
             except Exception:
                 continue
-        
+
         # Calculate average quality
         if report['quality_scores']:
             report['avg_quality_score'] = round(
                 sum(report['quality_scores']) / len(report['quality_scores']), 2
             )
-        
+
         # Add orphaned and stale counts
         report['orphaned_count'] = len(self.detect_orphaned_notes())
         report['stale_count'] = len(self.detect_stale_notes())
-        
+
         return report
-    
+
     def scan_review_candidates(
         self,
         min_quality_score: Optional[float] = None
@@ -652,13 +652,13 @@ class AnalyticsManager:
             min_quality_score = self.config.get('analytics', {}).get(
                 'promotion_threshold', 0.7
             )
-        
+
         candidates = []
         fleeting_dir = self.base_dir / "Fleeting Notes"
-        
+
         if not fleeting_dir.exists():
             return candidates
-        
+
         for note_file in fleeting_dir.glob('*.md'):
             try:
                 quality_result = self.assess_quality(
@@ -675,28 +675,28 @@ class AnalyticsManager:
                     })
             except Exception:
                 continue
-        
+
         return sorted(candidates, key=lambda x: x['quality_score'], reverse=True)
-    
+
     def _build_link_graph(self) -> Dict[str, Dict[str, List[str]]]:
         """Build bidirectional link graph for all notes."""
         link_graph = {}
-        
+
         # First pass: collect all outgoing links
         for md_file in self.base_dir.rglob('*.md'):
             if '.git' in str(md_file):
                 continue
-                
+
             note_path = str(md_file.relative_to(self.base_dir))
             link_graph[note_path] = {'incoming': [], 'outgoing': []}
-            
+
             try:
                 content = md_file.read_text(encoding='utf-8')
                 links = re.findall(r'\[\[(.*?)\]\]', content)
                 link_graph[note_path]['outgoing'] = links
             except Exception:
                 continue
-        
+
         # Second pass: populate incoming links
         for source_path, links in link_graph.items():
             for target_link in links['outgoing']:
@@ -705,14 +705,14 @@ class AnalyticsManager:
                     if target_link in target_path:
                         link_graph[target_path]['incoming'].append(source_path)
                         break
-        
+
         return link_graph
-    
+
     def _extract_title(self, file_path: Union[str, Path]) -> str:
         """Extract title from note file."""
         if isinstance(file_path, str):
             file_path = Path(file_path)
-        
+
         try:
             content = file_path.read_text(encoding='utf-8')
             # Look for first # heading
@@ -721,13 +721,13 @@ class AnalyticsManager:
                 return title_match.group(1).strip()
         except Exception:
             pass
-        
+
         return file_path.stem
-    
+
     def _generate_promotion_rationale(self, quality_result: AnalyticsResult) -> str:
         """Generate human-readable rationale for promotion recommendation."""
         reasons = []
-        
+
         if quality_result['word_count'] > 300:
             reasons.append("substantial content")
         if quality_result['tag_count'] >= 3:
@@ -736,7 +736,7 @@ class AnalyticsManager:
             reasons.append("well-connected")
         if quality_result['has_frontmatter']:
             reasons.append("complete metadata")
-        
+
         if reasons:
             return f"Ready for promotion: {', '.join(reasons)}"
         return "Meets quality threshold"

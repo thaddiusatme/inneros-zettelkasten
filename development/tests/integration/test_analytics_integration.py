@@ -28,30 +28,30 @@ class TestAnalyticsIntegration:
     
     Performance: 0.11s (already fast, uses tmp_path)
     """
-    
+
     def setup_method(self):
         """Set up test environment with realistic note structure."""
         self.temp_dir = tempfile.mkdtemp()
         self.notes_dir = Path(self.temp_dir)
-        
+
         # Create realistic directory structure
         (self.notes_dir / "Inbox").mkdir()
         (self.notes_dir / "Fleeting Notes").mkdir()
         (self.notes_dir / "Permanent Notes").mkdir()
         (self.notes_dir / "Literature Notes").mkdir()
-        
+
         self.analytics = NoteAnalytics(str(self.notes_dir))
-        
+
         # Create realistic test notes
         self._create_realistic_notes()
-    
+
     def teardown_method(self):
         """Clean up test environment."""
         shutil.rmtree(self.temp_dir)
-    
+
     def _create_realistic_notes(self):
         """Create a realistic collection of notes for testing."""
-        
+
         # High-quality permanent notes
         permanent_notes = [
             {
@@ -207,7 +207,7 @@ This field intersects with numerous other areas:
 """
             }
         ]
-        
+
         # Medium-quality fleeting notes
         fleeting_notes = [
             {
@@ -278,7 +278,7 @@ Need to develop this into a more comprehensive framework.
 """
             }
         ]
-        
+
         # Literature notes
         literature_notes = [
             {
@@ -355,7 +355,7 @@ This connects to several other important papers:
 """
             }
         ]
-        
+
         # Low-quality inbox notes
         inbox_notes = [
             {
@@ -384,7 +384,7 @@ Need to organize this better.
 """
             }
         ]
-        
+
         # Create all notes
         all_notes = [
             ("Permanent Notes", permanent_notes),
@@ -392,44 +392,44 @@ Need to organize this better.
             ("Literature Notes", literature_notes),
             ("Inbox", inbox_notes)
         ]
-        
+
         for directory, notes in all_notes:
             for note_data in notes:
                 note_path = self.notes_dir / directory / note_data["filename"]
                 note_path.parent.mkdir(parents=True, exist_ok=True)
-                
+
                 with open(note_path, 'w', encoding='utf-8') as f:
                     f.write(note_data["content"])
-    
+
     def test_comprehensive_note_scanning(self):
         """Test scanning of realistic note collection."""
         notes = self.analytics.scan_notes()
-        
+
         # Should find all created notes
         assert len(notes) == 7  # 2 permanent + 2 fleeting + 1 literature + 2 inbox
-        
+
         # Check variety of note types
         note_types = [note.note_type for note in notes]
         assert "permanent" in note_types
         assert "fleeting" in note_types
         assert "literature" in note_types
         assert "unknown" in note_types
-        
+
         # Check quality distribution
         quality_scores = [note.quality_score for note in notes]
         assert max(quality_scores) > 0.7  # High-quality notes exist (realistic threshold)
         assert min(quality_scores) < 0.3  # Low-quality notes exist
-        
+
         # Check AI feature detection
         notes_with_summaries = [note for note in notes if note.has_summary]
         assert len(notes_with_summaries) >= 2  # Permanent and literature notes have summaries
-    
+
     def test_realistic_report_generation(self):
         """Test comprehensive report generation with realistic data."""
         report = self.analytics.generate_report()
-        
+
         assert "error" not in report
-        
+
         # Check overview metrics
         overview = report["overview"]
         assert overview["total_notes"] == 7
@@ -438,7 +438,7 @@ Need to organize this better.
         assert 0.3 < overview["average_quality_score"] < 0.8  # Mixed quality
         assert overview["notes_with_ai_summaries"] >= 2
         assert overview["total_internal_links"] > 0
-        
+
         # Check distributions
         distributions = report["distributions"]
         note_types = distributions["note_types"]
@@ -446,168 +446,168 @@ Need to organize this better.
         assert note_types["fleeting"] == 2
         assert note_types["literature"] == 1
         assert note_types["unknown"] == 2
-        
+
         # Check quality metrics
         quality = report["quality_metrics"]
         assert quality["high_quality_notes"] >= 1
         assert quality["low_quality_notes"] >= 1
         assert quality["quality_distribution"]["min"] < quality["quality_distribution"]["max"]
-        
+
         # Check temporal analysis
         temporal = report["temporal_analysis"]
         assert temporal["notes_with_dates"] >= 5  # Most notes have creation dates
         assert temporal["date_range"]["earliest"] is not None
         assert temporal["date_range"]["latest"] is not None
-        
+
         # Check recommendations
         recommendations = report["recommendations"]
         assert len(recommendations) > 0
-        
+
         # Should recommend improvements for low-quality notes
         improvement_rec = any("low-quality" in rec for rec in recommendations)
         assert improvement_rec
-    
+
     def test_export_and_import_report(self):
         """Test report export and JSON integrity."""
         output_file = self.notes_dir / "analytics_report.json"
-        
+
         # Export report
         result = self.analytics.export_report(str(output_file))
         assert "Report exported" in result
         assert output_file.exists()
-        
+
         # Verify JSON structure
         with open(output_file, 'r') as f:
             exported_data = json.load(f)
-        
+
         # Check all expected sections
-        expected_sections = ["overview", "distributions", "quality_metrics", 
+        expected_sections = ["overview", "distributions", "quality_metrics",
                            "temporal_analysis", "recommendations"]
         for section in expected_sections:
             assert section in exported_data
-        
+
         # Verify data integrity
         assert exported_data["overview"]["total_notes"] == 7
         assert len(exported_data["recommendations"]) > 0
-        
+
         # Check that dates are properly serialized
         temporal = exported_data["temporal_analysis"]
         if temporal["date_range"]["earliest"]:
             # Should be valid ISO format
             datetime.fromisoformat(temporal["date_range"]["earliest"])
-    
+
     def test_quality_score_accuracy(self):
         """Test that quality scores accurately reflect note characteristics."""
         notes = self.analytics.scan_notes()
-        
+
         # Find specific notes by filename
         ml_note = next((n for n in notes if "machine-learning" in n.filename), None)
         random_note = next((n for n in notes if "random-thought" in n.filename), None)
         literature_note = next((n for n in notes if "attention-is-all" in n.filename), None)
-        
+
         assert ml_note is not None
         assert random_note is not None
         assert literature_note is not None
-        
+
         # Machine learning note should have high quality
         assert ml_note.quality_score > 0.7  # Realistic threshold for high-quality content
         assert ml_note.word_count > 300  # Realistic threshold for substantial content
         assert ml_note.tag_count >= 4
         assert ml_note.link_count > 0
-        
+
         # Random thought should have low quality
         assert random_note.quality_score < 0.4  # Realistic threshold for low-quality content
         assert random_note.word_count < 50
         assert random_note.tag_count == 0
-        
+
         # Literature note should have high quality
         assert literature_note.quality_score > 0.7
         assert literature_note.has_summary is True
         assert literature_note.tag_count >= 3
-    
+
     def test_tag_analysis_accuracy(self):
         """Test accuracy of tag-related analytics."""
         notes = self.analytics.scan_notes()
-        
+
         # Count total tags across all notes
         total_tags = sum(note.tag_count for note in notes)
         assert total_tags > 10  # Should have substantial tagging
-        
+
         # Check tag distribution
         tagged_notes = [note for note in notes if note.tag_count > 0]
         untagged_notes = [note for note in notes if note.tag_count == 0]
-        
+
         assert len(tagged_notes) >= 5  # Most notes should be tagged
         assert len(untagged_notes) >= 1  # Some inbox notes untagged
-        
+
         # High-quality notes should generally be well-tagged
         high_quality_notes = [note for note in notes if note.quality_score > 0.7]
         for note in high_quality_notes:
             assert note.tag_count >= 3  # High-quality notes should have multiple tags
-    
+
     def test_link_analysis_accuracy(self):
         """Test accuracy of internal link analysis."""
         notes = self.analytics.scan_notes()
-        
+
         # Count total internal links
         total_links = sum(note.link_count for note in notes)
         assert total_links > 5  # Should have several internal links
-        
+
         # Permanent notes should generally have more links
         permanent_notes = [note for note in notes if note.note_type == "permanent"]
         for note in permanent_notes:
             assert note.link_count > 0  # Permanent notes should be well-connected
-    
+
     def test_temporal_analysis_accuracy(self):
         """Test accuracy of temporal analysis."""
         notes = self.analytics.scan_notes()
-        
+
         # Most notes should have creation dates
         notes_with_dates = [note for note in notes if note.creation_date is not None]
         assert len(notes_with_dates) >= 5
-        
+
         # Check date parsing accuracy
         for note in notes_with_dates:
             assert isinstance(note.creation_date, datetime)
             # Dates should be reasonable (not in future, not too old)
             assert note.creation_date.year >= 2020
             assert note.creation_date <= datetime.now()
-    
+
     def test_recommendation_relevance(self):
         """Test that recommendations are relevant to the note collection."""
         report = self.analytics.generate_report()
         recommendations = report["recommendations"]
-        
+
         # Should have multiple relevant recommendations
         assert len(recommendations) >= 2  # Realistic expectation for test data
-        
+
         # Check for expected recommendation types
         rec_text = " ".join(recommendations).lower()
-        
+
         # Should recommend improvements (we have low-quality notes)
         assert any(word in rec_text for word in ["improve", "quality", "low-quality"])
-        
+
         # Should recommend tagging (we have untagged notes)
         assert "tag" in rec_text
-    
+
     def test_performance_with_realistic_data(self):
         """Test performance with realistic data volumes."""
         import time
-        
+
         # Measure scanning performance
         start_time = time.time()
         notes = self.analytics.scan_notes()
         scan_time = time.time() - start_time
-        
+
         # Should complete scanning quickly
         assert scan_time < 2.0  # Less than 2 seconds for 7 notes
         assert len(notes) == 7
-        
+
         # Measure report generation performance
         start_time = time.time()
         report = self.analytics.generate_report()
         report_time = time.time() - start_time
-        
+
         # Should generate report quickly
         assert report_time < 3.0  # Less than 3 seconds
         assert "error" not in report

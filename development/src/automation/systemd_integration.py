@@ -33,7 +33,7 @@ class SystemdServiceGenerator:
     
     Supports both system mode (requires root) and user mode installations.
     """
-    
+
     def __init__(
         self,
         daemon_path: str,
@@ -60,7 +60,7 @@ class SystemdServiceGenerator:
         self.mode = mode
         self.restart_policy = restart_policy
         self.restart_sec = restart_sec
-    
+
     def generate(self) -> str:
         """
         Generate systemd service file content.
@@ -75,16 +75,16 @@ class SystemdServiceGenerator:
         else:
             user_directive = ""
             group_directive = ""
-        
+
         # Determine working directory
         if self.mode == "user":
             working_dir = str(Path.home())
         else:
             working_dir = "/var/lib/inneros"
-        
+
         # Determine WantedBy target
         wants_target = "default.target" if self.mode == "user" else "multi-user.target"
-        
+
         # Generate service file using extracted template utility
         service_content = ServiceFileTemplate.render(
             daemon_path=self.daemon_path,
@@ -96,13 +96,13 @@ class SystemdServiceGenerator:
             working_dir=working_dir,
             wants_target=wants_target
         )
-        
+
         return service_content
 
 
 class HealthCheckScriptGenerator:
     """Generate health check scripts for systemd monitoring."""
-    
+
     def __init__(
         self,
         daemon_host: str = "localhost",
@@ -120,7 +120,7 @@ class HealthCheckScriptGenerator:
         self.daemon_host = daemon_host
         self.daemon_port = daemon_port
         self.timeout_seconds = timeout_seconds
-    
+
     def generate(self) -> str:
         """
         Generate health check script content.
@@ -161,7 +161,7 @@ class ServiceInstaller:
     
     Handles service file generation, path validation, and installation.
     """
-    
+
     def __init__(
         self,
         mode: str = "system",
@@ -179,7 +179,7 @@ class ServiceInstaller:
         self.mode = mode
         self.dry_run = dry_run
         self.service_dir_override = service_dir_override
-    
+
     def install(
         self,
         daemon_path: str,
@@ -198,24 +198,24 @@ class ServiceInstaller:
             Dictionary with installation result and steps
         """
         result = {"success": False, "steps": [], "executed": not self.dry_run}
-        
+
         # Validate paths exist (skip in dry-run mode)
         if not self.dry_run:
             daemon_path_obj = Path(daemon_path)
             config_path_obj = Path(config_path)
-            
+
             if not daemon_path_obj.exists():
                 result["error"] = f"Daemon path not found: {daemon_path}"
                 return result
-            
+
             if not config_path_obj.exists():
                 result["error"] = f"Config path not found: {config_path}"
                 return result
-        
+
         # Resolve installation paths
         resolver = InstallationPathResolver(mode=self.mode)
         paths = resolver.resolve()
-        
+
         # Generate service file
         generator = SystemdServiceGenerator(
             daemon_path=daemon_path,
@@ -224,29 +224,29 @@ class ServiceInstaller:
             mode=self.mode
         )
         service_content = generator.generate()
-        
+
         # Determine service file location
         if self.service_dir_override:
             service_path = Path(self.service_dir_override) / "inneros-daemon.service"
         else:
             service_path = Path(paths["service_path"])
-        
+
         result["steps"].append(f"Generate service file: {service_path}")
         result["steps"].append(f"Service content: {len(service_content)} bytes")
-        
+
         if not self.dry_run:
             # Create service directory if needed
             service_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Write service file
             service_path.write_text(service_content)
             result["steps"].append(f"Created service file: {service_path}")
-            
+
             # Generate systemctl commands
             runner = SystemctlCommandRunner(mode=self.mode)
             result["steps"].append(f"Next: {runner.daemon_reload_command()}")
             result["steps"].append(f"Next: {runner.enable_command('inneros-daemon')}")
             result["steps"].append(f"Next: {runner.start_command('inneros-daemon')}")
-        
+
         result["success"] = True
         return result

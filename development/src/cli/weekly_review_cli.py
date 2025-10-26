@@ -59,7 +59,7 @@ class WeeklyReviewCLI:
     - Manage export functionality
     - Provide user-friendly error messages
     """
-    
+
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize Weekly Review CLI
@@ -71,18 +71,18 @@ class WeeklyReviewCLI:
         self.workflow = WorkflowManager(self.vault_path)
         self.formatter = WeeklyReviewFormatter()
         logger.info(f"Weekly Review CLI initialized with vault: {self.vault_path}")
-    
+
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
         print("\n" + "="*60)
         print(title)
         print("="*60 + "\n")
-    
+
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == 'json'
-    
-    def weekly_review(self, preview: bool = False, 
+
+    def weekly_review(self, preview: bool = False,
                      output_format: str = 'normal',
                      export_path: Optional[str] = None) -> int:
         """
@@ -97,24 +97,24 @@ class WeeklyReviewCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        
+
         try:
             # Display header
             if not quiet:
                 print("📋 Generating weekly review checklist...")
-            
+
             # Scan for review candidates
             candidates = self.workflow.scan_review_candidates()
             if not quiet:
                 print(f"   Found {len(candidates)} notes requiring review")
-            
+
             # Show dry-run notice if applicable
             if preview and not quiet:
                 print("   🔍 DRY RUN MODE - No files will be modified")
-            
+
             # Generate recommendations
             recommendations = self.workflow.generate_weekly_recommendations(candidates)
-            
+
             # Format and display output
             if quiet:
                 print(json.dumps(recommendations, indent=2, default=str))
@@ -122,14 +122,14 @@ class WeeklyReviewCLI:
                 self._print_header("WEEKLY REVIEW CHECKLIST")
                 checklist = self.formatter.format_checklist(recommendations)
                 print(checklist)
-            
+
             # Export checklist if requested
             if export_path:
                 export_path_obj = Path(export_path)
                 result_path = self.formatter.export_checklist(recommendations, export_path_obj)
                 if not quiet:
                     print(f"\n📄 Checklist exported to: {result_path}")
-            
+
             # Show completion message
             if not quiet:
                 summary = recommendations["summary"]
@@ -137,14 +137,14 @@ class WeeklyReviewCLI:
                     print(f"\n✨ Review {summary['total_notes']} notes above and check them off as you complete each action.")
                 else:
                     print("\n🎉 No notes require review - your workflow is up to date!")
-            
+
             return 0
-            
+
         except Exception as e:
             print(f"❌ Error generating weekly review: {e}", file=sys.stderr)
             logger.exception("Error in weekly_review")
             return 1
-    
+
     def enhanced_metrics(self, output_format: str = 'normal',
                         export_path: Optional[str] = None) -> int:
         """
@@ -158,15 +158,15 @@ class WeeklyReviewCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        
+
         try:
             # Display header
             if not quiet:
                 print("📊 Generating enhanced metrics report...")
-            
+
             # Generate metrics
             metrics = self.workflow.generate_enhanced_metrics()
-            
+
             # Format and display output
             if quiet:
                 print(json.dumps(metrics, indent=2, default=str))
@@ -174,7 +174,7 @@ class WeeklyReviewCLI:
                 self._print_header("ENHANCED METRICS REPORT")
                 metrics_report = self.formatter.format_enhanced_metrics(metrics)
                 print(metrics_report)
-            
+
             # Export if requested
             if export_path:
                 export_path_obj = Path(export_path)
@@ -185,16 +185,16 @@ class WeeklyReviewCLI:
                         f.write(metrics_report)
                 if not quiet:
                     print(f"\n📄 Enhanced metrics exported to: {export_path}")
-            
+
             # Show summary insights
             if not quiet:
                 summary = metrics["summary"]
                 print(f"\n📈 Summary: {summary['total_notes']} total notes, {summary['total_orphaned']} orphaned, {summary['total_stale']} stale")
                 if summary['total_orphaned'] > 0 or summary['total_stale'] > 0:
                     print("💡 Consider addressing orphaned and stale notes to improve your knowledge graph")
-            
+
             return 0
-            
+
         except Exception as e:
             print(f"❌ Error generating enhanced metrics: {e}", file=sys.stderr)
             logger.exception("Error in enhanced_metrics")
@@ -229,7 +229,7 @@ Examples:
   %(prog)s enhanced-metrics --export metrics.md
         """
     )
-    
+
     # Global options
     parser.add_argument(
         '--vault',
@@ -242,10 +242,10 @@ Examples:
         action='store_true',
         help='Enable verbose logging'
     )
-    
+
     # Subcommands
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+
     # weekly-review subcommand
     weekly_review_parser = subparsers.add_parser(
         'weekly-review',
@@ -268,7 +268,7 @@ Examples:
         metavar='PATH',
         help='Export checklist to markdown file'
     )
-    
+
     # enhanced-metrics subcommand
     metrics_parser = subparsers.add_parser(
         'enhanced-metrics',
@@ -286,7 +286,7 @@ Examples:
         metavar='PATH',
         help='Export report to file'
     )
-    
+
     return parser
 
 
@@ -294,23 +294,23 @@ def main():
     """Main entry point for Weekly Review CLI"""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     # Configure logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Check if command was provided
     if not args.command:
         parser.print_help()
         return 1
-    
+
     # Initialize CLI
     try:
         cli = WeeklyReviewCLI(vault_path=args.vault)
     except Exception as e:
         print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
         return 1
-    
+
     # Execute command
     try:
         if args.command == 'weekly-review':

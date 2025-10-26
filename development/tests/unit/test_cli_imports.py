@@ -2,7 +2,6 @@
 Test that CLI tools can be imported and run after directory reorganization.
 """
 
-import pytest
 import subprocess
 import sys
 from pathlib import Path
@@ -10,7 +9,7 @@ from pathlib import Path
 
 class TestCLIImports:
     """Test CLI tool imports work correctly."""
-    
+
     def test_analytics_demo_help(self):
         """Test analytics_demo.py can show help."""
         result = subprocess.run(
@@ -21,7 +20,7 @@ class TestCLIImports:
         )
         assert result.returncode == 0
         assert "Analytics Demo" in result.stdout or "usage:" in result.stdout
-    
+
     def test_workflow_demo_help(self):
         """Test workflow_demo.py can show help."""
         result = subprocess.run(

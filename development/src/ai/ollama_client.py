@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional, List
 
 class OllamaClient:
     """Client for interacting with Ollama local AI service."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize Ollama client with configuration.
@@ -19,11 +19,11 @@ class OllamaClient:
         """
         if config is None:
             config = {}
-            
+
         self.base_url = config.get("base_url", "http://localhost:11434")
         self.timeout = config.get("timeout", 30)
         self.model = config.get("model", "llama3:latest")
-    
+
     def health_check(self) -> bool:
         """
         Check if Ollama service is running and responsive.
@@ -39,7 +39,7 @@ class OllamaClient:
             return response.status_code == 200
         except (requests.ConnectionError, requests.Timeout):
             return False
-    
+
     def is_model_available(self, model_name: str) -> bool:
         """
         Check if a specific model is available locally.
@@ -88,19 +88,19 @@ class OllamaClient:
                     "num_predict": max_tokens  # Ollama uses num_predict, not max_tokens
                 }
             }
-            
+
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
                 timeout=self.timeout
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 return result.get("response", "").strip()
             else:
                 raise Exception(f"API error: {response.status_code} - {response.text}")
-                
+
         except requests.ConnectionError:
             raise Exception("Failed to connect to Ollama service")
         except requests.Timeout:
@@ -130,19 +130,19 @@ class OllamaClient:
                 "model": self.model,
                 "prompt": text
             }
-            
+
             response = requests.post(
                 f"{self.base_url}/api/embeddings",
                 json=payload,
                 timeout=self.timeout
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 return result.get("embedding", [])
             else:
                 raise Exception(f"Embedding API error: {response.status_code} - {response.text}")
-                
+
         except requests.ConnectionError:
             raise Exception("Failed to connect to Ollama service")
         except requests.Timeout:

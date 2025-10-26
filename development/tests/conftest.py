@@ -33,7 +33,7 @@ def pytest_collection_modifyitems(config, items):
     """
     for item in items:
         test_path = Path(item.fspath)
-        
+
         # Try to get relative path, but handle tests outside tests/ directory
         try:
             relative_path = test_path.relative_to(Path(__file__).parent)
@@ -41,10 +41,10 @@ def pytest_collection_modifyitems(config, items):
             # Test is outside development/tests/ directory (e.g., demos/)
             # Use the full path for marker detection
             relative_path = test_path
-        
+
         # Convert to string for easier checking
         path_str = str(relative_path)
-        
+
         # Auto-apply markers based on directory
         if "smoke" in path_str or "smoke" in relative_path.parts:
             # Smoke tests: Real vault validation (nightly)

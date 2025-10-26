@@ -40,9 +40,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.cli.youtube_cli_utils import (
     YouTubeCLIProcessor,
     CLIOutputFormatter,
-    CLIExportManager,
-    BatchStatistics,
-    ProcessingResult
+    CLIExportManager
 )
 
 # Configure logging
@@ -64,7 +62,7 @@ class YouTubeCLI:
     - Manage export functionality
     - Provide user-friendly error messages
     """
-    
+
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize YouTube CLI
@@ -75,7 +73,7 @@ class YouTubeCLI:
         self.vault_path = vault_path or "."
         self.processor = YouTubeCLIProcessor(self.vault_path)
         logger.info(f"YouTube CLI initialized with vault: {self.vault_path}")
-    
+
     def process_single_note(self, note_path: str, preview: bool = False,
                           min_quality: Optional[float] = None,
                           categories: Optional[str] = None,
@@ -94,29 +92,29 @@ class YouTubeCLI:
             Exit code (0 for success, 1 for failure)
         """
         note_path_obj = Path(note_path)
-        
+
         # Parse categories if provided
         category_list = None
         if categories:
             category_list = [c.strip() for c in categories.split(',')]
-        
+
         # Determine quiet mode (for JSON output)
         quiet_mode = (output_format == 'json')
         formatter = CLIOutputFormatter(quiet_mode=quiet_mode)
-        
+
         # Process note
         if not quiet_mode:
             print(f"🔄 Processing YouTube note: {note_path_obj.name}")
             if preview:
                 print("   ℹ️ Preview mode - no modifications will be made")
-        
+
         result = self.processor.process_single_note(
             note_path_obj,
             preview=preview,
             min_quality=min_quality,
             categories=category_list
         )
-        
+
         # Format output
         if output_format == 'json':
             import json
@@ -129,9 +127,9 @@ class YouTubeCLI:
             }, indent=2))
         else:
             formatter.print_output(formatter.format_single_result(result))
-        
+
         return 0 if result.success else 1
-    
+
     def batch_process(self, preview: bool = False,
                      min_quality: Optional[float] = None,
                      categories: Optional[str] = None,
@@ -154,11 +152,11 @@ class YouTubeCLI:
         category_list = None
         if categories:
             category_list = [c.strip() for c in categories.split(',')]
-        
+
         # Determine quiet mode (for JSON output)
         quiet_mode = (output_format == 'json')
         formatter = CLIOutputFormatter(quiet_mode=quiet_mode)
-        
+
         # Display header
         if not quiet_mode:
             print("🎬 YouTube Batch Processing")
@@ -167,7 +165,7 @@ class YouTubeCLI:
             if preview:
                 print("   ℹ️ Preview mode - no modifications will be made")
             print()
-        
+
         # Create backup before apply operations (if not preview)
         if not preview:
             from src.automation.youtube_monitoring import backup_status_store
@@ -177,7 +175,7 @@ class YouTubeCLI:
                 backup_path = backup_status_store(status_file, backup_dir)
                 if backup_path and not quiet_mode:
                     print(f"💾 Status backup created: {backup_path.name}")
-        
+
         # Process batch
         stats = self.processor.process_batch(
             preview=preview,
@@ -185,14 +183,14 @@ class YouTubeCLI:
             categories=category_list,
             quiet_mode=quiet_mode
         )
-        
+
         # Format output
         if output_format == 'json':
             print(formatter.format_json_output(stats))
         else:
             summary = formatter.format_batch_summary(stats)
             formatter.print_output(summary)
-        
+
         # Export if requested
         if export_path and stats.total_notes > 0:
             export_path_obj = Path(export_path)
@@ -205,7 +203,7 @@ class YouTubeCLI:
                 print(f"\n✅ Report exported to: {export_path}")
             elif not success and not quiet_mode:
                 print(f"\n❌ Failed to export report to: {export_path}")
-        
+
         # Return exit code (0 if all successful, 1 if any failures)
         return 0 if stats.failed == 0 else 1
 
@@ -241,7 +239,7 @@ Examples:
   %(prog)s batch-process --categories "key_insights,actionable"
         """
     )
-    
+
     # Global options
     parser.add_argument(
         '--vault',
@@ -254,10 +252,10 @@ Examples:
         action='store_true',
         help='Enable verbose logging'
     )
-    
+
     # Subcommands
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+
     # process-note subcommand
     process_note_parser = subparsers.add_parser(
         'process-note',
@@ -289,7 +287,7 @@ Examples:
         default='normal',
         help='Output format'
     )
-    
+
     # batch-process subcommand
     batch_parser = subparsers.add_parser(
         'batch-process',
@@ -322,7 +320,7 @@ Examples:
         metavar='PATH',
         help='Export report to markdown file'
     )
-    
+
     return parser
 
 
@@ -330,23 +328,23 @@ def main():
     """Main entry point for YouTube CLI"""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     # Configure logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Check if command was provided
     if not args.command:
         parser.print_help()
         return 1
-    
+
     # Initialize CLI
     try:
         cli = YouTubeCLI(vault_path=args.vault)
     except Exception as e:
         print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
         return 1
-    
+
     # Execute command
     try:
         if args.command == 'process-note':

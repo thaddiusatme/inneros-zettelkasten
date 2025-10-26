@@ -4,7 +4,6 @@ Image Link Manager - Core Image Link Management
 Manages image link parsing, validation, and updates for directory moves.
 Part of TDD Iteration 10: Image Linking System (GREEN Phase)
 """
-import re
 from pathlib import Path
 from typing import List, Dict, Optional
 import logging
@@ -24,7 +23,7 @@ class ImageLinkManager:
     - Validate image references (detect broken links)
     - Calculate relative paths automatically
     """
-    
+
     def __init__(self, base_path: Optional[Path] = None):
         """
         Initialize manager.
@@ -34,7 +33,7 @@ class ImageLinkManager:
         """
         self.base_path = Path(base_path) if base_path else None
         self.parser = ImageLinkParser()
-    
+
     def parse_image_links(self, content: str) -> List[Dict]:
         """
         Extract all image references from content.
@@ -48,7 +47,7 @@ class ImageLinkManager:
             List of image link dicts (see ImageLinkParser.parse_image_links)
         """
         return self.parser.parse_image_links(content)
-    
+
     def update_image_links_for_move(
         self,
         content: str,
@@ -71,14 +70,14 @@ class ImageLinkManager:
         """
         # Parse all image links
         image_links = self.parse_image_links(content)
-        
+
         if not image_links:
             logger.debug("No image links found to update")
             return content
-        
+
         # Update content with new paths
         updated_content = content
-        
+
         # Process in reverse order to maintain string positions
         for link in reversed(image_links):
             if link["type"] == "markdown":
@@ -87,19 +86,19 @@ class ImageLinkManager:
                 new_path = self._recalculate_relative_path(
                     old_path, source_path, dest_path
                 )
-                
+
                 # Replace the path portion only
                 old_link = link["raw_match"]
                 new_link = f'![{link["alt_text"]}]({new_path})'
-                
+
                 updated_content = updated_content.replace(old_link, new_link, 1)
                 logger.debug(f"Updated markdown link: {old_link} → {new_link}")
-            
+
             # Wiki links don't need path updates (they're just filenames)
             # They rely on Obsidian's auto-resolution
-        
+
         return updated_content
-    
+
     def validate_image_links(
         self,
         note_path: Path,
@@ -122,12 +121,12 @@ class ImageLinkManager:
         """
         broken_links = []
         image_links = self.parse_image_links(content)
-        
+
         for link in image_links:
             if link["type"] == "markdown":
                 # Resolve markdown path relative to note
                 image_path_str = link["path"]
-                
+
                 # Calculate absolute path for validation
                 if image_path_str.startswith("../"):
                     # Relative path - resolve from note's directory
@@ -136,7 +135,7 @@ class ImageLinkManager:
                 else:
                     # Absolute or same-directory path
                     image_abs_path = Path(image_path_str)
-                
+
                 # Check if image exists
                 if not image_abs_path.exists():
                     broken_links.append({
@@ -146,7 +145,7 @@ class ImageLinkManager:
                         "link_type": "markdown",
                         "exists": False
                     })
-            
+
             elif link["type"] == "wiki":
                 # For wiki links, check in attachments/ directory
                 # This is a simplified check - full resolution would need vault scanning
@@ -161,7 +160,7 @@ class ImageLinkManager:
                                 if image_file.exists():
                                     found = True
                                     break
-                    
+
                     if not found:
                         broken_links.append({
                             "note_path": str(note_path),
@@ -170,9 +169,9 @@ class ImageLinkManager:
                             "link_type": "wiki",
                             "exists": False
                         })
-        
+
         return broken_links
-    
+
     def _recalculate_relative_path(
         self,
         old_relative_path: str,
@@ -193,12 +192,12 @@ class ImageLinkManager:
         # For relative paths that point to attachments/, keep them simple
         # Most notes will be at same depth (Inbox/, Fleeting Notes/, etc)
         # so ../attachments/ will work for all
-        
+
         if old_relative_path.startswith("../"):
             # Already a relative path - check if directories are at same depth
             source_depth = len(source_note_path.parent.parts)
             dest_depth = len(dest_note_path.parent.parts)
-            
+
             if source_depth == dest_depth:
                 # Same depth - path stays the same
                 return old_relative_path
@@ -208,11 +207,11 @@ class ImageLinkManager:
                 parts = old_relative_path.split("/")
                 up_count = sum(1 for p in parts if p == "..")
                 remaining_parts = [p for p in parts if p != ".."]
-                
+
                 # Calculate new depth difference
                 depth_diff = dest_depth - source_depth
                 new_up_count = up_count - depth_diff
-                
+
                 # Rebuild path
                 new_up_parts = [".."] * max(1, new_up_count)
                 return "/".join(new_up_parts + remaining_parts)

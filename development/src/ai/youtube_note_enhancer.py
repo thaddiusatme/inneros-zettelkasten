@@ -63,12 +63,12 @@ class YouTubeNoteEnhancer:
     4. Update frontmatter with processing metadata
     5. Create backups and support rollback
     """
-    
+
     def __init__(self):
         """Initialize enhancer"""
         # Minimal GREEN phase implementation
         pass
-    
+
     def parse_note_structure(self, content: str) -> NoteStructure:
         """
         Parse note to identify structure and sections
@@ -82,7 +82,7 @@ class YouTubeNoteEnhancer:
             NoteStructure with parsed information
         """
         return NoteParser.parse_structure(content)
-    
+
     def identify_insertion_point(self, content: str) -> int:
         """
         Find line number where quotes section should be inserted
@@ -96,11 +96,11 @@ class YouTubeNoteEnhancer:
             Line number for insertion (0-indexed)
         """
         return NoteParser.identify_insertion_point(content)
-    
+
     def insert_quotes_section(
-        self, 
-        content: str, 
-        quotes_markdown: str, 
+        self,
+        content: str,
+        quotes_markdown: str,
         insertion_line: int
     ) -> str:
         """
@@ -117,7 +117,7 @@ class YouTubeNoteEnhancer:
             Updated content with quotes inserted
         """
         return SectionInserter.insert_section(content, quotes_markdown, insertion_line)
-    
+
     def update_frontmatter(self, content: str, metadata: Dict[str, Any]) -> str:
         """
         Update YAML frontmatter with processing metadata
@@ -138,10 +138,10 @@ class YouTubeNoteEnhancer:
             Content with updated frontmatter
         """
         return FrontmatterUpdater.update(content, metadata)
-    
+
     def enhance_note(
-        self, 
-        note_path: Path, 
+        self,
+        note_path: Path,
         quotes_data: QuotesData,
         force: bool = False
     ) -> EnhanceResult:
@@ -168,22 +168,22 @@ class YouTubeNoteEnhancer:
         """
         start_time = time.time()
         result = EnhanceResult()
-        
+
         # Validate quotes_data
         if quotes_data is None:
             raise ValueError("quotes_data cannot be None")
-        
+
         # 1. Validate note exists
         if not note_path.exists():
             result.success = False
             result.error_type = "FileNotFoundError"
             result.error_message = f"Note not found: {note_path}"
             return result
-        
+
         try:
             # Read original content
             original_content = note_path.read_text(encoding='utf-8')
-            
+
             # 2. Check if already processed
             frontmatter, _ = parse_frontmatter(original_content)
             if frontmatter.get('ai_processed') and not force:
@@ -191,59 +191,59 @@ class YouTubeNoteEnhancer:
                 result.skipped = True
                 result.message = "Note already processed (use force=True to reprocess)"
                 return result
-            
+
             # 3. Create backup
             backup_path = self._create_backup(note_path)
             result.backup_path = backup_path
-            
+
             # 4. Generate quotes markdown
             quotes_markdown = self._format_quotes_markdown(quotes_data)
-            
+
             # 5. Insert quotes section
             insertion_point = self.identify_insertion_point(original_content)
             enhanced_content = self.insert_quotes_section(
-                original_content, 
-                quotes_markdown, 
+                original_content,
+                quotes_markdown,
                 insertion_point
             )
-            
+
             # 6. Update frontmatter
             processing_time = time.time() - start_time
             quote_count = (
-                len(quotes_data.key_insights) + 
-                len(quotes_data.actionable) + 
-                len(quotes_data.notable) + 
+                len(quotes_data.key_insights) +
+                len(quotes_data.actionable) +
+                len(quotes_data.notable) +
                 len(quotes_data.definitions)
             )
-            
+
             metadata = {
                 'ai_processed': True,
                 'processed_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
                 'quote_count': quote_count,
                 'processing_time_seconds': round(processing_time, 2)
             }
-            
+
             enhanced_content = self.update_frontmatter(enhanced_content, metadata)
-            
+
             # 7. Write enhanced note
             note_path.write_text(enhanced_content, encoding='utf-8')
-            
+
             result.success = True
             result.message = f"Successfully enhanced note with {quote_count} quotes"
             result.quote_count = quote_count
             result.processing_time = processing_time
-            
+
         except Exception as e:
             # 8. Rollback on failure
             result.success = False
             result.error_type = type(e).__name__
             result.error_message = str(e)
-            
+
             if result.backup_path and result.backup_path.exists():
                 self._rollback(note_path, result.backup_path)
-        
+
         return result
-    
+
     def _format_quotes_markdown(self, quotes_data: QuotesData) -> str:
         """
         Format QuotesData into markdown section
@@ -257,7 +257,7 @@ class YouTubeNoteEnhancer:
             Formatted markdown string
         """
         return SectionInserter.format_quotes_section(quotes_data)
-    
+
     def _create_backup(self, note_path: Path) -> Path:
         """
         Create backup before modification
@@ -271,12 +271,12 @@ class YouTubeNoteEnhancer:
         # Create backup with timestamp
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         backup_path = note_path.parent / f"{note_path.stem}_backup_{timestamp}{note_path.suffix}"
-        
+
         # Copy file to backup location
         shutil.copy2(note_path, backup_path)
-        
+
         return backup_path
-    
+
     def _rollback(self, note_path: Path, backup_path: Path) -> bool:
         """
         Restore from backup on failure

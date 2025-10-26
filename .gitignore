@@ -104,6 +104,10 @@ knowledge/.obsidian/
 # Automation artifacts
 .automation/backups/
 .automation/reports/
+.automation/metrics/
+.automation/cache/
+.automation/logs/
+.automation/tmp/
 .automation/review_queue/ALERT_*.md
 
 # Ignore dev temp artifacts
@@ -122,15 +126,11 @@ knowledge/
 
 # Test artifacts and output
 development/demos/**/test_output/
+reports/
 
 # Secrets and environment
 .env
 .env.*
-
-# Automation cache and temporary files
-.automation/cache/
-.automation/logs/
-.automation/tmp/
 
 # YouTube processing cache
 .automation/cache/youtube_transcripts.json

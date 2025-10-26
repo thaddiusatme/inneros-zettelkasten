@@ -5,7 +5,7 @@ Contains modular utilities for link text generation and quality assessment
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Any
 import re
 
 
@@ -19,7 +19,7 @@ class QualityScore:
 
 class LinkTextGenerator:
     """Utility class for generating intelligent link text from note metadata"""
-    
+
     @staticmethod
     def generate_from_file_path(file_path: str) -> str:
         """
@@ -36,17 +36,17 @@ class LinkTextGenerator:
             name = file_path.replace('.md', '').split('/')[-1]
         else:
             name = file_path.split('/')[-1]
-        
+
         # Convert hyphens/underscores to spaces and title case
         name = name.replace('-', ' ').replace('_', ' ')
-        
+
         # Remove timestamps and common prefixes
         name = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', name)  # Remove date prefixes
         name = re.sub(r'^(fleeting|permanent|lit|zettel)-', '', name)  # Remove type prefixes
-        
+
         return name.title().strip()
-    
-    @staticmethod 
+
+    @staticmethod
     def generate_from_semantic_overlap(overlap_terms: str, min_term_length: int = 3) -> str:
         """
         Generate semantically meaningful link text from content overlap
@@ -60,11 +60,11 @@ class LinkTextGenerator:
         """
         if not overlap_terms:
             return ""
-            
+
         terms = overlap_terms.split()
         # Filter for meaningful terms (longer than min_term_length)
         meaningful_terms = [term for term in terms if len(term) >= min_term_length]
-        
+
         if len(meaningful_terms) >= 2:
             # Use first 2-3 most meaningful terms
             return ' '.join(meaningful_terms[:3]).title()
@@ -72,7 +72,7 @@ class LinkTextGenerator:
             return meaningful_terms[0].title()
         else:
             return ""
-    
+
     @classmethod
     def generate_intelligent_link_text(cls, file_path: str, content_overlap: str = "") -> str:
         """
@@ -90,7 +90,7 @@ class LinkTextGenerator:
             semantic_text = cls.generate_from_semantic_overlap(content_overlap)
             if semantic_text:
                 return f"[[{semantic_text}]]"
-        
+
         # Fall back to file path approach
         file_text = cls.generate_from_file_path(file_path)
         return f"[[{file_text}]]"
@@ -98,14 +98,14 @@ class LinkTextGenerator:
 
 class LinkQualityAssessor:
     """Utility class for assessing link suggestion quality with confidence scoring"""
-    
+
     # Quality thresholds
     HIGH_QUALITY_THRESHOLD = 0.8
     MEDIUM_QUALITY_THRESHOLD = 0.6
-    
+
     @classmethod
-    def assess_connection_quality(cls, similarity_score: float, 
-                                content_overlap: str = "", 
+    def assess_connection_quality(cls, similarity_score: float,
+                                content_overlap: str = "",
                                 note_types: tuple = None) -> QualityScore:
         """
         Assess quality of a connection with multiple factors
@@ -119,15 +119,15 @@ class LinkQualityAssessor:
             QualityScore with score, confidence level, and explanation
         """
         base_score = similarity_score
-        
+
         # Boost score for rich content overlap
         if content_overlap and len(content_overlap.split()) >= 3:
             base_score = min(1.0, base_score + 0.1)
-        
+
         # Boost score for compatible note types
         if note_types and cls._are_compatible_types(note_types[0], note_types[1]):
             base_score = min(1.0, base_score + 0.05)
-        
+
         # Determine confidence and explanation
         if base_score >= cls.HIGH_QUALITY_THRESHOLD:
             confidence = "high"
@@ -138,13 +138,13 @@ class LinkQualityAssessor:
         else:
             confidence = "low"
             explanation = cls._generate_low_quality_explanation(similarity_score)
-        
+
         return QualityScore(
             score=base_score,
             confidence=confidence,
             explanation=explanation
         )
-    
+
     @staticmethod
     def _are_compatible_types(source_type: str, target_type: str) -> bool:
         """Check if note types are compatible for linking"""
@@ -156,9 +156,9 @@ class LinkQualityAssessor:
             ('fleeting', 'permanent'),
             ('permanent', 'fleeting'),
         }
-        
+
         return (source_type, target_type) in compatible_pairs
-    
+
     @staticmethod
     def _generate_high_quality_explanation(similarity: float, overlap: str) -> str:
         """Generate explanation for high-quality connections"""
@@ -166,7 +166,7 @@ class LinkQualityAssessor:
             return f"Strong semantic similarity ({similarity:.1%}) with rich content overlap"
         else:
             return f"Strong semantic similarity ({similarity:.1%}) between note contents"
-    
+
     @staticmethod
     def _generate_medium_quality_explanation(similarity: float, overlap: str) -> str:
         """Generate explanation for medium-quality connections"""
@@ -174,7 +174,7 @@ class LinkQualityAssessor:
             return f"Moderate semantic relationship ({similarity:.1%}) with shared concepts"
         else:
             return f"Moderate semantic relationship ({similarity:.1%}) detected"
-    
+
     @staticmethod
     def _generate_low_quality_explanation(similarity: float) -> str:
         """Generate explanation for low-quality connections"""
@@ -183,7 +183,7 @@ class LinkQualityAssessor:
 
 class InsertionContextDetector:
     """Utility for detecting appropriate insertion points in notes"""
-    
+
     # Common section patterns in Zettelkasten notes
     SECTION_PATTERNS = {
         'related_concepts': [
@@ -203,7 +203,7 @@ class InsertionContextDetector:
             r'# [^#\n]+',   # Main title
         ]
     }
-    
+
     @classmethod
     def detect_insertion_point(cls, note_content: str, link_type: str = "related") -> tuple:
         """
@@ -217,20 +217,20 @@ class InsertionContextDetector:
             Tuple of (suggested_location, insertion_context)
         """
         lines = note_content.split('\n')
-        
+
         # Look for existing related sections first
         for section_type, patterns in cls.SECTION_PATTERNS.items():
             for pattern in patterns:
                 for i, line in enumerate(lines):
                     if re.match(pattern, line.strip(), re.IGNORECASE):
                         return section_type, line.strip()
-        
+
         # If no specific sections found, suggest creating one
         if cls._has_structured_content(lines):
             return "related_concepts", "## Related Concepts"
         else:
             return "main_content", "# Main Content"
-    
+
     @staticmethod
     def _has_structured_content(lines: List[str]) -> bool:
         """Check if note has structured content with headings"""
@@ -240,25 +240,25 @@ class InsertionContextDetector:
 
 class SuggestionBatchProcessor:
     """Utility for efficient batch processing of link suggestions"""
-    
+
     @staticmethod
     def sort_by_quality(suggestions: List[Any]) -> List[Any]:
         """Sort suggestions by quality score (highest first)"""
         return sorted(suggestions, key=lambda x: x.quality_score, reverse=True)
-    
+
     @staticmethod
     def filter_by_threshold(suggestions: List[Any], min_quality: float) -> List[Any]:
         """Filter suggestions below quality threshold"""
         return [s for s in suggestions if s.quality_score >= min_quality]
-    
+
     @staticmethod
     def limit_results(suggestions: List[Any], max_results: int) -> List[Any]:
         """Limit number of suggestions returned"""
         return suggestions[:max_results]
-    
+
     @classmethod
-    def process_batch(cls, suggestions: List[Any], 
-                     min_quality: float = 0.0, 
+    def process_batch(cls, suggestions: List[Any],
+                     min_quality: float = 0.0,
                      max_results: int = 10) -> List[Any]:
         """
         Complete batch processing pipeline
@@ -273,9 +273,9 @@ class SuggestionBatchProcessor:
         """
         # Filter by quality
         filtered = cls.filter_by_threshold(suggestions, min_quality)
-        
-        # Sort by quality 
+
+        # Sort by quality
         sorted_suggestions = cls.sort_by_quality(filtered)
-        
+
         # Limit results
         return cls.limit_results(sorted_suggestions, max_results)

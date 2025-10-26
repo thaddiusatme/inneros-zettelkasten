@@ -24,8 +24,8 @@ import time
 import threading
 from typing import Callable, Any, Dict
 from youtube_transcript_api._errors import (
-    TranscriptsDisabled, 
-    VideoUnavailable, 
+    TranscriptsDisabled,
+    VideoUnavailable,
     NoTranscriptFound
 )
 
@@ -40,7 +40,7 @@ class YouTubeRateLimitHandler:
     
     Thread-safe for concurrent request handling.
     """
-    
+
     def __init__(self, config: Dict[str, Any]):
         """Initialize rate limit handler with configuration.
         
@@ -67,7 +67,7 @@ class YouTubeRateLimitHandler:
         self.backoff_multiplier = self._validate_config(
             config.get('backoff_multiplier', 2), 'backoff_multiplier', 1.5, 5
         )
-        
+
         # Thread-safe metrics tracking with enhanced statistics
         self._metrics_lock = threading.Lock()
         self._metrics = {
@@ -77,11 +77,11 @@ class YouTubeRateLimitHandler:
             'failed': 0,
             'permanent_failures': 0
         }
-        
+
         # Setup structured logging
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
-    
+
     @property
     def metrics(self) -> Dict[str, int]:
         """
@@ -92,7 +92,7 @@ class YouTubeRateLimitHandler:
         """
         with self._metrics_lock:
             return self._metrics.copy()
-    
+
     def fetch_with_retry(self, video_id: str, fetch_func: Callable[[str], Any]) -> Any:
         """
         Fetch transcript with exponential backoff retry logic.
@@ -108,47 +108,47 @@ class YouTubeRateLimitHandler:
             Exception: Permanent errors or exhausted retries
         """
         last_exception = None
-        
+
         for attempt in range(self.max_retries + 1):
             try:
                 # Increment total attempts (thread-safe)
                 with self._metrics_lock:
                     self._metrics['total_attempts'] += 1
-                
+
                 # Attempt fetch
                 result = fetch_func(video_id)
-                
+
                 # Success - increment succeeded counter
                 with self._metrics_lock:
                     self._metrics['succeeded'] += 1
-                
+
                 return result
-                
+
             except Exception as e:
                 last_exception = e
-                
+
                 # Classify error - permanent errors fail immediately
                 is_transient = self._classify_error(e)
-                
+
                 if not is_transient:
                     # Permanent error - fail immediately without retry
                     with self._metrics_lock:
                         self._metrics['permanent_failures'] += 1
                         self._metrics['failed'] += 1
-                    
+
                     self.logger.info(
                         f"Permanent error [video_id={video_id}] "
                         f"error_type={type(e).__name__}, no retry attempted"
                     )
                     raise
-                
+
                 # Transient error - check if we can retry
                 if attempt >= self.max_retries:
                     # Exhausted retries - increment counters and log warning
                     with self._metrics_lock:
                         self._metrics['rate_limited'] += 1
                         self._metrics['failed'] += 1
-                    
+
                     self.logger.warning(
                         f"Rate limit exhausted [video_id={video_id}] "
                         f"after {self.max_retries + 1} attempts. "
@@ -156,11 +156,11 @@ class YouTubeRateLimitHandler:
                         f"Final error: {type(e).__name__}"
                     )
                     raise
-                
+
                 # We will retry - increment rate_limited counter
                 with self._metrics_lock:
                     self._metrics['rate_limited'] += 1
-                
+
                 # Calculate delay and log retry attempt with structured context
                 delay = self._calculate_delay(attempt)
                 self.logger.info(
@@ -169,14 +169,14 @@ class YouTubeRateLimitHandler:
                     f"delay={delay}s, error_type={type(e).__name__}, "
                     f"error_msg={str(e)[:100]}"
                 )
-                
+
                 # Sleep before retry
                 time.sleep(delay)
-        
+
         # Should never reach here, but raise last exception if we do
         if last_exception:
             raise last_exception
-    
+
     def _validate_config(self, value: Any, name: str, min_val: float, max_val: float) -> float:
         """Validate configuration parameter is within acceptable range.
         
@@ -203,7 +203,7 @@ class YouTubeRateLimitHandler:
             raise ValueError(
                 f"Invalid {name} value: {value}. Must be numeric between {min_val}-{max_val}"
             ) from e
-    
+
     def _classify_error(self, exception: Exception) -> bool:
         """Classify error as transient (retryable) or permanent.
         
@@ -226,15 +226,15 @@ class YouTubeRateLimitHandler:
         # Permanent errors - fail immediately
         if isinstance(exception, (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound)):
             return False
-        
+
         # Transient errors - retry with backoff
         error_message = str(exception)
         if "429" in error_message or "Too Many Requests" in error_message:
             return True
-        
+
         # Generic exceptions - treat as transient for now (conservative retry)
         return True
-    
+
     def _calculate_delay(self, attempt: int) -> float:
         """Calculate exponential backoff delay with max cap.
         
@@ -254,10 +254,10 @@ class YouTubeRateLimitHandler:
         """
         # Exponential backoff: base_delay * (multiplier ^ attempt)
         delay = self.base_delay * (self.backoff_multiplier ** attempt)
-        
+
         # Cap at max_delay to prevent excessive waits
         return min(delay, self.max_delay)
-    
+
     def get_retry_statistics(self) -> Dict[str, Any]:
         """Get detailed retry statistics for monitoring.
         
@@ -277,7 +277,7 @@ class YouTubeRateLimitHandler:
                     'failure_rate': 0.0,
                     'avg_attempts': 0.0
                 }
-            
+
             return {
                 'retry_rate': self._metrics['rate_limited'] / total,
                 'success_rate': self._metrics['succeeded'] / total,

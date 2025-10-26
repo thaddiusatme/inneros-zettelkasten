@@ -8,44 +8,41 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
-from typing import List, Dict, Optional
+from typing import List
 
 from src.ai.workflow_manager import WorkflowManager
-from src.ai.safe_image_processor import SafeImageProcessor
-from src.ai.image_integrity_monitor import ImageIntegrityMonitor
 
 
 class TestWorkflowManagerImageIntegration:
     """RED Phase: Tests for integrating SafeImageProcessor with WorkflowManager"""
-    
+
     def setup_method(self):
         """Set up test environment"""
         self.test_dir = tempfile.mkdtemp()
         self.vault_path = Path(self.test_dir)
-        
+
         # Create test directory structure
         (self.vault_path / "Inbox").mkdir(parents=True)
         (self.vault_path / "Fleeting Notes").mkdir(parents=True)
         (self.vault_path / "Permanent Notes").mkdir(parents=True)
         (self.vault_path / "Media").mkdir(parents=True)
-        
+
         # Create test notes with images
         self.test_notes = self._create_test_notes_with_images()
-        
+
         # Initialize components (they don't exist yet - RED phase)
         self.workflow_manager = None
         self.safe_processor = None
         self.integrity_monitor = None
-    
+
     def teardown_method(self):
         """Clean up test environment"""
         shutil.rmtree(self.test_dir)
-    
+
     def _create_test_notes_with_images(self) -> List[Path]:
         """Create test notes containing image references"""
         notes = []
-        
+
         # Test note 1: Markdown images
         note1_path = self.vault_path / "Inbox" / "test-note-with-markdown-images.md"
         note1_content = """---
@@ -67,7 +64,7 @@ Some text content here.
 """
         note1_path.write_text(note1_content)
         notes.append(note1_path)
-        
+
         # Test note 2: Wiki-style images
         note2_path = self.vault_path / "Inbox" / "test-note-with-wiki-images.md"
         note2_content = """---
@@ -91,7 +88,7 @@ Key insights:
 """
         note2_path.write_text(note2_content)
         notes.append(note2_path)
-        
+
         # Test note 3: No images (control)
         note3_path = self.vault_path / "Inbox" / "test-note-without-images.md"
         note3_content = """---
@@ -109,24 +106,24 @@ It should still be processed safely but with minimal image operations.
 """
         note3_path.write_text(note3_content)
         notes.append(note3_path)
-        
+
         # Create corresponding image files
         self._create_test_images()
-        
+
         return notes
-    
+
     def _create_test_images(self):
         """Create test image files"""
         media_dir = self.vault_path / "Media"
-        
+
         # Create simple test image files
         test_images = [
             "test-image-1.png",
-            "test-image-2.jpg", 
+            "test-image-2.jpg",
             "research-diagram.png",
             "data-visualization.svg"
         ]
-        
+
         for image_name in test_images:
             image_path = media_dir / image_name
             # Create dummy image content
@@ -149,7 +146,7 @@ It should still be processed safely but with minimal image operations.
         workflow_manager = WorkflowManager(str(self.vault_path))
         # This method integrates SafeImageProcessor
         result = workflow_manager.safe_process_inbox_note(
-            str(self.test_notes[0]), 
+            str(self.test_notes[0]),
             preserve_images=True
         )
         assert 'image_preservation' in result
@@ -189,12 +186,12 @@ It should still be processed safely but with minimal image operations.
     def test_ai_processing_with_backup_rollback_works(self):
         """GREEN: AI processing with automatic backup/rollback works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
-        
+
         # Simulate AI processing with potential failure handling
         result = workflow_manager.process_inbox_note_safe(
             str(self.test_notes[0])
         )
-        
+
         # Should handle failures gracefully
         assert 'processing_failed' in result
         assert 'rollback_successful' in result
@@ -202,13 +199,13 @@ It should still be processed safely but with minimal image operations.
     def test_performance_monitoring_integration_works(self):
         """GREEN: Performance monitoring for safe operations works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
-        
+
         # Should provide performance metrics for safe operations
         result = workflow_manager.process_inbox_note_enhanced(
             str(self.test_notes[0]),
             collect_performance_metrics=True
         )
-        
+
         assert 'performance_metrics' in result
         assert 'backup_time' in result['performance_metrics']
         assert 'processing_time' in result['performance_metrics']
@@ -217,20 +214,20 @@ It should still be processed safely but with minimal image operations.
     def test_concurrent_safe_processing_works(self):
         """GREEN: Concurrent safe processing with session management works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
-        
+
         # Should handle concurrent processing safely
         session_id = workflow_manager.start_safe_processing_session("batch_inbox")
-        
+
         results = []
         for note in self.test_notes[:2]:  # Process subset for faster testing
             result = workflow_manager.process_note_in_session(
-                str(note), 
+                str(note),
                 session_id=session_id
             )
             results.append(result)
-        
+
         commit_result = workflow_manager.commit_safe_processing_session(session_id)
-        
+
         assert len(results) == 2
         assert commit_result is True
 
@@ -238,19 +235,19 @@ It should still be processed safely but with minimal image operations.
         """RED: WorkflowSafetyManager integration doesn't exist"""
         with pytest.raises((AttributeError, TypeError)):
             workflow_manager = WorkflowManager(str(self.vault_path))
-            
+
             # Should integrate with WorkflowSafetyManager for checkpoint management
             checkpoint_id = workflow_manager.create_workflow_checkpoint("ai_enhancement")
-            
+
             try:
                 # Process note with potential failure point
                 result = workflow_manager.process_inbox_note(str(self.test_notes[0]))
-                
+
                 if result.get('success'):
                     workflow_manager.commit_workflow_checkpoint(checkpoint_id)
                 else:
                     workflow_manager.restore_workflow_checkpoint(checkpoint_id)
-                    
+
             except Exception:
                 restored = workflow_manager.restore_workflow_checkpoint(checkpoint_id)
                 assert restored is True
@@ -259,7 +256,7 @@ It should still be processed safely but with minimal image operations.
         """RED: Enhanced AI processing with safety guarantees doesn't exist"""
         with pytest.raises((AttributeError, TypeError)):
             workflow_manager = WorkflowManager(str(self.vault_path))
-            
+
             # Should provide enhanced AI processing with complete safety
             result = workflow_manager.enhanced_ai_process_note(
                 str(self.test_notes[0]),
@@ -268,7 +265,7 @@ It should still be processed safely but with minimal image operations.
                 enable_summarization=True,
                 safety_mode=True
             )
-            
+
             assert result['ai_processing_complete'] is True
             assert result['images_preserved'] >= 2
             assert 'ai_tags' in result
@@ -279,7 +276,7 @@ It should still be processed safely but with minimal image operations.
         """RED: CLI integration with safety flags doesn't exist"""
         with pytest.raises((AttributeError, TypeError)):
             workflow_manager = WorkflowManager(str(self.vault_path))
-            
+
             # Should support CLI safety flags for all operations
             result = workflow_manager.process_inbox_note(
                 str(self.test_notes[0]),
@@ -287,7 +284,7 @@ It should still be processed safely but with minimal image operations.
                 cli_backup_enabled=True,
                 cli_monitoring_enabled=True
             )
-            
+
             assert 'cli_safety_report' in result
             assert result['cli_safety_report']['backup_created'] is True
             assert result['cli_safety_report']['monitoring_active'] is True
@@ -296,12 +293,12 @@ It should still be processed safely but with minimal image operations.
         """RED: Comprehensive error recovery system doesn't exist"""
         with pytest.raises((AttributeError, TypeError)):
             workflow_manager = WorkflowManager(str(self.vault_path))
-            
+
             # Should provide detailed error recovery information
             result = workflow_manager.process_inbox_note_with_recovery(
                 str(self.test_notes[0])
             )
-            
+
             assert 'error_recovery_plan' in result
             assert 'recovery_options' in result['error_recovery_plan']
             assert 'safety_guarantees' in result['error_recovery_plan']

@@ -26,7 +26,7 @@ class FleetingAnalysis:
     total_count: int = 0
     age_distribution: Dict[str, int] = field(default_factory=lambda: {
         'new': 0,       # 0-7 days
-        'recent': 0,    # 8-30 days  
+        'recent': 0,    # 8-30 days
         'stale': 0,     # 31-90 days
         'old': 0        # 90+ days
     })
@@ -42,7 +42,7 @@ class FleetingAnalysisCoordinator:
     Extracted from WorkflowManager (ADR-002 Phase 9) to reduce god class complexity.
     Handles age categorization, statistics aggregation, and health report generation.
     """
-    
+
     def __init__(self, fleeting_dir: Path):
         """
         Initialize FleetingAnalysisCoordinator.
@@ -56,12 +56,12 @@ class FleetingAnalysisCoordinator:
         """
         if fleeting_dir is None:
             raise TypeError("fleeting_dir cannot be None")
-        
+
         if not isinstance(fleeting_dir, Path):
             fleeting_dir = Path(fleeting_dir)
-        
+
         self.fleeting_dir = fleeting_dir
-    
+
     def analyze_fleeting_notes(self) -> FleetingAnalysis:
         """
         Analyze fleeting notes collection for age distribution and health metrics.
@@ -71,19 +71,19 @@ class FleetingAnalysisCoordinator:
         """
         analysis = FleetingAnalysis()
         notes_data = []
-        
+
         # Scan fleeting notes directory
         if not self.fleeting_dir.exists():
             return analysis
-        
+
         current_date = datetime.now()
-        
+
         for note_path in self.fleeting_dir.glob("*.md"):
             try:
                 # Get note age from metadata or file stats
                 content = note_path.read_text(encoding='utf-8')
                 frontmatter, _ = parse_frontmatter(content)
-                
+
                 # Try to get created date from frontmatter
                 created_str = frontmatter.get('created', '')
                 if created_str and not any(placeholder in created_str for placeholder in ['{{', '<%', 'tp.']):
@@ -99,11 +99,11 @@ class FleetingAnalysisCoordinator:
                 else:
                     # Use file modification time as fallback
                     created_date = datetime.fromtimestamp(note_path.stat().st_mtime)
-                
+
                 # Calculate age in days
                 age_delta = current_date - created_date
                 days_old = age_delta.days
-                
+
                 # Store note data
                 note_info = {
                     'name': note_path.name,
@@ -112,7 +112,7 @@ class FleetingAnalysisCoordinator:
                     'created': created_date
                 }
                 notes_data.append(note_info)
-                
+
                 # Categorize by age
                 if days_old <= 7:
                     analysis.age_distribution['new'] += 1
@@ -122,24 +122,24 @@ class FleetingAnalysisCoordinator:
                     analysis.age_distribution['stale'] += 1
                 else:
                     analysis.age_distribution['old'] += 1
-                    
+
             except Exception:
                 # Skip notes that can't be processed
                 continue
-        
+
         # Sort notes by age
         notes_data.sort(key=lambda x: x['days_old'], reverse=True)
-        
+
         # Set analysis results
         analysis.total_count = len(notes_data)
         analysis.notes_by_age = notes_data
-        
+
         if notes_data:
             analysis.oldest_note = notes_data[0]
             analysis.newest_note = notes_data[-1]
-        
+
         return analysis
-    
+
     def generate_fleeting_health_report(self) -> Dict:
         """
         Generate a health report for fleeting notes with recommendations.
@@ -149,7 +149,7 @@ class FleetingAnalysisCoordinator:
         """
         # Get analysis
         analysis = self.analyze_fleeting_notes()
-        
+
         # Calculate health status
         if analysis.total_count == 0:
             health_status = 'HEALTHY'
@@ -157,7 +157,7 @@ class FleetingAnalysisCoordinator:
         else:
             old_percentage = (analysis.age_distribution['old'] / analysis.total_count * 100) if analysis.total_count > 0 else 0
             stale_percentage = (analysis.age_distribution['stale'] / analysis.total_count * 100) if analysis.total_count > 0 else 0
-            
+
             if old_percentage >= 50:
                 health_status = 'CRITICAL'
                 summary = f'Critical: {old_percentage:.0f}% of fleeting notes are over 90 days old and require immediate attention.'
@@ -167,7 +167,7 @@ class FleetingAnalysisCoordinator:
             else:
                 health_status = 'HEALTHY'
                 summary = f'Healthy: Most fleeting notes ({analysis.age_distribution["new"] + analysis.age_distribution["recent"]}/{analysis.total_count}) are being actively processed.'
-        
+
         # Generate recommendations
         recommendations = []
         if analysis.age_distribution['old'] > 0:
@@ -178,14 +178,14 @@ class FleetingAnalysisCoordinator:
             recommendations.append("Consider batch processing to reduce fleeting note backlog")
         if analysis.age_distribution['new'] == 0 and analysis.total_count > 0:
             recommendations.append("No new notes in the last week - consider if capture process is working")
-        
+
         # Get oldest notes for priority processing
         oldest_notes = analysis.notes_by_age[:5] if len(analysis.notes_by_age) >= 5 else analysis.notes_by_age
-        
-        # Get newest notes to show recent activity  
+
+        # Get newest notes to show recent activity
         newest_notes = analysis.notes_by_age[-5:] if len(analysis.notes_by_age) >= 5 else analysis.notes_by_age
         newest_notes.reverse()  # Show newest first
-        
+
         return {
             'summary': summary,
             'health_status': health_status,

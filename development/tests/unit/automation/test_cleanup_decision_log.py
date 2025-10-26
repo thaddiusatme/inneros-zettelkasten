@@ -1,7 +1,5 @@
 """RED phase: Decision log YAML generation from inventory records."""
 
-import pytest
-from pathlib import Path
 
 
 def test_decision_log_generates_from_inventory(tmp_path):

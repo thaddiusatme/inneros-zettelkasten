@@ -20,7 +20,7 @@ TDD Phase: RED (Expected to FAIL - drives implementation)
 """
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch, call
+from unittest.mock import Mock, patch
 import sys
 import tempfile
 import shutil
@@ -39,23 +39,23 @@ class TestYouTubeHandlerTranscriptIntegration:
     These tests define the expected behavior before implementation.
     All tests should FAIL initially - this is intentional and correct.
     """
-    
+
     @pytest.fixture
     def temp_vault(self):
         """Create temporary vault directory for testing."""
         temp_dir = tempfile.mkdtemp()
         vault_path = Path(temp_dir) / "knowledge"
         vault_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Create Media/Transcripts directory
         transcripts_dir = vault_path / "Media" / "Transcripts"
         transcripts_dir.mkdir(parents=True, exist_ok=True)
-        
+
         yield vault_path
-        
+
         # Cleanup
         shutil.rmtree(temp_dir)
-    
+
     @pytest.fixture
     def handler_config(self, temp_vault):
         """Create handler configuration with vault path."""
@@ -65,7 +65,7 @@ class TestYouTubeHandlerTranscriptIntegration:
             'processing_timeout': 300,
             'cooldown_seconds': 60
         }
-    
+
     @pytest.fixture
     def mock_transcript_result(self):
         """Mock transcript fetch result."""
@@ -78,7 +78,7 @@ class TestYouTubeHandlerTranscriptIntegration:
             "language": "en",
             "duration": 120.0
         }
-    
+
     # ==========================================
     # TEST 1: Handler Initializes Transcript Saver
     # ==========================================
@@ -95,19 +95,19 @@ class TestYouTubeHandlerTranscriptIntegration:
         """
         # Act
         handler = YouTubeFeatureHandler(config=handler_config)
-        
+
         # Assert
         assert hasattr(handler, 'transcript_saver'), \
             "Handler should have transcript_saver attribute"
-        
+
         assert isinstance(handler.transcript_saver, YouTubeTranscriptSaver), \
             "transcript_saver should be instance of YouTubeTranscriptSaver"
-        
+
         # Verify vault path is correct
         expected_vault = Path(handler_config['vault_path'])
         assert handler.transcript_saver.vault_path == expected_vault, \
             f"Saver vault_path should be {expected_vault}"
-    
+
     # ==========================================
     # TEST 2: Handler Saves Transcript After Fetch
     # ==========================================
@@ -138,18 +138,18 @@ class TestYouTubeHandlerTranscriptIntegration:
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result
         mock_fetcher.format_for_llm.return_value = "formatted transcript"
         mock_fetcher_class.return_value = mock_fetcher
-        
+
         mock_extractor = Mock()
         mock_extractor.extract_quotes.return_value = {'quotes': []}
         mock_extractor_class.return_value = mock_extractor
-        
+
         mock_enhancer = Mock()
         mock_result = Mock()
         mock_result.success = True
         mock_result.quote_count = 0
         mock_enhancer.enhance_note.return_value = mock_result
         mock_enhancer_class.return_value = mock_enhancer
-        
+
         # Create test note
         note_path = temp_vault / "test-youtube-note.md"
         note_content = """---
@@ -162,47 +162,47 @@ created: 2025-10-17
 # Test Video Note
 """
         note_path.write_text(note_content, encoding='utf-8')
-        
+
         # Create mock event
         class MockEvent:
             def __init__(self, path):
                 self.src_path = path
-        
+
         event = MockEvent(note_path)
-        
+
         # Act
         handler = YouTubeFeatureHandler(config=handler_config)
-        
+
         # Patch transcript_saver.save_transcript to verify it's called
         with patch.object(handler.transcript_saver, 'save_transcript') as mock_save:
             expected_transcript_path = temp_vault / "Media" / "Transcripts" / "youtube-dQw4w9WgXcQ-2025-10-17.md"
             mock_save.return_value = expected_transcript_path
-            
+
             result = handler.handle(event)
-            
+
             # Assert save_transcript was called
             assert mock_save.called, "save_transcript() should be called"
-            
+
             # Verify call arguments
             call_args = mock_save.call_args
             assert call_args is not None, "save_transcript() should have been called with arguments"
-            
+
             # Check video_id
             assert call_args[1]['video_id'] == 'dQw4w9WgXcQ', \
                 "save_transcript() should be called with correct video_id"
-            
+
             # Check transcript_data
             assert 'transcript_data' in call_args[1], \
                 "save_transcript() should be called with transcript_data"
-            
+
             # Check metadata
             assert 'metadata' in call_args[1], \
                 "save_transcript() should be called with metadata"
-            
+
             # Check parent_note_name
             assert 'parent_note_name' in call_args[1], \
                 "save_transcript() should be called with parent_note_name"
-    
+
     # ==========================================
     # TEST 3: Handler Returns Transcript Path in Results
     # ==========================================
@@ -233,18 +233,18 @@ created: 2025-10-17
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result
         mock_fetcher.format_for_llm.return_value = "formatted transcript"
         mock_fetcher_class.return_value = mock_fetcher
-        
+
         mock_extractor = Mock()
         mock_extractor.extract_quotes.return_value = {'quotes': []}
         mock_extractor_class.return_value = mock_extractor
-        
+
         mock_enhancer = Mock()
         mock_result = Mock()
         mock_result.success = True
         mock_result.quote_count = 3
         mock_enhancer.enhance_note.return_value = mock_result
         mock_enhancer_class.return_value = mock_enhancer
-        
+
         # Create test note
         note_path = temp_vault / "test-youtube-note.md"
         note_content = """---
@@ -257,34 +257,34 @@ created: 2025-10-17
 # Test Video Note
 """
         note_path.write_text(note_content, encoding='utf-8')
-        
+
         class MockEvent:
             def __init__(self, path):
                 self.src_path = path
-        
+
         event = MockEvent(note_path)
-        
+
         # Act
         handler = YouTubeFeatureHandler(config=handler_config)
         result = handler.handle(event)
-        
+
         # Assert
         assert result is not None, "Handler should return result dict"
         assert 'transcript_file' in result, "Result should include 'transcript_file' key"
-        
+
         # Verify transcript_file is a Path
         assert isinstance(result['transcript_file'], Path), \
             "transcript_file should be a Path object"
-        
+
         # Verify transcript file exists
         assert result['transcript_file'].exists(), \
             "Transcript file should exist after processing"
-        
+
         # Verify backward compatibility - existing keys should still be present
         assert 'success' in result, "Result should include 'success' key (backward compatibility)"
         assert 'quotes_added' in result, "Result should include 'quotes_added' key"
         assert 'processing_time' in result, "Result should include 'processing_time' key"
-    
+
     # ==========================================
     # TEST 4: Handler Generates Transcript Wikilink
     # ==========================================
@@ -315,18 +315,18 @@ created: 2025-10-17
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result
         mock_fetcher.format_for_llm.return_value = "formatted transcript"
         mock_fetcher_class.return_value = mock_fetcher
-        
+
         mock_extractor = Mock()
         mock_extractor.extract_quotes.return_value = {'quotes': []}
         mock_extractor_class.return_value = mock_extractor
-        
+
         mock_enhancer = Mock()
         mock_result = Mock()
         mock_result.success = True
         mock_result.quote_count = 0
         mock_enhancer.enhance_note.return_value = mock_result
         mock_enhancer_class.return_value = mock_enhancer
-        
+
         # Create test note
         note_path = temp_vault / "test-youtube-note.md"
         note_content = """---
@@ -339,21 +339,21 @@ created: 2025-10-17
 # Test Video
 """
         note_path.write_text(note_content, encoding='utf-8')
-        
+
         class MockEvent:
             def __init__(self, path):
                 self.src_path = path
-        
+
         event = MockEvent(note_path)
-        
+
         # Act
         handler = YouTubeFeatureHandler(config=handler_config)
         result = handler.handle(event)
-        
+
         # Assert
         assert 'transcript_wikilink' in result, \
             "Result should include 'transcript_wikilink' key"
-        
+
         # Verify wikilink format
         wikilink = result['transcript_wikilink']
         assert wikilink.startswith('[['), "Wikilink should start with '[[')"
@@ -361,7 +361,7 @@ created: 2025-10-17
         assert 'youtube-test123-' in wikilink, \
             "Wikilink should contain video_id in format 'youtube-{id}-'"
         assert '2025-10-17' in wikilink, "Wikilink should contain date"
-    
+
     # ==========================================
     # TEST 5: Handler Handles Save Failures Gracefully
     # ==========================================
@@ -393,20 +393,20 @@ created: 2025-10-17
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result
         mock_fetcher.format_for_llm.return_value = "formatted transcript"
         mock_fetcher_class.return_value = mock_fetcher
-        
+
         mock_extractor = Mock()
         mock_extractor.extract_quotes.return_value = {'quotes': [
             {'text': 'Test quote', 'timestamp': '00:00', 'context': 'test', 'relevance_score': 0.8}
         ]}
         mock_extractor_class.return_value = mock_extractor
-        
+
         mock_enhancer = Mock()
         mock_result = Mock()
         mock_result.success = True
         mock_result.quote_count = 1
         mock_enhancer.enhance_note.return_value = mock_result
         mock_enhancer_class.return_value = mock_enhancer
-        
+
         # Create test note
         note_path = temp_vault / "test-youtube-note.md"
         note_content = """---
@@ -419,29 +419,29 @@ created: 2025-10-17
 # Test Failure Handling
 """
         note_path.write_text(note_content, encoding='utf-8')
-        
+
         class MockEvent:
             def __init__(self, path):
                 self.src_path = path
-        
+
         event = MockEvent(note_path)
-        
+
         # Act
         handler = YouTubeFeatureHandler(config=handler_config)
-        
+
         # Make save_transcript raise an exception
         with patch.object(handler.transcript_saver, 'save_transcript', side_effect=Exception("Disk full")):
             result = handler.handle(event)
-        
+
         # Assert - Processing should still succeed
         assert result is not None, "Handler should return result even if transcript save fails"
         assert result['success'] is True, \
             "Handler should succeed even if transcript save fails (graceful degradation)"
-        
+
         # Quotes should still be extracted
         assert result['quotes_added'] == 1, \
             "Quote extraction should succeed even if transcript save fails"
-        
+
         # Transcript failure should be indicated
         assert 'transcript_error' in result or result.get('transcript_file') is None, \
             "Result should indicate transcript save failure"

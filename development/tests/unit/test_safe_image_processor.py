@@ -10,8 +10,8 @@ import shutil
 import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import List, Dict, Optional
+from unittest.mock import patch
+from typing import List
 
 # Add development directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
@@ -33,56 +33,56 @@ class TestSafeImageProcessorRedPhase:
     RED Phase: These tests SHOULD FAIL to demonstrate SafeImageProcessor requirements
     These tests define the atomic operations interface we need to implement
     """
-    
+
     def setup_method(self):
         """Set up test environment with controlled image files"""
         self.test_dir = Path(tempfile.mkdtemp())
         self.vault_path = self.test_dir / "test_vault"
         self.vault_path.mkdir(exist_ok=True)
-        
+
         # Create test directories
         (self.vault_path / "Inbox").mkdir(exist_ok=True)
         (self.vault_path / "Permanent Notes").mkdir(exist_ok=True)
         (self.vault_path / "Literature Notes").mkdir(exist_ok=True)
         (self.vault_path / "Media").mkdir(exist_ok=True)
         (self.vault_path / "Templates").mkdir(exist_ok=True)
-        
+
         # Create test images and notes
         self.test_images = self._create_test_images()
         self.test_notes = self._create_test_notes_with_images()
-        
+
         # Initialize processor (will fail in RED phase)
         if SafeImageProcessor:
             self.processor = SafeImageProcessor(str(self.vault_path))
         else:
             self.processor = None
-    
+
     def teardown_method(self):
         """Clean up test environment"""
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
-    
+
     def _create_test_images(self) -> List[Path]:
         """Create test image files for controlled testing"""
         test_images = []
         image_data = b"FAKE_IMAGE_DATA_FOR_TESTING"
-        
+
         for i, name in enumerate([
             "screenshot_messenger.jpg",
-            "diagram_workflow.png", 
+            "diagram_workflow.png",
             "code_snippet.png",
             "pasted_image.png"
         ]):
             image_path = self.vault_path / "Media" / name
             image_path.write_bytes(image_data + bytes(str(i), 'utf-8'))
             test_images.append(image_path)
-        
+
         return test_images
-    
+
     def _create_test_notes_with_images(self) -> List[Path]:
         """Create test notes with image references"""
         notes = []
-        
+
         # Note 1: Multiple image references
         note1_content = """---
 type: fleeting
@@ -106,8 +106,8 @@ Content with image references that must be preserved during AI processing.
         note1_path = self.vault_path / "Inbox" / "test_note_multiple_images.md"
         note1_path.write_text(note1_content)
         notes.append(note1_path)
-        
-        # Note 2: Single image reference  
+
+        # Note 2: Single image reference
         note2_content = """---
 type: literature
 created: 2025-09-24 22:15
@@ -123,7 +123,7 @@ This is a literature note with a single image reference.
         note2_path = self.vault_path / "Inbox" / "literature_with_image.md"
         note2_path.write_text(note2_content)
         notes.append(note2_path)
-        
+
         return notes
 
     # ============================================================================
@@ -164,18 +164,18 @@ This is a literature note with a single image reference.
             # Test with a session that has actual images
             images = self._create_test_images()
             session = ImageBackupSession(self.vault_path, "test_rollback", images)
-            
+
             # Create backups
             session.create_backups()
-            
+
             # Simulate processing failure by deleting an image
             original_image = images[0]
             original_content = original_image.read_bytes()
             original_image.unlink()
-            
+
             # This should restore the image
             session.rollback()
-            
+
             # Image should be restored
             assert original_image.exists()
             # Content should match
@@ -189,10 +189,10 @@ This is a literature note with a single image reference.
                 self.test_notes,
                 operation="ai_batch_enhancement"
             )
-            
+
             # Should return results for all notes
             assert len(results) == len(self.test_notes)
-            
+
             # Each result should have required fields
             for result in results:
                 assert hasattr(result, 'success')
@@ -209,13 +209,13 @@ This is a literature note with a single image reference.
                 'ai_tags': ['test', 'enhanced'],
                 'quality_score': 0.8
             }
-            
+
             # Safe processing should integrate with WorkflowManager
             result = self.processor.safe_workflow_processing(
                 note_path=self.test_notes[0],
                 workflow_operation=lambda note: mock_workflow_result
             )
-            
+
             assert result.success is True
             assert result.processing_time > 0
             assert result.backup_session_id is not None
@@ -237,7 +237,7 @@ This is a literature note with a single image reference.
                 # Simulate concurrent processing attempts
                 session1 = self.processor.create_backup_session("concurrent_1")
                 session2 = self.processor.create_backup_session("concurrent_2")
-                
+
                 # Should handle concurrent sessions safely
                 assert session1.session_id != session2.session_id
 
@@ -254,14 +254,14 @@ This is a literature note with a single image reference.
                     operation_name="test_lifecycle",
                     images_to_backup=self.test_images
                 )
-                
+
                 # Session lifecycle: create → backup → process → commit/rollback
                 session.create_backups()
                 session.start_monitoring()
-                
+
                 # Simulate processing
                 processing_successful = True
-                
+
                 if processing_successful:
                     session.commit()
                 else:
@@ -276,7 +276,7 @@ This is a literature note with a single image reference.
                     operation_name="integrity_test",
                     images_to_backup=self.test_images
                 )
-                
+
                 # Should validate backup integrity
                 integrity_check = session.validate_backup_integrity()
                 assert integrity_check.all_backups_valid is True
@@ -297,7 +297,7 @@ This is a literature note with a single image reference.
                     processing_time=1.5,
                     backup_session_id="test_session_123"
                 )
-                
+
                 assert result.success is True
                 assert len(result.preserved_images) == len(self.test_images)
 
@@ -311,7 +311,7 @@ This is a literature note with a single image reference.
                         self.test_notes[0],
                         operation="error_test"
                     )
-                    
+
                     # Should handle errors gracefully
                     assert result.success is False
                     assert result.error_message is not None

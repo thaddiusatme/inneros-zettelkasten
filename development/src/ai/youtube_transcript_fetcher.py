@@ -70,7 +70,7 @@ class YouTubeTranscriptFetcher:
         >>> result = fetcher.fetch_transcript("dQw4w9WgXcQ")
         >>> print(f"Fetched {len(result['transcript'])} entries")
     """
-    
+
     def __init__(self):
         """
         Initialize transcript fetcher.
@@ -80,7 +80,7 @@ class YouTubeTranscriptFetcher:
         """
         self.api = YouTubeTranscriptApi()
         logger.info("YouTubeTranscriptFetcher initialized successfully")
-    
+
     def _convert_transcript_to_dict(self, transcript_data: List[Any]) -> List[Dict[str, Any]]:
         """
         Convert API transcript objects to dict format.
@@ -102,7 +102,7 @@ class YouTubeTranscriptFetcher:
             }
             for entry in transcript_data
         ]
-    
+
     def fetch_transcript(self, video_id: str, prefer_manual: bool = True, preferred_languages: list = None) -> Dict[str, Any]:
         """
         Fetch transcript for YouTube video.
@@ -135,26 +135,26 @@ class YouTubeTranscriptFetcher:
         """
         if preferred_languages is None:
             preferred_languages = ['en']
-        
+
         logger.info(f"Fetching transcript for video: {video_id} (preferred languages: {preferred_languages})")
-        
+
         # Validate video ID format
         if not video_id or not isinstance(video_id, str):
             error_msg = f"Invalid video ID: {video_id} (must be non-empty string)"
             logger.error(error_msg)
             raise InvalidVideoIdError(error_msg)
-        
+
         video_id = video_id.strip()
-        
+
         if not video_id or not re.match(r'^[\w-]+$', video_id):
             error_msg = f"Invalid video ID format: {video_id} (contains invalid characters)"
             logger.error(error_msg)
             raise InvalidVideoIdError(error_msg)
-        
+
         try:
             # Fetch transcript using youtube-transcript-api v1.2.3+
             transcript_list = self.api.list(video_id)
-            
+
             if prefer_manual:
                 # Try to get manual transcript in preferred language first (higher quality)
                 logger.debug(f"Looking for manual transcript in preferred languages: {preferred_languages}")
@@ -170,9 +170,9 @@ class YouTubeTranscriptFetcher:
                                 "is_manual": True,
                                 "language": transcript.language_code
                             }
-                
+
                 # If no preferred manual found, try any manual
-                logger.debug(f"No manual transcript in preferred languages, trying any manual")
+                logger.debug("No manual transcript in preferred languages, trying any manual")
                 for transcript in transcript_list:
                     if not transcript.is_generated:
                         transcript_data = transcript.fetch()
@@ -184,9 +184,9 @@ class YouTubeTranscriptFetcher:
                             "is_manual": True,
                             "language": transcript.language_code
                         }
-                
+
                 # If no manual found, use auto-generated in preferred language
-                logger.debug(f"No manual transcript found, looking for auto-generated in preferred languages")
+                logger.debug("No manual transcript found, looking for auto-generated in preferred languages")
                 for lang in preferred_languages:
                     for transcript in transcript_list:
                         if transcript.is_generated and transcript.language_code.startswith(lang):
@@ -199,9 +199,9 @@ class YouTubeTranscriptFetcher:
                                 "is_manual": False,
                                 "language": transcript.language_code
                             }
-                
+
                 # Last resort: any auto-generated
-                logger.debug(f"Using any available auto-generated transcript")
+                logger.debug("Using any available auto-generated transcript")
                 for transcript in transcript_list:
                     if transcript.is_generated:
                         transcript_data = transcript.fetch()
@@ -227,7 +227,7 @@ class YouTubeTranscriptFetcher:
                         "is_manual": is_manual,
                         "language": transcript.language_code
                     }
-                
+
         except (YouTubeRequestFailed, RequestBlocked, IpBlocked) as e:
             raise RateLimitError(
                 f"Rate limit exceeded. Please retry later. Details: {str(e)}"
@@ -252,7 +252,7 @@ class YouTubeTranscriptFetcher:
                 )
             # Re-raise other exceptions
             raise
-    
+
     def format_timestamp(self, seconds: float) -> str:
         """
         Format timestamp in MM:SS format for markdown.
@@ -277,7 +277,7 @@ class YouTubeTranscriptFetcher:
         minutes = int(seconds // 60)
         secs = int(seconds % 60)
         return f"{minutes:02d}:{secs:02d}"
-    
+
     def format_for_llm(self, transcript: List[Dict[str, Any]]) -> str:
         """
         Format transcript for LLM consumption.
@@ -305,14 +305,14 @@ class YouTubeTranscriptFetcher:
         if not transcript:
             logger.warning("Empty transcript provided to format_for_llm()")
             return ""
-        
+
         logger.debug(f"Formatting {len(transcript)} transcript entries for LLM")
-        
+
         # Format each entry with timestamp
         formatted_lines = []
         for entry in transcript:
             timestamp = self.format_timestamp(entry['start'])
             text = entry['text'].strip()
             formatted_lines.append(f"[{timestamp}] {text}")
-        
+
         return "\n".join(formatted_lines)

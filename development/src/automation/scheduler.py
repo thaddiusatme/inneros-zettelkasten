@@ -31,7 +31,7 @@ class SchedulerManager:
     
     Size: ~250 LOC (ADR-001 compliant)
     """
-    
+
     def __init__(self, scheduler: BackgroundScheduler, execution_callback: Optional[Callable] = None):
         """
         Initialize scheduler manager.
@@ -43,7 +43,7 @@ class SchedulerManager:
         """
         self._scheduler = scheduler
         self._execution_callback = execution_callback
-    
+
     def add_job(self, job_id: str, func: Callable, schedule: str) -> None:
         """
         Add cron-scheduled job.
@@ -60,10 +60,10 @@ class SchedulerManager:
         wrapped_func = JobExecutionTracker.wrap_job_with_tracking(
             job_id, func, self._execution_callback
         )
-        
+
         # Parse cron expression using utilities
         trigger = SchedulerUtils.parse_cron_schedule(schedule)
-        
+
         # Add job to scheduler
         self._scheduler.add_job(
             wrapped_func,
@@ -71,7 +71,7 @@ class SchedulerManager:
             id=job_id,
             replace_existing=True
         )
-    
+
     def remove_job(self, job_id: str) -> None:
         """
         Remove scheduled job.
@@ -84,7 +84,7 @@ class SchedulerManager:
         except Exception:
             # Job may not exist, ignore
             pass
-    
+
     def list_jobs(self) -> List[JobInfo]:
         """
         Get all scheduled jobs.
@@ -96,15 +96,15 @@ class SchedulerManager:
         for job in self._scheduler.get_jobs():
             # Extract cron schedule string using utilities
             schedule = SchedulerUtils.format_trigger(job.trigger)
-            
+
             jobs.append(JobInfo(
                 id=job.id,
                 schedule=schedule,
                 next_run=job.next_run_time
             ))
-        
+
         return jobs
-    
+
     def pause_job(self, job_id: str) -> None:
         """
         Temporarily pause job execution.
@@ -113,7 +113,7 @@ class SchedulerManager:
             job_id: Job identifier to pause
         """
         self._scheduler.pause_job(job_id)
-    
+
     def resume_job(self, job_id: str) -> None:
         """
         Resume paused job.

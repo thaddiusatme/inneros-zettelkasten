@@ -10,11 +10,11 @@ from .link_suggestion_utils import QualityScore
 
 class RealContentQualityAnalyzer:
     """Analyzes quality of connections using real content analysis"""
-    
+
     def __init__(self):
         """Initialize analyzer"""
         self.analyzer = ConnectionQualityAnalyzer()
-    
+
     def analyze_connection_quality(self, content1: str, content2: str) -> QualityScore:
         """
         Analyze connection quality between two content strings

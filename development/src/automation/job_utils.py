@@ -21,11 +21,11 @@ class JobExecutionTracker:
     
     Size: ~120 LOC (ADR-001 compliant)
     """
-    
+
     @staticmethod
     def wrap_job_with_tracking(
-        job_id: str, 
-        func: Callable, 
+        job_id: str,
+        func: Callable,
         execution_callback: Optional[Callable] = None
     ) -> Callable:
         """
@@ -58,21 +58,21 @@ class JobExecutionTracker:
         def wrapped():
             start_time = time.time()
             success = False
-            
+
             try:
                 result = func()
                 success = True
                 return result
-            except Exception as e:
+            except Exception:
                 success = False
                 raise
             finally:
                 duration = time.time() - start_time
                 if execution_callback:
                     execution_callback(job_id, success, duration)
-        
+
         return wrapped
-    
+
     @staticmethod
     def measure_execution_time(func: Callable) -> tuple:
         """
@@ -96,7 +96,7 @@ class JobExecutionTracker:
         start_time = time.time()
         success = False
         result = None
-        
+
         try:
             result = func()
             success = True
@@ -105,9 +105,9 @@ class JobExecutionTracker:
             raise
         finally:
             duration = time.time() - start_time
-        
+
         return result, duration, success
-    
+
     @staticmethod
     def create_execution_callback(
         on_success: Optional[Callable] = None,
@@ -139,13 +139,13 @@ class JobExecutionTracker:
                 on_success(job_id, duration)
             elif not success and on_failure:
                 on_failure(job_id, duration)
-            
+
             # Always call complete handler
             if on_complete:
                 on_complete(job_id, success, duration)
-        
+
         return callback
-    
+
     @staticmethod
     def safe_execute_job(func: Callable, job_id: str = "unknown") -> bool:
         """
@@ -168,6 +168,6 @@ class JobExecutionTracker:
         try:
             func()
             return True
-        except Exception as e:
+        except Exception:
             # Job failed, but don't propagate exception
             return False

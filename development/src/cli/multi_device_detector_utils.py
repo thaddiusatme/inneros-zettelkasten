@@ -24,14 +24,14 @@ class DevicePatternMatcher:
     
     Encapsulates regex patterns and matching logic for different device types
     """
-    
+
     def __init__(self):
         """Initialize device patterns"""
         self.patterns = {
             DeviceType.SAMSUNG_S23: re.compile(r'^Screenshot_(\d{8})_(\d{6})_(.+)\.jpg$'),
             DeviceType.IPAD: re.compile(r'^(\d{8})_(\d{6})\d{3}_iOS\.png$'),
         }
-    
+
     def match(self, filename: str, device_type: DeviceType) -> Optional[re.Match]:
         """
         Match filename against device pattern
@@ -46,7 +46,7 @@ class DevicePatternMatcher:
         if device_type not in self.patterns:
             return None
         return self.patterns[device_type].match(filename)
-    
+
     def detect_device_type(self, filename: str) -> DeviceType:
         """
         Detect device type from filename
@@ -69,12 +69,12 @@ class TimestampExtractor:
     
     Parses timestamps from filenames using device-specific formats
     """
-    
+
     TIMESTAMP_FORMATS = {
         DeviceType.SAMSUNG_S23: '%Y%m%d_%H%M%S',
         DeviceType.IPAD: '%Y%m%d_%H%M%S',
     }
-    
+
     def __init__(self, pattern_matcher: DevicePatternMatcher):
         """
         Initialize with pattern matcher
@@ -83,7 +83,7 @@ class TimestampExtractor:
             pattern_matcher: DevicePatternMatcher instance for regex matching
         """
         self.pattern_matcher = pattern_matcher
-    
+
     def extract(self, filename: str, device_type: DeviceType) -> Optional[datetime]:
         """
         Extract timestamp from filename
@@ -97,22 +97,22 @@ class TimestampExtractor:
         """
         if device_type == DeviceType.UNKNOWN:
             return None
-        
+
         match = self.pattern_matcher.match(filename, device_type)
         if not match:
             return None
-        
+
         # Extract date and time groups
         date_str = match.group(1)  # YYYYMMDD
         time_str = match.group(2)  # HHMMSS
-        
+
         # Parse to datetime
         timestamp_str = f"{date_str}_{time_str}"
         timestamp_format = self.TIMESTAMP_FORMATS.get(device_type)
-        
+
         if not timestamp_format:
             return None
-        
+
         try:
             return datetime.strptime(timestamp_str, timestamp_format)
         except ValueError:
@@ -125,14 +125,14 @@ class DeviceMetadataBuilder:
     
     Builds consistent metadata structure across all device types
     """
-    
+
     DEVICE_NAMES = {
         DeviceType.SAMSUNG_S23: "Samsung Galaxy S23",
         DeviceType.IPAD: "iPad",
         DeviceType.UNKNOWN: "Unknown Device"
     }
-    
-    def __init__(self, pattern_matcher: DevicePatternMatcher, 
+
+    def __init__(self, pattern_matcher: DevicePatternMatcher,
                  timestamp_extractor: TimestampExtractor):
         """
         Initialize with utilities
@@ -143,8 +143,8 @@ class DeviceMetadataBuilder:
         """
         self.pattern_matcher = pattern_matcher
         self.timestamp_extractor = timestamp_extractor
-    
-    def build(self, file_path: Path, device_type: DeviceType, 
+
+    def build(self, file_path: Path, device_type: DeviceType,
               timestamp: Optional[datetime]) -> Dict[str, Any]:
         """
         Build unified metadata dictionary
@@ -163,13 +163,13 @@ class DeviceMetadataBuilder:
             'source_file': file_path.name,
             'timestamp': timestamp,
         }
-        
+
         # Device-specific fields
         if device_type == DeviceType.SAMSUNG_S23:
             metadata['app_name'] = self._extract_samsung_app_name(file_path.name)
-        
+
         return metadata
-    
+
     def _extract_samsung_app_name(self, filename: str) -> Optional[str]:
         """
         Extract app name from Samsung screenshot filename

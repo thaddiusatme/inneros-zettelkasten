@@ -40,11 +40,11 @@ def _create_vault_structure(base_path: Path, vault_name: str) -> Path:
     """
     vault_path = base_path / vault_name
     vault_path.mkdir(parents=True, exist_ok=True)
-    
+
     # Create standard directories
     for dir_name in STANDARD_VAULT_DIRS:
         (vault_path / dir_name).mkdir(exist_ok=True)
-    
+
     return vault_path
 
 
@@ -63,11 +63,11 @@ def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     Performance: <1 second
     """
     start_time = time.time()
-    
+
     # Create vault with standard structure
     vault_name = f"test_vault_{int(time.time() * 1000000)}"
     vault_path = _create_vault_structure(tmp_path, vault_name)
-    
+
     # Copy sample notes to appropriate directories
     shutil.copy(
         SAMPLE_NOTES_DIR / "permanent-test-note.md",
@@ -81,7 +81,7 @@ def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
         SAMPLE_NOTES_DIR / "literature-test-note.md",
         vault_path / "Literature Notes" / "literature-test-note.md"
     )
-    
+
     # Create metadata
     elapsed = time.time() - start_time
     metadata = {
@@ -92,7 +92,7 @@ def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
         'creation_time_seconds': elapsed,
         'vault_path': str(vault_path)
     }
-    
+
     return vault_path, metadata
 
 
@@ -111,34 +111,34 @@ def create_small_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     Performance: <5 seconds
     """
     start_time = time.time()
-    
+
     # Create vault with standard structure
     vault_name = f"test_vault_small_{int(time.time() * 1000000)}"
     vault_path = _create_vault_structure(tmp_path, vault_name)
-    
+
     # Create 15 notes (5 of each type)
     permanent_count = 0
     fleeting_count = 0
     literature_count = 0
-    
+
     # Create 5 permanent notes
     for i in range(5):
         target_file = vault_path / "Permanent Notes" / f"permanent-test-note-{i+1}.md"
         shutil.copy(SAMPLE_NOTES_DIR / "permanent-test-note.md", target_file)
         permanent_count += 1
-    
+
     # Create 5 fleeting notes
     for i in range(5):
         target_file = vault_path / "Fleeting Notes" / f"fleeting-test-note-{i+1}.md"
         shutil.copy(SAMPLE_NOTES_DIR / "fleeting-test-note.md", target_file)
         fleeting_count += 1
-    
+
     # Create 5 literature notes
     for i in range(5):
         target_file = vault_path / "Literature Notes" / f"literature-test-note-{i+1}.md"
         shutil.copy(SAMPLE_NOTES_DIR / "literature-test-note.md", target_file)
         literature_count += 1
-    
+
     # Create metadata
     elapsed = time.time() - start_time
     metadata = {
@@ -149,5 +149,5 @@ def create_small_vault(tmp_path: Path) -> Tuple[Path, Dict]:
         'creation_time_seconds': elapsed,
         'vault_path': str(vault_path)
     }
-    
+
     return vault_path, metadata

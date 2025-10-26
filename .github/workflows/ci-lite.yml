@@ -28,29 +28,11 @@ jobs:
           pip install -r requirements.txt
           pip install ruff black pyright pytest pytest-cov
       
-      - name: Run ruff (linter)
-        run: |
-          ruff check development/src development/tests --select=E,F,W --ignore=E501
-        continue-on-error: false
-      
-      - name: Run black (formatter check)
-        run: |
-          black --check development/src development/tests
-        continue-on-error: false
-      
-      - name: Run pyright (type checker)
-        run: |
-          pyright development/src
-        continue-on-error: true
-      
-      - name: Run pytest (fast tests only)
+      - name: Run quality gates and unit tests
         env:
           PYTHONPATH: development
         run: |
-          pytest development/tests/unit -q --tb=short --maxfail=5 \
-            --ignore=development/tests/unit/test_real_analytics.py \
-            --ignore=development/tests/integration
-        continue-on-error: false
+          make test
       
       - name: Summary
         if: always()

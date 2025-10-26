@@ -3,11 +3,9 @@ TDD RED Phase: Automation Status CLI Tests
 Tests automation visibility, daemon detection, log parsing, and daemon control.
 """
 
-import json
 import pytest
-from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open, MagicMock
+from unittest.mock import Mock, patch, mock_open
 from src.cli.automation_status_cli import (
     AutomationStatusCLI,
     DaemonDetector,

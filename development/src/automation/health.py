@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from .health_utils import HealthMetricsCollector
 
 if TYPE_CHECKING:
-    from .daemon import AutomationDaemon, DaemonState
+    from .daemon import AutomationDaemon
 
 
 @dataclass
@@ -31,7 +31,7 @@ class HealthCheckManager:
     
     Size: ~200 LOC (ADR-001 compliant)
     """
-    
+
     def __init__(self, daemon: 'AutomationDaemon'):
         """
         Initialize health check manager.
@@ -41,7 +41,7 @@ class HealthCheckManager:
         """
         self._daemon = daemon
         self._metrics_collector = HealthMetricsCollector()
-    
+
     def get_health_status(self) -> HealthReport:
         """
         Comprehensive health check.
@@ -50,44 +50,44 @@ class HealthCheckManager:
             HealthReport with health status and component checks
         """
         from .daemon import DaemonState
-        
+
         # Check daemon state
         daemon_running = self._daemon._state == DaemonState.RUNNING
-        
+
         # Check scheduler
         scheduler_healthy = (
             self._daemon._scheduler is not None and
             self._daemon._scheduler.running
         )
-        
+
         # Check file watcher (if configured)
         watcher_healthy = True
         if self._daemon.file_watcher:
             watcher_healthy = self._daemon.file_watcher.is_running()
-        
+
         # Check event handler (if configured)
         event_handler_healthy = True
         if self._daemon.event_handler:
             handler_health = self._daemon.event_handler.get_health_status()
             event_handler_healthy = handler_health.get('is_healthy', True)
-        
+
         # Overall health
         is_healthy = daemon_running and scheduler_healthy
         status_code = 200 if is_healthy else 503
-        
+
         checks = {
             "scheduler": scheduler_healthy,
             "daemon": daemon_running,
             "file_watcher": watcher_healthy,
             "event_handler": event_handler_healthy,
         }
-        
+
         return HealthReport(
             is_healthy=is_healthy,
             status_code=status_code,
             checks=checks
         )
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """
         Performance and operational metrics.
@@ -96,10 +96,10 @@ class HealthCheckManager:
             Dictionary with uptime, job counts, and execution statistics
         """
         status = self._daemon.status()
-        
+
         # Get execution statistics from metrics collector
         exec_stats = self._metrics_collector.get_execution_statistics()
-        
+
         metrics = {
             "uptime_seconds": status.uptime_seconds,
             "total_jobs": status.active_jobs,
@@ -109,9 +109,9 @@ class HealthCheckManager:
             "failed_executions": exec_stats["failed_executions"],
             "success_rate": exec_stats["success_rate"],
         }
-        
+
         return metrics
-    
+
     def record_job_execution(self, job_id: str, success: bool, duration: float) -> None:
         """
         Track job execution history.
@@ -123,7 +123,7 @@ class HealthCheckManager:
         """
         # Delegate to metrics collector
         self._metrics_collector.record_execution(job_id, success, duration)
-    
+
     def get_execution_history(self, job_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get recent execution history.
@@ -137,7 +137,7 @@ class HealthCheckManager:
         """
         # Delegate to metrics collector
         return self._metrics_collector.get_execution_history(job_id, limit)
-    
+
     def reset_metrics(self) -> None:
         """Reset all execution metrics and history."""
         # Delegate to metrics collector

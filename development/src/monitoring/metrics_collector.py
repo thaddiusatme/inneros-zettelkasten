@@ -11,13 +11,13 @@ class MetricsCollector:
     - Gauges: Current state values (e.g., active_watchers)
     - Histograms: Value distributions (e.g., processing_time_ms)
     """
-    
+
     def __init__(self):
         """Initialize empty metric storage."""
         self._counters: Dict[str, int] = {}
         self._gauges: Dict[str, float] = {}
         self._histograms: Dict[str, List[float]] = {}
-    
+
     def increment_counter(self, name: str, value: int = 1) -> None:
         """Increment a counter metric.
         
@@ -28,7 +28,7 @@ class MetricsCollector:
         if name not in self._counters:
             self._counters[name] = 0
         self._counters[name] += value
-    
+
     def get_counter(self, name: str) -> int:
         """Get current counter value.
         
@@ -39,7 +39,7 @@ class MetricsCollector:
             Current counter value
         """
         return self._counters.get(name, 0)
-    
+
     def set_gauge(self, name: str, value: float) -> None:
         """Set a gauge metric to specific value.
         
@@ -48,7 +48,7 @@ class MetricsCollector:
             value: New value
         """
         self._gauges[name] = value
-    
+
     def get_gauge(self, name: str) -> float:
         """Get current gauge value.
         
@@ -59,7 +59,7 @@ class MetricsCollector:
             Current gauge value
         """
         return self._gauges.get(name, 0.0)
-    
+
     def record_histogram(self, name: str, value: float) -> None:
         """Record a value in histogram distribution.
         
@@ -70,7 +70,7 @@ class MetricsCollector:
         if name not in self._histograms:
             self._histograms[name] = []
         self._histograms[name].append(value)
-    
+
     def get_histogram(self, name: str) -> List[float]:
         """Get histogram values.
         
@@ -81,7 +81,7 @@ class MetricsCollector:
             List of recorded values
         """
         return self._histograms.get(name, [])
-    
+
     def get_all_metrics(self) -> Dict[str, Any]:
         """Get complete snapshot of all metrics.
         

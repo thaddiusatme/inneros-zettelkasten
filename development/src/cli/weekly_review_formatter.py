@@ -2,14 +2,14 @@
 Weekly Review Formatter - Transforms AI recommendations into user-friendly checklists.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from pathlib import Path
 from datetime import datetime
 
 
 class WeeklyReviewFormatter:
     """Formats weekly review recommendations into various output formats."""
-    
+
     def __init__(self):
         """Initialize the formatter."""
         self.action_config = {
@@ -34,7 +34,7 @@ class WeeklyReviewFormatter:
                 "priority": 4
             }
         }
-    
+
     def format_checklist(self, recommendations: Dict) -> str:
         """Format recommendations into a markdown checklist.
         
@@ -45,42 +45,42 @@ class WeeklyReviewFormatter:
             Formatted markdown checklist string
         """
         lines = []
-        
+
         # Header with date and summary
         lines.extend(self._format_header(recommendations))
-        
+
         # Main sections organized by action type
         lines.extend(self._format_sections(recommendations))
-        
+
         # Footer with metadata
         lines.extend(self._format_footer(recommendations))
-        
+
         return "\\n".join(lines)
-    
+
     def _format_header(self, recommendations: Dict) -> List[str]:
         """Format the checklist header with summary stats."""
         summary = recommendations["summary"]
         generated_at = recommendations["generated_at"]
-        
+
         # Parse date for header
         try:
             date_obj = datetime.fromisoformat(generated_at.replace('Z', '+00:00'))
             date_str = date_obj.strftime("%Y-%m-%d")
         except:
             date_str = "Unknown Date"
-        
+
         lines = [
             f"# Weekly Review - {date_str}",
             ""
         ]
-        
+
         # Summary statistics
         total = summary["total_notes"]
         promote = summary["promote_to_permanent"]
         develop = summary["move_to_fleeting"]
         improve = summary["needs_improvement"]
         errors = summary["processing_errors"]
-        
+
         if total == 0:
             lines.extend([
                 "**Summary**: 0 notes to process",
@@ -98,47 +98,47 @@ class WeeklyReviewFormatter:
                 summary_parts.append(f"{improve} improve")
             if errors > 0:
                 summary_parts.append(f"{errors} errors")
-            
+
             summary_text = ", ".join(summary_parts) if summary_parts else "0 actions"
             lines.extend([
                 f"**Summary**: {total} notes to process ({summary_text})",
                 ""
             ])
-        
+
         return lines
-    
+
     def _format_sections(self, recommendations: Dict) -> List[str]:
         """Format the main sections organized by action type."""
         if not recommendations["recommendations"]:
             return ["*No specific actions required.*", ""]
-        
+
         lines = []
-        
+
         # Group recommendations by action
         grouped = self._group_by_action(recommendations["recommendations"])
-        
+
         # Sort sections by priority
-        sorted_actions = sorted(grouped.keys(), 
+        sorted_actions = sorted(grouped.keys(),
                               key=lambda x: self.action_config[x]["priority"])
-        
+
         for action in sorted_actions:
             if not grouped[action]:
                 continue
-                
+
             config = self.action_config[action]
             lines.extend([
                 f"## {config['section']} ({len(grouped[action])})",
                 ""
             ])
-            
+
             # Format individual items
             for rec in grouped[action]:
                 lines.append(self._format_checklist_item(rec, config))
-            
+
             lines.append("")  # Add spacing between sections
-        
+
         return lines
-    
+
     def _group_by_action(self, recommendations: List[Dict]) -> Dict[str, List[Dict]]:
         """Group recommendations by action type."""
         grouped = {
@@ -147,14 +147,14 @@ class WeeklyReviewFormatter:
             "improve_or_archive": [],
             "manual_review": []
         }
-        
+
         for rec in recommendations:
             action = rec["action"]
             if action in grouped:
                 grouped[action].append(rec)
-        
+
         return grouped
-    
+
     def _format_checklist_item(self, rec: Dict, config: Dict) -> str:
         """Format a single checklist item."""
         file_name = rec["file_name"]
@@ -162,10 +162,10 @@ class WeeklyReviewFormatter:
         reason = rec["reason"]
         quality_score = rec.get("quality_score")
         confidence = rec.get("confidence")
-        
+
         # Build the checklist line
         line = f"- [ ] **{file_name}** — **{action_text}** ✅"
-        
+
         # Add quality score if available
         if quality_score is not None:
             try:
@@ -173,7 +173,7 @@ class WeeklyReviewFormatter:
                 line += f" | Quality: {qual_val:.2f}"
             except (ValueError, TypeError):
                 line += f" | Quality: {quality_score}"
-        
+
         # Add confidence if available
         if confidence is not None:
             try:
@@ -181,31 +181,31 @@ class WeeklyReviewFormatter:
                 line += f" | Confidence: {conf_val:.1f}"
             except (ValueError, TypeError):
                 line += f" | Confidence: {confidence}"
-        
+
         # Add reason on next line as indented text
         if reason:
             line += f"\\n  - {reason}"
-        
+
         # Add AI tags if available
         ai_tags = rec.get("ai_tags", [])
         if ai_tags:
             tags_text = ", ".join(ai_tags[:5])  # Limit to 5 tags
             line += f"\\n  - Tags: {tags_text}"
-        
+
         return line
-    
+
     def _format_footer(self, recommendations: Dict) -> List[str]:
         """Format the checklist footer with metadata."""
         generated_at = recommendations["generated_at"]
-        
+
         return [
             "---",
             "",
             f"*Generated: {generated_at}*",
-            f"*AI-powered recommendations based on content quality and metadata analysis*",
+            "*AI-powered recommendations based on content quality and metadata analysis*",
             ""
         ]
-    
+
     def export_checklist(self, recommendations: Dict, export_path: Path) -> Path:
         """Export checklist to a markdown file.
         
@@ -221,16 +221,16 @@ class WeeklyReviewFormatter:
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
             filename = f"weekly-review-{timestamp}.md"
             export_path = export_path / filename
-        
+
         # Ensure parent directory exists
         export_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Format and write checklist
         checklist_content = self.format_checklist(recommendations)
         export_path.write_text(checklist_content, encoding='utf-8')
-        
+
         return export_path
-    
+
     def format_for_interactive(self, recommendations: Dict) -> List[Dict]:
         """Format recommendations for interactive step-by-step mode.
         
@@ -241,16 +241,16 @@ class WeeklyReviewFormatter:
             List of interactive items sorted by priority
         """
         interactive_items = []
-        
+
         for rec in recommendations["recommendations"]:
             action = rec["action"]
             config = self.action_config.get(action, self.action_config["manual_review"])
-            
+
             # Create formatted display text
             display_text = f"**{rec['file_name']}** — {config['action_text']}"
             if rec.get("quality_score"):
                 display_text += f" (Quality: {rec['quality_score']:.2f})"
-            
+
             interactive_items.append({
                 "file_name": rec["file_name"],
                 "action": action,
@@ -262,12 +262,12 @@ class WeeklyReviewFormatter:
                 "source": rec.get("source", "unknown"),
                 "ai_tags": rec.get("ai_tags", [])
             })
-        
+
         # Sort by priority (promote first, then develop, then improve)
         interactive_items.sort(key=lambda x: x["priority"])
-        
+
         return interactive_items
-    
+
     def format_enhanced_metrics(self, metrics: Dict) -> str:
         """
         Format enhanced metrics into a readable markdown report.
@@ -279,7 +279,7 @@ class WeeklyReviewFormatter:
             Formatted markdown metrics report
         """
         lines = []
-        
+
         # Header
         lines.extend([
             "# 📊 Enhanced Weekly Review Metrics",
@@ -287,7 +287,7 @@ class WeeklyReviewFormatter:
             f"**Generated**: {metrics.get('generated_at', 'Unknown')}",
             ""
         ])
-        
+
         # Summary overview
         summary = metrics.get("summary", {})
         lines.extend([
@@ -299,7 +299,7 @@ class WeeklyReviewFormatter:
             f"- **Average Links per Note**: {summary.get('avg_links_per_note', 0):.2f}",
             ""
         ])
-        
+
         # Orphaned notes section
         orphaned_notes = metrics.get("orphaned_notes", [])
         if orphaned_notes:
@@ -312,7 +312,7 @@ class WeeklyReviewFormatter:
             for note in orphaned_notes:
                 lines.append(f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - Last modified: {note.get('last_modified', 'Unknown')[:10]}")
             lines.append("")
-        
+
         # Stale notes section
         stale_notes = metrics.get("stale_notes", [])
         if stale_notes:
@@ -328,7 +328,7 @@ class WeeklyReviewFormatter:
             if len(stale_notes) > 10:
                 lines.append(f"- ... and {len(stale_notes) - 10} more")
             lines.append("")
-        
+
         # Note age distribution
         age_dist = metrics.get("note_age_distribution", {})
         lines.extend([
@@ -340,7 +340,7 @@ class WeeklyReviewFormatter:
             f"- **Old** (> 90 days): {age_dist.get('old', 0)} notes",
             ""
         ])
-        
+
         # Productivity metrics
         productivity = metrics.get("productivity_metrics", {})
         lines.extend([
@@ -350,13 +350,13 @@ class WeeklyReviewFormatter:
             f"- **Average Notes Modified per Week**: {productivity.get('avg_notes_modified_per_week', 0):.1f}",
             f"- **Total Weeks Active**: {productivity.get('total_weeks_active', 0)}"
         ])
-        
+
         most_productive = productivity.get('most_productive_week_creation')
         if most_productive:
             lines.append(f"- **Most Productive Week**: {most_productive[0]} ({most_productive[1]} notes created)")
-        
+
         lines.append("")
-        
+
         # Link density insights
         link_density = metrics.get("link_density", 0)
         if link_density < 1.0:
@@ -365,17 +365,17 @@ class WeeklyReviewFormatter:
             insight = "🔗 Good link density - your notes are moderately connected"
         else:
             insight = "🔗 Excellent link density - your notes form a well-connected knowledge graph"
-        
+
         lines.extend([
             "## 💡 Insights & Recommendations",
             "",
             insight
         ])
-        
+
         if orphaned_notes:
             lines.append("🏝️ Focus on connecting orphaned notes to improve knowledge discoverability")
-        
+
         if stale_notes:
             lines.append("⏰ Consider reviewing or archiving stale notes to keep your collection fresh")
-        
+
         return "\n".join(lines)

@@ -36,13 +36,13 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
         TypeError: If daemon is not provided
     """
     app = Flask(__name__)
-    
+
     # Register YouTube API blueprint if handler available
     if daemon.youtube_handler:
         from .youtube_api import create_youtube_blueprint
         youtube_bp = create_youtube_blueprint(daemon.youtube_handler)
         app.register_blueprint(youtube_bp, url_prefix='/api/youtube')
-    
+
     # Enable CORS for monitoring dashboards and API endpoints
     @app.after_request
     def add_cors_headers(response):
@@ -50,7 +50,7 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         return response
-    
+
     @app.route('/')
     def root():
         """Server info and available endpoints."""
@@ -59,18 +59,18 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
             '/health': 'Daemon and handler health status (JSON)',
             '/metrics': 'Prometheus metrics (text)'
         }
-        
+
         # Add YouTube API endpoints if available
         if daemon.youtube_handler:
             endpoints['/api/youtube/process'] = 'POST - Trigger YouTube note processing'
             endpoints['/api/youtube/queue'] = 'GET - Check processing queue status'
-        
+
         return jsonify({
             'name': 'InnerOS Automation Daemon Monitoring',
             'version': '1.1.0',
             'endpoints': endpoints
         })
-    
+
     @app.route('/health')
     def health():
         """
@@ -85,19 +85,19 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
         """
         try:
             health_data = daemon.get_daemon_health()
-            
+
             # Determine overall health status
             is_healthy = health_data.get('daemon', {}).get('is_healthy', False)
             status_code = 200 if is_healthy else 503
-            
+
             return jsonify(health_data), status_code
-            
+
         except Exception as e:
             return jsonify({
                 'error': 'Health check failed',
                 'message': str(e)
             }), 503
-    
+
     @app.route('/metrics')
     def metrics():
         """
@@ -115,13 +115,13 @@ def create_app(daemon: 'AutomationDaemon') -> Flask:
             response = Response(metrics_text, mimetype='text/plain')
             response.charset = 'utf-8'
             return response
-            
+
         except Exception as e:
             error_text = f"# Error exporting metrics\n# {str(e)}\n"
             response = Response(error_text, status=503, mimetype='text/plain')
             response.charset = 'utf-8'
             return response
-    
+
     return app
 
 

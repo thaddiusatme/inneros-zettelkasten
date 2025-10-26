@@ -45,7 +45,7 @@ class ResultValidator:
         >>> assert validated['word_count'] == 0
         >>> assert validated['tag_count'] == 0
     """
-    
+
     @staticmethod
     def validate_workflow_result(result: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -83,24 +83,24 @@ class ResultValidator:
             result['analytics'] = ResultValidator.validate_analytics_result(
                 result['analytics']
             )
-        
+
         # Validate AI enhancement result
         if 'ai_enhancement' in result and result['ai_enhancement']:
             result['ai_enhancement'] = ResultValidator.validate_ai_result(
                 result['ai_enhancement']
             )
-        
+
         # Validate connections result
         result['connections'] = ResultValidator.validate_connections_result(
             result.get('connections')
         )
-        
+
         # Ensure errors and warnings lists exist
         result.setdefault('errors', [])
         result.setdefault('warnings', [])
-        
+
         return result
-    
+
     @staticmethod
     def validate_analytics_result(analytics: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -132,7 +132,7 @@ class ResultValidator:
         analytics.setdefault('link_count', 0)
         analytics.setdefault('success', True)
         return analytics
-    
+
     @staticmethod
     def validate_ai_result(ai_result: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -160,7 +160,7 @@ class ResultValidator:
         ai_result.setdefault('tags', [])
         ai_result.setdefault('summary', '')
         return ai_result
-    
+
     @staticmethod
     def validate_connections_result(connections: Any) -> list:
         """

@@ -34,7 +34,7 @@ class HealthPoller:
     - Error handling and retries
     - Response parsing
     """
-    
+
     def __init__(self, base_url: str, timeout: int = 5):
         """
         Initialize health poller.
@@ -46,7 +46,7 @@ class HealthPoller:
         self.base_url = base_url
         self.timeout = timeout
         self.health_url = f"{base_url}/health"
-    
+
     def fetch(self) -> Dict[str, Any]:
         """
         Fetch current health status.
@@ -58,7 +58,7 @@ class HealthPoller:
             with urllib.request.urlopen(self.health_url, timeout=self.timeout) as response:
                 data = json.loads(response.read().decode('utf-8'))
                 return data
-                
+
         except HTTPError as e:
             # 503 still contains valid JSON data
             if e.code == 503:
@@ -68,13 +68,13 @@ class HealthPoller:
                 except:
                     pass
             return self._create_error_response(f'HTTP {e.code}: {e.reason}', e.code)
-            
+
         except URLError as e:
             return self._create_error_response(f'Connection error: {e.reason}', 0)
-            
+
         except Exception as e:
             return self._create_error_response(str(e), 0)
-    
+
     def _create_error_response(self, message: str, status_code: int) -> Dict[str, Any]:
         """Create standardized error response."""
         return {
@@ -94,7 +94,7 @@ class StatusFormatter:
     - Metric formatting
     - Human-readable output
     """
-    
+
     @staticmethod
     def format_indicator(is_healthy: bool) -> str:
         """
@@ -108,12 +108,12 @@ class StatusFormatter:
         """
         if not RICH_AVAILABLE:
             return "✓" if is_healthy else "✗"
-        
+
         if is_healthy:
             return "[green]🟢 Healthy[/green]"
         else:
             return "[red]🔴 Unhealthy[/red]"
-    
+
     @staticmethod
     def format_metrics(handler_data: Dict[str, Any]) -> str:
         """
@@ -126,18 +126,18 @@ class StatusFormatter:
             Formatted metrics string
         """
         parts = []
-        
+
         # Events processed
         events = handler_data.get('events_processed', 0)
         parts.append(f"Events: {events}")
-        
+
         # Average processing time
         if 'avg_processing_time' in handler_data:
             avg_time = handler_data['avg_processing_time']
             parts.append(f"Avg: {avg_time:.2f}s")
-        
+
         return ", ".join(parts)
-    
+
     @staticmethod
     def format_daemon_metrics(daemon_data: Dict[str, Any]) -> str:
         """
@@ -163,7 +163,7 @@ class TableRenderer:
     - Title and styling
     - Metrics display (Phase 3.1)
     """
-    
+
     def __init__(self, formatter: StatusFormatter, metrics_collector=None):
         """
         Initialize table renderer.
@@ -174,7 +174,7 @@ class TableRenderer:
         """
         self.formatter = formatter
         self.metrics_collector = metrics_collector
-    
+
     def create_status_table(self, health_data: Dict[str, Any]) -> Optional['Table']:
         """
         Create Rich Table from health data.
@@ -187,7 +187,7 @@ class TableRenderer:
         """
         if not RICH_AVAILABLE:
             return None
-        
+
         table = Table(
             title="InnerOS Automation Daemon Status",
             show_header=True,
@@ -196,41 +196,41 @@ class TableRenderer:
         table.add_column("Component", style="cyan", no_wrap=True)
         table.add_column("Status", style="white")
         table.add_column("Metrics", style="yellow")
-        
+
         # Add daemon row
         self._add_daemon_row(table, health_data)
-        
+
         # Add handler rows
         self._add_handler_rows(table, health_data)
-        
+
         return table
-    
+
     def _add_daemon_row(self, table: 'Table', health_data: Dict[str, Any]):
         """Add daemon status row to table."""
         daemon = health_data.get('daemon', {})
         is_healthy = daemon.get('is_healthy', False)
-        
+
         status_str = self.formatter.format_indicator(is_healthy)
         metrics_str = self.formatter.format_daemon_metrics(daemon)
-        
+
         table.add_row("Daemon", status_str, metrics_str)
-    
+
     def _add_handler_rows(self, table: 'Table', health_data: Dict[str, Any]):
         """Add handler status rows to table."""
         handlers = health_data.get('handlers', {})
-        
+
         for handler_name, handler_data in handlers.items():
             # Determine handler health
             handler_healthy = handler_data.get('is_healthy', False)
             if isinstance(handler_healthy, str):
                 handler_healthy = handler_healthy != 'N/A'
-            
+
             # Format row data
             handler_status = self.formatter.format_indicator(handler_healthy)
             handler_metrics = self.formatter.format_metrics(handler_data)
-            
+
             table.add_row(f"  {handler_name}", handler_status, handler_metrics)
-    
+
     def create_metrics_table(self) -> Optional['Table']:
         """
         Create Rich Table from metrics collector data.
@@ -241,7 +241,7 @@ class TableRenderer:
         """
         if not RICH_AVAILABLE or not self.metrics_collector:
             return None
-        
+
         table = Table(
             title="📊 System Metrics",
             show_header=True,
@@ -250,18 +250,18 @@ class TableRenderer:
         table.add_column("Metric", style="cyan", no_wrap=True)
         table.add_column("Type", style="magenta")
         table.add_column("Value", style="yellow")
-        
+
         # Get all metrics
         metrics = self.metrics_collector.get_all_metrics()
-        
+
         # Add counter metrics
         for name, value in metrics.get("counters", {}).items():
             table.add_row(name, "counter", f"{value:,}")
-        
+
         # Add gauge metrics
         for name, value in metrics.get("gauges", {}).items():
             table.add_row(name, "gauge", f"{value:.2f}")
-        
+
         # Add histogram metrics (show avg/min/max)
         for name, values in metrics.get("histograms", {}).items():
             if values:
@@ -273,7 +273,7 @@ class TableRenderer:
                     "histogram",
                     f"avg: {avg:.1f}ms (min: {min_val:.0f}, max: {max_val:.0f})"
                 )
-        
+
         return table
 
 
@@ -286,7 +286,7 @@ class DashboardOrchestrator:
     - Display refresh management
     - Error handling and recovery
     """
-    
+
     def __init__(
         self,
         poller: HealthPoller,
@@ -304,7 +304,7 @@ class DashboardOrchestrator:
         self.poller = poller
         self.renderer = renderer
         self.refresh_interval = refresh_interval
-    
+
     def run(self, on_update: Callable[[Any], None]):
         """
         Run dashboard polling loop.
@@ -316,7 +316,7 @@ class DashboardOrchestrator:
             while True:
                 # Fetch current status
                 health_data = self.poller.fetch()
-                
+
                 # Create display content
                 if health_data.get('error'):
                     # Error panel for connection issues
@@ -333,20 +333,20 @@ class DashboardOrchestrator:
                     # Status table for healthy connection
                     status_table = self.renderer.create_status_table(health_data)
                     metrics_table = self.renderer.create_metrics_table()
-                    
+
                     # Combine tables if metrics available
                     if RICH_AVAILABLE and metrics_table:
                         from rich.console import Group
                         content = Group(status_table, metrics_table)
                     else:
                         content = status_table
-                
+
                 # Update display
                 on_update(content)
-                
+
                 # Wait before next refresh
                 time.sleep(self.refresh_interval)
-                
+
         except KeyboardInterrupt:
             # Graceful shutdown on Ctrl+C
             pass

@@ -2,11 +2,9 @@ from pathlib import Path
 
 import pytest
 import sys
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.ai.workflow_manager import WorkflowManager
-from src.utils.vault_path import get_default_vault_path
 
 
 def test_workflow_manager_uses_default_path(monkeypatch, tmp_path):

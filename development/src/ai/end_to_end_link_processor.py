@@ -11,7 +11,7 @@ from .link_suggestion_engine import LinkSuggestion
 
 class EndToEndLinkProcessor:
     """Complete end-to-end processor for link suggestions from real notes"""
-    
+
     def __init__(self, vault_path: str):
         """
         Initialize end-to-end processor
@@ -21,9 +21,9 @@ class EndToEndLinkProcessor:
         """
         self.vault_path = vault_path
         self.processor = RealNoteConnectionProcessor(vault_path)
-    
-    def process_note_for_link_suggestions(self, target_note: str, 
-                                        min_quality: float = 0.6, 
+
+    def process_note_for_link_suggestions(self, target_note: str,
+                                        min_quality: float = 0.6,
                                         max_results: int = 10) -> List[LinkSuggestion]:
         """
         Process a note for complete link suggestions workflow
@@ -37,9 +37,9 @@ class EndToEndLinkProcessor:
             List of LinkSuggestion objects
         """
         suggestions = self.processor.generate_suggestions_for_note(
-            target_note, 
+            target_note,
             min_quality=min_quality
         )
-        
+
         # Limit results
         return suggestions[:max_results]

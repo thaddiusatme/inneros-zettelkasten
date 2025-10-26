@@ -14,7 +14,7 @@ Target: Extract ~250-300 LOC from WorkflowManager (fleeting note methods)
 import time
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Callable, Union
+from typing import Dict, List, Optional, Callable
 
 from src.utils.frontmatter import parse_frontmatter
 
@@ -25,7 +25,7 @@ class FleetingNoteCoordinator:
     
     ADR-002 Phase 12b: Extracts fleeting note triage and promotion to reduce WorkflowManager complexity.
     """
-    
+
     def __init__(
         self,
         fleeting_dir: Path,
@@ -52,11 +52,11 @@ class FleetingNoteCoordinator:
         self.literature_dir = Path(literature_dir)
         self.process_callback = process_callback
         self.default_quality_threshold = default_quality_threshold
-        
+
         # Ensure directories exist
         self.fleeting_dir.mkdir(parents=True, exist_ok=True)
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def find_fleeting_notes(self) -> List[Path]:
         """
         Find all fleeting notes for triage processing.
@@ -65,7 +65,7 @@ class FleetingNoteCoordinator:
             List of Path objects for fleeting notes
         """
         fleeting_notes = []
-        
+
         # Check both Fleeting Notes and Inbox directories
         for directory in [self.fleeting_dir, self.inbox_dir]:
             if directory.exists():
@@ -73,20 +73,20 @@ class FleetingNoteCoordinator:
                     try:
                         content = note_file.read_text(encoding='utf-8')
                         metadata, _ = parse_frontmatter(content)
-                        
+
                         # Include notes that are explicitly fleeting type or in fleeting directory
-                        if (metadata.get('type') == 'fleeting' or 
+                        if (metadata.get('type') == 'fleeting' or
                             directory.name == "Fleeting Notes"):
                             fleeting_notes.append(note_file)
-                            
+
                     except Exception:
                         # Skip files that can't be read or parsed
                         continue
-        
+
         return fleeting_notes
-    
+
     def generate_triage_report(
-        self, 
+        self,
         quality_threshold: Optional[float] = None,
         fast: bool = True
     ) -> Dict:
@@ -101,10 +101,10 @@ class FleetingNoteCoordinator:
             Dict: Triage report with quality assessment and recommendations
         """
         start_time = time.time()
-        
+
         # Get fleeting notes for processing
         fleeting_notes = self.find_fleeting_notes()
-        
+
         if not fleeting_notes:
             return {
                 'total_notes_processed': 0,
@@ -113,19 +113,19 @@ class FleetingNoteCoordinator:
                 'processing_time': time.time() - start_time,
                 'quality_threshold': quality_threshold
             }
-        
+
         # Process each note for quality assessment
         recommendations = []
         quality_scores = []
-        
+
         for note_path in fleeting_notes:
             try:
                 # Use callback for quality assessment
                 result = self.process_callback(note_path, fast=fast)
-                
+
                 quality_score = result.get('quality_score', 0.5)
                 quality_scores.append(quality_score)
-                
+
                 # Generate recommendation based on quality
                 if quality_score >= 0.7:
                     action = "Promote to Permanent"
@@ -136,7 +136,7 @@ class FleetingNoteCoordinator:
                 else:
                     action = "Consider Archiving"
                     rationale = "Low quality content. May need significant work or could be archived."
-                
+
                 # Apply quality threshold filter if specified
                 if quality_threshold is None or quality_score >= quality_threshold:
                     recommendations.append({
@@ -147,7 +147,7 @@ class FleetingNoteCoordinator:
                         'ai_tags': result.get('ai_tags', []),
                         'created': result.get('metadata', {}).get('created', 'Unknown')
                     })
-                    
+
             except Exception as e:
                 # Handle individual note processing errors gracefully
                 recommendations.append({
@@ -158,7 +158,7 @@ class FleetingNoteCoordinator:
                     'ai_tags': [],
                     'created': 'Unknown'
                 })
-        
+
         # Calculate quality distribution
         quality_distribution = {'high': 0, 'medium': 0, 'low': 0}
         for score in quality_scores:
@@ -168,14 +168,14 @@ class FleetingNoteCoordinator:
                 quality_distribution['medium'] += 1
             else:
                 quality_distribution['low'] += 1
-        
+
         # Sort recommendations by quality score (highest first)
         recommendations.sort(key=lambda x: x['quality_score'], reverse=True)
-        
+
         processing_time = time.time() - start_time
         total_processed = len(fleeting_notes)
         filtered_count = total_processed - len(recommendations) if quality_threshold else 0
-        
+
         return {
             'total_notes_processed': total_processed,
             'quality_distribution': quality_distribution,
@@ -184,11 +184,11 @@ class FleetingNoteCoordinator:
             'quality_threshold': quality_threshold,
             'filtered_count': filtered_count
         }
-    
+
     def promote_fleeting_note(
-        self, 
-        note_path: str, 
-        target_type: Optional[str] = None, 
+        self,
+        note_path: str,
+        target_type: Optional[str] = None,
         preview_mode: bool = False,
         base_dir: Optional[Path] = None
     ) -> Dict:
@@ -205,11 +205,11 @@ class FleetingNoteCoordinator:
             Dict: Promotion results with details of operations performed
         """
         start_time = time.time()
-        
+
         try:
             # Import DirectoryOrganizer from production-ready infrastructure
             from src.utils.directory_organizer import DirectoryOrganizer
-            
+
             # Resolve note path
             if not note_path.startswith('/'):
                 # If path starts with 'knowledge/', it's relative to the vault root
@@ -223,21 +223,21 @@ class FleetingNoteCoordinator:
                     note_path_obj = Path(note_path)
             else:
                 note_path_obj = Path(note_path)
-                
+
             if not note_path_obj.exists():
                 raise ValueError(f"Note not found: {note_path}")
-                
+
             # Validate note is fleeting type
             content = note_path_obj.read_text(encoding='utf-8')
             metadata, body = parse_frontmatter(content)
-            
+
             if metadata.get('type') != 'fleeting':
                 raise ValueError(f"Note is not a fleeting note (type: {metadata.get('type')})")
-                
+
             # Get AI quality assessment for the note
             ai_result = self.process_callback(note_path_obj, fast=True)
             quality_score = ai_result.get('quality_score', 0.5)
-            
+
             # Auto-detect target type if not specified
             if target_type is None:
                 # Use simple heuristic: literature if it has source/url, otherwise permanent
@@ -245,19 +245,19 @@ class FleetingNoteCoordinator:
                     target_type = 'literature'
                 else:
                     target_type = 'permanent'
-                    
+
             # Determine target directory
             if target_type == 'literature':
                 target_dir = self.literature_dir
             else:
                 target_dir = self.permanent_dir
-                
+
             if not target_dir.exists():
                 target_dir.mkdir(parents=True)
-                
+
             # Create target path
             target_path = target_dir / note_path_obj.name
-            
+
             promotion_result = {
                 'success': True,
                 'promoted_notes': [{
@@ -276,28 +276,28 @@ class FleetingNoteCoordinator:
                 'backup_created': False,
                 'metadata_updated': True
             }
-            
+
             if preview_mode:
                 # Preview mode - don't actually move files
                 promotion_result['processing_time'] = time.time() - start_time
                 return promotion_result
-                
+
             # Create backup using DirectoryOrganizer
             if base_dir:
                 organizer = DirectoryOrganizer(base_dir.parent if base_dir.parent else base_dir)
                 backup_path = organizer.create_backup()
                 promotion_result['backup_created'] = True
                 promotion_result['backup_path'] = str(backup_path)
-            
+
             # Update metadata for promotion
             updated_metadata = metadata.copy()
             updated_metadata['type'] = target_type
             updated_metadata['promoted_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
             updated_metadata['promoted_date'] = datetime.now().strftime('%Y-%m-%d %H:%M')
             updated_metadata['promotion_quality_score'] = quality_score
-            
+
             # Reconstruct file content with updated metadata
-            updated_content = f"---\n"
+            updated_content = "---\n"
             for key, value in updated_metadata.items():
                 if isinstance(value, list):
                     updated_content += f"{key}: {value}\n"
@@ -306,16 +306,16 @@ class FleetingNoteCoordinator:
                 else:
                     updated_content += f"{key}: {value}\n"
             updated_content += f"---\n\n{body}"
-            
+
             # Write to target location
             target_path.write_text(updated_content, encoding='utf-8')
-            
+
             # Remove original file
             note_path_obj.unlink()
-            
+
             promotion_result['processing_time'] = time.time() - start_time
             return promotion_result
-            
+
         except Exception as e:
             return {
                 'success': False,
@@ -334,11 +334,11 @@ class FleetingNoteCoordinator:
                 'backup_created': False,
                 'error': str(e)
             }
-    
+
     def promote_fleeting_notes_batch(
-        self, 
-        quality_threshold: float = 0.7, 
-        target_type: Optional[str] = None, 
+        self,
+        quality_threshold: float = 0.7,
+        target_type: Optional[str] = None,
         preview_mode: bool = False,
         base_dir: Optional[Path] = None
     ) -> Dict:
@@ -355,17 +355,17 @@ class FleetingNoteCoordinator:
             Dict: Batch promotion results
         """
         start_time = time.time()
-        
+
         try:
             # Get triage results to identify high-quality notes
             triage_report = self.generate_triage_report(quality_threshold=quality_threshold, fast=True)
-            
+
             # Find notes eligible for promotion
             eligible_notes = [
-                rec for rec in triage_report['recommendations'] 
+                rec for rec in triage_report['recommendations']
                 if rec['action'] == 'Promote to Permanent' and rec['quality_score'] >= quality_threshold
             ]
-            
+
             if not eligible_notes:
                 return {
                     'total_promoted': 0,
@@ -378,11 +378,11 @@ class FleetingNoteCoordinator:
                     'processing_time': time.time() - start_time,
                     'backup_created': False
                 }
-            
+
             # Create single backup for batch operation
             backup_created = False
             backup_path = None
-            
+
             if not preview_mode and base_dir:
                 try:
                     from src.utils.directory_organizer import DirectoryOrganizer
@@ -391,7 +391,7 @@ class FleetingNoteCoordinator:
                     backup_created = True
                 except Exception as e:
                     print(f"Warning: Could not create backup: {e}")
-            
+
             # Process each eligible note
             promoted_notes = []
             for note_rec in eligible_notes:
@@ -402,13 +402,13 @@ class FleetingNoteCoordinator:
                         preview_mode=preview_mode,
                         base_dir=base_dir
                     )
-                    
+
                     # Extract the promoted note info and add batch context
                     if single_result.get('promoted_notes'):
                         promoted_note = single_result['promoted_notes'][0]
                         promoted_note['batch_promotion'] = True
                         promoted_notes.append(promoted_note)
-                        
+
                 except Exception as e:
                     # Add failed note to results
                     promoted_notes.append({
@@ -418,11 +418,11 @@ class FleetingNoteCoordinator:
                         'batch_promotion': True,
                         'preview_mode': preview_mode
                     })
-            
+
             total_processed = triage_report['total_notes_processed']
             total_promoted = len([n for n in promoted_notes if 'error' not in n])
             total_skipped = total_processed - len(eligible_notes)
-            
+
             return {
                 'total_promoted': total_promoted,
                 'total_skipped': total_skipped,
@@ -435,7 +435,7 @@ class FleetingNoteCoordinator:
                 'backup_created': backup_created,
                 'backup_path': str(backup_path) if backup_path else None
             }
-            
+
         except Exception as e:
             return {
                 'total_promoted': 0,

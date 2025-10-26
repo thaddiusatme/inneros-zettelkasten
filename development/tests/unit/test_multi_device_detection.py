@@ -17,7 +17,7 @@ from src.cli.multi_device_detector import MultiDeviceDetector, DeviceType
 
 class TestSamsungS23Detection:
     """Test Samsung S23 screenshot detection and metadata extraction"""
-    
+
     def test_detect_samsung_s23_from_filename(self):
         """Should identify Samsung S23 from Screenshot_YYYYMMDD_HHMMSS_AppName.jpg pattern"""
         # Arrange
@@ -27,13 +27,13 @@ class TestSamsungS23Detection:
             Path("Screenshot_20250810_143028_Chrome.jpg"),
             Path("Screenshot_20251001_183045_Threads.jpg"),
         ]
-        
+
         # Act & Assert
         for screenshot in samsung_screenshots:
             device_type = detector.detect_device(screenshot)
             assert device_type == DeviceType.SAMSUNG_S23, \
                 f"Failed to detect Samsung S23 from {screenshot.name}"
-    
+
     def test_extract_samsung_timestamp_from_filename(self):
         """Should extract YYYYMMDD_HHMMSS timestamp from Samsung screenshot filename"""
         # Arrange
@@ -52,14 +52,14 @@ class TestSamsungS23Detection:
                 'expected': datetime(2025, 10, 1, 18, 30, 45)
             },
         ]
-        
+
         # Act & Assert
         for test_case in test_cases:
             timestamp = detector.extract_timestamp(test_case['filename'])
             assert timestamp == test_case['expected'], \
                 f"Failed to extract timestamp from {test_case['filename'].name}. " \
                 f"Expected {test_case['expected']}, got {timestamp}"
-    
+
     def test_extract_samsung_app_name_from_filename(self):
         """Should extract app name from Samsung screenshot filename"""
         # Arrange
@@ -78,7 +78,7 @@ class TestSamsungS23Detection:
                 'expected_app': 'Threads'
             },
         ]
-        
+
         # Act & Assert
         for test_case in test_cases:
             metadata = detector.extract_metadata(test_case['filename'])
@@ -91,7 +91,7 @@ class TestSamsungS23Detection:
 
 class TestIPadDetection:
     """Test iPad screenshot detection and metadata extraction"""
-    
+
     def test_detect_ipad_from_filename(self):
         """Should identify iPad from YYYYMMDD_HHMMSS000_iOS.png pattern"""
         # Arrange
@@ -101,13 +101,13 @@ class TestIPadDetection:
             Path("20250901_042410000_iOS.png"),
             Path("20250305_190004000_iOS.png"),
         ]
-        
+
         # Act & Assert
         for screenshot in ipad_screenshots:
             device_type = detector.detect_device(screenshot)
             assert device_type == DeviceType.IPAD, \
                 f"Failed to detect iPad from {screenshot.name}"
-    
+
     def test_extract_ipad_timestamp_from_filename(self):
         """Should extract YYYYMMDD_HHMMSS from iPad filename (ignore 000 milliseconds)"""
         # Arrange
@@ -126,23 +126,23 @@ class TestIPadDetection:
                 'expected': datetime(2025, 3, 5, 19, 0, 4)
             },
         ]
-        
+
         # Act & Assert
         for test_case in test_cases:
             timestamp = detector.extract_timestamp(test_case['filename'])
             assert timestamp == test_case['expected'], \
                 f"Failed to extract timestamp from {test_case['filename'].name}. " \
                 f"Expected {test_case['expected']}, got {timestamp}"
-    
+
     def test_ipad_metadata_does_not_include_app_name(self):
         """iPad screenshots should not have app_name field (not available in filename)"""
         # Arrange
         detector = MultiDeviceDetector()
         ipad_screenshot = Path("20250926_221840000_iOS.png")
-        
+
         # Act
         metadata = detector.extract_metadata(ipad_screenshot)
-        
+
         # Assert
         assert 'app_name' not in metadata or metadata['app_name'] is None, \
             f"iPad screenshots should not have app_name, but got: {metadata.get('app_name')}"
@@ -150,16 +150,16 @@ class TestIPadDetection:
 
 class TestUnifiedMetadata:
     """Test unified metadata structure across devices"""
-    
+
     def test_normalize_device_metadata_samsung(self):
         """Should create unified metadata dict for Samsung screenshots"""
         # Arrange
         detector = MultiDeviceDetector()
         samsung_screenshot = Path("Screenshot_20250926_095442_Innerview.jpg")
-        
+
         # Act
         metadata = detector.extract_metadata(samsung_screenshot)
-        
+
         # Assert - Check required fields
         assert 'device_type' in metadata, "Missing device_type field"
         assert metadata['device_type'] == DeviceType.SAMSUNG_S23.value
@@ -168,16 +168,16 @@ class TestUnifiedMetadata:
         assert 'source_file' in metadata, "Missing source_file field"
         assert 'timestamp' in metadata, "Missing timestamp field"
         assert isinstance(metadata['timestamp'], datetime), "timestamp should be datetime object"
-    
+
     def test_normalize_device_metadata_ipad(self):
         """Should create unified metadata dict for iPad screenshots"""
         # Arrange
         detector = MultiDeviceDetector()
         ipad_screenshot = Path("20250926_221840000_iOS.png")
-        
+
         # Act
         metadata = detector.extract_metadata(ipad_screenshot)
-        
+
         # Assert - Check required fields
         assert 'device_type' in metadata, "Missing device_type field"
         assert metadata['device_type'] == DeviceType.IPAD.value
@@ -190,7 +190,7 @@ class TestUnifiedMetadata:
 
 class TestUnknownDeviceHandling:
     """Test graceful handling of unknown/unrecognized file patterns"""
-    
+
     def test_handle_unknown_device_gracefully(self):
         """Should return UNKNOWN device type for unrecognized patterns without crashing"""
         # Arrange
@@ -201,35 +201,35 @@ class TestUnknownDeviceHandling:
             Path("DJI_20240831_113357_59.jpg"),  # Drone photo
             Path("document.pdf"),
         ]
-        
+
         # Act & Assert
         for unknown_file in unknown_files:
             device_type = detector.detect_device(unknown_file)
             assert device_type == DeviceType.UNKNOWN, \
                 f"Should detect {unknown_file.name} as UNKNOWN device"
-    
+
     def test_unknown_device_returns_none_timestamp(self):
         """Unknown devices should return None for timestamp (cannot extract)"""
         # Arrange
         detector = MultiDeviceDetector()
         unknown_file = Path("random_file.jpg")
-        
+
         # Act
         timestamp = detector.extract_timestamp(unknown_file)
-        
+
         # Assert
         assert timestamp is None, \
             f"Unknown devices should return None timestamp, got {timestamp}"
-    
+
     def test_unknown_device_metadata_includes_type(self):
         """Unknown devices should still return metadata dict with device_type"""
         # Arrange
         detector = MultiDeviceDetector()
         unknown_file = Path("random_file.jpg")
-        
+
         # Act
         metadata = detector.extract_metadata(unknown_file)
-        
+
         # Assert
         assert 'device_type' in metadata, "Unknown devices should have device_type"
         assert metadata['device_type'] == DeviceType.UNKNOWN.value

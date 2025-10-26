@@ -24,12 +24,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Scan for missing metadata
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         missing_fields = engine.detect_missing_metadata(str(note))
-        
+
         # Assert: Should detect missing 'type' field
         assert 'type' in missing_fields
         assert len(missing_fields) == 1
@@ -47,12 +47,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Scan for missing metadata
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         missing_fields = engine.detect_missing_metadata(str(note))
-        
+
         # Assert: Should detect missing 'created' field
         assert 'created' in missing_fields
         assert len(missing_fields) == 1
@@ -71,12 +71,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Scan for missing metadata
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         missing_fields = engine.detect_missing_metadata(str(note))
-        
+
         # Assert: Should return empty list (no missing fields)
         assert len(missing_fields) == 0
 
@@ -88,12 +88,12 @@ Some content here.
 
 Some content here without frontmatter.
 """)
-        
+
         # Act: Scan for missing metadata
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         missing_fields = engine.detect_missing_metadata(str(note))
-        
+
         # Assert: Should detect missing type and created fields
         assert 'type' in missing_fields
         assert 'created' in missing_fields
@@ -111,12 +111,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Scan for missing metadata
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         missing_fields = engine.detect_missing_metadata(str(note))
-        
+
         # Assert: Should detect both missing fields
         assert 'type' in missing_fields
         assert 'created' in missing_fields
@@ -138,12 +138,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Infer type from filename
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         inferred_type = engine.infer_note_type(str(note))
-        
+
         # Assert: Should infer 'literature'
         assert inferred_type == 'literature'
 
@@ -159,12 +159,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Infer type from filename
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         inferred_type = engine.infer_note_type(str(note))
-        
+
         # Assert: Should infer 'fleeting'
         assert inferred_type == 'fleeting'
 
@@ -180,12 +180,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Infer type from filename
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         inferred_type = engine.infer_note_type(str(note))
-        
+
         # Assert: Should infer 'fleeting'
         assert inferred_type == 'fleeting'
 
@@ -201,12 +201,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Infer type from filename
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         inferred_type = engine.infer_note_type(str(note))
-        
+
         # Assert: Should default to 'fleeting' (safest assumption)
         assert inferred_type == 'fleeting'
 
@@ -226,12 +226,12 @@ Date: 2025-10-15
 
 This is a summary of an article I read...
 """)
-        
+
         # Act: Infer type from content
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path))
         inferred_type = engine.infer_note_type(str(note))
-        
+
         # Assert: Should infer 'literature' from content indicators (Source:, Author:)
         # If content analysis not implemented, should default to 'fleeting'
         assert inferred_type in ['literature', 'fleeting']
@@ -253,12 +253,12 @@ status: inbox
 Some content here.
 """
         note.write_text(original_content)
-        
+
         # Act: Repair with dry_run=True
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path), dry_run=True)
         result = engine.repair_note_metadata(str(note))
-        
+
         # Assert: Should report repair but not modify file
         assert 'type' in result['would_add']
         assert result['would_add']['type'] == 'fleeting'
@@ -276,12 +276,12 @@ status: inbox
 
 Some content here.
 """)
-        
+
         # Act: Repair with dry_run=False
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path), dry_run=False)
         result = engine.repair_note_metadata(str(note))
-        
+
         # Assert: Should modify file and add type field
         assert 'type' in result['added']
         assert result['added']['type'] == 'literature'
@@ -302,12 +302,12 @@ custom_field: value
 
 Some content here.
 """)
-        
+
         # Act: Repair missing type field
         from development.src.ai.metadata_repair_engine import MetadataRepairEngine
         engine = MetadataRepairEngine(str(tmp_path), dry_run=False)
         result = engine.repair_note_metadata(str(note))
-        
+
         # Assert: Should preserve existing fields
         assert 'type' in result['added']
         assert result['added']['type'] == 'fleeting'

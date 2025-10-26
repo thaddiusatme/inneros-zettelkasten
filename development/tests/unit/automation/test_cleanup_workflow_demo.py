@@ -1,8 +1,6 @@
 """RED phase: End-to-end cleanup workflow demo with real automation assets."""
 
-import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import yaml
 
 

@@ -22,7 +22,6 @@ Week 4 P0.2: Simple Delegations (5 methods)
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from src.ai.types import WorkflowResult, AnalyticsResult, ReviewCandidate, WorkflowReport
 from src.ai.core_workflow_manager import CoreWorkflowManager
 from src.ai.analytics_manager import AnalyticsManager
 from src.ai.ai_enhancement_manager import AIEnhancementManager
@@ -52,7 +51,7 @@ class LegacyWorkflowManagerAdapter:
         report = workflow.generate_workflow_report()
         result = workflow.process_inbox_note("Inbox/test.md")
     """
-    
+
     def __init__(self, base_directory: str | None = None) -> None:
         """
         Initialize adapter with 4 refactored managers.
@@ -75,21 +74,21 @@ class LegacyWorkflowManagerAdapter:
             self.base_dir = resolved
         else:
             self.base_dir = Path(base_directory).expanduser()
-        
+
         # Define workflow directories (legacy compatibility)
         self.inbox_dir = self.base_dir / "Inbox"
         self.fleeting_dir = self.base_dir / "Fleeting Notes"
         self.permanent_dir = self.base_dir / "Permanent Notes"
         self.archive_dir = self.base_dir / "Archive"
-        
+
         # Load configuration (centralized for all managers)
         self.config = self._load_config()
-        
+
         # Initialize 4 refactored managers
         self.analytics = AnalyticsManager(self.base_dir, self.config)
         self.ai_enhancement = AIEnhancementManager(self.base_dir, self.config)
         self.connections = ConnectionManager(self.base_dir, self.config)
-        
+
         # CoreWorkflowManager requires manager dependencies
         self.core = CoreWorkflowManager(
             base_dir=self.base_dir,
@@ -98,7 +97,7 @@ class LegacyWorkflowManagerAdapter:
             ai_enhancement_manager=self.ai_enhancement,
             connection_manager=self.connections
         )
-    
+
     def _load_config(self) -> Dict[str, Any]:
         """
         Load workflow configuration from file or use defaults.
@@ -106,7 +105,7 @@ class LegacyWorkflowManagerAdapter:
         Maintains backward compatibility with old WorkflowManager config format.
         """
         config_file = self.base_dir / ".ai_workflow_config.json"
-        
+
         default_config = {
             # Old WorkflowManager config keys
             "auto_tag_inbox": True,
@@ -116,13 +115,13 @@ class LegacyWorkflowManagerAdapter:
             "max_tags_per_note": 8,
             "similarity_threshold": 0.7,
             "archive_after_days": 90,
-            
+
             # New manager config keys
             "quality_threshold": 0.7,
             "stale_days_threshold": 90,
             "min_quality_for_promotion": 0.7
         }
-        
+
         if config_file.exists():
             try:
                 import json
@@ -131,13 +130,13 @@ class LegacyWorkflowManagerAdapter:
                 default_config.update(user_config)
             except Exception:
                 pass  # Use defaults on error
-        
+
         return default_config
-    
+
     # =========================================================================
     # Analytics Delegations (Pure passthrough - no transformation needed)
     # =========================================================================
-    
+
     def detect_orphaned_notes(self) -> List[Dict[str, Any]]:
         """
         Detect notes with no incoming or outgoing links.
@@ -154,7 +153,7 @@ class LegacyWorkflowManagerAdapter:
             }]
         """
         return self.analytics.detect_orphaned_notes()
-    
+
     def detect_stale_notes(self, days_threshold: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Detect notes not modified within threshold period.
@@ -174,7 +173,7 @@ class LegacyWorkflowManagerAdapter:
             }]
         """
         return self.analytics.detect_stale_notes(days_threshold=days_threshold)
-    
+
     def generate_workflow_report(self) -> Dict[str, Any]:
         """
         Generate comprehensive workflow status report.
@@ -196,7 +195,7 @@ class LegacyWorkflowManagerAdapter:
         """
         # Get base analytics report
         analytics_report = self.analytics.generate_workflow_report()
-        
+
         # Count notes by directory
         directory_counts = {}
         for dir_name, dir_path in [
@@ -209,7 +208,7 @@ class LegacyWorkflowManagerAdapter:
                 directory_counts[dir_name] = len(list(dir_path.glob("*.md")))
             else:
                 directory_counts[dir_name] = 0
-        
+
         # Determine workflow health
         inbox_count = directory_counts["Inbox"]
         workflow_health = "healthy"
@@ -217,14 +216,14 @@ class LegacyWorkflowManagerAdapter:
             workflow_health = "critical"
         elif inbox_count > 20:
             workflow_health = "needs_attention"
-        
+
         # Generate recommendations
         recommendations = []
         if inbox_count > 20:
             recommendations.append(f"Process {inbox_count} notes in Inbox")
         if directory_counts["Fleeting Notes"] > 30:
             recommendations.append(f"Review {directory_counts['Fleeting Notes']} fleeting notes for promotion")
-        
+
         # AI feature usage (simplified - would need to scan notes)
         ai_usage = {
             "notes_with_ai_tags": 0,
@@ -232,7 +231,7 @@ class LegacyWorkflowManagerAdapter:
             "notes_with_ai_processing": 0,
             "total_analyzed": sum(directory_counts.values())
         }
-        
+
         return {
             "workflow_status": {
                 "health": workflow_health,
@@ -243,7 +242,7 @@ class LegacyWorkflowManagerAdapter:
             "analytics": analytics_report,
             "recommendations": recommendations
         }
-    
+
     def scan_review_candidates(self) -> List[Dict[str, Any]]:
         """
         Identify high-quality fleeting notes ready for promotion.
@@ -260,11 +259,11 @@ class LegacyWorkflowManagerAdapter:
             }]
         """
         return self.analytics.scan_review_candidates()
-    
+
     # =========================================================================
     # Core Workflow Delegation (Parameter transformation: drop 'fast')
     # =========================================================================
-    
+
     def process_inbox_note(
         self,
         note_path: str,
@@ -306,11 +305,11 @@ class LegacyWorkflowManagerAdapter:
         # Drop 'fast' parameter - new architecture doesn't use it
         # CoreWorkflowManager handles optimization internally
         return self.core.process_inbox_note(note_path, dry_run=dry_run)
-    
+
     # =========================================================================
     # Multi-Manager Coordination (Complex orchestration methods)
     # =========================================================================
-    
+
     def generate_weekly_recommendations(
         self,
         candidates: List[Dict[str, Any]],
@@ -340,7 +339,7 @@ class LegacyWorkflowManagerAdapter:
             }
         """
         from datetime import datetime
-        
+
         # Initialize result structure (matching old WorkflowManager format)
         result = {
             "summary": {
@@ -353,17 +352,17 @@ class LegacyWorkflowManagerAdapter:
             "recommendations": [],
             "generated_at": datetime.now().isoformat()
         }
-        
+
         for candidate in candidates:
             # Get AI assessment for promotion readiness
             note_path = candidate.get('note', '')
             if note_path:
                 try:
                     ai_assessment = self.ai_enhancement.assess_promotion_readiness(note_path)
-                    
+
                     # Extract action from assessment
                     action = ai_assessment.get('action', 'improve_or_archive')
-                    
+
                     recommendation = {
                         'file_name': Path(note_path).name,
                         'note': note_path,
@@ -373,9 +372,9 @@ class LegacyWorkflowManagerAdapter:
                         'confidence': ai_assessment.get('confidence', 'medium'),
                         'ai_tags': candidate.get('ai_tags', [])
                     }
-                    
+
                     result["recommendations"].append(recommendation)
-                    
+
                     # Update summary counts
                     if action == 'promote_to_permanent':
                         result["summary"]["promote_to_permanent"] += 1
@@ -383,7 +382,7 @@ class LegacyWorkflowManagerAdapter:
                         result["summary"]["move_to_fleeting"] += 1
                     elif action == 'improve_or_archive':
                         result["summary"]["needs_improvement"] += 1
-                        
+
                 except Exception as e:
                     # Continue on individual failures
                     recommendation = {
@@ -397,9 +396,9 @@ class LegacyWorkflowManagerAdapter:
                     }
                     result["recommendations"].append(recommendation)
                     result["summary"]["processing_errors"] += 1
-        
+
         return result
-    
+
     def generate_enhanced_metrics(self) -> Dict[str, Any]:
         """
         Generate comprehensive analytics dashboard with enhanced metrics.
@@ -419,18 +418,18 @@ class LegacyWorkflowManagerAdapter:
             }
         """
         from datetime import datetime
-        
+
         # Call multiple analytics methods
         orphaned = self.analytics.detect_orphaned_notes()
         stale = self.analytics.detect_stale_notes()
         workflow_report = self.analytics.generate_workflow_report()
-        
+
         # Calculate total notes (count all .md files)
         total_notes = 0
         for dir_path in [self.inbox_dir, self.fleeting_dir, self.permanent_dir, self.archive_dir]:
             if dir_path.exists():
                 total_notes += len(list(dir_path.glob('*.md')))
-        
+
         # Aggregate into enhanced metrics (matching old API)
         enhanced = {
             'generated_at': datetime.now().isoformat(),
@@ -456,9 +455,9 @@ class LegacyWorkflowManagerAdapter:
                 'total_notes': total_notes
             }
         }
-        
+
         return enhanced
-    
+
     def analyze_fleeting_notes(self) -> Dict[str, Any]:
         """
         Analyze fleeting notes age distribution.
@@ -475,7 +474,7 @@ class LegacyWorkflowManagerAdapter:
             }
         """
         return self.analytics.analyze_fleeting_notes()
-    
+
     def generate_fleeting_health_report(self) -> Dict[str, Any]:
         """
         Generate health report for fleeting notes.
@@ -491,27 +490,27 @@ class LegacyWorkflowManagerAdapter:
             }
         """
         analysis = self.analytics.analyze_fleeting_notes()
-        
+
         # Generate health report
         total = analysis.get('total', 0)
         age_buckets = analysis.get('age_buckets', {})
-        
+
         # Calculate health score (more recent = healthier)
         recent_count = age_buckets.get('0-7', 0) + age_buckets.get('8-30', 0)
         health_score = recent_count / total if total > 0 else 0.0
-        
+
         # Generate recommendations
         recommendations = []
         old_count = age_buckets.get('30+', 0)
         if old_count > 0:
             recommendations.append(f"Review {old_count} fleeting notes older than 30 days")
-        
+
         return {
             'analysis': analysis,
             'health_score': health_score,
             'recommendations': recommendations
         }
-    
+
     def generate_fleeting_triage_report(
         self,
         quality_threshold: float = 0.7,
@@ -536,7 +535,7 @@ class LegacyWorkflowManagerAdapter:
         """
         # Get fleeting notes analysis
         analysis = self.analytics.analyze_fleeting_notes()
-        
+
         # For now, return basic triage report
         # Full AI quality scoring would require iterating through all notes
         return {
@@ -545,11 +544,11 @@ class LegacyWorkflowManagerAdapter:
             'total_analyzed': analysis.get('total', 0),
             'quality_threshold': quality_threshold
         }
-    
+
     # =========================================================================
     # File Operations (Promotion methods with file moves)
     # =========================================================================
-    
+
     def promote_note(
         self,
         note_path: str,
@@ -581,16 +580,16 @@ class LegacyWorkflowManagerAdapter:
                 f"Invalid target_type: {target_type}. "
                 f"Must be one of: {valid_types}"
             )
-        
+
         # Determine target directory
         if target_type == 'permanent':
             target_dir = self.permanent_dir
         else:  # literature
             target_dir = self.base_dir / "Literature Notes"
-        
+
         note_path_obj = Path(note_path)
         target_path = target_dir / note_path_obj.name
-        
+
         # For now, return plan (actual file move requires DirectoryOrganizer)
         return {
             'success': True,
@@ -599,7 +598,7 @@ class LegacyWorkflowManagerAdapter:
             'target_type': target_type,
             'note': 'File move not yet implemented - requires DirectoryOrganizer integration'
         }
-    
+
     def promote_fleeting_note(
         self,
         note_path: str,
@@ -624,7 +623,7 @@ class LegacyWorkflowManagerAdapter:
             }
         """
         note_path_obj = Path(note_path)
-        
+
         # If target_type not specified, try to detect from YAML
         if target_type is None:
             # Read frontmatter to detect type
@@ -641,24 +640,24 @@ class LegacyWorkflowManagerAdapter:
                     target_type = 'permanent'
             except Exception:
                 target_type = 'permanent'
-        
+
         # Generate plan
         plan = {
             'source': str(note_path),
             'target_type': target_type,
             'note': 'Detected from YAML' if target_type else 'Using default'
         }
-        
+
         if preview_mode:
             return {'preview': plan}
-        
+
         # Would execute promotion here
         return {
             'success': True,
             **plan,
             'note': 'File move not yet implemented'
         }
-    
+
     def promote_fleeting_notes_batch(
         self,
         quality_threshold: float = 0.7,
@@ -684,9 +683,9 @@ class LegacyWorkflowManagerAdapter:
         """
         # Get triage report
         triage = self.generate_fleeting_triage_report(quality_threshold=quality_threshold)
-        
+
         candidates = triage.get('candidates', [])
-        
+
         if preview_mode:
             return {
                 'candidates': candidates,
@@ -695,7 +694,7 @@ class LegacyWorkflowManagerAdapter:
                 'preview': True,
                 'note': 'Preview mode - no files moved'
             }
-        
+
         # Would execute batch promotion here
         return {
             'candidates': candidates,
@@ -704,11 +703,11 @@ class LegacyWorkflowManagerAdapter:
             'preview': False,
             'note': 'Batch promotion not yet implemented'
         }
-    
+
     # =========================================================================
     # Additional Methods (Batch processing, comprehensive analysis)
     # =========================================================================
-    
+
     def detect_orphaned_notes_comprehensive(self) -> List[Dict[str, Any]]:
         """
         Detect orphaned notes across entire repository.
@@ -726,7 +725,7 @@ class LegacyWorkflowManagerAdapter:
         # This would delegate to analytics for comprehensive scan
         # For now, use standard orphan detection
         return self.analytics.detect_orphaned_notes()
-    
+
     def remediate_orphaned_notes(
         self,
         mode: str = "link",
@@ -766,7 +765,7 @@ class LegacyWorkflowManagerAdapter:
             mode = "link"
         if scope not in {"permanent", "fleeting", "all"}:
             scope = "permanent"
-        
+
         # Build result
         result = {
             'mode': mode,
@@ -782,14 +781,14 @@ class LegacyWorkflowManagerAdapter:
                 'errors': 0
             }
         }
-        
+
         # Get orphaned notes
         orphaned = self.analytics.detect_orphaned_notes()
         result['summary']['considered'] = len(orphaned)
-        
+
         # Limit processing
         to_process = orphaned[:limit]
-        
+
         # For checklist mode, just return the list
         if mode == "checklist":
             result['actions'] = [
@@ -798,7 +797,7 @@ class LegacyWorkflowManagerAdapter:
             ]
             result['summary']['processed'] = len(to_process)
             return result
-        
+
         # For link mode, would coordinate with ConnectionManager
         # For now, return plan
         result['actions'] = [
@@ -807,9 +806,9 @@ class LegacyWorkflowManagerAdapter:
         ]
         result['summary']['processed'] = len(to_process)
         result['note'] = 'Link insertion not yet implemented - requires ConnectionManager integration'
-        
+
         return result
-    
+
     def batch_process_inbox(self, dry_run: bool = True) -> Dict[str, Any]:
         """
         Process all notes in inbox directory.
@@ -830,7 +829,7 @@ class LegacyWorkflowManagerAdapter:
         processed = 0
         successful = 0
         failed = 0
-        
+
         # Scan inbox directory
         if self.inbox_dir.exists():
             for note_path in self.inbox_dir.glob('*.md'):
@@ -845,18 +844,18 @@ class LegacyWorkflowManagerAdapter:
                 except Exception as e:
                     failed += 1
                     results.append({'error': str(e), 'note': str(note_path)})
-        
+
         return {
             'processed': processed,
             'successful': successful,
             'failed': failed,
             'results': results
         }
-    
+
     # =========================================================================
     # Session Management (Stubs for now - low priority)
     # =========================================================================
-    
+
     def start_safe_processing_session(self, operation_name: str) -> str:
         """
         Start a safe processing session with rollback capability.
@@ -874,7 +873,7 @@ class LegacyWorkflowManagerAdapter:
             "Session management not yet implemented. "
             "Use direct methods with dry_run=True for safety."
         )
-    
+
     def process_inbox_note_safe(self, note_path: str) -> Dict[str, Any]:
         """
         Process inbox note with automatic session management.

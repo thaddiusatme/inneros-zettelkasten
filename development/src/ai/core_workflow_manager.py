@@ -42,7 +42,7 @@ class CoreWorkflowManager:
     - Bug report creation on failures
     - Result validation with sensible defaults
     """
-    
+
     def __init__(
         self,
         base_dir: Path,
@@ -67,7 +67,7 @@ class CoreWorkflowManager:
         self.ai_enhancement = ai_enhancement_manager
         self.connections = connection_manager
         self.bug_reporter = BugReporter(base_dir)
-        
+
     def process_inbox_note(
         self,
         note_path: str,
@@ -224,7 +224,7 @@ class CoreWorkflowManager:
         else:
             # Analytics succeeded
             analytics_error = None
-        
+
         # Initialize result structure
         result = {
             'success': False if analytics_error else True,
@@ -234,17 +234,17 @@ class CoreWorkflowManager:
             'errors': [analytics_error] if analytics_error else [],
             'warnings': []
         }
-        
+
         # Add dry_run flag if applicable
         if dry_run:
             result['dry_run'] = True
-        
+
         # Cost gating - skip AI if quality too low (but only if Analytics succeeded)
         quality_score = analytics_result.get('quality_score', 0.0)
         cost_gate_threshold = self.config.get('ai_enhancement', {}).get(
             'cost_gate_threshold', 0.3
         )
-        
+
         # Only apply cost gating if Analytics succeeded
         analytics_succeeded = analytics_result.get('success', True)
         if analytics_succeeded and quality_score < cost_gate_threshold:
@@ -265,12 +265,12 @@ class CoreWorkflowManager:
             # Run AI enhancement
             try:
                 ai_result = self.ai_enhancement.enhance_note(
-                    note_path, 
-                    fast=False, 
+                    note_path,
+                    fast=False,
                     dry_run=dry_run
                 )
                 result['ai_enhancement'] = ai_result
-                
+
                 # Check for AI failures
                 if not ai_result.get('success', False):
                     result['success'] = False
@@ -280,7 +280,7 @@ class CoreWorkflowManager:
                         'error': 'AI enhancement failed with fallback'
                     })
                     # Note: Bug reporting handled by AIEnhancementManager
-                    
+
             except Exception as e:
                 # Graceful degradation on AI failure
                 result['ai_enhancement'] = {
@@ -294,11 +294,11 @@ class CoreWorkflowManager:
                     'type': 'exception',
                     'error': str(e)
                 })
-        
+
         # Connection discovery - runs independently
         try:
             connections_result = self.connections.discover_links(
-                note_path, 
+                note_path,
                 dry_run=dry_run
             )
             # discover_links returns list directly
@@ -311,14 +311,14 @@ class CoreWorkflowManager:
                 'type': 'exception',
                 'error': str(e)
             })
-        
+
         # Validate and apply sensible defaults
         result = ResultValidator.validate_workflow_result(result)
-        
+
         # Check for total workflow failure (multiple errors)
         if len(result['errors']) >= 3:
             result['warnings'].append('Total workflow failure - multiple systems failed')
             self.bug_reporter.create_workflow_failure_report(note_path, result)
-        
+
         return result
-    
+

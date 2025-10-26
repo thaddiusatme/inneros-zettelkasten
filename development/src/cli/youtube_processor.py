@@ -52,17 +52,17 @@ class YouTubeProcessor:
         >>> result = processor.process_video("https://youtube.com/watch?v=FLpS7OfD5-s")
         >>> print(f"Created: {result['file_path']}")
     """
-    
+
     # URL parsing patterns
     URL_PATTERN_STANDARD = r'[?&]v=([^&]+)'  # youtube.com/watch?v=VIDEO_ID
     URL_PATTERN_SHORT = r'youtu\.be/([^?]+)'  # youtu.be/VIDEO_ID
-    
+
     # Validation patterns
     YOUTUBE_DOMAINS = [
         r'youtube\.com/watch\?v=',
         r'youtu\.be/'
     ]
-    
+
     # Metadata constants
     NOTE_TYPE = "literature"
     NOTE_STATUS = "inbox"
@@ -70,7 +70,7 @@ class YouTubeProcessor:
     FILE_PREFIX = "youtube"
     TIMESTAMP_FORMAT = "%Y%m%d-%H%M"
     METADATA_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M"
-    
+
     def __init__(self, knowledge_dir: Optional[Path] = None):
         """
         Initialize YouTube processor with optional knowledge directory.
@@ -83,7 +83,7 @@ class YouTubeProcessor:
         self.extractor = ContextAwareQuoteExtractor()
         self.formatter = YouTubeTemplateFormatter()
         logger.info(f"YouTubeProcessor initialized with knowledge_dir: {self.knowledge_dir}")
-    
+
     def extract_video_id(self, url: str) -> str:
         """
         Extract video ID from YouTube URL.
@@ -115,17 +115,17 @@ class YouTubeProcessor:
             video_id = match.group(1)
             logger.debug(f"Extracted video ID from standard URL: {video_id}")
             return video_id
-        
+
         # Try short format: youtu.be/VIDEO_ID
         match = re.search(self.URL_PATTERN_SHORT, url)
         if match:
             video_id = match.group(1)
             logger.debug(f"Extracted video ID from short URL: {video_id}")
             return video_id
-        
+
         logger.warning(f"Failed to extract video ID from URL: {url}")
         raise ValueError(f"Invalid YouTube URL: {url}")
-    
+
     def validate_url(self, url: str) -> bool:
         """
         Validate YouTube URL format.
@@ -146,12 +146,12 @@ class YouTubeProcessor:
         if not url:
             logger.debug("URL validation failed: empty string")
             return False
-        
+
         # Check for YouTube domains
         is_valid = any(re.search(pattern, url) for pattern in self.YOUTUBE_DOMAINS)
         logger.debug(f"URL validation for '{url}': {is_valid}")
         return is_valid
-    
+
     def process_video(
         self,
         url: str,
@@ -201,7 +201,7 @@ class YouTubeProcessor:
             >>> print(f"Quotes: {result['quotes_extracted']}")
         """
         import time
-        
+
         timing: Dict[str, float] = {
             "total": 0.0,
             "fetch": 0.0,
@@ -209,21 +209,21 @@ class YouTubeProcessor:
             "formatting": 0.0
         }
         start_time = time.time()
-        
+
         try:
             # Step 1: Extract video ID
             video_id = self.extract_video_id(url)
             logger.info(f"Processing video: {video_id}")
-            
+
             # Step 2: Fetch transcript
             fetch_start = time.time()
             transcript_result = self.fetcher.fetch_transcript(video_id)
             timing["fetch"] = time.time() - fetch_start
             logger.info(f"Transcript fetched: {len(transcript_result['transcript'])} segments in {timing['fetch']:.2f}s")
-            
+
             # Format transcript for LLM
             llm_transcript = self.fetcher.format_for_llm(transcript_result["transcript"])
-            
+
             # Step 3: Extract quotes with AI
             extract_start = time.time()
             quotes_result = self.extractor.extract_quotes(
@@ -234,7 +234,7 @@ class YouTubeProcessor:
             )
             timing["extraction"] = time.time() - extract_start
             logger.info(f"Quotes extracted: {len(quotes_result['quotes'])} quotes in {timing['extraction']:.2f}s")
-            
+
             # Step 4: Format markdown
             format_start = time.time()
             format_result = self.formatter.format_template(
@@ -243,16 +243,16 @@ class YouTubeProcessor:
             )
             timing["formatting"] = time.time() - format_start
             logger.info(f"Markdown formatted in {timing['formatting']:.2f}s")
-            
+
             # Step 5: Build metadata
             metadata = self._build_metadata(video_id, transcript_result, quotes_result)
-            
+
             # Step 6: Create note file
             file_path = self._create_note_file(video_id, format_result["markdown"], metadata)
-            
+
             timing["total"] = time.time() - start_time
             logger.info(f"Processing complete: {file_path} in {timing['total']:.2f}s")
-            
+
             return {
                 "success": True,
                 "video_id": video_id,
@@ -261,11 +261,11 @@ class YouTubeProcessor:
                 "metadata": metadata,
                 "timing": timing
             }
-            
+
         except Exception as e:
             timing["total"] = time.time() - start_time
             error_msg = str(e).lower()
-            
+
             # Categorize error for user-friendly messages (order matters!)
             if "llm" in error_msg or "service unavailable" in error_msg:
                 error_type = "LLM service unavailable"
@@ -275,15 +275,15 @@ class YouTubeProcessor:
                 error_type = "Service unavailable"
             else:
                 error_type = str(e)
-            
+
             logger.error(f"Processing failed: {error_type}")
-            
+
             return {
                 "success": False,
                 "error": error_type,
                 "timing": timing
             }
-    
+
     def _create_note_file(
         self,
         video_id: str,
@@ -308,14 +308,14 @@ class YouTubeProcessor:
         inbox_dir = self.knowledge_dir / self.INBOX_SUBDIR
         inbox_dir.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Inbox directory ensured: {inbox_dir}")
-        
+
         # Generate filename: youtube-YYYYMMDD-HHmm-{video_id}.md
         now = datetime.now()
         timestamp = now.strftime(self.TIMESTAMP_FORMAT)
         filename = f"{self.FILE_PREFIX}-{timestamp}-{video_id}.md"
         file_path = inbox_dir / filename
         logger.debug(f"Generated filename: {filename}")
-        
+
         # Build complete content with frontmatter
         frontmatter_lines = ["---"]
         for key, value in metadata.items():
@@ -327,15 +327,15 @@ class YouTubeProcessor:
             else:
                 frontmatter_lines.append(f"{key}: {value}")
         frontmatter_lines.append("---")
-        
+
         full_content = "\n".join(frontmatter_lines) + "\n\n" + formatted_content
-        
+
         # Write file
         file_path.write_text(full_content, encoding="utf-8")
         logger.info(f"Note created: {file_path}")
-        
+
         return file_path
-    
+
     def _build_metadata(
         self,
         video_id: str,
@@ -354,7 +354,7 @@ class YouTubeProcessor:
             Dict with frontmatter fields (type, status, created, etc.)
         """
         now = datetime.now()
-        
+
         metadata = {
             "type": self.NOTE_TYPE,
             "status": self.NOTE_STATUS,
@@ -363,11 +363,11 @@ class YouTubeProcessor:
             "source": f"https://youtube.com/watch?v={video_id}",
             "tags": quotes_data.get("key_themes", [])
         }
-        
+
         # Add video title if available
         if "title" in transcript_metadata.get("metadata", {}):
             metadata["title"] = transcript_metadata["metadata"]["title"]
             logger.debug(f"Added video title to metadata: {metadata['title']}")
-        
+
         logger.info(f"Built metadata with {len(metadata['tags'])} tags")
         return metadata

@@ -83,7 +83,7 @@ class ConfigurationLoader:
     
     Size: ~150 LOC (ADR-001 compliant)
     """
-    
+
     def load_config(self, path: Path) -> DaemonConfig:
         """
         Load and validate YAML config file.
@@ -101,21 +101,21 @@ class ConfigurationLoader:
         """
         if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {path}")
-        
+
         # Load YAML
         with open(path, 'r') as f:
             raw_config = yaml.safe_load(f)
-        
+
         if not raw_config:
             raise ValueError("Configuration file is empty")
-        
+
         # Validate and construct config object using validator
         errors = ConfigValidator.validate_raw_config(raw_config)
         if errors:
             raise ValueError(f"Configuration validation errors: {'; '.join(errors)}")
-        
+
         return self._parse_config(raw_config)
-    
+
     def validate_config_file(self, path: Path) -> List[str]:
         """
         Validate config file and return errors.
@@ -127,31 +127,31 @@ class ConfigurationLoader:
             List of validation error messages (empty if valid)
         """
         errors = []
-        
+
         # Check file exists
         if not path.exists():
             errors.append(f"Configuration file not found: {path}")
             return errors
-        
+
         # Load and validate YAML
         try:
             with open(path, 'r') as f:
                 raw_config = yaml.safe_load(f)
-            
+
             if not raw_config:
                 errors.append("Configuration file is empty")
                 return errors
-            
+
             # Validate configuration using validator
             errors.extend(ConfigValidator.validate_raw_config(raw_config))
-            
+
         except yaml.YAMLError as e:
             errors.append(f"YAML parsing error: {e}")
         except Exception as e:
             errors.append(f"Error reading config: {e}")
-        
+
         return errors
-    
+
     def get_default_config(self) -> DaemonConfig:
         """
         Get safe default configuration.
@@ -164,7 +164,7 @@ class ConfigurationLoader:
             log_level="INFO",
             jobs=[]
         )
-    
+
     def _parse_config(self, raw_config: dict) -> DaemonConfig:
         """
         Parse raw configuration into DaemonConfig object.
@@ -179,11 +179,11 @@ class ConfigurationLoader:
         daemon_section = raw_config.get("daemon", {})
         check_interval = daemon_section.get("check_interval", 60)
         log_level = daemon_section.get("log_level", "INFO")
-        
+
         # Parse jobs section
         jobs = []
         jobs_section = raw_config.get("jobs", [])
-        
+
         for job_data in jobs_section:
             job = JobConfig(
                 name=job_data["name"],
@@ -192,7 +192,7 @@ class ConfigurationLoader:
                 description=job_data.get("description")
             )
             jobs.append(job)
-        
+
         # Parse file_watching section
         file_watching = None
         if "file_watching" in raw_config:
@@ -204,7 +204,7 @@ class ConfigurationLoader:
                 ignore_patterns=fw_data.get("ignore_patterns", []),
                 debounce_seconds=fw_data.get("debounce_seconds", 2.0)
             )
-        
+
         # Parse screenshot_handler section
         screenshot_handler = None
         if "screenshot_handler" in raw_config:
@@ -216,7 +216,7 @@ class ConfigurationLoader:
                 ocr_enabled=sh_data.get("ocr_enabled", True),
                 processing_timeout=sh_data.get("processing_timeout", 600)
             )
-        
+
         # Parse smart_link_handler section
         smart_link_handler = None
         if "smart_link_handler" in raw_config:
@@ -228,7 +228,7 @@ class ConfigurationLoader:
                 max_suggestions=sl_data.get("max_suggestions", 5),
                 auto_insert=sl_data.get("auto_insert", False)
             )
-        
+
         # Parse youtube_handler section
         youtube_handler = None
         if "youtube_handler" in raw_config:
@@ -240,7 +240,7 @@ class ConfigurationLoader:
                 min_quality=yt_data.get("min_quality", 0.7),
                 processing_timeout=yt_data.get("processing_timeout", 300)
             )
-        
+
         return DaemonConfig(
             check_interval=check_interval,
             log_level=log_level,

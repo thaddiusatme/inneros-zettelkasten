@@ -12,7 +12,7 @@ class MetricsEndpoint:
     
     Provides JSON API for current metrics and historical data.
     """
-    
+
     def __init__(self, collector: MetricsCollector, storage: MetricsStorage):
         """Initialize endpoint with collector and storage.
         
@@ -22,7 +22,7 @@ class MetricsEndpoint:
         """
         self.collector = collector
         self.storage = storage
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics with history.
         

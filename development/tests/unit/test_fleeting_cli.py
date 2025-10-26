@@ -10,7 +10,6 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -22,22 +21,22 @@ class TestDedicatedFleetingCLI:
     
     RED PHASE: These tests will fail until we create fleeting_cli.py
     """
-    
+
     def setup_method(self):
         """Set up test environment."""
         self.temp_dir = tempfile.mkdtemp()
         self.base_dir = Path(self.temp_dir)
-        
+
         # Create directory structure
         (self.base_dir / "Fleeting Notes").mkdir()
         (self.base_dir / "Permanent Notes").mkdir()
         (self.base_dir / "Literature Notes").mkdir()
         (self.base_dir / "Archive").mkdir()
-    
+
     def teardown_method(self):
         """Clean up test environment."""
         shutil.rmtree(self.temp_dir)
-    
+
     def test_fleeting_cli_import(self):
         """TEST 1: Verify fleeting_cli module can be imported."""
         try:
@@ -45,35 +44,35 @@ class TestDedicatedFleetingCLI:
             assert fleeting_cli is not None
         except ImportError as e:
             pytest.fail(f"fleeting_cli module should exist and be importable: {e}")
-    
+
     def test_fleeting_health_command_execution(self):
         """TEST 2: Verify fleeting-health command executes successfully."""
         from src.cli.fleeting_cli import FleetingCLI
-        
+
         cli = FleetingCLI(vault_path=str(self.base_dir))
-        
+
         # Execute fleeting health command
         exit_code = cli.fleeting_health(output_format='normal')
-        
+
         # Should execute without errors
         assert exit_code == 0
-    
+
     def test_fleeting_triage_command_execution(self):
         """TEST 3: Verify fleeting-triage command executes successfully."""
         from src.cli.fleeting_cli import FleetingCLI
-        
+
         cli = FleetingCLI(vault_path=str(self.base_dir))
-        
+
         # Execute fleeting triage command
         exit_code = cli.fleeting_triage(
             quality_threshold=0.7,
             fast=True,
             output_format='normal'
         )
-        
+
         # Should execute without errors
         assert exit_code == 0
-    
+
     def test_bug_3_fixed_no_attributeerror(self):
         """
         TEST 4: Verify Bug #3 is fixed (AttributeError: 'AnalyticsManager' object has no attribute 'analyze_fleeting_notes').
@@ -84,15 +83,15 @@ class TestDedicatedFleetingCLI:
         """
         from src.cli.fleeting_cli import FleetingCLI
         from src.ai.workflow_manager import WorkflowManager
-        
+
         # Initialize CLI (should use WorkflowManager, not adapter)
         cli = FleetingCLI(vault_path=str(self.base_dir))
-        
+
         # Verify it's using WorkflowManager directly
         assert hasattr(cli, 'workflow')
         assert isinstance(cli.workflow, WorkflowManager), \
             "FleetingCLI should use WorkflowManager directly to avoid Bug #3"
-        
+
         # Execute fleeting health command - should NOT raise AttributeError
         try:
             exit_code = cli.fleeting_health(output_format='normal')

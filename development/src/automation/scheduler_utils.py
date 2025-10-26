@@ -21,7 +21,7 @@ class SchedulerUtils:
     
     Size: ~100 LOC (ADR-001 compliant)
     """
-    
+
     @staticmethod
     def validate_cron_expression(schedule: str) -> Tuple[bool, Optional[str]]:
         """
@@ -41,19 +41,19 @@ class SchedulerUtils:
         """
         if not schedule or not isinstance(schedule, str):
             return False, "Cron expression must be a non-empty string"
-        
+
         parts = schedule.split()
-        
+
         if len(parts) not in (5, 6):
             return False, f"Invalid cron expression: must have 5 or 6 fields, got {len(parts)}"
-        
+
         # Try creating a CronTrigger to validate syntax
         try:
             SchedulerUtils.parse_cron_schedule(schedule)
             return True, None
         except ValueError as e:
             return False, str(e)
-    
+
     @staticmethod
     def detect_cron_format(schedule: str) -> str:
         """
@@ -69,14 +69,14 @@ class SchedulerUtils:
             ValueError: If schedule is invalid
         """
         parts = schedule.split()
-        
+
         if len(parts) == 6:
             return "extended"
         elif len(parts) == 5:
             return "standard"
         else:
             raise ValueError(f"Invalid cron expression: {schedule}")
-    
+
     @staticmethod
     def parse_cron_schedule(schedule: str) -> CronTrigger:
         """
@@ -98,7 +98,7 @@ class SchedulerUtils:
             Extended: "0 0 8 * * *" -> second=0, minute=0, hour=8, ...
         """
         parts = schedule.split()
-        
+
         if len(parts) == 6:
             # Extended cron with seconds: second minute hour day month day_of_week
             return CronTrigger(
@@ -120,7 +120,7 @@ class SchedulerUtils:
             )
         else:
             raise ValueError(f"Invalid cron expression: {schedule}")
-    
+
     @staticmethod
     def format_trigger(trigger) -> str:
         """
@@ -139,7 +139,7 @@ class SchedulerUtils:
         if isinstance(trigger, CronTrigger):
             fields = trigger.fields
             parts = []
-            
+
             # Check if seconds field exists (6-field format)
             if len(fields) == 6:
                 parts = [
@@ -159,11 +159,11 @@ class SchedulerUtils:
                     str(fields[3]),  # month
                     str(fields[4]),  # day_of_week
                 ]
-            
+
             return " ".join(parts)
-        
+
         return str(trigger)
-    
+
     @staticmethod
     def normalize_cron_expression(schedule: str) -> str:
         """
@@ -184,7 +184,7 @@ class SchedulerUtils:
         is_valid, error = SchedulerUtils.validate_cron_expression(schedule)
         if not is_valid:
             raise ValueError(error)
-        
+
         # Parse and format to normalize
         trigger = SchedulerUtils.parse_cron_schedule(schedule)
         return SchedulerUtils.format_trigger(trigger)

@@ -33,7 +33,7 @@ class BugReporter:
         ... )
         PosixPath('.../review_queue/AI_FAILURE_20251005_2000.md')
     """
-    
+
     def __init__(self, base_dir: Path):
         """
         Initialize BugReporter with base directory.
@@ -44,10 +44,10 @@ class BugReporter:
         self.base_dir = Path(base_dir)
         self.review_queue = self.base_dir / ".automation" / "review_queue"
         self.review_queue.mkdir(parents=True, exist_ok=True)
-    
+
     def create_ai_failure_report(
-        self, 
-        note_path: str, 
+        self,
+        note_path: str,
         error_details: Dict[str, Any]
     ) -> Path:
         """
@@ -81,7 +81,7 @@ class BugReporter:
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         bug_report_path = self.review_queue / f"AI_FAILURE_{timestamp}.md"
-        
+
         report_content = f"""# AI Enhancement Failure Report
 
 **Date**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -107,13 +107,13 @@ class BugReporter:
 {error_details}
 ```
 """
-        
+
         bug_report_path.write_text(report_content)
         return bug_report_path
-    
+
     def create_workflow_failure_report(
-        self, 
-        note_path: str, 
+        self,
+        note_path: str,
         result: Dict[str, Any]
     ) -> Path:
         """
@@ -149,12 +149,12 @@ class BugReporter:
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         bug_report_path = self.review_queue / f"WORKFLOW_FAILURE_{timestamp}.md"
-        
+
         errors_summary = "\n".join([
-            f"- **{err['stage']}**: {err['error']}" 
+            f"- **{err['stage']}**: {err['error']}"
             for err in result.get('errors', [])
         ])
-        
+
         report_content = f"""# Total Workflow Failure Report - CRITICAL
 
 **Date**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -176,6 +176,6 @@ class BugReporter:
 {result}
 ```
 """
-        
+
         bug_report_path.write_text(report_content)
         return bug_report_path

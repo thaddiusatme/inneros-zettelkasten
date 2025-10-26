@@ -54,7 +54,7 @@ class ServiceFileTemplate:
     
     Centralizes template logic for easy maintenance and testing.
     """
-    
+
     @staticmethod
     def render(
         daemon_path: str,
@@ -96,7 +96,7 @@ class ServiceFileTemplate:
 
 class InstallationPathResolver:
     """Resolve installation paths for system vs user mode."""
-    
+
     def __init__(
         self,
         mode: str = "system",
@@ -114,7 +114,7 @@ class InstallationPathResolver:
         self.mode = mode
         self.custom_daemon_path = custom_daemon_path
         self.custom_config_path = custom_config_path
-    
+
     def resolve(self) -> Dict[str, str]:
         """
         Resolve all installation paths based on mode.
@@ -126,7 +126,7 @@ class InstallationPathResolver:
             return self._resolve_system_paths()
         else:
             return self._resolve_user_paths()
-    
+
     def _resolve_system_paths(self) -> Dict[str, str]:
         """Resolve paths for system mode installation."""
         return {
@@ -135,7 +135,7 @@ class InstallationPathResolver:
             "service_path": "/etc/systemd/system/inneros-daemon.service",
             "log_path": "/var/log/inneros"
         }
-    
+
     def _resolve_user_paths(self) -> Dict[str, str]:
         """Resolve paths for user mode installation."""
         home = Path.home()
@@ -149,7 +149,7 @@ class InstallationPathResolver:
 
 class SystemctlCommandRunner:
     """Generate systemctl commands for service management."""
-    
+
     def __init__(self, mode: str = "system"):
         """
         Initialize systemctl command runner.
@@ -159,27 +159,27 @@ class SystemctlCommandRunner:
         """
         self.mode = mode
         self.user_flag = "--user" if mode == "user" else ""
-    
+
     def enable_command(self, service_name: str) -> str:
         """Generate systemctl enable command."""
         return self._build_command("enable", service_name)
-    
+
     def start_command(self, service_name: str) -> str:
         """Generate systemctl start command."""
         return self._build_command("start", service_name)
-    
+
     def stop_command(self, service_name: str) -> str:
         """Generate systemctl stop command."""
         return self._build_command("stop", service_name)
-    
+
     def daemon_reload_command(self) -> str:
         """Generate daemon-reload command."""
         return f"systemctl {self.user_flag} daemon-reload".strip()
-    
+
     def status_command(self, service_name: str) -> str:
         """Generate systemctl status command."""
         return self._build_command("status", service_name)
-    
+
     def _build_command(self, action: str, service_name: str) -> str:
         """Build systemctl command with consistent formatting."""
         return f"systemctl {self.user_flag} {action} {service_name}".strip()

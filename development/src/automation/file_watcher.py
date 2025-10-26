@@ -29,7 +29,7 @@ class FileWatcher:
     
     Size: ~150 LOC (ADR-001 compliant)
     """
-    
+
     def __init__(
         self,
         watch_path: Path,
@@ -47,12 +47,12 @@ class FileWatcher:
         self.watch_path = Path(watch_path)
         self.debounce_seconds = debounce_seconds
         self.ignore_patterns = ignore_patterns or [".obsidian/*", "*.tmp", ".*"]
-        
+
         self._observer: Optional[Observer] = None
         self._callbacks: List[Callable[[Path, str], None]] = []
         self._debounce_timers: Dict[str, threading.Timer] = {}
         self._lock = threading.Lock()
-    
+
     def register_callback(self, callback: Callable[[Path, str], None]) -> None:
         """
         Register callback to be invoked on file events.
@@ -61,7 +61,7 @@ class FileWatcher:
             callback: Function(file_path, event_type) called on events
         """
         self._callbacks.append(callback)
-    
+
     def start(self) -> None:
         """
         Start file watching.
@@ -71,35 +71,35 @@ class FileWatcher:
         """
         if not self.watch_path.exists():
             raise FileWatcherError(f"Watch path does not exist: {self.watch_path}")
-        
+
         if self._observer is not None and self._observer.is_alive():
             raise FileWatcherError("File watcher is already running")
-        
+
         # Create event handler
         event_handler = _FileEventHandler(self)
-        
+
         # Create and start observer
         self._observer = Observer()
         self._observer.schedule(event_handler, str(self.watch_path), recursive=True)
         self._observer.start()
-    
+
     def stop(self) -> None:
         """Stop file watching gracefully."""
         if self._observer:
             self._observer.stop()
             self._observer.join(timeout=5)
             self._observer = None
-        
+
         # Cancel any pending debounce timers
         with self._lock:
             for timer in self._debounce_timers.values():
                 timer.cancel()
             self._debounce_timers.clear()
-    
+
     def is_running(self) -> bool:
         """Check if watcher is actively monitoring."""
         return self._observer is not None and self._observer.is_alive()
-    
+
     def _should_ignore(self, file_path: Path) -> bool:
         """
         Check if file should be ignored based on glob patterns.
@@ -112,7 +112,7 @@ class FileWatcher:
         """
         path_str = str(file_path)
         file_name = file_path.name
-        
+
         # Check each ignore pattern using fnmatch for proper glob support
         for pattern in self.ignore_patterns:
             # Handle directory-specific patterns
@@ -123,9 +123,9 @@ class FileWatcher:
             # Handle filename patterns
             elif fnmatch.fnmatch(file_name, pattern):
                 return True
-        
+
         return False
-    
+
     def _trigger_callbacks(self, file_path: Path, event_type: str) -> None:
         """
         Trigger registered callbacks with debouncing.
@@ -137,15 +137,15 @@ class FileWatcher:
         # Check if should ignore
         if self._should_ignore(file_path):
             return
-        
+
         # Debounce logic
         file_key = str(file_path)
-        
+
         with self._lock:
             # Cancel existing timer for this file
             if file_key in self._debounce_timers:
                 self._debounce_timers[file_key].cancel()
-            
+
             # Create new timer
             timer = threading.Timer(
                 self.debounce_seconds,
@@ -154,7 +154,7 @@ class FileWatcher:
             )
             self._debounce_timers[file_key] = timer
             timer.start()
-    
+
     def _execute_callbacks(self, file_path: Path, event_type: str) -> None:
         """Execute all registered callbacks."""
         # Remove timer from tracking
@@ -162,7 +162,7 @@ class FileWatcher:
             file_key = str(file_path)
             if file_key in self._debounce_timers:
                 del self._debounce_timers[file_key]
-        
+
         # Call all registered callbacks
         for callback in self._callbacks:
             try:
@@ -178,22 +178,22 @@ class _FileEventHandler(FileSystemEventHandler):
     
     Translates watchdog events to FileWatcher callbacks.
     """
-    
+
     def __init__(self, watcher: FileWatcher):
         """Initialize with parent watcher reference."""
         super().__init__()
         self.watcher = watcher
-    
+
     def on_created(self, event: FileSystemEvent) -> None:
         """Handle file creation events."""
         if not event.is_directory:
             self.watcher._trigger_callbacks(Path(event.src_path), "created")
-    
+
     def on_modified(self, event: FileSystemEvent) -> None:
         """Handle file modification events."""
         if not event.is_directory:
             self.watcher._trigger_callbacks(Path(event.src_path), "modified")
-    
+
     def on_deleted(self, event: FileSystemEvent) -> None:
         """Handle file deletion events."""
         if not event.is_directory:

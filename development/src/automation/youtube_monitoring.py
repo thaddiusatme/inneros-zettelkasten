@@ -33,7 +33,7 @@ def setup_rotating_log(log_dir: Path, max_bytes: int = 10485760, backup_count: i
     """
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "youtube_automation.log"
-    
+
     handler = RotatingFileHandler(
         log_file,
         maxBytes=max_bytes,
@@ -70,29 +70,29 @@ class MonitoringCounters:
     - Increment methods
     - Persist to JSON
     """
-    
+
     def __init__(self):
         """Initialize all counters to zero"""
         self.total_processed = 0
         self.successful = 0
         self.failed = 0
         self.skipped = 0
-    
+
     def increment_success(self):
         """Increment success counter"""
         self.successful += 1
         self.total_processed += 1
-    
+
     def increment_failure(self):
         """Increment failure counter"""
         self.failed += 1
         self.total_processed += 1
-    
+
     def increment_skipped(self):
         """Increment skipped counter"""
         self.skipped += 1
         self.total_processed += 1
-    
+
     def write_metrics(self, metrics_file: Path):
         """
         Persist metrics to JSON file
@@ -101,7 +101,7 @@ class MonitoringCounters:
             metrics_file: Path to write metrics JSON
         """
         metrics_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         data = {
             'total_processed': self.total_processed,
             'successful': self.successful,
@@ -109,10 +109,10 @@ class MonitoringCounters:
             'skipped': self.skipped,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         with open(metrics_file, 'w') as f:
             json.dump(data, f, indent=2)
-        
+
         logger.info(f"Metrics written: {self.total_processed} total, "
                    f"{self.successful} success, {self.failed} failed")
 
@@ -131,18 +131,18 @@ def backup_status_store(status_file: Path, backup_dir: Path) -> Optional[Path]:
     if not status_file.exists():
         logger.debug(f"Status file does not exist, skipping backup: {status_file}")
         return None
-    
+
     # Create backup directory if needed
     backup_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Generate timestamped filename using helper
     timestamp = _format_timestamp()
     backup_path = backup_dir / f"status_{timestamp}.json"
-    
+
     # Copy file
     shutil.copy2(status_file, backup_path)
     logger.info(f"Status backup created: {backup_path.name}")
-    
+
     return backup_path
 
 
@@ -159,11 +159,11 @@ def get_health_status(metrics_file: Path) -> Dict[str, Any]:
     if not metrics_file.exists():
         logger.debug(f"Metrics file not found: {metrics_file}")
         return {'status': 'unknown'}
-    
+
     try:
         with open(metrics_file) as f:
             last_run = json.load(f)
-        
+
         logger.debug(f"Health check: {last_run['total_processed']} processed, "
                     f"{last_run['successful']} successful")
         return {

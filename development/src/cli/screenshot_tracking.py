@@ -9,7 +9,7 @@ import json
 import hashlib
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime
 
 # Optional filelock for concurrent safety
@@ -37,7 +37,7 @@ class ProcessedScreenshotTracker:
     Stores history in JSON file with screenshot filenames, processing timestamps,
     and file hashes for integrity verification.
     """
-    
+
     def __init__(self, history_file: Path):
         """
         Initialize tracker with history file
@@ -47,28 +47,28 @@ class ProcessedScreenshotTracker:
         """
         self.history_file = Path(history_file)
         self.lock_file = Path(str(history_file) + ".lock")
-        
+
         # Ensure history file exists with correct structure
         if not self.history_file.exists():
             self._create_empty_history()
-        
+
         logger.info(f"Initialized ProcessedScreenshotTracker: {self.history_file}")
-    
+
     def _create_empty_history(self):
         """Create empty history file with correct structure"""
         empty_history = {
             "version": "1.0",
             "processed_screenshots": {}
         }
-        
+
         # Ensure parent directory exists
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(self.history_file, 'w') as f:
             json.dump(empty_history, f, indent=2)
-        
+
         logger.info(f"Created empty history file: {self.history_file}")
-    
+
     def _compute_file_hash(self, file_path: Path) -> str:
         """
         Compute SHA256 hash of file for integrity checking
@@ -81,7 +81,7 @@ class ProcessedScreenshotTracker:
         """
         if not file_path.exists():
             return "unavailable"
-        
+
         try:
             sha256_hash = hashlib.sha256()
             with open(file_path, "rb") as f:
@@ -91,7 +91,7 @@ class ProcessedScreenshotTracker:
         except Exception as e:
             logger.warning(f"Could not compute hash for {file_path}: {e}")
             return "error"
-    
+
     def mark_processed(self, screenshot_path: Path, daily_note: str):
         """
         Mark screenshot as processed
@@ -102,7 +102,7 @@ class ProcessedScreenshotTracker:
         """
         with FileLock(self.lock_file):
             history = self._load_history()
-            
+
             # Add entry with both keys for backward compatibility
             history['processed_screenshots'][screenshot_path.name] = {
                 "processed_at": datetime.now().isoformat(),
@@ -110,12 +110,12 @@ class ProcessedScreenshotTracker:
                 "daily_note": daily_note,  # Legacy key (backward compatibility)
                 "file_hash": self._compute_file_hash(screenshot_path)
             }
-            
+
             # Save
             self._save_history(history)
-        
+
         logger.info(f"Marked as processed: {screenshot_path.name}")
-    
+
     def is_processed(self, screenshot_path: Path) -> bool:
         """
         Check if screenshot has been processed
@@ -128,7 +128,7 @@ class ProcessedScreenshotTracker:
         """
         history = self._load_history()
         return screenshot_path.name in history['processed_screenshots']
-    
+
     def filter_unprocessed(self, screenshots: List[Path], force: bool = False) -> List[Path]:
         """
         Filter list to unprocessed screenshots only
@@ -142,18 +142,18 @@ class ProcessedScreenshotTracker:
         """
         if force:
             return screenshots
-        
+
         history = self._load_history()
         processed_names = set(history['processed_screenshots'].keys())
-        
+
         unprocessed = [
             screenshot for screenshot in screenshots
             if screenshot.name not in processed_names
         ]
-        
+
         logger.info(f"Filtered {len(screenshots)} screenshots -> {len(unprocessed)} unprocessed")
         return unprocessed
-    
+
     def get_statistics(self, screenshots: List[Path]) -> Dict[str, Any]:
         """
         Get statistics on new vs already-processed screenshots
@@ -166,10 +166,10 @@ class ProcessedScreenshotTracker:
         """
         history = self._load_history()
         processed_names = set(history['processed_screenshots'].keys())
-        
+
         processed_in_list = [s.name for s in screenshots if s.name in processed_names]
         new_in_list = [s.name for s in screenshots if s.name not in processed_names]
-        
+
         return {
             "total": len(screenshots),
             "already_processed": len(processed_in_list),
@@ -177,7 +177,7 @@ class ProcessedScreenshotTracker:
             "processed_files": processed_in_list,
             "new_files": new_in_list
         }
-    
+
     def get_history(self) -> Dict[str, Any]:
         """
         Get full processing history
@@ -186,7 +186,7 @@ class ProcessedScreenshotTracker:
             History dictionary
         """
         return self._load_history()
-    
+
     def _load_history(self) -> Dict[str, Any]:
         """Load history from JSON file"""
         try:
@@ -199,7 +199,7 @@ class ProcessedScreenshotTracker:
                 "version": "1.0",
                 "processed_screenshots": {}
             }
-    
+
     def _save_history(self, history: Dict[str, Any]):
         """Save history to JSON file"""
         with open(self.history_file, 'w') as f:

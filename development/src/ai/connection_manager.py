@@ -34,7 +34,7 @@ class ConnectionManager:
     
     NO Analytics dependencies - can run in parallel with AnalyticsManager.
     """
-    
+
     def __init__(
         self,
         base_dir: Path,
@@ -53,7 +53,7 @@ class ConnectionManager:
         self.config = config
         self.embeddings = embeddings_service
         self.feedback_history = []
-    
+
     def discover_links(
         self,
         note_path: str,
@@ -158,18 +158,18 @@ class ConnectionManager:
         """
         if not self.embeddings:
             return []
-        
+
         try:
             # Get similar notes using embeddings
             similar_notes = self.embeddings.get_similar(note_path)
-            
+
             # Filter and rank by threshold
             suggestions = self.predict_links(note_path, similar_notes)
-            
+
             return suggestions
-        except Exception as e:
+        except Exception:
             return []
-    
+
     def predict_links(
         self,
         note_path: str,
@@ -315,7 +315,7 @@ class ConnectionManager:
                 similar_notes = self.embeddings.get_similar(note_path)
             else:
                 similar_notes = []
-        
+
         # Get threshold from config
         threshold = self.config.get('connections', {}).get(
             'similarity_threshold', 0.7
@@ -323,7 +323,7 @@ class ConnectionManager:
         max_suggestions = self.config.get('connections', {}).get(
             'max_suggestions', 5
         )
-        
+
         # Filter by threshold
         predictions = []
         for note in similar_notes:
@@ -336,13 +336,13 @@ class ConnectionManager:
                     'score': score,
                     'reason': 'semantic_similarity'
                 })
-        
+
         # Sort by score descending
         predictions.sort(key=lambda x: x['score'], reverse=True)
-        
+
         # Limit to max suggestions
         return predictions[:max_suggestions]
-    
+
     def record_link_decision(
         self,
         source: str,
@@ -466,9 +466,9 @@ class ConnectionManager:
             'similarity_score': similarity_score,
             'reason': reason
         }
-        
+
         self.feedback_history.append(decision)
-    
+
     def get_feedback_history(self) -> List[LinkFeedback]:
         """
         Get history of user link decisions.
@@ -477,7 +477,7 @@ class ConnectionManager:
             List of feedback decisions
         """
         return self.feedback_history
-    
+
     def analyze_bidirectional_links(self) -> Dict[str, Any]:
         """
         Analyze bidirectional link patterns.
@@ -494,23 +494,23 @@ class ConnectionManager:
             }
         """
         import re
-        
+
         link_graph = {}
-        
+
         # Build link graph
         for md_file in self.base_dir.rglob('*.md'):
             if '.git' in str(md_file):
                 continue
-            
+
             note_path = str(md_file.relative_to(self.base_dir))
-            
+
             try:
                 content = md_file.read_text(encoding='utf-8')
                 outgoing = re.findall(r'\[\[(.*?)\]\]', content)
                 link_graph[note_path] = outgoing
             except Exception:
                 continue
-        
+
         # Find one-way links
         one_way_links = []
         for source, targets in link_graph.items():
@@ -526,7 +526,7 @@ class ConnectionManager:
                         'bidirectional': False,
                         'suggest_backlink': True
                     })
-        
+
         return {
             'one_way_links': one_way_links,
             'count': len(one_way_links)

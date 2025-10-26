@@ -15,18 +15,15 @@ TDD Cycle: RED Phase - All tests should FAIL initially
 
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import tempfile
 import shutil
-from datetime import datetime
 import sys
 
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from src.automation.feature_handlers import YouTubeFeatureHandler
-from src.ai.youtube_transcript_saver import YouTubeTranscriptSaver
-from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 
 
 class TestYouTubeHandlerNoteLinking(unittest.TestCase):
@@ -36,7 +33,7 @@ class TestYouTubeHandlerNoteLinking(unittest.TestCase):
     These tests verify that after successful quote insertion, the handler
     adds bidirectional links between the note and transcript file.
     """
-    
+
     def setUp(self):
         """Set up test environment with temporary vault."""
         self.test_dir = tempfile.mkdtemp()
@@ -45,11 +42,11 @@ class TestYouTubeHandlerNoteLinking(unittest.TestCase):
         self.inbox_path.mkdir(parents=True)
         self.transcripts_dir = self.vault_path / "Media" / "Transcripts"
         self.transcripts_dir.mkdir(parents=True, exist_ok=True)
-        
+
     def tearDown(self):
         """Clean up test environment."""
         shutil.rmtree(self.test_dir)
-    
+
     def test_handler_adds_transcript_to_frontmatter(self):
         """
         RED: Test that handler adds transcript_file field to note frontmatter.
@@ -76,22 +73,22 @@ video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 Original content here.
 """
         note_path.write_text(original_content)
-        
+
         # Mock dependencies
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver:
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 3
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             from src.automation.feature_handlers import YouTubeFeatureHandler
             handler = YouTubeFeatureHandler(
@@ -99,22 +96,22 @@ Original content here.
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             result = handler.handle(note_path)
-            
+
             # Verify success
             self.assertTrue(result['success'])
-            
+
             # RED: This should FAIL - frontmatter update not implemented yet
             updated_content = note_path.read_text()
             self.assertIn('transcript_file:', updated_content)
             self.assertIn('[[youtube-dQw4w9WgXcQ-2025-10-18]]', updated_content)
-            
+
             # Verify original fields preserved
             self.assertIn('created: 2025-10-18 00:00', updated_content)
             self.assertIn('type: fleeting', updated_content)
             self.assertIn('tags: [youtube, test]', updated_content)
-    
+
     def test_handler_inserts_transcript_link_in_body(self):
         """
         RED: Test that handler inserts transcript link in note body after title.
@@ -140,22 +137,22 @@ This is the original content.
 More content here.
 """
         note_path.write_text(original_content)
-        
+
         # Mock dependencies
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver:
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             from src.automation.feature_handlers import YouTubeFeatureHandler
             handler = YouTubeFeatureHandler(
@@ -163,26 +160,26 @@ More content here.
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             result = handler.handle(note_path)
-            
+
             # Verify success
             self.assertTrue(result['success'])
-            
+
             # RED: This should FAIL - body link insertion not implemented yet
             updated_content = note_path.read_text()
             self.assertIn('**Full Transcript**:', updated_content)
             self.assertIn('[[youtube-dQw4w9WgXcQ-2025-10-18]]', updated_content)
-            
+
             # Verify link is after title but before original content
             lines = updated_content.split('\n')
             title_idx = next(i for i, line in enumerate(lines) if line.startswith('# Amazing Video Title'))
             transcript_link_idx = next(i for i, line in enumerate(lines) if '**Full Transcript**:' in line)
             content_idx = next(i for i, line in enumerate(lines) if 'This is the original content' in line)
-            
+
             self.assertGreater(transcript_link_idx, title_idx)
             self.assertLess(transcript_link_idx, content_idx)
-    
+
     def test_handler_preserves_existing_content(self):
         """
         RED: Test that handler preserves all existing note content.
@@ -216,22 +213,22 @@ These are my reflections.
 - Link 2
 """
         note_path.write_text(original_content)
-        
+
         # Mock dependencies
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver:
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             from src.automation.feature_handlers import YouTubeFeatureHandler
             handler = YouTubeFeatureHandler(
@@ -239,12 +236,12 @@ These are my reflections.
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             result = handler.handle(note_path)
-            
+
             # Verify success
             self.assertTrue(result['success'])
-            
+
             # RED: Verify content preservation
             updated_content = note_path.read_text()
             self.assertIn('Important user notes here.', updated_content)
@@ -253,7 +250,7 @@ These are my reflections.
             self.assertIn('## References', updated_content)
             self.assertIn('- Link 1', updated_content)
             self.assertIn('- Link 2', updated_content)
-    
+
     def test_handler_handles_linking_failure_gracefully(self):
         """
         RED: Test that linking failures don't crash the handler.
@@ -278,40 +275,40 @@ video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 Content here.
 """
         note_path.write_text(original_content)
-        
+
         # Mock dependencies - simulate error during frontmatter update
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver, \
              patch('src.utils.frontmatter.parse_frontmatter', side_effect=Exception("Simulated parse error")):
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             handler = YouTubeFeatureHandler(
                 vault_path=self.vault_path,
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             # Should not raise exception
             result = handler.handle(note_path)
-            
+
             # RED: Handler should still report success (quotes were added)
             self.assertTrue(result['success'])
-            
+
             # RED: Should indicate linking had issues
             self.assertIn('transcript_link_added', result)
             self.assertFalse(result['transcript_link_added'])
-    
+
     def test_bidirectional_navigation_works(self):
         """
         RED: Test end-to-end bidirectional linking.
@@ -335,7 +332,7 @@ video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 Content here.
 """
         note_path.write_text(original_content)
-        
+
         # Create actual transcript file (not mocked)
         transcript_content = """---
 created: 2025-10-18 00:00
@@ -351,21 +348,21 @@ Transcript content here.
 """
         transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
         transcript_path.write_text(transcript_content)
-        
+
         # Mock dependencies
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver:
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             from src.automation.feature_handlers import YouTubeFeatureHandler
             handler = YouTubeFeatureHandler(
@@ -373,24 +370,24 @@ Transcript content here.
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             result = handler.handle(note_path)
-            
+
             # Verify success
             self.assertTrue(result['success'])
-            
+
             # RED: Verify bidirectional linking
             # 1. Transcript → Note (already done by Phase 1)
             transcript_text = transcript_path.read_text()
             self.assertIn('parent_note: [[test-youtube-note]]', transcript_text)
-            
+
             # 2. Note → Transcript (frontmatter)
             note_text = note_path.read_text()
             self.assertIn('transcript_file: [[youtube-dQw4w9WgXcQ-2025-10-18]]', note_text)
-            
+
             # 3. Note → Transcript (body)
             self.assertIn('**Full Transcript**: [[youtube-dQw4w9WgXcQ-2025-10-18]]', note_text)
-    
+
     def test_linking_with_various_note_structures(self):
         """
         RED: Test linking works with different note structures.
@@ -413,22 +410,22 @@ video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 Just some content without a title heading.
 """
         note_path.write_text(original_content)
-        
+
         # Mock dependencies
         with patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer, \
              patch('src.ai.youtube_transcript_saver.YouTubeTranscriptSaver') as MockSaver:
-            
+
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
             mock_result = Mock()
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
-            
+
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
-            
+
             # Create handler and process
             from src.automation.feature_handlers import YouTubeFeatureHandler
             handler = YouTubeFeatureHandler(
@@ -436,16 +433,16 @@ Just some content without a title heading.
                 processing_timeout=30,
                 metrics_tracker=Mock()
             )
-            
+
             result = handler.handle(note_path)
-            
+
             # Verify success
             self.assertTrue(result['success'])
-            
+
             # RED: Should still add transcript link (at start of body if no title)
             updated_content = note_path.read_text()
             self.assertIn('**Full Transcript**: [[youtube-dQw4w9WgXcQ-2025-10-18]]', updated_content)
-            
+
             # Should preserve original content
             self.assertIn('Just some content without a title heading.', updated_content)
 

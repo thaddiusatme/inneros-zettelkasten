@@ -66,7 +66,7 @@ class FleetingCLI:
     
     Bug #3 Fix: Uses WorkflowManager directly to avoid AttributeError in adapter
     """
-    
+
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize Fleeting Notes CLI
@@ -79,22 +79,22 @@ class FleetingCLI:
         self.workflow = WorkflowManager(self.vault_path)
         self.formatter = FleetingFormatter()
         logger.info(f"Fleeting CLI initialized with vault: {self.vault_path}")
-    
+
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
         print("\n" + "="*60)
         print(title)
         print("="*60 + "\n")
-    
+
     def _print_section(self, title: str) -> None:
         """Print a formatted subsection header."""
         print(f"\n{title}")
         print("-" * len(title))
-    
+
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == 'json'
-    
+
     def fleeting_health(self, output_format: str = 'normal',
                        export_path: Optional[str] = None) -> int:
         """
@@ -108,22 +108,22 @@ class FleetingCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        
+
         try:
             # Display header
             if not quiet:
                 print("📊 Generating fleeting notes health report...")
-            
+
             # Generate health report - BUG #3 FIX: WorkflowManager has the method
             health_report = self.workflow.generate_fleeting_health_report()
-            
+
             # Format and display output
             if quiet:
                 print(json.dumps(health_report, indent=2, default=str))
             else:
                 self._print_header("FLEETING NOTES HEALTH REPORT")
                 print(self.formatter.display_health_report(health_report))
-            
+
             # Export if requested
             if export_path:
                 export_path_obj = Path(export_path)
@@ -135,14 +135,14 @@ class FleetingCLI:
                         f.write(self.formatter.format_health_markdown(health_report))
                 if not quiet:
                     print(f"\n📄 Health report exported to: {export_path}")
-            
+
             return 0
-            
+
         except Exception as e:
             print(f"❌ Error generating fleeting health report: {e}", file=sys.stderr)
             logger.exception("Error in fleeting_health")
             return 1
-    
+
     def fleeting_triage(self, quality_threshold: Optional[float] = 0.7,
                        fast: bool = True,
                        output_format: str = 'normal',
@@ -160,30 +160,30 @@ class FleetingCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        
+
         # Validate quality threshold
         if quality_threshold is not None and (quality_threshold < 0.0 or quality_threshold > 1.0):
             print("❌ Error: Quality threshold must be between 0.0 and 1.0", file=sys.stderr)
             return 1
-        
+
         try:
             # Display header
             if not quiet:
                 print("📊 Generating AI-powered fleeting notes triage report...")
-            
+
             # Generate triage report
             triage_report = self.workflow.generate_fleeting_triage_report(
                 quality_threshold=quality_threshold,
                 fast=fast
             )
-            
+
             # Format and display output
             if quiet:
                 print(json.dumps(triage_report, indent=2, default=str))
             else:
                 self._print_header("FLEETING NOTES TRIAGE REPORT")
                 print(self.formatter.display_triage_report(triage_report))
-            
+
             # Export if requested
             if export_path:
                 export_path_obj = Path(export_path)
@@ -194,9 +194,9 @@ class FleetingCLI:
                         f.write(self.formatter.format_triage_markdown(triage_report))
                 if not quiet:
                     print(f"\n📄 Triage report exported to: {export_path}")
-            
+
             return 0
-            
+
         except Exception as e:
             print(f"❌ Error generating triage report: {e}", file=sys.stderr)
             logger.exception("Error in fleeting_triage")
@@ -231,7 +231,7 @@ Examples:
   %(prog)s fleeting-health --format json
         """
     )
-    
+
     # Global options
     parser.add_argument(
         '--vault',
@@ -244,10 +244,10 @@ Examples:
         action='store_true',
         help='Enable verbose logging'
     )
-    
+
     # Subcommands
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+
     # fleeting-health subcommand
     health_parser = subparsers.add_parser(
         'fleeting-health',
@@ -265,7 +265,7 @@ Examples:
         metavar='PATH',
         help='Export report to file'
     )
-    
+
     # fleeting-triage subcommand
     triage_parser = subparsers.add_parser(
         'fleeting-triage',
@@ -295,7 +295,7 @@ Examples:
         metavar='PATH',
         help='Export report to file'
     )
-    
+
     return parser
 
 
@@ -303,23 +303,23 @@ def main():
     """Main entry point for Fleeting Notes CLI"""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     # Configure logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Check if command was provided
     if not args.command:
         parser.print_help()
         return 1
-    
+
     # Initialize CLI
     try:
         cli = FleetingCLI(vault_path=args.vault)
     except Exception as e:
         print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
         return 1
-    
+
     # Execute command
     try:
         if args.command == 'fleeting-health':

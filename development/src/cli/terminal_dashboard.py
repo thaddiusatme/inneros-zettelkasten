@@ -26,7 +26,7 @@ from .terminal_dashboard_utils import (
 )
 
 # Phase 3.1: Import metrics for dashboard integration
-from src.monitoring import MetricsCollector, MetricsStorage, MetricsDisplayFormatter
+from src.monitoring import MetricsCollector
 
 try:
     from rich.console import Console
@@ -91,20 +91,20 @@ def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1,
         print("Error: 'rich' library required for dashboard")
         print("Install with: pip install rich")
         return
-    
+
     # Phase 3.1: Initialize metrics if not provided
     if metrics_collector is None:
         metrics_collector = MetricsCollector()
-    
+
     # Initialize components
     poller = HealthPoller(url)
     formatter = StatusFormatter()
     renderer = TableRenderer(formatter, metrics_collector=metrics_collector)
     orchestrator = DashboardOrchestrator(poller, renderer, refresh_interval)
-    
+
     # Setup display
     console = Console()
-    
+
     try:
         with Live(console=console, refresh_per_second=1) as live:
             orchestrator.run(lambda content: live.update(content))
@@ -115,7 +115,7 @@ def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1,
 def main():
     """CLI entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="InnerOS Automation Daemon Terminal Dashboard"
     )
@@ -130,12 +130,12 @@ def main():
         default=1,
         help='Refresh interval in seconds (default: 1)'
     )
-    
+
     args = parser.parse_args()
-    
+
     print(f"Starting dashboard monitoring {args.url}")
     print("Press Ctrl+C to stop\n")
-    
+
     run_dashboard(url=args.url, refresh_interval=args.refresh)
 
 

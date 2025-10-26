@@ -22,7 +22,7 @@ class ImageAttachmentManager:
     - Device-aware filename prefixes (samsung-, ipad-)
     - Preserves original filenames when possible
     """
-    
+
     def __init__(self, base_path: Path):
         """
         Initialize manager with knowledge base path.
@@ -32,7 +32,7 @@ class ImageAttachmentManager:
         """
         self.base_path = Path(base_path)
         self.attachments_root = self.base_path / "attachments"
-    
+
     def save_to_attachments(self, image_path: Path) -> Path:
         """
         Save image to centralized attachments/YYYY-MM/ structure.
@@ -53,30 +53,30 @@ class ImageAttachmentManager:
         """
         if not image_path.exists():
             raise FileNotFoundError(f"Source image not found: {image_path}")
-        
+
         if not image_path.is_file():
             raise ValueError(f"Path is not a file: {image_path}")
-        
+
         # Auto-detect capture date and device
         capture_date = self._extract_capture_date(image_path)
         device_prefix = self._detect_device_from_filename(image_path.name)
-        
+
         # Create destination folder
         dest_folder = self.create_month_folder(capture_date.year, capture_date.month)
-        
+
         # Generate destination filename
         dest_filename = self._generate_filename(image_path, capture_date, device_prefix)
         dest_path = dest_folder / dest_filename
-        
+
         # Copy image to attachments (preserve original)
         shutil.copy2(image_path, dest_path)
         logger.info(f"Saved image to attachments: {dest_path} (captured: {capture_date.strftime('%Y-%m-%d %H:%M:%S')})")
-        
+
         return dest_path
-    
+
     def get_attachment_path(
-        self, 
-        image_filename: str, 
+        self,
+        image_filename: str,
         capture_date: datetime,
         device_prefix: Optional[str] = None
     ) -> Path:
@@ -92,7 +92,7 @@ class ImageAttachmentManager:
             Path where image would be saved
         """
         dest_folder = self.get_month_folder(capture_date.year, capture_date.month)
-        
+
         if device_prefix:
             # Use device prefix with timestamp
             stem = Path(image_filename).stem
@@ -101,9 +101,9 @@ class ImageAttachmentManager:
             dest_filename = f"{device_prefix}-{timestamp}{suffix}"
         else:
             dest_filename = image_filename
-        
+
         return dest_folder / dest_filename
-    
+
     def create_month_folder(self, year: int, month: int) -> Path:
         """
         Create attachments/YYYY-MM/ folder if it doesn't exist.
@@ -117,13 +117,13 @@ class ImageAttachmentManager:
         """
         folder_name = f"{year:04d}-{month:02d}"
         folder_path = self.attachments_root / folder_name
-        
+
         # Create folder and parents if needed
         folder_path.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Ensured folder exists: {folder_path}")
-        
+
         return folder_path
-    
+
     def get_month_folder(self, year: int, month: int) -> Path:
         """
         Get path to month folder without creating it.
@@ -137,10 +137,10 @@ class ImageAttachmentManager:
         """
         folder_name = f"{year:04d}-{month:02d}"
         return self.attachments_root / folder_name
-    
+
     def _generate_filename(
-        self, 
-        image_path: Path, 
+        self,
+        image_path: Path,
         capture_date: datetime,
         device_prefix: Optional[str] = None
     ) -> str:
@@ -163,7 +163,7 @@ class ImageAttachmentManager:
         else:
             # Use original filename
             return image_path.name
-    
+
     def _extract_capture_date(self, image_path: Path) -> datetime:
         """
         Extract capture date from filename or file metadata.
@@ -180,7 +180,7 @@ class ImageAttachmentManager:
             Capture datetime
         """
         filename = image_path.name
-        
+
         # Try Samsung pattern: Screenshot_20251002_083000_Chrome.jpg
         if filename.startswith("Screenshot_"):
             parts = filename.split("_")
@@ -193,7 +193,7 @@ class ImageAttachmentManager:
                     return capture_date
                 except (ValueError, IndexError):
                     logger.debug(f"Could not parse Samsung date from: {filename}")
-        
+
         # Try iPad pattern: 20241002_083000000_iOS.png
         if "_iOS" in filename or "_ios" in filename:
             parts = filename.split("_")
@@ -206,13 +206,13 @@ class ImageAttachmentManager:
                     return capture_date
                 except (ValueError, IndexError):
                     logger.debug(f"Could not parse iPad date from: {filename}")
-        
+
         # Fallback: Use file modification date
         stat = image_path.stat()
         capture_date = datetime.fromtimestamp(stat.st_mtime)
         logger.debug(f"Using file modification date: {capture_date}")
         return capture_date
-    
+
     def _detect_device_from_filename(self, filename: str) -> Optional[str]:
         """
         Detect device type from screenshot filename patterns.
@@ -224,13 +224,13 @@ class ImageAttachmentManager:
             Device prefix (samsung, ipad) or None
         """
         filename_lower = filename.lower()
-        
+
         # Samsung patterns: Screenshot_YYYYMMDD_HHMMSS_*.jpg
         if filename_lower.startswith("screenshot_") and "_" in filename:
             return "samsung"
-        
+
         # iPad patterns: YYYYMMDD_HHMMSS000_iOS.png
         if "_ios" in filename_lower:
             return "ipad"
-        
+
         return None

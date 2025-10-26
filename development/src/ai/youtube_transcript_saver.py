@@ -56,7 +56,7 @@ class YouTubeTranscriptSaver:
         ...     parent_note_name="fleeting-note"
         ... )
     """
-    
+
     def __init__(self, vault_path: Path):
         """
         Initialize transcript saver.
@@ -66,12 +66,12 @@ class YouTubeTranscriptSaver:
         """
         self.vault_path = Path(vault_path)
         self.transcripts_dir = self.vault_path / "Media" / "Transcripts"
-        
+
         # Create transcripts directory if it doesn't exist
         self.transcripts_dir.mkdir(parents=True, exist_ok=True)
-        
+
         logger.info(f"YouTubeTranscriptSaver initialized with vault: {vault_path}")
-    
+
     def save_transcript(
         self,
         video_id: str,
@@ -114,12 +114,12 @@ class YouTubeTranscriptSaver:
         date_str = datetime.now().strftime("%Y-%m-%d")
         filename = f"youtube-{video_id}-{date_str}.md"
         file_path = self.transcripts_dir / filename
-        
+
         # Check if file already exists (idempotent)
         if file_path.exists():
             logger.info(f"Transcript file already exists: {file_path}")
             return file_path
-        
+
         # Build complete transcript content
         content = self._build_transcript_content(
             transcript_data=transcript_data,
@@ -127,13 +127,13 @@ class YouTubeTranscriptSaver:
             parent_note_name=parent_note_name,
             date_str=date_str
         )
-        
+
         # Write to file
         file_path.write_text(content, encoding="utf-8")
-        
+
         logger.info(f"Saved transcript to: {file_path}")
         return file_path
-    
+
     def _build_transcript_content(
         self,
         transcript_data: List[Dict[str, Any]],
@@ -161,7 +161,7 @@ class YouTubeTranscriptSaver:
         video_title = metadata["video_title"]
         duration = metadata["duration"]
         language = metadata.get("language", "en")
-        
+
         # Build content sections
         frontmatter = self._build_frontmatter(
             video_id=video_id,
@@ -172,7 +172,7 @@ class YouTubeTranscriptSaver:
             transcript_length=len(transcript_data),
             parent_note_name=parent_note_name
         )
-        
+
         header = self._build_header(
             video_title=video_title,
             video_url=video_url,
@@ -180,11 +180,11 @@ class YouTubeTranscriptSaver:
             language=language,
             parent_note_name=parent_note_name
         )
-        
+
         body = self._build_timestamped_body(transcript_data)
-        
+
         return frontmatter + header + body
-    
+
     def _format_timestamp(self, seconds: float) -> str:
         """
         Format timestamp in MM:SS format.
@@ -209,7 +209,7 @@ class YouTubeTranscriptSaver:
         minutes = int(seconds // 60)
         secs = int(seconds % 60)
         return f"{minutes:02d}:{secs:02d}"
-    
+
     def _format_duration(self, seconds: float) -> str:
         """
         Format duration as HH:MM:SS or MM:SS.
@@ -234,12 +234,12 @@ class YouTubeTranscriptSaver:
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
         secs = int(seconds % 60)
-        
+
         if hours > 0:
             return f"{hours}:{minutes:02d}:{secs:02d}"
         else:
             return f"{minutes}:{secs:02d}"
-    
+
     def _build_frontmatter(
         self,
         video_id: str,
@@ -267,7 +267,7 @@ class YouTubeTranscriptSaver:
         """
         duration_str = self._format_duration(duration)
         fetched_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         return f"""---
 type: transcript
 source: youtube
@@ -282,7 +282,7 @@ parent_note: {parent_note_name}
 ---
 
 """
-    
+
     def _build_header(
         self,
         video_title: str,
@@ -305,16 +305,16 @@ parent_note: {parent_note_name}
             Markdown header with title and metadata
         """
         duration_str = self._format_duration(duration)
-        
+
         header = f"# Transcript: {video_title}\n\n"
         header += f"**Video**: [{video_title}]({video_url})\n"
         header += f"**Duration**: {duration_str}\n"
         header += f"**Language**: {language}\n"
         header += f"**Parent Note**: [[{parent_note_name}]]\n\n"
         header += "## Transcript\n\n"
-        
+
         return header
-    
+
     def _build_timestamped_body(self, transcript_data: List[Dict[str, Any]]) -> str:
         """
         Build timestamped transcript body.
@@ -330,9 +330,9 @@ parent_note: {parent_note_name}
             timestamp = self._format_timestamp(entry["start"])
             text = entry["text"].strip()
             transcript_lines.append(f"[{timestamp}] {text}")
-        
+
         return "\n".join(transcript_lines)
-    
+
     def get_transcript_link(self, video_id: str, date_str: str) -> str:
         """
         Generate wikilink for transcript file.

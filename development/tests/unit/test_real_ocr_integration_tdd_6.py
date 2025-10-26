@@ -17,7 +17,7 @@ Following proven TDD patterns from Advanced Tag Enhancement and Smart Link Manag
 """
 
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from pathlib import Path
 import tempfile
 import os
@@ -36,23 +36,23 @@ class TestRealOCRIntegration(unittest.TestCase):
     
     These tests MUST FAIL initially since mock OCR is still being used.
     """
-    
+
     def setUp(self):
         """Set up test fixtures"""
         self.analyzer = RichContextAnalyzer()
         self.filename_generator = ContextualFilenameGenerator()
-        
+
         # Create mock screenshot file
         self.temp_dir = tempfile.mkdtemp()
         self.screenshot_path = Path(self.temp_dir) / "Screenshot_20250925_092059_Messenger.jpg"
         self.screenshot_path.touch()
-    
+
     def tearDown(self):
         """Clean up test fixtures"""
         if self.screenshot_path.exists():
             self.screenshot_path.unlink()
         os.rmdir(self.temp_dir)
-    
+
     def test_real_llama_vision_ocr_integration(self):
         """
         Test that RichContextAnalyzer uses real LlamaVisionOCR instead of mock content
@@ -71,19 +71,19 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.92,
                 processing_time=2.3
             )
-            
+
             # Analyze screenshot with real OCR
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
-            
+
             # Verify real OCR integration - THESE WILL FAIL with mock implementation
             self.assertIn("John: Hey, can we discuss", result['basic_ocr'])
             self.assertIn("Messenger conversation between John and Sarah", result['content_summary'])
             self.assertIn("machine learning", result['key_topics'])
             self.assertIn("Active project collaboration", result['contextual_insights'])
-            
+
             # Verify LlamaVisionOCR was actually called
             mock_analyze.assert_called_once_with(self.screenshot_path)
-    
+
     def test_detailed_ai_vision_description_requirement(self):
         """
         Test that AI vision descriptions are detailed (>100 words) with visual elements
@@ -93,7 +93,7 @@ class TestRealOCRIntegration(unittest.TestCase):
         with patch.object(LlamaVisionOCR, 'analyze_screenshot') as mock_analyze:
             # Detailed AI vision description with visual elements
             detailed_description = """Messenger conversation interface showing a clean, modern chat layout with white background and blue message bubbles. The conversation is between John and Sarah discussing machine learning projects. Visual elements include user profile pictures on the left side of messages, timestamp indicators showing recent activity, and the characteristic Messenger blue color scheme. The interface shows typical mobile messaging app UI components including message bubbles with rounded corners, clear typography for readability, and proper spacing between conversation threads. At the bottom, there's a text input field with placeholder text visible."""
-            
+
             mock_analyze.return_value = VisionAnalysisResult(
                 extracted_text="John: Hey Sarah! Sarah: Hi John, what's up?",
                 content_summary=detailed_description,  # >100 words with visual elements
@@ -104,16 +104,16 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.88,
                 processing_time=1.9
             )
-            
+
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
-            
+
             # Verify detailed description requirements - WILL FAIL with current mock
             description = result['content_summary']
             self.assertGreater(len(description), 100, "AI vision description must be >100 words")
             self.assertIn("visual", description.lower(), "Must describe visual elements")
             self.assertIn("interface", description.lower(), "Must describe UI components")
             self.assertIn("color", description.lower(), "Must describe color scheme")
-    
+
     def test_source_context_analysis_with_app_detection(self):
         """
         Test source context analysis with app-specific content understanding
@@ -131,20 +131,20 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.85,
                 processing_time=2.1
             )
-            
+
             # Test with Threads screenshot
             threads_screenshot = Path(self.temp_dir) / "Screenshot_20250925_143021_Threads.jpg"
             threads_screenshot.touch()
-            
+
             result = self.analyzer.analyze_screenshot_with_rich_context(threads_screenshot)
-            
+
             # Verify app-specific analysis - WILL FAIL without real OCR
             self.assertEqual(result['device_metadata']['app_name'], 'Threads')
             self.assertIn("social media", result['content_summary'].lower())
             self.assertIn("Social engagement", result['contextual_insights'])
-            
+
             threads_screenshot.unlink()
-    
+
     def test_enhanced_filename_generation_with_real_ocr_content(self):
         """
         Test enhanced filename generation using real OCR content keywords
@@ -162,18 +162,18 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.91,
                 processing_time=1.8
             )
-            
+
             # Generate filename with real OCR content
             timestamp = "20250925-1430"
             filename = self.filename_generator.generate_contextual_filename(
-                self.screenshot_path, 
-                mock_analyze.return_value, 
+                self.screenshot_path,
+                mock_analyze.return_value,
                 timestamp
             )
-            
+
             # Verify enhanced filename from real content - WILL FAIL with mock keywords
             self.assertEqual(filename, "capture-20250925-1430-github-ai-automation-tools.md")
-            
+
             # Verify real content was used for generation
             description = self.filename_generator.extract_intelligent_description(
                 mock_analyze.return_value.extracted_text,
@@ -182,7 +182,7 @@ class TestRealOCRIntegration(unittest.TestCase):
             self.assertIn("github", description)
             self.assertIn("ai", description)
             self.assertIn("automation", description)
-    
+
     def test_ocr_confidence_scoring_and_quality_assessment(self):
         """
         Test OCR confidence scoring and content quality assessment
@@ -201,15 +201,15 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.95,  # High confidence
                 processing_time=1.2
             )
-            
+
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
-            
+
             # Verify confidence scoring integration - WILL FAIL without real OCR
             self.assertIn('ocr_confidence', result)
             self.assertEqual(result['ocr_confidence'], 0.95)
             self.assertIn('quality_assessment', result)
             self.assertEqual(result['quality_assessment'], 'high')
-    
+
     def test_app_specific_conversation_analysis(self):
         """
         Test app-specific conversation analysis for Messenger/Threads content
@@ -227,9 +227,9 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.89,
                 processing_time=2.0
             )
-            
+
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
-            
+
             # Verify conversation-specific analysis - WILL FAIL with generic mock
             self.assertIn('conversation_participants', result)
             self.assertEqual(set(result['conversation_participants']), {'Alice', 'Bob'})
@@ -237,7 +237,7 @@ class TestRealOCRIntegration(unittest.TestCase):
             self.assertEqual(result['conversation_topic'], 'ai tools productivity')
             self.assertIn('sentiment_analysis', result)
             self.assertEqual(result['sentiment_analysis'], 'positive')
-    
+
     def test_error_handling_and_fallback_strategies(self):
         """
         Test comprehensive error handling when OCR processing fails
@@ -247,19 +247,19 @@ class TestRealOCRIntegration(unittest.TestCase):
         with patch.object(LlamaVisionOCR, 'analyze_screenshot') as mock_analyze:
             # Simulate OCR failure
             mock_analyze.return_value = None
-            
+
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
-            
+
             # Verify fallback handling - WILL FAIL without real OCR error handling
             self.assertIn('ocr_status', result)
             self.assertEqual(result['ocr_status'], 'failed')
             self.assertIn('fallback_content', result)
             self.assertIn('Visual content captured but OCR processing failed', result['fallback_content'])
-            
+
             # Verify graceful degradation
             self.assertIsNotNone(result['basic_ocr'])
             self.assertIsNotNone(result['content_summary'])
-    
+
     def test_performance_targets_with_real_ocr_processing(self):
         """
         Test that real OCR processing maintains <30s performance target
@@ -278,14 +278,14 @@ class TestRealOCRIntegration(unittest.TestCase):
                 confidence_score=0.8,
                 processing_time=8.5  # Realistic OCR processing time
             )
-            
+
             import time
             start_time = time.time()
             result = self.analyzer.analyze_screenshot_with_rich_context(self.screenshot_path)
             end_time = time.time()
-            
+
             total_time = end_time - start_time
-            
+
             # Verify performance targets - WILL FAIL without real timing
             self.assertIn('processing_metrics', result)
             self.assertIn('ocr_processing_time', result['processing_metrics'])
@@ -299,7 +299,7 @@ class TestOCRUtilityExtraction(unittest.TestCase):
     
     These tests define the modular architecture needed for production OCR integration.
     """
-    
+
     def test_real_ocr_processor_utility_class(self):
         """
         Test RealOCRProcessor utility class for modular OCR integration
@@ -307,20 +307,20 @@ class TestOCRUtilityExtraction(unittest.TestCase):
         Now passes with extracted utility class
         """
         from src.cli.individual_screenshot_utils import RealOCRProcessor
-        
+
         processor = RealOCRProcessor()
-        
+
         # Test with non-existent file (should return None gracefully)
         result = processor.process_screenshot_with_vision(Path("test.jpg"))
         self.assertIsNone(result)  # Expected since file doesn't exist
-        
+
         # Test statistics tracking
         stats = processor.get_processing_statistics()
         self.assertIn('total_processed', stats)
         self.assertIn('success_rate', stats)
         self.assertEqual(stats['total_processed'], 1)
         self.assertEqual(stats['failed'], 1)
-    
+
     def test_content_intelligence_analyzer_utility_class(self):
         """
         Test ContentIntelligenceAnalyzer for app-specific analysis
@@ -328,14 +328,14 @@ class TestOCRUtilityExtraction(unittest.TestCase):
         MUST FAIL: Class doesn't exist yet
         """
         from src.cli.individual_screenshot_utils import ContentIntelligenceAnalyzer
-        
+
         analyzer = ContentIntelligenceAnalyzer()
         intelligence = analyzer.analyze_app_specific_content("messaging_app", "conversation text")
-        
+
         self.assertIn('participants', intelligence)
         self.assertIn('topic', intelligence)
         self.assertIn('sentiment', intelligence)
-    
+
     def test_ocr_performance_optimizer_utility_class(self):
         """
         Test OCRPerformanceOptimizer for caching and optimization
@@ -343,10 +343,10 @@ class TestOCRUtilityExtraction(unittest.TestCase):
         MUST FAIL: Class doesn't exist yet
         """
         from src.cli.individual_screenshot_utils import OCRPerformanceOptimizer
-        
+
         optimizer = OCRPerformanceOptimizer()
         result = optimizer.optimize_ocr_processing(Path("test.jpg"))
-        
+
         self.assertIn('cache_hit', result)
         self.assertIn('processing_time', result)
 

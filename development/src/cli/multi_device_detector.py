@@ -42,7 +42,7 @@ class MultiDeviceDetector:
         >>> print(metadata['device_name'])
         Samsung Galaxy S23
     """
-    
+
     def __init__(self):
         """
         Initialize multi-device detector with utility classes
@@ -53,10 +53,10 @@ class MultiDeviceDetector:
         self.pattern_matcher = DevicePatternMatcher()
         self.timestamp_extractor = TimestampExtractor(self.pattern_matcher)
         self.metadata_builder = DeviceMetadataBuilder(
-            self.pattern_matcher, 
+            self.pattern_matcher,
             self.timestamp_extractor
         )
-    
+
     def detect_device(self, file_path: Path) -> DeviceType:
         """
         Detect device type from filename pattern
@@ -75,7 +75,7 @@ class MultiDeviceDetector:
             DeviceType.IPAD
         """
         return self.pattern_matcher.detect_device_type(file_path.name)
-    
+
     def extract_timestamp(self, file_path: Path) -> Optional[datetime]:
         """
         Extract timestamp from filename using device-specific parsing
@@ -94,7 +94,7 @@ class MultiDeviceDetector:
         """
         device_type = self.detect_device(file_path)
         return self.timestamp_extractor.extract(file_path.name, device_type)
-    
+
     def extract_metadata(self, file_path: Path) -> Dict[str, Any]:
         """
         Extract all device-specific metadata

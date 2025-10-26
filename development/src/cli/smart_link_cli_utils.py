@@ -5,29 +5,28 @@ Minimal implementation to pass failing tests
 """
 
 from typing import List
-import sys
 from ai.link_suggestion_engine import LinkSuggestion
 
 
 def display_suggestion_interactively(suggestion: LinkSuggestion, current: int, total: int) -> str:
     """Display a suggestion interactively and get user choice"""
-    
+
     # Quality emoji indicators
     quality_emoji = {
         "high": "🟢",
-        "medium": "🟡", 
+        "medium": "🟡",
         "low": "🔴"
     }
-    
+
     emoji = quality_emoji.get(suggestion.confidence, "⚪")
-    
+
     print(f"\n{emoji} Suggestion {current}/{total}")
     print(f"Link: {suggestion.suggested_link_text}")
     print(f"Similarity: {suggestion.similarity_score:.1%}")
     print(f"Explanation: {suggestion.explanation}")
     print(f"Insert in: {suggestion.insertion_context}")
     print("\nOptions: [A]ccept, [R]eject, [S]kip")
-    
+
     choice = get_user_choice_for_suggestion()
     return choice
 
@@ -66,10 +65,10 @@ def filter_suggestions_by_quality(suggestions: List[LinkSuggestion], min_quality
     return [s for s in suggestions if s.quality_score >= min_quality]
 
 
-def display_suggestions_summary(suggestions: List[LinkSuggestion], processed: int = None, 
+def display_suggestions_summary(suggestions: List[LinkSuggestion], processed: int = None,
                                accepted: int = None, rejected: int = None):
     """Display summary of suggestions processing"""
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"   Total suggestions: {len(suggestions)}")
     if processed is not None:
         print(f"   Processed: {processed}")
@@ -97,10 +96,10 @@ def display_cli_error(error_message: str, context: str = ""):
 def process_suggestions_batch(suggestions: List[LinkSuggestion], interactive: bool = False) -> List[dict]:
     """Process a batch of suggestions with progress tracking"""
     results = []
-    
+
     for i, suggestion in enumerate(suggestions, 1):
         display_progress(i, len(suggestions), f"Processing {suggestion.target_note}")
-        
+
         if interactive:
             choice = display_suggestion_interactively(suggestion, i, len(suggestions))
             results.append({
@@ -111,8 +110,8 @@ def process_suggestions_batch(suggestions: List[LinkSuggestion], interactive: bo
             # Auto-accept high quality suggestions in non-interactive mode
             action = 'accept' if suggestion.confidence == 'high' else 'skip'
             results.append({
-                'suggestion': suggestion, 
+                'suggestion': suggestion,
                 'action': action
             })
-    
+
     return results

@@ -1,10 +1,7 @@
-import os
 import tempfile
 from pathlib import Path
 
-import pytest
 import sys
-from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.utils.vault_path import get_default_vault_path

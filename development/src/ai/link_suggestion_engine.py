@@ -6,12 +6,11 @@ Converts connection discovery results into actionable link suggestions with qual
 
 from dataclasses import dataclass
 from typing import List, Any
-from pathlib import Path
 
 from .link_suggestion_utils import (
-    QualityScore, 
-    LinkTextGenerator, 
-    LinkQualityAssessor, 
+    QualityScore,
+    LinkTextGenerator,
+    LinkQualityAssessor,
     InsertionContextDetector,
     SuggestionBatchProcessor
 )
@@ -34,7 +33,7 @@ class LinkSuggestionEngine:
     Converts connection discovery results into actionable link suggestions
     with intelligent quality scoring and link text generation
     """
-    
+
     def __init__(self, vault_path: str, quality_threshold: float = 0.5, max_suggestions: int = 10):
         """
         Initialize LinkSuggestionEngine
@@ -47,8 +46,8 @@ class LinkSuggestionEngine:
         self.vault_path = vault_path
         self.quality_threshold = quality_threshold
         self.max_suggestions = max_suggestions
-    
-    def generate_link_suggestions(self, target_note: str, connections: List[Any], 
+
+    def generate_link_suggestions(self, target_note: str, connections: List[Any],
                                 min_quality: float = None, max_results: int = None) -> List[LinkSuggestion]:
         """
         Generate link suggestions from connection discovery results
@@ -65,21 +64,21 @@ class LinkSuggestionEngine:
         suggestions = []
         min_qual = min_quality or self.quality_threshold
         max_res = max_results or self.max_suggestions
-        
+
         for conn in connections:
             # Generate suggestion using extracted utilities
             quality = self.score_link_quality(conn)
-            
+
             # Skip if below quality threshold
             if quality.score < min_qual:
                 continue
-                
-            link_text = self.generate_link_text("", conn.target_file, 
+
+            link_text = self.generate_link_text("", conn.target_file,
                                               getattr(conn, 'content_overlap', ''))
-            
+
             # Detect insertion context
             location, context = InsertionContextDetector.detect_insertion_point("", "related")
-            
+
             suggestion = LinkSuggestion(
                 source_note=getattr(conn, 'source_file', target_note),
                 target_note=conn.target_file,
@@ -92,10 +91,10 @@ class LinkSuggestionEngine:
                 suggested_location=location
             )
             suggestions.append(suggestion)
-        
+
         # Use batch processor for efficient sorting and filtering
         return SuggestionBatchProcessor.process_batch(suggestions, min_qual, max_res)
-    
+
     def generate_link_text(self, source_content: str, target_content: str, content_overlap: str = "") -> str:
         """
         Generate intelligent link text based on content analysis
@@ -110,7 +109,7 @@ class LinkSuggestionEngine:
         """
         # Use extracted utility for intelligent link text generation
         return LinkTextGenerator.generate_intelligent_link_text(target_content, content_overlap)
-    
+
     def score_link_quality(self, connection: Any) -> QualityScore:
         """
         Assess the quality of a suggested link connection
@@ -124,7 +123,7 @@ class LinkSuggestionEngine:
         # Extract data from connection object
         similarity_score = getattr(connection, 'similarity_score', 0.5)
         content_overlap = getattr(connection, 'content_overlap', '')
-        
+
         # Use extracted utility for quality assessment
         return LinkQualityAssessor.assess_connection_quality(
             similarity_score=similarity_score,

@@ -1,9 +1,6 @@
 """RED phase: CLI decision review with user confirmation and persistence."""
 
-import pytest
-from pathlib import Path
 from io import StringIO
-import sys
 
 
 def test_cli_review_decisions_displays_pending_moves(tmp_path, monkeypatch):

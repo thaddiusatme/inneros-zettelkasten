@@ -43,7 +43,7 @@ class AIEnhancementManager:
     - Bug reports on failures
     - Dry run mode
     """
-    
+
     def __init__(
         self,
         base_dir: Path,
@@ -69,7 +69,7 @@ class AIEnhancementManager:
         self.ai_summarizer = ai_summarizer
         self.external_api = None  # Can be injected for testing/fallback
         self.bug_reporter = BugReporter(base_dir)
-    
+
     def enhance_note(
         self,
         note_path: str,
@@ -206,7 +206,7 @@ class AIEnhancementManager:
                 'reason': 'dry_run',
                 'source': 'dry_run'
             }
-        
+
         # Try tier 1: Local LLM
         try:
             result = self._enhance_with_local_llm(note_path)
@@ -223,7 +223,7 @@ class AIEnhancementManager:
                 'error_type': type(e).__name__
             })
             pass
-        
+
         # Try tier 2: External API
         try:
             result = self._enhance_with_external_api(note_path)
@@ -232,10 +232,10 @@ class AIEnhancementManager:
                 result['tier'] = 'api'
                 result['source'] = 'external_api'
                 return result
-        except Exception as e:
+        except Exception:
             # API failed, will degrade
             pass
-        
+
         # Tier 3: Degraded mode
         return {
             'success': False,
@@ -247,7 +247,7 @@ class AIEnhancementManager:
             'source': 'degraded',
             'error': 'All AI tiers failed'
         }
-    
+
     def assess_promotion_readiness(
         self,
         note_path: str
@@ -386,7 +386,7 @@ class AIEnhancementManager:
             'suggestions': [],
             'recommended_type': 'permanent'
         }
-    
+
     def generate_ai_tags(self, content: str) -> List[str]:
         """
         Generate AI tags from content with kebab-case enforcement.
@@ -465,11 +465,11 @@ class AIEnhancementManager:
         if self.local_llm and hasattr(self.local_llm, 'generate_tags'):
             tags = self.local_llm.generate_tags(content)
             return self._enforce_kebab_case(tags)
-        
+
         # Fallback: extract simple tags from content
         tags = ['ai-generated']
         return self._enforce_kebab_case(tags)
-    
+
     def _enhance_with_local_llm(self, note_path: str) -> AIEnhancementResult:
         """Enhance using local Ollama LLM."""
         # Use local LLM if available
@@ -480,19 +480,19 @@ class AIEnhancementManager:
                 'tags': llm_result.get('tags', []),
                 'summary': llm_result.get('summary', '')
             }
-        
+
         # Fallback: Use existing AI services
         if self.ai_tagger and self.ai_summarizer:
             # Use existing AI services
             pass
-        
+
         # Last resort: Return empty result
         return {
             'success': True,
             'tags': [],
             'summary': ''
         }
-    
+
     def _enhance_with_external_api(self, note_path: str) -> AIEnhancementResult:
         """Enhance using external API as fallback."""
         # Use external API if available
@@ -503,18 +503,18 @@ class AIEnhancementManager:
                 'tags': api_result.get('tags', []),
                 'summary': api_result.get('summary', '')
             }
-        
+
         # Placeholder fallback
         return {
             'success': True,
             'tags': [],
             'summary': ''
         }
-    
+
     def _enforce_kebab_case(self, tags: List[str]) -> List[str]:
         """Convert all tags to kebab-case format."""
         import re
-        
+
         kebab_tags = []
         for tag in tags:
             # Convert to lowercase
@@ -527,8 +527,8 @@ class AIEnhancementManager:
             tag = re.sub(r'-+', '-', tag)
             # Remove leading/trailing hyphens
             tag = tag.strip('-')
-            
+
             if tag:  # Only add non-empty tags
                 kebab_tags.append(tag)
-        
+
         return kebab_tags
