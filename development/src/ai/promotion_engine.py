@@ -70,57 +70,62 @@ class PromotionEngine:
         """
         Promote a note from inbox/fleeting to appropriate directory.
         
+        This method now delegates to NoteLifecycleManager for unified promotion logic.
+        If target_type is specified, it updates the note's type field before promotion.
+        
         Args:
             note_path: Path to the note to promote
             target_type: Target note type ("permanent", "literature", or "fleeting")
+                        If provided, overrides the note's existing type field.
             
         Returns:
-            Promotion results dictionary
+            Promotion results dictionary with keys:
+            - success: bool
+            - source: str (original path)
+            - target: str (new path)
+            - type: str (note type)
+            - error: str (if failed)
         """
         source_file = Path(note_path)
 
         if not source_file.exists():
             return {"error": "Source note not found"}
 
-        # Determine target directory
-        if target_type == "permanent":
-            target_dir = self.permanent_dir
-        elif target_type == "literature":
-            target_dir = self.literature_dir
-        elif target_type == "fleeting":
-            target_dir = self.fleeting_dir
-        else:
+        # Validate target type
+        if target_type not in ["permanent", "literature", "fleeting"]:
             return {"error": f"Invalid target type: {target_type}"}
 
-        target_dir.mkdir(exist_ok=True)
-        target_file = target_dir / source_file.name
-
         try:
-            # Read and update content
-            with open(source_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+            # If target_type specified, update note's type field before promotion
+            # This allows caller to override note's classification if needed
+            if target_type:
+                with open(source_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                frontmatter, body = parse_frontmatter(content)
+                
+                # Update type field to match target
+                frontmatter["type"] = target_type
+                
+                # Write updated type back to note
+                updated_content = build_frontmatter(frontmatter, body)
+                safe_write(source_file, updated_content)
 
-            frontmatter, body = parse_frontmatter(content)
+            # Delegate to NoteLifecycleManager for unified promotion logic
+            # This handles: status update, validation, file move, timestamps
+            result = self.lifecycle_manager.promote_note(source_file)
 
-            # Update metadata for promotion
-            frontmatter["type"] = target_type
-            frontmatter["status"] = "promoted"
-            frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-            # Rebuild and save to target location
-            updated_content = build_frontmatter(frontmatter, body)
-            safe_write(target_file, updated_content)
-
-            # Remove from source location
-            source_file.unlink()
-
-            return {
-                "success": True,
-                "source": str(source_file),
-                "target": str(target_file),
-                "type": target_type,
-                "has_summary": "ai_summary" in frontmatter
-            }
+            if result.get("promoted"):
+                # Transform result to match expected format
+                return {
+                    "success": True,
+                    "source": str(source_file),
+                    "target": result["destination_path"],
+                    "type": result["note_type"],
+                    "has_summary": False  # Legacy field for compatibility
+                }
+            else:
+                return {"error": result.get("error", "Promotion failed")}
 
         except Exception as e:
             return {"error": f"Failed to promote note: {e}"}
@@ -180,21 +185,9 @@ class PromotionEngine:
             if "error" in result:
                 return False, result["error"]
 
-            # Update lifecycle status
-            target_path = Path(result["target"])
-            try:
-                status_result = self.lifecycle_manager.update_status(
-                    target_path,
-                    "promoted"
-                )
-
-                if isinstance(status_result, dict) and "error" in status_result:
-                    error_msg = status_result["error"]
-                    logger.error(f"Status update failed for {note_path.name}: {error_msg}")
-                    return False, error_msg
-            except Exception as e:
-                logger.warning(f"Lifecycle status update failed for {note_path.name}: {e}")
-
+            # Status update and file move are now handled by promote_note() delegation
+            # No need for separate status update - NoteLifecycleManager handles it atomically
+            
             return True, None
 
         except Exception as e:

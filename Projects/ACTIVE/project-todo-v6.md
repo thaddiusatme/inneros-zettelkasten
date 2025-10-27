@@ -44,19 +44,12 @@ tags: [project-tracking, priorities, note-lifecycle, hygiene-bundle, shipping]
 - ✅ Permissions: `chmod +x` on 2 daemon scripts
 - ✅ Auto-fixed 14,789 code style issues (ruff --fix)
 
-**In Progress**:
+**Known Issues** (Will fix in P1):
 - 🟡 Quality gates: 13 real errors remain (E722 bare except, F821 undefined names)
   - `workflow_manager.py`: `dry_run` undefined (lines 315, 318)
   - Type hints: `QualityScore`, `WorkflowIntegrityResult` undefined
   - Bare `except:` clauses need exception types
-
-**Remaining**:
-- [ ] Decision: Ship now with known-issues note OR fix 13 errors first (15-30 min)
-- [ ] Create branch `chore/repo-hygiene-bundle`
-- [ ] Commit + push
-- [ ] Open PR
-- [ ] Merge to `main`
-- [ ] Tag `v0.1.0-beta`
+  - Will be fixed after P0 note lifecycle completion
 
 ---
 
@@ -195,13 +188,24 @@ Success: WorkflowManager < 1,500 LOC; clear unit boundaries
 
 ---
 
-## 🚀 Immediate Next Actions
+## 🚀 Immediate Next Actions (This Session or Next)
 
-1. **Decide**: Ship now (Option A) or fix 13 errors first (Option B)?
-2. **Create branch**: `chore/repo-hygiene-bundle`
-3. **Commit**: All hygiene bundle changes
-4. **Push + PR**: Open with validation checklist
-5. **Merge + Tag**: `v0.1.0-beta`
+**Current Priority**: P0 Note Lifecycle Completion
+
+1. **Create branch**: `fix/note-lifecycle-p0-completion`
+2. **Start PBI-002**: Literature directory integration
+   - File: `development/src/utils/note_lifecycle_manager.py`
+   - Add `self.literature_dir` initialization
+   - Update `promote_note()` for 3 note types
+   - Write tests, verify no regressions
+3. **Execute PBI-003**: Repair 77 orphaned notes
+   - Create `development/scripts/repair_orphaned_notes.py`
+   - Dry-run first, then apply with backup
+4. **Complete PBI-004**: Safe file moves with backlink updates
+5. **Fix 13 lint errors**: Clean `make test` → exits 0
+6. **Merge + Ship**: Combine with hygiene bundle → v0.1.0-beta
+
+**Next Session Prompt**: See ready-to-use TDD prompt above for fresh context
 
 ---
 
@@ -216,6 +220,7 @@ Success: WorkflowManager < 1,500 LOC; clear unit boundaries
 ---
 
 **Version History**:
+- v6.0 (Oct 26, 2025 16:05): **DECISION - Option B**: Fix note lifecycle P0 (77 orphaned notes) before beta; realigned with v4 priorities
 - v6.0 (Oct 26, 2025 15:34): Hygiene bundle 95% complete; decision point for shipping strategy
 - v5.0 (Oct 26, 2025 15:24): Scope confirmed (entire InnerOS); hygiene bundle started
 - v4.0 (Oct 22, 2025): October completions; YouTube automation + cleanup system
@@ -223,3 +228,5 @@ Success: WorkflowManager < 1,500 LOC; clear unit boundaries
 - Earlier: See v4 for full history
 
 **Archive**: Previous versions in `Projects/ACTIVE/` for historical context
+
+**Key Decision**: Chose workflow integrity over speed-to-beta. Fix 77 orphaned notes (PBI-002/003/004) restores knowledge capture pipeline trust before shipping v0.1.0-beta to users.

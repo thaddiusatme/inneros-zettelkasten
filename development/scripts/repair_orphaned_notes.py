@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Repair Orphaned Notes - Fix notes stuck with ai_processed=true + status=inbox
+Repair Orphaned Notes - Fix notes stuck in Inbox with incorrect status/location
 
-Problem: 77 notes have been AI processed but their status wasn't updated to 'promoted',
-causing them to remain in Inbox/ instead of moving to their type-specific directories.
+Problems Fixed:
+  1. Notes with ai_processed=true but status=inbox (needs status update + move)
+  2. Notes with status=promoted but still in Inbox (needs move only)
 
-Solution: Update status to 'promoted', add processed_date, and move files using
-NoteLifecycleManager.promote_note().
+Both issues indicate broken auto-promotion workflow where status updates and file 
+moves got decoupled. This script fixes both using NoteLifecycleManager.promote_note()
+which atomically handles status updates, validation, and file moves.
 
 Usage:
     # Preview what will be fixed (dry-run, default)
@@ -35,12 +37,13 @@ from src.utils.frontmatter import parse_frontmatter
 
 def find_orphaned_notes(inbox_dir: Path) -> List[Dict]:
     """
-    Find notes with ai_processed=true AND status=inbox.
+    Find two types of orphaned notes in Inbox:
     
-    These are "orphaned" - AI has processed them but they weren't promoted.
+    Type 1: ai_processed=true AND status=inbox (needs status update + move)
+    Type 2: status=promoted but still in Inbox (needs move only)
     
     Returns:
-        List of dicts with note info: path, type, title, quality_score
+        List of dicts with note info: path, type, title, quality_score, orphan_type
     """
     orphaned = []
     
@@ -53,28 +56,39 @@ def find_orphaned_notes(inbox_dir: Path) -> List[Dict]:
             content = note_path.read_text(encoding='utf-8')
             frontmatter, body = parse_frontmatter(content)
             
-            # Check if note is orphaned
+            # Extract common fields
+            note_type = frontmatter.get('type', 'fleeting')
+            quality_score = frontmatter.get('quality_score', 0.0)
             ai_processed = frontmatter.get('ai_processed', False)
             status = frontmatter.get('status', 'inbox')
             
+            # Extract title from first heading or filename
+            title = note_path.stem
+            for line in body.split('\n'):
+                if line.startswith('# '):
+                    title = line[2:].strip()
+                    break
+            
+            orphan_type = None
+            
+            # Type 1: AI processed but status never updated
             if ai_processed and status == 'inbox':
-                # Extract note info
-                note_type = frontmatter.get('type', 'fleeting')
-                quality_score = frontmatter.get('quality_score', 0.0)
-                
-                # Extract title from first heading or filename
-                title = note_path.stem
-                for line in body.split('\n'):
-                    if line.startswith('# '):
-                        title = line[2:].strip()
-                        break
-                
+                orphan_type = 'needs_status_update'
+            
+            # Type 2: Status says promoted but file never moved
+            elif status == 'promoted':
+                orphan_type = 'needs_file_move'
+            
+            # Add to orphaned list if matches either type
+            if orphan_type:
                 orphaned.append({
                     'path': note_path,
                     'type': note_type,
                     'title': title[:50],  # Truncate long titles
                     'quality_score': quality_score,
-                    'filename': note_path.name
+                    'filename': note_path.name,
+                    'orphan_type': orphan_type,
+                    'status': status
                 })
         
         except Exception as e:
@@ -113,27 +127,41 @@ def display_preview_table(orphaned: List[Dict]):
         return
     
     print(f"\n📊 Found {len(orphaned)} orphaned notes:\n")
-    print("=" * 100)
-    print(f"{'Type':<12} {'Quality':<10} {'Title':<50} {'Filename':<28}")
-    print("=" * 100)
+    print("=" * 120)
+    print(f"{'Type':<12} {'Status':<10} {'Issue':<25} {'Title':<45} {'Filename':<28}")
+    print("=" * 120)
     
-    # Group by type for better visualization
-    by_type = {}
+    # Group by orphan_type for better visualization
+    by_orphan_type = {}
+    for note in orphaned:
+        orphan_type = note['orphan_type']
+        by_orphan_type.setdefault(orphan_type, []).append(note)
+    
+    # Display Type 1 first (needs status update)
+    if 'needs_status_update' in by_orphan_type:
+        for note in by_orphan_type['needs_status_update']:
+            issue = "ai_processed → no status"
+            print(f"{note['type']:<12} {note['status']:<10} {issue:<25} {note['title']:<45} {note['filename']:<28}")
+    
+    # Display Type 2 (needs file move)
+    if 'needs_file_move' in by_orphan_type:
+        for note in by_orphan_type['needs_file_move']:
+            issue = "status:promoted → not moved"
+            print(f"{note['type']:<12} {note['status']:<10} {issue:<25} {note['title']:<45} {note['filename']:<28}")
+    
+    print("=" * 120)
+    print(f"\nSummary by issue type:")
+    print(f"  - Needs status update + move: {len(by_orphan_type.get('needs_status_update', []))} notes")
+    print(f"  - Needs file move only: {len(by_orphan_type.get('needs_file_move', []))} notes")
+    
+    # Also show breakdown by note type
+    by_note_type = {}
     for note in orphaned:
         note_type = note['type']
-        by_type.setdefault(note_type, []).append(note)
-    
-    for note_type in ['permanent', 'literature', 'fleeting']:
-        notes = by_type.get(note_type, [])
-        if notes:
-            for note in notes:
-                quality = f"{note['quality_score']:.2f}" if note['quality_score'] else "N/A"
-                print(f"{note_type:<12} {quality:<10} {note['title']:<50} {note['filename']:<28}")
-    
-    print("=" * 100)
-    print(f"\nSummary by type:")
-    for note_type, notes in by_type.items():
-        print(f"  - {note_type}: {len(notes)} notes")
+        by_note_type.setdefault(note_type, []).append(note)
+    print(f"\nBreakdown by note type:")
+    for note_type in sorted(by_note_type.keys()):
+        print(f"  - {note_type}: {len(by_note_type[note_type])} notes")
 
 
 def repair_orphaned_notes(vault_dir: Path, apply: bool = False, skip_backup: bool = False) -> Dict:
