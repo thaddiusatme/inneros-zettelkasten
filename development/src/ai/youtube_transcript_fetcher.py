@@ -47,14 +47,18 @@ except ImportError:
         VideoUnavailable,
         YouTubeRequestFailed,
     )
+
     # Create placeholder exceptions for compatibility
     class RequestBlocked(Exception):
         """Placeholder for RequestBlocked exception in older youtube-transcript-api versions."""
+
         pass
-    
+
     class IpBlocked(Exception):
         """Placeholder for IpBlocked exception in older youtube-transcript-api versions."""
+
         pass
+
 
 logger = logging.getLogger(__name__)
 

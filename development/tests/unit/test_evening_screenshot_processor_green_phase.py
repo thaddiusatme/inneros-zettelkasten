@@ -36,12 +36,12 @@ if not pytest:  # pragma: no cover
     from src.ai.llama_vision_ocr import VisionAnalysisResult
     from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
     from src.cli.evening_screenshot_utils import (
-    OneDriveScreenshotDetector,
-    ScreenshotOCRProcessor,
-    DailyNoteGenerator,
-    SmartLinkIntegrator,
-    SafeScreenshotManager,
-)
+        OneDriveScreenshotDetector,
+        ScreenshotOCRProcessor,
+        DailyNoteGenerator,
+        SmartLinkIntegrator,
+        SafeScreenshotManager,
+    )
 
 
 class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
