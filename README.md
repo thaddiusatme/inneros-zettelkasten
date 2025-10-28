@@ -2,10 +2,10 @@
 
 > **A powerful personal knowledge management system combining the Zettelkasten method with AI assistance**
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() 
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue)]() 
+[![CI](https://github.com/thaddiusatme/inneros-zettelkasten/workflows/CI%20-%20Quality%20Gates/badge.svg)](https://github.com/thaddiusatme/inneros-zettelkasten/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-0.1.0--beta-blue)]() 
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
-[![Python](https://img.shields.io/badge/python-3.9+-blue)]()
+[![Python](https://img.shields.io/badge/python-3.13-blue)]()
 [![Obsidian](https://img.shields.io/badge/obsidian-1.0+-purple)]()
 
 ---
