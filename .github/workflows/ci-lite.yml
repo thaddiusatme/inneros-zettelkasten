@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci-lite:
-    name: Fast Checks (ruff, black, pyright, pytest)
+    name: Fast Checks (ruff, black, pyright)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     
@@ -26,34 +26,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install ruff black pyright pytest pytest-cov
+          pip install ruff black pyright
       
-      - name: Run ruff (linter)
-        run: |
-          ruff check development/src development/tests --select=E,F,W --ignore=E501
-        continue-on-error: false
-      
-      - name: Run black (formatter check)
-        run: |
-          black --check development/src development/tests
-        continue-on-error: false
-      
-      - name: Run pyright (type checker)
-        run: |
-          pyright development/src
-        continue-on-error: true
-      
-      - name: Run pytest (fast tests only)
+      - name: Run linters (ruff, black)
         env:
           PYTHONPATH: development
         run: |
-          pytest development/tests/unit -q --tb=short --maxfail=5 \
-            --ignore=development/tests/unit/test_real_analytics.py \
-            --ignore=development/tests/integration
-        continue-on-error: false
+          make lint
+      
+      - name: Run type checker (pyright)
+        env:
+          PYTHONPATH: development
+        run: |
+          make type
+        continue-on-error: true  # pyright optional for now
       
       - name: Summary
         if: always()
         run: |
-          echo "✅ CI-Lite checks complete"
+          echo "✅ CI-Lite checks complete (lint + type only)"
+          echo "Note: Unit tests run in main CI workflow"
           echo "Runtime target: <3 minutes"
