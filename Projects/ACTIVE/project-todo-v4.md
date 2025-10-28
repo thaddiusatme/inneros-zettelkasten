@@ -330,31 +330,17 @@ tags: [project-tracking, priorities, workflow-automation, note-lifecycle, hygien
 - **TDD Documentation**: Complete RED→GREEN→REFACTOR→COMMIT→LESSONS cycle
 - **Lessons Learned**: `test-infrastructure-fixes-p1-lessons-learned.md`
 
-### 2. Ship v0.1.0-beta (30 min)
-- [ ] Create branch `chore/repo-hygiene-bundle-and-lifecycle-fixes`
-- [ ] Commit all changes with comprehensive message:
-  ```
-  Repo hygiene bundle + note lifecycle P0 fixes
-  
-  Note Lifecycle (v4 P0 completion):
-  - PBI-002: Literature directory integration
-  - PBI-003: Repair 77 orphaned notes (ai_processed + status fix)
-  - PBI-004: Safe file moves with backlink updates
-  
-  Hygiene Bundle:
-  - Add Makefile for one-command dev (make test/cov/run/ui)
-  - Update CI-Lite to call make test
-  - Fix daemon_registry.yaml paths (3/3 daemons)
-  - Tighten .gitignore (metrics, cache, logs, tmp, reports)
-  - Add docs: ARCHITECTURE, HOWTOs, ADRs, prompts/
-  - Persist PROJECT-INTAKE.md (13-point)
-  - Auto-fix 14,789 style issues + fix 13 real errors
-  - Set daemon script permissions
-  ```
-- [ ] Push branch
-- [ ] Open PR with validation checklist
+### 2. Ship v0.1.0-beta (IN PROGRESS)
+- [x] Create branch `chore/repo-hygiene-bundle-and-lifecycle-fixes`
+- [x] Bundle all completed work:
+  - Test Infrastructure Fixes (P1) - 777cbc0, ba564ad
+  - CI Quality Gates (P0) - 0a91d8a through 0b10821
+  - Note Lifecycle P0 Completion - ac9355d through ec930df
+- [x] Push branch
+- [x] Open PR #8 with comprehensive validation checklist
+- [ ] **WAITING**: CI checks to pass (currently in progress)
 - [ ] Merge to main
-- [ ] Tag `v0.1.0-beta -m "First teachable, shippable cut with clean workflow"`
+- [ ] Tag `v0.1.0-beta -m "Post-beta quality infrastructure + note lifecycle fixes"`
 - [ ] Push tag
 
 #### Post-Beta Immediate
