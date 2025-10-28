@@ -28,14 +28,33 @@ import re
 import logging
 from typing import Dict, List, Any
 from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import (
-    TranscriptsDisabled,
-    NoTranscriptFound,
-    VideoUnavailable,
-    YouTubeRequestFailed,
-    RequestBlocked,
-    IpBlocked,
-)
+
+# Import available exceptions, with fallbacks for older versions
+try:
+    from youtube_transcript_api._errors import (
+        TranscriptsDisabled,
+        NoTranscriptFound,
+        VideoUnavailable,
+        YouTubeRequestFailed,
+        RequestBlocked,
+        IpBlocked,
+    )
+except ImportError:
+    # Older versions don't have RequestBlocked and IpBlocked
+    from youtube_transcript_api._errors import (
+        TranscriptsDisabled,
+        NoTranscriptFound,
+        VideoUnavailable,
+        YouTubeRequestFailed,
+    )
+    # Create placeholder exceptions for compatibility
+    class RequestBlocked(Exception):
+        """Placeholder for RequestBlocked exception in older youtube-transcript-api versions."""
+        pass
+    
+    class IpBlocked(Exception):
+        """Placeholder for IpBlocked exception in older youtube-transcript-api versions."""
+        pass
 
 logger = logging.getLogger(__name__)
 
