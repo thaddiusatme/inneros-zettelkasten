@@ -9,10 +9,8 @@ Tests cover:
 All tests should FAIL initially (RED phase).
 """
 
-import pytest
 import json
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from datetime import datetime
 
 from src.monitoring.metrics_collector import MetricsCollector
 from src.monitoring.metrics_storage import MetricsStorage
@@ -26,7 +24,7 @@ class TestMetricsCollector:
         """Test that incrementing a counter creates it if it doesn't exist."""
         collector = MetricsCollector()
         collector.increment_counter("notes_processed")
-        
+
         assert collector.get_counter("notes_processed") == 1
 
     def test_increment_counter_accumulates_values(self):
@@ -35,7 +33,7 @@ class TestMetricsCollector:
         collector.increment_counter("ai_api_calls", 1)
         collector.increment_counter("ai_api_calls", 3)
         collector.increment_counter("ai_api_calls", 2)
-        
+
         assert collector.get_counter("ai_api_calls") == 6
 
     def test_set_gauge_updates_current_value(self):
@@ -43,7 +41,7 @@ class TestMetricsCollector:
         collector = MetricsCollector()
         collector.set_gauge("active_watchers", 5)
         assert collector.get_gauge("active_watchers") == 5
-        
+
         collector.set_gauge("active_watchers", 3)
         assert collector.get_gauge("active_watchers") == 3
 
@@ -53,7 +51,7 @@ class TestMetricsCollector:
         collector.record_histogram("processing_time_ms", 100)
         collector.record_histogram("processing_time_ms", 250)
         collector.record_histogram("processing_time_ms", 150)
-        
+
         histogram = collector.get_histogram("processing_time_ms")
         assert len(histogram) == 3
         assert 100 in histogram
@@ -66,9 +64,9 @@ class TestMetricsCollector:
         collector.increment_counter("notes_processed", 10)
         collector.set_gauge("daemon_status", 1)
         collector.record_histogram("processing_time_ms", 200)
-        
+
         metrics = collector.get_all_metrics()
-        
+
         assert "counters" in metrics
         assert "gauges" in metrics
         assert "histograms" in metrics
@@ -83,15 +81,15 @@ class TestMetricsStorage:
     def test_store_adds_metrics_with_timestamp(self):
         """Test that store adds metrics with current timestamp."""
         storage = MetricsStorage(retention_hours=24)
-        
+
         metrics = {
             "counters": {"notes_processed": 10},
             "gauges": {"daemon_status": 1},
-            "histograms": {"processing_time_ms": [100, 200]}
+            "histograms": {"processing_time_ms": [100, 200]},
         }
-        
+
         storage.store(metrics)
-        
+
         stored = storage.get_latest()
         assert stored is not None
         assert stored["metrics"] == metrics
@@ -100,11 +98,11 @@ class TestMetricsStorage:
     def test_aggregate_hourly_groups_by_hour(self):
         """Test that hourly aggregation groups metrics correctly."""
         storage = MetricsStorage(retention_hours=24)
-        
+
         # Store metrics at different times (without mocking for simplicity)
         storage.store({"counters": {"notes_processed": 10}})
         storage.store({"counters": {"notes_processed": 15}})
-        
+
         hourly = storage.aggregate_hourly()
         assert len(hourly) >= 1
         assert "hour" in hourly[0]
@@ -114,10 +112,10 @@ class TestMetricsStorage:
         """Test that get_last_24h only returns recent metrics."""
         # Use short retention window for testing
         storage = MetricsStorage(retention_hours=0)  # 0 hours = immediate pruning
-        
+
         # Store metric and immediately check it's pruned
         storage.store({"counters": {"old_metric": 1}})
-        
+
         # With 0 hour retention, get_last_24h should prune everything
         recent = storage.get_last_24h()
         assert len(recent) == 0  # All pruned due to 0 retention
@@ -126,9 +124,9 @@ class TestMetricsStorage:
         """Test that export_json produces valid JSON."""
         storage = MetricsStorage(retention_hours=24)
         storage.store({"counters": {"notes_processed": 10}})
-        
+
         json_str = storage.export_json()
-        
+
         # Should be valid JSON
         data = json.loads(json_str)
         assert isinstance(data, list)
@@ -144,12 +142,12 @@ class TestMetricsEndpoint:
         collector = MetricsCollector()
         storage = MetricsStorage(retention_hours=24)
         endpoint = MetricsEndpoint(collector, storage)
-        
+
         collector.increment_counter("notes_processed", 5)
         storage.store(collector.get_all_metrics())
-        
+
         response = endpoint.get_metrics()
-        
+
         assert response["status"] == "success"
         assert "current" in response
         assert "history" in response
@@ -160,9 +158,9 @@ class TestMetricsEndpoint:
         collector = MetricsCollector()
         storage = MetricsStorage(retention_hours=24)
         endpoint = MetricsEndpoint(collector, storage)
-        
+
         response = endpoint.get_metrics()
-        
+
         assert "timestamp" in response
         # Timestamp should be ISO format string
         datetime.fromisoformat(response["timestamp"])

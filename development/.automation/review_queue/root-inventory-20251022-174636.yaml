@@ -1,0 +1,288 @@
+metadata:
+  scan_date: '2025-10-22T17:46:36.028422'
+  root_directory: /Users/thaddius/repos/inneros-zettelkasten
+  total_files: 38
+categories:
+  preserve:
+  - name: inneros
+    path: /Users/thaddius/repos/inneros-zettelkasten/inneros
+    size_bytes: 10113
+    size_kb: 9.88
+    modified: '2025-08-20T11:42:28.515032'
+  - name: pyrightconfig.json
+    path: /Users/thaddius/repos/inneros-zettelkasten/pyrightconfig.json
+    size_bytes: 391
+    size_kb: 0.38
+    modified: '2025-09-18T16:17:35.869733'
+  - name: requirements.txt
+    path: /Users/thaddius/repos/inneros-zettelkasten/requirements.txt
+    size_bytes: 552
+    size_kb: 0.54
+    modified: '2025-10-12T21:24:04.248126'
+  - name: .env.sample
+    path: /Users/thaddius/repos/inneros-zettelkasten/.env.sample
+    size_bytes: 700
+    size_kb: 0.68
+    modified: '2025-10-22T09:31:37.544569'
+  - name: README.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/README.md
+    size_bytes: 19161
+    size_kb: 18.71
+    modified: '2025-10-22T09:31:37.548003'
+  - name: .gitignore-distribution
+    path: /Users/thaddius/repos/inneros-zettelkasten/.gitignore-distribution
+    size_bytes: 1012
+    size_kb: 0.99
+    modified: '2025-10-11T16:56:18.127154'
+  - name: .gitignore
+    path: /Users/thaddius/repos/inneros-zettelkasten/.gitignore
+    size_bytes: 2167
+    size_kb: 2.12
+    modified: '2025-10-22T09:31:37.545319'
+  - name: INSTALLATION.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/INSTALLATION.md
+    size_bytes: 8614
+    size_kb: 8.41
+    modified: '2025-10-11T16:56:18.130994'
+  session_state:
+  - name: NEXT_SESSION_AUTOMATION.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/NEXT_SESSION_AUTOMATION.md
+    size_bytes: 5899
+    size_kb: 5.76
+    modified: '2025-10-07T14:37:57.161986'
+  - name: NEXT_SESSION_PROMPT.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/NEXT_SESSION_PROMPT.md
+    size_bytes: 8017
+    size_kb: 7.83
+    modified: '2025-10-17T20:54:30.410672'
+  - name: CURRENT-STATE-2025-10-19.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/CURRENT-STATE-2025-10-19.md
+    size_bytes: 3677
+    size_kb: 3.59
+    modified: '2025-10-22T09:31:37.545610'
+  - name: NEXT_CHAT_PROMPT.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/NEXT_CHAT_PROMPT.md
+    size_bytes: 4405
+    size_kb: 4.3
+    modified: '2025-10-07T14:37:57.161888'
+  phase_docs:
+  - name: PHASE-2.2-COMPLETION-ASSESSMENT.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/PHASE-2.2-COMPLETION-ASSESSMENT.md
+    size_bytes: 9393
+    size_kb: 9.17
+    modified: '2025-10-16T11:05:18.013408'
+  - name: PHASE-3-PREP.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/PHASE-3-PREP.md
+    size_bytes: 10523
+    size_kb: 10.28
+    modified: '2025-10-16T11:06:32.763694'
+  - name: DEMO-PHASE-2.2.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/DEMO-PHASE-2.2.sh
+    size_bytes: 2303
+    size_kb: 2.25
+    modified: '2025-10-16T11:05:18.013228'
+  - name: PHASE2-COMPLETE-SUMMARY.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/PHASE2-COMPLETE-SUMMARY.md
+    size_bytes: 6141
+    size_kb: 6.0
+    modified: '2025-10-16T09:54:34.095711'
+  - name: QUICK-START-PHASE-2.2.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/QUICK-START-PHASE-2.2.md
+    size_bytes: 5884
+    size_kb: 5.75
+    modified: '2025-10-16T11:05:18.013838'
+  completion_docs:
+  - name: INBOX-PROCESSING-FIX-SUMMARY.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/INBOX-PROCESSING-FIX-SUMMARY.md
+    size_bytes: 3103
+    size_kb: 3.03
+    modified: '2025-10-12T21:24:04.230114'
+  demo_scripts:
+  - name: continue_archive.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/continue_archive.sh
+    size_bytes: 2865
+    size_kb: 2.8
+    modified: '2025-10-11T16:56:18.153558'
+  - name: archive_active_projects.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/archive_active_projects.sh
+    size_bytes: 7441
+    size_kb: 7.27
+    modified: '2025-10-11T16:56:18.153327'
+  - name: test_move_demo.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/test_move_demo.sh
+    size_bytes: 3172
+    size_kb: 3.1
+    modified: '2025-10-02T12:43:35.419298'
+  documentation:
+  - name: QUICK-REFERENCE.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/QUICK-REFERENCE.md
+    size_bytes: 3730
+    size_kb: 3.64
+    modified: '2025-10-12T21:24:04.238231'
+  - name: MIGRATION-GUIDE.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/MIGRATION-GUIDE.md
+    size_bytes: 21774
+    size_kb: 21.26
+    modified: '2025-10-12T21:24:04.230266'
+  - name: GETTING-STARTED.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/GETTING-STARTED.md
+    size_bytes: 9561
+    size_kb: 9.34
+    modified: '2025-10-12T21:24:04.229873'
+  - name: FEATURE-STATUS.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/FEATURE-STATUS.md
+    size_bytes: 6067
+    size_kb: 5.92
+    modified: '2025-10-11T16:56:18.130421'
+  - name: CLI-REFERENCE.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/CLI-REFERENCE.md
+    size_bytes: 21858
+    size_kb: 21.35
+    modified: '2025-10-12T21:24:04.229690'
+  - name: CONNECTION-DISCOVERY-DFD.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/CONNECTION-DISCOVERY-DFD.md
+    size_bytes: 13283
+    size_kb: 12.97
+    modified: '2025-09-24T17:23:41.109783'
+  logs:
+  - name: integration-test-results.log
+    path: /Users/thaddius/repos/inneros-zettelkasten/integration-test-results.log
+    size_bytes: 2598
+    size_kb: 2.54
+    modified: '2025-10-09T14:06:47.359356'
+  - name: complete_integration_demo.log
+    path: /Users/thaddius/repos/inneros-zettelkasten/complete_integration_demo.log
+    size_bytes: 2414
+    size_kb: 2.36
+    modified: '2025-09-17T09:03:17.457677'
+  - name: unit-test-profile.log
+    path: /Users/thaddius/repos/inneros-zettelkasten/unit-test-profile.log
+    size_bytes: 9634
+    size_kb: 9.41
+    modified: '2025-10-09T14:07:43.774101'
+  - name: distribution-test-profile.log
+    path: /Users/thaddius/repos/inneros-zettelkasten/distribution-test-profile.log
+    size_bytes: 20635
+    size_kb: 20.15
+    modified: '2025-10-09T14:08:24.627124'
+  metrics:
+  - name: orphan-metrics.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/orphan-metrics.md
+    size_bytes: 3071
+    size_kb: 3.0
+    modified: '2025-08-14T11:49:56.109066'
+  - name: orphan-metrics.json
+    path: /Users/thaddius/repos/inneros-zettelkasten/orphan-metrics.json
+    size_bytes: 6667
+    size_kb: 6.51
+    modified: '2025-08-14T11:49:56.108633'
+  - name: analytics_report.json
+    path: /Users/thaddius/repos/inneros-zettelkasten/analytics_report.json
+    size_bytes: 1448
+    size_kb: 1.41
+    modified: '2025-07-28T14:05:44.038522'
+  empty_files:
+  - name: Pasted image 20250729144519.png.md
+    path: /Users/thaddius/repos/inneros-zettelkasten/Pasted image 20250729144519.png.md
+    size_bytes: 0
+    size_kb: 0.0
+    modified: '2025-08-14T11:41:14.668800'
+  - name: watcher.log
+    path: /Users/thaddius/repos/inneros-zettelkasten/watcher.log
+    size_bytes: 0
+    size_kb: 0.0
+    modified: '2025-07-27T15:29:09.735052'
+  misc:
+  - name: process_youtube_note.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/process_youtube_note.sh
+    size_bytes: 941
+    size_kb: 0.92
+    modified: '2025-10-22T09:31:37.556010'
+  - name: move-rules-to-windsurf.sh
+    path: /Users/thaddius/repos/inneros-zettelkasten/move-rules-to-windsurf.sh
+    size_bytes: 1042
+    size_kb: 1.02
+    modified: '2025-10-05T22:20:33.560851'
+recommendations:
+  session_state:
+    action: archive
+    destination: Projects/COMPLETED-2025-10/
+    reason: Historical session tracking files
+    files:
+    - NEXT_SESSION_AUTOMATION.md
+    - NEXT_SESSION_PROMPT.md
+    - CURRENT-STATE-2025-10-19.md
+    - NEXT_CHAT_PROMPT.md
+  phase_docs:
+    action: archive
+    destination: Projects/COMPLETED-2025-10/
+    reason: Phase completion documentation
+    files:
+    - PHASE-2.2-COMPLETION-ASSESSMENT.md
+    - PHASE-3-PREP.md
+    - DEMO-PHASE-2.2.sh
+    - PHASE2-COMPLETE-SUMMARY.md
+    - QUICK-START-PHASE-2.2.md
+  completion_docs:
+    action: archive
+    destination: Projects/COMPLETED-2025-10/
+    reason: Completion summaries and fix reports
+    files:
+    - INBOX-PROCESSING-FIX-SUMMARY.md
+  demo_scripts:
+    action: review
+    destination: development/demos/ OR Projects/Archive/
+    reason: Test/demo scripts - decide if still useful
+    files:
+    - continue_archive.sh
+    - archive_active_projects.sh
+    - test_move_demo.sh
+  documentation:
+    action: keep_or_organize
+    destination: Keep in root OR Projects/REFERENCE/
+    reason: Active documentation - review for relevance
+    files:
+    - QUICK-REFERENCE.md
+    - MIGRATION-GUIDE.md
+    - GETTING-STARTED.md
+    - FEATURE-STATUS.md
+    - CLI-REFERENCE.md
+    - CONNECTION-DISCOVERY-DFD.md
+  logs:
+    action: delete
+    destination: N/A (or backups/ if needed)
+    reason: Log files - generally safe to delete
+    files:
+    - integration-test-results.log
+    - complete_integration_demo.log
+    - unit-test-profile.log
+    - distribution-test-profile.log
+  metrics:
+    action: archive
+    destination: Projects/COMPLETED-2025-10/metrics/
+    reason: Historical metrics - archive for reference
+    files:
+    - orphan-metrics.md
+    - orphan-metrics.json
+    - analytics_report.json
+  empty_files:
+    action: delete
+    destination: N/A
+    reason: Empty placeholder files - safe to delete
+    files:
+    - Pasted image 20250729144519.png.md
+    - watcher.log
+  misc:
+    action: review
+    destination: TBD
+    reason: Uncategorized files - manual review needed
+    files:
+    - process_youtube_note.sh
+    - move-rules-to-windsurf.sh
+summary:
+  total_files_scanned: 38
+  preserve: 8
+  archive_candidates: 10
+  delete_candidates: 6
+  review_needed: 11
+  metrics_to_archive: 3

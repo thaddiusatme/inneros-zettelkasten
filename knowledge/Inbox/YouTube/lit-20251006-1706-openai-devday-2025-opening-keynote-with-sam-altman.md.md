@@ -1,9 +1,11 @@
 ---
 created: 2025-10-06 17:06
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [youtube, video-content]
+tags:
+- youtube
+- video-content
 source: youtube
 url: https://www.youtube.com/watch?v=hS1YqcewH0c
 video_id: hS1YqcewH0c
@@ -13,6 +15,7 @@ ai_processed: true
 processed_at: 2025-10-06 20:08
 quote_count: 3
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.698537'
 ---
 
 

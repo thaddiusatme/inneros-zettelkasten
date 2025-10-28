@@ -20,29 +20,31 @@ from .daemon_cli_utils import (
     DaemonStarter,
     DaemonStopper,
     EnhancedDaemonStatus,
-    LogReader
+    LogReader,
 )
 
 
 class DaemonOrchestrator:
     """Main orchestrator for daemon commands."""
-    
-    def __init__(self, pid_file_path: Optional[Path] = None, logs_dir: Optional[Path] = None):
+
+    def __init__(
+        self, pid_file_path: Optional[Path] = None, logs_dir: Optional[Path] = None
+    ):
         self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
         self.logs_dir = logs_dir or (Path.home() / ".automation" / "logs")
-    
+
     def start(self) -> Dict:
         """Route to start command."""
         return DaemonStarter(pid_file_path=self.pid_file).start()
-    
+
     def stop(self) -> Dict:
         """Route to stop command."""
         return DaemonStopper(pid_file_path=self.pid_file).stop()
-    
+
     def status(self) -> Dict:
         """Route to status command."""
         return EnhancedDaemonStatus(pid_file_path=self.pid_file).get_status()
-    
+
     def logs(self, lines: int = 10) -> Dict:
         """Route to logs command."""
         return LogReader(logs_dir=self.logs_dir).read_recent(lines)
@@ -50,44 +52,46 @@ class DaemonOrchestrator:
 
 def main():
     """Main CLI entry point."""
-    parser = argparse.ArgumentParser(description='Daemon management commands')
-    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
-    
+    parser = argparse.ArgumentParser(description="Daemon management commands")
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
     # Start command
-    subparsers.add_parser('start', help='Start the daemon')
-    
+    subparsers.add_parser("start", help="Start the daemon")
+
     # Stop command
-    subparsers.add_parser('stop', help='Stop the daemon')
-    
+    subparsers.add_parser("stop", help="Stop the daemon")
+
     # Status command
-    subparsers.add_parser('status', help='Show daemon status')
-    
+    subparsers.add_parser("status", help="Show daemon status")
+
     # Logs command
-    logs_parser = subparsers.add_parser('logs', help='Show recent logs')
-    logs_parser.add_argument('--lines', type=int, default=10, help='Number of lines to show')
-    
+    logs_parser = subparsers.add_parser("logs", help="Show recent logs")
+    logs_parser.add_argument(
+        "--lines", type=int, default=10, help="Number of lines to show"
+    )
+
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         sys.exit(1)
-    
+
     orchestrator = DaemonOrchestrator()
-    
-    if args.command == 'start':
+
+    if args.command == "start":
         result = orchestrator.start()
-    elif args.command == 'stop':
+    elif args.command == "stop":
         result = orchestrator.stop()
-    elif args.command == 'status':
+    elif args.command == "status":
         result = orchestrator.status()
-    elif args.command == 'logs':
+    elif args.command == "logs":
         result = orchestrator.logs(lines=args.lines)
     else:
         parser.print_help()
         sys.exit(1)
-    
+
     print(result)
-    sys.exit(0 if result.get('success', result.get('running', False)) else 1)
+    sys.exit(0 if result.get("success", result.get("running", False)) else 1)
 
 
 if __name__ == "__main__":

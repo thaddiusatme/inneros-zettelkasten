@@ -12,6 +12,7 @@ object. Otherwise the resolver returns ``None``.
 This utility is kept intentionally small and dependency-light. YAML parsing is
 only attempted if ``pyyaml`` is importable; otherwise the file is ignored.
 """
+
 from __future__ import annotations
 
 import json
@@ -53,7 +54,12 @@ def _read_config_file(config_path: Path) -> Optional[str]:
             # Lightweight fallback: naive key: value parser (no nesting)
             try:
                 import re
-                matches = re.findall(r'^\s*vault_path\s*:\s*["\']?(.*?)["\']?\s*$', config_path.read_text(), re.MULTILINE)
+
+                matches = re.findall(
+                    r'^\s*vault_path\s*:\s*["\']?(.*?)["\']?\s*$',
+                    config_path.read_text(),
+                    re.MULTILINE,
+                )
                 if matches:
                     return matches[0]
             except Exception:

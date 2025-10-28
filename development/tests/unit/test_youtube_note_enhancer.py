@@ -7,16 +7,12 @@ Following proven TDD patterns from Smart Link Management and Directory Organizat
 
 import pytest
 from pathlib import Path
-from datetime import datetime
-from typing import Dict, List
 import tempfile
 import shutil
 
 # Import will fail initially - this is expected for RED phase
 from src.ai.youtube_note_enhancer import (
     YouTubeNoteEnhancer,
-    NoteStructure,
-    EnhanceResult,
     QuotesData,
 )
 
@@ -69,16 +65,32 @@ This is important in the fight against AI slop
         """Sample AI-extracted quotes"""
         return QuotesData(
             key_insights=[
-                {"timestamp": "00:15", "quote": "AI is transforming content creation", "context": "Introduction"}
+                {
+                    "timestamp": "00:15",
+                    "quote": "AI is transforming content creation",
+                    "context": "Introduction",
+                }
             ],
             actionable=[
-                {"timestamp": "05:30", "quote": "Focus on quality over quantity", "context": "Strategy"}
+                {
+                    "timestamp": "05:30",
+                    "quote": "Focus on quality over quantity",
+                    "context": "Strategy",
+                }
             ],
             notable=[
-                {"timestamp": "10:00", "quote": "Community feedback is crucial", "context": "Engagement"}
+                {
+                    "timestamp": "10:00",
+                    "quote": "Community feedback is crucial",
+                    "context": "Engagement",
+                }
             ],
             definitions=[
-                {"timestamp": "02:45", "quote": "AI slop: low-quality AI-generated content", "context": "Terminology"}
+                {
+                    "timestamp": "02:45",
+                    "quote": "AI slop: low-quality AI-generated content",
+                    "context": "Terminology",
+                }
             ],
         )
 
@@ -86,12 +98,15 @@ This is important in the fight against AI slop
         """RED: Parse basic note with all sections present"""
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.parse_note_structure(sample_templater_note)
-        
+
         assert result.has_frontmatter is True
         assert result.has_why_section is True
         assert result.title == "AI Channels Are Taking Over Warhammer 40k Lore"
         assert "youtube" in result.frontmatter_data.get("tags", [])
-        assert result.why_section_content == "This is important in the fight against AI slop"
+        assert (
+            result.why_section_content
+            == "This is important in the fight against AI slop"
+        )
 
     def test_parse_note_structure_missing_sections(self):
         """RED: Handle note missing 'Why I'm Saving This' section"""
@@ -107,7 +122,7 @@ created: 2025-10-03 09:53
 """
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.parse_note_structure(note_without_why)
-        
+
         assert result.has_why_section is False
         assert result.insertion_point is not None  # Should still find insertion point
 
@@ -122,7 +137,7 @@ tags: [unclosed bracket
 # Test Video
 """
         enhancer = YouTubeNoteEnhancer()
-        
+
         # Should not crash, but return structure with error flag
         result = enhancer.parse_note_structure(malformed_note)
         assert result.has_parse_errors is True
@@ -132,13 +147,17 @@ tags: [unclosed bracket
         """RED: Find correct insertion point after 'Why I'm Saving This'"""
         enhancer = YouTubeNoteEnhancer()
         insertion_line = enhancer.identify_insertion_point(sample_templater_note)
-        
+
         # Should be after "Why I'm Saving This" section content
         # but before "Key Takeaways" section
         lines = sample_templater_note.split("\n")
-        why_index = next(i for i, line in enumerate(lines) if "## Why I'm Saving This" in line)
-        takeaways_index = next(i for i, line in enumerate(lines) if "## Key Takeaways" in line)
-        
+        why_index = next(
+            i for i, line in enumerate(lines) if "## Why I'm Saving This" in line
+        )
+        takeaways_index = next(
+            i for i, line in enumerate(lines) if "## Key Takeaways" in line
+        )
+
         assert why_index < insertion_line < takeaways_index
 
 
@@ -171,12 +190,15 @@ Important content
 ## Key Takeaways
 """
         enhancer = YouTubeNoteEnhancer()
-        result = enhancer.insert_quotes_section(original, sample_quotes_markdown, insertion_line=2)
-        
+        result = enhancer.insert_quotes_section(
+            original, sample_quotes_markdown, insertion_line=2
+        )
+
         assert "## Extracted Quotes" in result
         # Count level-2 headings only (## followed by space, not ###)
         import re
-        level_2_headings = len(re.findall(r'^## [^#]', result, re.MULTILINE))
+
+        level_2_headings = len(re.findall(r"^## [^#]", result, re.MULTILINE))
         assert level_2_headings == 3  # Original 2 + new quotes section
 
     def test_insert_quotes_section_preserve_content(self):
@@ -194,7 +216,7 @@ Deep analysis here
         quotes = "## Extracted Quotes\n\nQuote content here\n"
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.insert_quotes_section(original, quotes, insertion_line=2)
-        
+
         # All original sections must be present
         assert "Important content" in result
         assert "Point 1" in result
@@ -219,8 +241,10 @@ Quote 4
 """
         original = "## Why\nContent\n\n## Next"
         enhancer = YouTubeNoteEnhancer()
-        result = enhancer.insert_quotes_section(original, quotes_with_categories, insertion_line=2)
-        
+        result = enhancer.insert_quotes_section(
+            original, quotes_with_categories, insertion_line=2
+        )
+
         assert "🎯 Key Insights" in result
         assert "💡 Actionable Insights" in result
         assert "📝 Notable Quotes" in result
@@ -247,9 +271,9 @@ Content here
             "quote_count": 12,
             "processing_time_seconds": 1.45,
         }
-        
+
         result = enhancer.update_frontmatter(note, metadata)
-        
+
         assert "ai_processed: true" in result
         assert "processed_at: 2025-10-06 17:00" in result
         assert "quote_count: 12" in result
@@ -269,9 +293,9 @@ Content
 """
         enhancer = YouTubeNoteEnhancer()
         metadata = {"ai_processed": True}
-        
+
         result = enhancer.update_frontmatter(note, metadata)
-        
+
         # All original fields preserved
         assert "type: literature" in result
         assert "created: 2025-10-03 09:53" in result
@@ -326,19 +350,21 @@ This is a test reason for saving
     def test_enhance_note_end_to_end(self, sample_note_path):
         """RED: Complete enhancement workflow"""
         quotes_data = QuotesData(
-            key_insights=[{"timestamp": "00:15", "quote": "Test insight", "context": "Test"}],
+            key_insights=[
+                {"timestamp": "00:15", "quote": "Test insight", "context": "Test"}
+            ],
             actionable=[],
             notable=[],
             definitions=[],
         )
-        
+
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(sample_note_path, quotes_data)
-        
+
         assert result.success is True
         assert result.backup_path is not None
         assert result.backup_path.exists()
-        
+
         # Read enhanced note
         enhanced_content = sample_note_path.read_text()
         assert "## Extracted Quotes" in enhanced_content
@@ -348,11 +374,13 @@ This is a test reason for saving
     def test_enhance_note_with_backup(self, sample_note_path):
         """RED: Create backup before modification"""
         original_content = sample_note_path.read_text()
-        
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
+
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(sample_note_path, quotes_data)
-        
+
         # Backup should contain original content
         assert result.backup_path.exists()
         backup_content = result.backup_path.read_text()
@@ -361,14 +389,14 @@ This is a test reason for saving
     def test_enhance_note_rollback_on_failure(self, sample_note_path):
         """RED: Rollback if insertion fails"""
         original_content = sample_note_path.read_text()
-        
+
         # Pass invalid quotes data to trigger failure
         quotes_data = None
         enhancer = YouTubeNoteEnhancer()
-        
+
         with pytest.raises(Exception):
             enhancer.enhance_note(sample_note_path, quotes_data)
-        
+
         # Note should be unchanged
         current_content = sample_note_path.read_text()
         assert current_content == original_content
@@ -389,11 +417,13 @@ Already has quotes
 """
         note_path = temp_note_dir / "processed.md"
         note_path.write_text(processed_note)
-        
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
+
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(note_path, quotes_data, force=False)
-        
+
         # Should skip processing
         assert result.success is False
         assert result.skipped is True
@@ -402,11 +432,13 @@ Already has quotes
     def test_enhance_note_file_not_found(self):
         """RED: Error handling for missing file"""
         nonexistent_path = Path("/nonexistent/path/note.md")
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
-        
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
+
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(nonexistent_path, quotes_data)
-        
+
         assert result.success is False
         assert result.error_type == "FileNotFoundError"
         assert result.error_message is not None
@@ -474,34 +506,38 @@ This is important in the fight against AI slop and finding the line of what is a
 """
         note_path = temp_note_dir / "real-templater-note.md"
         note_path.write_text(real_note_content)
-        
+
         quotes_data = QuotesData(
             key_insights=[
-                {"timestamp": "01:23", "quote": "Real quote from video", "context": "Main topic"}
+                {
+                    "timestamp": "01:23",
+                    "quote": "Real quote from video",
+                    "context": "Main topic",
+                }
             ],
             actionable=[],
             notable=[],
             definitions=[],
         )
-        
+
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(note_path, quotes_data)
-        
+
         # Verify successful processing
         assert result.success is True
-        
+
         # Verify content preservation
         enhanced = note_path.read_text()
         assert "Majorkill" in enhanced  # Original channel preserved
         assert "Why I'm Saving This" in enhanced  # Original reason preserved
         assert "## Extracted Quotes" in enhanced  # Quotes added
         assert "Real quote from video" in enhanced  # Quote content present
-        
+
         # Verify frontmatter updates
         assert "ai_processed: true" in enhanced
         assert "processed_at:" in enhanced
         assert "quote_count: 1" in enhanced
-        
+
         # Verify all original sections still present
         assert "## Key Takeaways" in enhanced
         assert "## My Thoughts & Applications" in enhanced

@@ -15,15 +15,15 @@ class PerformanceMetricsCollector:
     GREEN Phase: Basic performance metrics collection
     Minimal implementation for metrics collection tests
     """
-    
+
     def __init__(self):
         self.metrics: Dict[str, Any] = {}
         self.start_time = time.time()
-        
+
     def record_metrics(self, metrics: Dict[str, Any]):
         """Record performance metrics"""
         self.metrics.update(metrics)
-        
+
     def get_comprehensive_metrics(self) -> Dict[str, Any]:
         """
         GREEN Phase: Get comprehensive metrics
@@ -38,28 +38,28 @@ class PerformanceMetricsCollector:
             "io_operations_count": 0,
             "successful_notes": 0,
             "failed_notes": 0,
-            "error_rate": 0.0
+            "error_rate": 0.0,
         }
-        
+
         # Update with recorded metrics
         default_metrics.update(self.metrics)
-        
+
         return default_metrics
-    
+
     def start_collection(self):
         """Start metrics collection"""
         self.start_time = time.time()
         self.metrics.clear()
-        
+
     def stop_collection(self):
         """Stop metrics collection"""
         if "total_processing_time" not in self.metrics:
             self.metrics["total_processing_time"] = time.time() - self.start_time
-    
+
     def get_current_memory_mb(self) -> float:
         """Get current memory usage in MB"""
         return psutil.virtual_memory().used / (1024 * 1024)
-    
+
     def get_current_cpu_percent(self) -> float:
         """Get current CPU usage percentage"""
         return psutil.cpu_percent()

@@ -1,0 +1,981 @@
+summary:
+  total_notes: 82
+  scan_date: '2025-10-22T15:58:31.798031'
+  inbox_path: knowledge/Inbox
+  categories:
+    orphaned: 28
+    active_capture: 49
+    needs_metadata_repair: 5
+categories:
+  orphaned:
+  - path: knowledge/Inbox/daily-screenshots-2025-09-30.md
+    status: inbox
+    ai_processed: '2025-10-16T21:35:44.737909'
+    type: fleeting
+    quality_score: 0.8
+    created: 2025-09-30 20:56
+    age_days: 21
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 0.77
+  - path: knowledge/Inbox/lit-20251008-1148-the-must-follow-roadmap-for-all-solo-developers.md_backup_20251008-114934.md
+    status: inbox
+    ai_processed: '2025-10-16T21:40:32.826078'
+    type: literature
+    quality_score: 0.75
+    created: 2025-10-08 11:48
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.16
+  - path: knowledge/Inbox/capture-20250926-0954-visual-content.md
+    status: inbox
+    ai_processed: '2025-10-16T21:11:32.765517'
+    type: fleeting
+    quality_score: 0.85
+    created: 2025-10-01 19:06
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.2
+  - path: knowledge/Inbox/capture-20240301-0029-visual-content.md
+    status: inbox
+    ai_processed: '2025-10-16T21:12:52.724658'
+    type: fleeting
+    quality_score: 0.85
+    created: 2025-10-01 20:14
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.38
+  - path: knowledge/Inbox/lit-20251006-1706-openai-devday-2025-opening-keynote-with-sam-altman.md_backup_20251006-200855.md
+    status: inbox
+    ai_processed: '2025-10-16T21:13:19.015969'
+    type: literature
+    quality_score: 0.85
+    created: 2025-10-06 17:06
+    age_days: 15
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.77
+  - path: knowledge/Inbox/lit-20251008-1124-the-largest-change-in-warcraft-history.md_backup_20251008-112644.md
+    status: inbox
+    ai_processed: '2025-10-16T21:13:42.778060'
+    type: literature
+    quality_score: 0.85
+    created: 2025-10-08 11:23
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.27
+  - path: knowledge/Inbox/capture-20240301-0052-ai.md
+    status: inbox
+    ai_processed: '2025-10-16T21:14:06.760503'
+    type: fleeting
+    quality_score: 0.85
+    created: 2025-10-01 20:15
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.47
+  - path: knowledge/Inbox/lit-20251003-0925-ai-channels-are-taking-over-warhammer-40k-lore-on-youtube.md
+    status: inbox
+    ai_processed: '2025-10-16T21:14:29.554728'
+    type: literature
+    quality_score: 0.65
+    created: 2025-10-03 09:24
+    age_days: 19
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.26
+  - path: knowledge/Inbox/capture-20240301-1021-visual-content.md
+    status: inbox
+    ai_processed: '2025-10-16T21:14:56.434041'
+    type: fleeting
+    quality_score: 0.75
+    created: 2025-10-01 20:15
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.26
+  - path: knowledge/Inbox/capture-20250926-0954-management.md
+    status: inbox
+    ai_processed: '2025-10-16T21:15:22.827335'
+    type: fleeting
+    quality_score: 0.75
+    created: 2025-10-01 19:05
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.27
+  - path: knowledge/Inbox/capture-20250925-1914-visual-content.md
+    status: inbox
+    ai_processed: '2025-10-16T21:15:48.614677'
+    type: fleeting
+    quality_score: 0.8
+    created: 2025-10-01 19:07
+    age_days: 20
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.13
+  - path: knowledge/Inbox/YouTube/lit-20251003-1044-replacing-humans-with-ai-is-going-horribly-wrong.md_backup_20251008-131225.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-03 10:44
+    age_days: 19
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.99
+  - path: knowledge/Inbox/YouTube/lit-20251007-1900-the-ultimate-pixel-art-tutorial.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 19:00
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.2
+  - path: knowledge/Inbox/YouTube/lit-20251006-1706-openai-devday-2025-opening-keynote-with-sam-altman.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-06 17:06
+    age_days: 15
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.38
+  - path: knowledge/Inbox/YouTube/lit-20251020-1644-the-philosophy-of-jake.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 16:44
+    age_days: 1
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.0
+  - path: knowledge/Inbox/YouTube/lit-20251007-2157-20-programming-projects-that-will-make-you-a-god-at-coding.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 21:57
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.84
+  - path: knowledge/Inbox/YouTube/lit-20251006-0734-the-hidden-depth-of-zoro-the-anatomy-of-one-piece.md_backup_20251008-131257.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-06 07:34
+    age_days: 16
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.12
+  - path: knowledge/Inbox/YouTube/lit-20251003-1044-replacing-humans-with-ai-is-going-horribly-wrong.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-03 10:44
+    age_days: 19
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.96
+  - path: knowledge/Inbox/YouTube/lit-20251018-0924-andrej-karpathy-we-re-summoning-ghosts-not-building-animals.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-18 09:24
+    age_days: 4
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.37
+  - path: knowledge/Inbox/YouTube/lit-20251007-1047-ai-slop-is-killing-our-channel.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 10:47
+    age_days: 15
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.36
+  - path: knowledge/Inbox/YouTube/lit-20251007-1651-what-canvas-size-should-you-use-for-pixel-art-pixel-art-tuto.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 16:50
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.82
+  - path: knowledge/Inbox/YouTube/lit-20251019-1300-prismo-the-mirage-of-desire.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-19 13:00
+    age_days: 3
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.22
+  - path: knowledge/Inbox/YouTube/lit-20251008-1148-the-must-follow-roadmap-for-all-solo-developers.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 11:48
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.17
+  - path: knowledge/Inbox/YouTube/lit-20251007-1732-how-to-choose-good-colour-palettes-pixel-art-tutorial.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 17:32
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.89
+  - path: knowledge/Inbox/YouTube/lit-20251008-1124-the-largest-change-in-warcraft-history.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 11:23
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.2
+  - path: knowledge/Inbox/YouTube/test-youtube-20251008-1125-automation-test.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 11:25
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 1.35
+  - path: knowledge/Inbox/YouTube/lit-20251006-0734-the-hidden-depth-of-zoro-the-anatomy-of-one-piece.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-06 07:34
+    age_days: 16
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.16
+  - path: knowledge/Inbox/YouTube/lit-20251007-2148-how-i-code-profitable-apps-solo-no-wasted-time-beginner-frie.md.md
+    status: inbox
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 21:48
+    age_days: 14
+    issues:
+    - orphaned_note
+    recommendations:
+    - repair_status_to_promoted
+    category: orphaned
+    file_size_kb: 2.18
+  active_capture:
+  - path: knowledge/Inbox/fleeting-20251019-1203-resistance-to-change-is-the-force-we-try-to-avoid-the-most.md.md
+    status: inbox
+    ai_processed: false
+    type: fleeting
+    quality_score: 0.0
+    created: 2025-10-19 12:02
+    age_days: 3
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.97
+  - path: knowledge/Inbox/Tag Dashboard testing.md
+    status: unknown
+    ai_processed: '2025-10-16T21:39:52.063962'
+    type: dashboard
+    quality_score: 0.4
+    created: 2025-09-23 18:16
+    age_days: 28
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.5
+  - path: "knowledge/Inbox/Media reference on \u201Chammer point\u201D (memorable\
+      \ anchoring stories in communication)..md"
+    status: unknown
+    ai_processed: '2025-10-16T21:12:28.524402'
+    type: fleeting
+    quality_score: 0.75
+    created: 2025-09-21 16:02
+    age_days: 30
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 26.67
+  - path: knowledge/Inbox/YouTube.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-19 16:57
+    age_days: 2
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.0
+  - path: knowledge/Inbox/fleeting-20251019-1208-exploration-of-quitting-tech-for-groceries.md.md
+    status: inbox
+    ai_processed: false
+    type: fleeting
+    quality_score: 0.0
+    created: 2025-10-19 12:07
+    age_days: 3
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.4
+  - path: knowledge/Inbox/YouTube/lit-20251008-2123-ai-could-wipe-out-the-working-class-sen-bernie-sanders.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 21:23
+    age_days: 13
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.23
+  - path: knowledge/Inbox/YouTube/lit-20251007-1857-this-video-is-written-in-code.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 18:56
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.17
+  - path: knowledge/Inbox/YouTube/lit-20251009-1124-i-made-a-game-using-ai-assets.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-09 11:24
+    age_days: 13
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.15
+  - path: knowledge/Inbox/YouTube/lit-20251007-1900-the-ultimate-pixel-art-tutorial.md_backup_20251008-131316.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 19:00
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.17
+  - path: knowledge/Inbox/YouTube/lit-20251019-1300-prismo-the-mirage-of-desire.md_backup_20251019-163026.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-19 13:00
+    age_days: 3
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.35
+  - path: knowledge/Inbox/YouTube/lit-20251007-1651-what-canvas-size-should-you-use-for-pixel-art-pixel-art-tuto.md_backup_20251008-131238.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 16:50
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.16
+  - path: knowledge/Inbox/YouTube/lit-20251021-1929-the-lessons-we-ve-learned-from-finn_backup_20251021-193513.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 19:29
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.5
+  - path: knowledge/Inbox/YouTube/lit-20251003-0954-ai-channels-are-taking-over-warhammer-40k-lore-on-youtube.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-03 09:53
+    age_days: 19
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.2
+  - path: knowledge/Inbox/YouTube/lit-20251018-0845-andrej-karpathy-we-re-summoning-ghosts-not-building-animals.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-18 08:45
+    age_days: 4
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.22
+  - path: knowledge/Inbox/YouTube/lit-20251020-2115-carthage-faction-overview-divide-et-impera-1-3-total-war-rom.md.md
+    status: processed
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 21:15
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.19
+  - path: knowledge/Inbox/YouTube/lit-20251021-1655-the-napoleonic-wars-oversimplified-part-1.md.md
+    status: processed
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 16:55
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.47
+  - path: knowledge/Inbox/YouTube/lit-20251007-2227-don-t-start-an-ai-agency-do-this-instead.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 22:26
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.21
+  - path: knowledge/Inbox/YouTube/manual-demo-20251021-151710.md
+    status: draft
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 15:30
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.94
+  - path: knowledge/Inbox/YouTube/lit-20251021-1655-the-napoleonic-wars-oversimplified-part-1.md_backup_20251021-170320.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 16:55
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.58
+  - path: knowledge/Inbox/YouTube/youtube-demo-status-sync.md
+    status: draft
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 20:55
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 3.07
+  - path: knowledge/Inbox/YouTube/lit-20251020-2115-carthage-faction-overview-divide-et-impera-1-3-total-war-rom.md_backup_20251020-212454.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 21:15
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.6
+  - path: knowledge/Inbox/YouTube/lit-20251010-1345-want-to-make-games-these-are-the-only-skills-you-need.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-10 13:45
+    age_days: 12
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.14
+  - path: knowledge/Inbox/YouTube/youtube-demo-status-sync_backup_20251020-210546.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 20:55
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.13
+  - path: knowledge/Inbox/YouTube/lit-20251021-1929-the-lessons-we-ve-learned-from-finn.md
+    status: processed
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 19:29
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.44
+  - path: knowledge/Inbox/YouTube/lit-20251007-2148-how-i-code-profitable-apps-solo-no-wasted-time-beginner-frie.md_backup_20251008-131400.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 21:48
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.26
+  - path: knowledge/Inbox/YouTube/lit-20251019-1704-deep-dive-into-llms-like-chatgpt.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-19 17:04
+    age_days: 2
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.11
+  - path: knowledge/Inbox/YouTube/lit-20251018-0924-andrej-karpathy-we-re-summoning-ghosts-not-building-animals.md_backup_20251018-213210.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-18 09:24
+    age_days: 4
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.38
+  - path: knowledge/Inbox/YouTube/quick-demo-20251021-151527.md
+    status: draft
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 15:30
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.31
+  - path: knowledge/Inbox/YouTube/lit-20251007-1732-how-to-choose-good-colour-palettes-pixel-art-tutorial.md_backup_20251008-131328.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 17:32
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.17
+  - path: knowledge/Inbox/YouTube/youtube-20251004-2200-FLpS7OfD5-s.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-04 22:00
+    age_days: 17
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.05
+  - path: knowledge/Inbox/YouTube/lit-20251020-2051-how-finn-s-swords-taught-us-to-grow.md.md
+    status: draft
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 20:51
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.45
+  - path: knowledge/Inbox/YouTube/demo-20251021-151759.md
+    status: processed
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 15:30
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.27
+  - path: knowledge/Inbox/YouTube/test-approval-workflow-20251020-1954.md
+    status: draft
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 19:54
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.71
+  - path: knowledge/Inbox/YouTube/lit-20251008-1648-github-ceo-why-now-is-the-best-time-to-be-a-developer-thomas.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 16:48
+    age_days: 13
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.54
+  - path: knowledge/Inbox/YouTube/youtube-20251005-1408-EUG65dIY-2k.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-05 14:08
+    age_days: 17
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.1
+  - path: knowledge/Inbox/YouTube/lit-20251007-2157-20-programming-projects-that-will-make-you-a-god-at-coding.md_backup_20251008-131344.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-07 21:57
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.22
+  - path: knowledge/Inbox/YouTube/lit-20251009-1135-ai-coding-sucks.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-09 11:35
+    age_days: 13
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.08
+  - path: knowledge/Inbox/YouTube/lit-20251021-1909-adventure-time-s-dark-lesson-on-feeling-lost.md_backup_20251021-190955.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 19:09
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.52
+  - path: knowledge/Inbox/YouTube/lit-20251019-1648-how-i-use-llms.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-19 16:48
+    age_days: 2
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.01
+  - path: knowledge/Inbox/YouTube/lit-20251008-1533-how-to-make-a-video-game-godot-beginner-tutorial.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 15:33
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.12
+  - path: knowledge/Inbox/YouTube/lit-20251003-1044-replacing-humans-with-ai-is-going-horribly-wrong.md_backup_20251008-131225_backup_20251008-131426.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-03 10:44
+    age_days: 19
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.19
+  - path: knowledge/Inbox/YouTube/demo-20251021-151759_backup_20251021-151820.md
+    status: processing
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 15:30
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 0.58
+  - path: knowledge/Inbox/YouTube/lit-20251006-0734-the-hidden-depth-of-zoro-the-anatomy-of-one-piece.md_backup_20251008-131257_backup_20251008-131500.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-06 07:34
+    age_days: 16
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.11
+  - path: knowledge/Inbox/YouTube/lit-20251008-1318-1-year-of-learning-game-development-in-6-minutes.md.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-08 13:18
+    age_days: 14
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.11
+  - path: knowledge/Inbox/YouTube/lit-20251021-1909-adventure-time-s-dark-lesson-on-feeling-lost.md.md
+    status: processed
+    ai_processed: true
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-21 19:09
+    age_days: 0
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 2.49
+  - path: knowledge/Inbox/YouTube/lit-20251020-1644-the-philosophy-of-jake.md_backup_20251020-172423.md
+    status: inbox
+    ai_processed: false
+    type: literature
+    quality_score: 0.0
+    created: 2025-10-20 16:44
+    age_days: 1
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 1.08
+  - path: knowledge/Inbox/Media/Transcripts/youtube-bT69pe4X_1g-2025-10-20.md
+    status: unknown
+    ai_processed: false
+    type: transcript
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 97.76
+  - path: knowledge/Inbox/Media/Transcripts/youtube-aircAruvnKk-2025-10-20.md
+    status: unknown
+    ai_processed: false
+    type: transcript
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 25.9
+  - path: knowledge/Inbox/Media/Transcripts/youtube-aircAruvnKk-2025-10-21.md
+    status: unknown
+    ai_processed: false
+    type: transcript
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues: []
+    recommendations: []
+    category: active_capture
+    file_size_kb: 25.88
+  needs_metadata_repair:
+  - path: knowledge/Inbox/Untitled.md
+    status: unknown
+    ai_processed: false
+    type: null
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues:
+    - missing_type_field
+    recommendations:
+    - infer_type_from_filename
+    category: needs_metadata_repair
+    file_size_kb: 0.0
+  - path: knowledge/Inbox/YouTube/youtube-20251005-1407-AN7c5S9k5L0.md
+    status: unknown
+    ai_processed: false
+    type: null
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues:
+    - missing_type_field
+    recommendations:
+    - infer_type_from_filename
+    category: needs_metadata_repair
+    file_size_kb: 1.05
+  - path: knowledge/Inbox/YouTube/youtube-20251005-1344-OYlQyPo-L4g.md
+    status: unknown
+    ai_processed: false
+    type: null
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues:
+    - missing_type_field
+    recommendations:
+    - infer_type_from_filename
+    category: needs_metadata_repair
+    file_size_kb: 1.05
+  - path: knowledge/Inbox/YouTube/youtube-20251005-1407-GuTcle5edjk.md
+    status: unknown
+    ai_processed: false
+    type: null
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues:
+    - missing_type_field
+    recommendations:
+    - infer_type_from_filename
+    category: needs_metadata_repair
+    file_size_kb: 1.05
+  - path: knowledge/Inbox/YouTube/youtube-20251005-0957-EUG65dIY-2k.md
+    status: unknown
+    ai_processed: false
+    type: null
+    quality_score: 0.0
+    created: null
+    age_days: null
+    issues:
+    - missing_type_field
+    recommendations:
+    - infer_type_from_filename
+    category: needs_metadata_repair
+    file_size_kb: 1.05

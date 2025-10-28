@@ -1,9 +1,11 @@
 ---
 created: 2025-10-08 11:25
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [youtube, test]
+tags:
+- youtube
+- test
 source: youtube
 url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 video_id: dQw4w9WgXcQ
@@ -12,6 +14,7 @@ ai_processed: true
 processed_at: 2025-10-08 11:25
 quote_count: 3
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.709238'
 ---
 
 # Test YouTube Automation

@@ -7,7 +7,7 @@ from .metrics_utils import (
     TimeWindowManager,
     MetricsAggregator,
     MetricsFormatter,
-    RingBuffer
+    RingBuffer,
 )
 from .metrics_display import MetricsDisplayFormatter, WebDashboardMetrics
 
@@ -20,5 +20,5 @@ __all__ = [
     "MetricsFormatter",
     "RingBuffer",
     "MetricsDisplayFormatter",
-    "WebDashboardMetrics"
+    "WebDashboardMetrics",
 ]

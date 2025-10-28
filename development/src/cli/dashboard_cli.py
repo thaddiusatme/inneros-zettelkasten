@@ -37,12 +37,13 @@ logger = logging.getLogger(__name__)
 from .dashboard_utils import (
     WebDashboardLauncher,
     LiveDashboardLauncher,
-    OutputFormatter
+    OutputFormatter,
 )
 
 # Import Phase 1 utilities for daemon detection
 try:
     from .status_utils import DaemonDetector
+
     HAVE_STATUS_UTILS = True
 except ImportError:
     HAVE_STATUS_UTILS = False
@@ -50,21 +51,21 @@ except ImportError:
 
 class DashboardLauncher:
     """Facade for web UI workflow dashboard.
-    
+
     REFACTOR phase: Delegates to WebDashboardLauncher utility.
     """
-    
-    def __init__(self, vault_path: str = '.'):
+
+    def __init__(self, vault_path: str = "."):
         """Initialize dashboard launcher.
-        
+
         Args:
             vault_path: Path to vault root directory
         """
         self.launcher = WebDashboardLauncher(vault_path=vault_path)
-    
+
     def launch(self) -> Dict[str, Any]:
         """Launch workflow dashboard.
-        
+
         Returns:
             Result dictionary with success status and URL
         """
@@ -73,22 +74,22 @@ class DashboardLauncher:
 
 class TerminalDashboardLauncher:
     """Facade for live terminal dashboard.
-    
+
     REFACTOR phase: Delegates to LiveDashboardLauncher utility.
     """
-    
-    def __init__(self, daemon_url: str = 'http://localhost:8080'):
+
+    def __init__(self, daemon_url: str = "http://localhost:8080"):
         """Initialize terminal dashboard launcher.
-        
+
         Args:
             daemon_url: URL of automation daemon
         """
         self.launcher = LiveDashboardLauncher(daemon_url=daemon_url)
         self.daemon_url = daemon_url  # Keep for compatibility
-    
+
     def launch(self) -> Dict[str, Any]:
         """Launch terminal dashboard.
-        
+
         Returns:
             Result dictionary with success status
         """
@@ -97,13 +98,13 @@ class TerminalDashboardLauncher:
 
 class DashboardOrchestrator:
     """Main orchestrator for dashboard commands.
-    
+
     Phase 2.2 GREEN: Enhanced with daemon status integration.
     """
-    
-    def __init__(self, vault_path: str = '.'):
+
+    def __init__(self, vault_path: str = "."):
         """Initialize dashboard orchestrator.
-        
+
         Args:
             vault_path: Path to vault root directory
         """
@@ -111,58 +112,63 @@ class DashboardOrchestrator:
         self.web_launcher = DashboardLauncher(vault_path=vault_path)
         self.terminal_launcher = TerminalDashboardLauncher()
         self.daemon_detector = DaemonDetector() if HAVE_STATUS_UTILS else None
-        
+
         # Phase 2.2: Add daemon integration
         try:
             from .dashboard_utils import DashboardDaemonIntegration
+
             self.daemon_integration = DashboardDaemonIntegration()
         except ImportError:
             self.daemon_integration = None
-    
+
     def run(self, live_mode: bool = False) -> Dict[str, Any]:
         """Run dashboard launcher.
-        
+
         Args:
             live_mode: If True, launch terminal dashboard; else web UI
-            
+
         Returns:
             Result dictionary with success status and daemon status
         """
         # Phase 2.2: Check daemon status before launch
         daemon_status = self.check_daemon_status()
-        
+
         launcher = self.terminal_launcher if live_mode else self.web_launcher
         result = launcher.launch()
-        result['mode'] = 'live' if live_mode else 'web'
-        
+        result["mode"] = "live" if live_mode else "web"
+
         # Phase 2.2: Include daemon status in result
-        result['daemon_status'] = daemon_status
-        
+        result["daemon_status"] = daemon_status
+
         return result
-    
+
     def check_daemon_status(self) -> Dict[str, Any]:
         """Check if automation daemon is running.
-        
+
         Returns:
             Daemon status dictionary
         """
         # Phase 2.2: Use new integration if available
         if self.daemon_integration:
             return self.daemon_integration.check_daemon_status()
-        
+
         # Fallback to old method
         if self.daemon_detector:
             is_running, pid = self.daemon_detector.is_running()
-            return {'running': is_running, 'available': True, 'pid': pid}
-        return {'running': False, 'available': False, 'message': 'Status utilities not available'}
+            return {"running": is_running, "available": True, "pid": pid}
+        return {
+            "running": False,
+            "available": False,
+            "message": "Status utilities not available",
+        }
 
 
 def main():
     """CLI entry point for dashboard commands."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
-        description='InnerOS Dashboard Launcher',
+        description="InnerOS Dashboard Launcher",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -170,48 +176,48 @@ Examples:
   inneros dashboard --live       Launch live terminal dashboard
   
 Dashboard provides real-time system monitoring and quick workflow actions.
-        """
+        """,
     )
-    
+
     parser.add_argument(
-        'vault_path',
-        nargs='?',
-        default='.',
-        help='Path to vault root (default: current directory)'
+        "vault_path",
+        nargs="?",
+        default=".",
+        help="Path to vault root (default: current directory)",
     )
-    
+
     parser.add_argument(
-        '--live',
-        action='store_true',
-        help='Launch live terminal dashboard instead of web UI'
+        "--live",
+        action="store_true",
+        help="Launch live terminal dashboard instead of web UI",
     )
-    
+
     parser.add_argument(
-        '--daemon-url',
-        default='http://localhost:8080',
-        help='Daemon URL for live mode (default: http://localhost:8080)'
+        "--daemon-url",
+        default="http://localhost:8080",
+        help="Daemon URL for live mode (default: http://localhost:8080)",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Create orchestrator
     orchestrator = DashboardOrchestrator(vault_path=args.vault_path)
-    
+
     # Update terminal launcher URL if specified
     if args.live and args.daemon_url:
         orchestrator.terminal_launcher.daemon_url = args.daemon_url
-    
+
     # Run appropriate launcher
     result = orchestrator.run(live_mode=args.live)
-    
+
     # Display results using OutputFormatter
-    if result.get('success'):
+    if result.get("success"):
         print(OutputFormatter.format_success(result))
     else:
         print(OutputFormatter.format_error(result))
-        if result.get('error'):
+        if result.get("error"):
             sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

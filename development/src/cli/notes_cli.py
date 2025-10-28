@@ -47,10 +47,16 @@ def _detect_repo_and_roots(user_path: Path) -> tuple[Path, Path]:
     else:
         # If passed repo root (contains knowledge) use it
         repo_root = p
-        if not (repo_root / "knowledge").exists() and (p / "knowledge" / "Inbox").exists():
+        if (
+            not (repo_root / "knowledge").exists()
+            and (p / "knowledge" / "Inbox").exists()
+        ):
             repo_root = p
         # If passed knowledge/<subdir>, climb up to repo root
-        if p.name in ("Inbox", "Fleeting Notes", "Permanent Notes") and (p.parent / "knowledge").exists():
+        if (
+            p.name in ("Inbox", "Fleeting Notes", "Permanent Notes")
+            and (p.parent / "knowledge").exists()
+        ):
             repo_root = p.parent.parent
 
     # Preferred reviews dir resolution
@@ -112,12 +118,20 @@ def _open_in_editor(path: Path, editor_arg: str | None) -> None:
 def _git_commit(repo_root: Path, file_path: Path, message: str) -> None:
     try:
         # Ensure we're in a git repo
-        result = subprocess.run(["git", "-C", str(repo_root), "rev-parse", "--is-inside-work-tree"], capture_output=True)
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+        )
         if result.returncode != 0:
             print("⚠️  Not a git repository. Skipping commit.")
             return
-        subprocess.run(["git", "-C", str(repo_root), "add", str(file_path.relative_to(repo_root))], check=False)
-        subprocess.run(["git", "-C", str(repo_root), "commit", "-m", message], check=False)
+        subprocess.run(
+            ["git", "-C", str(repo_root), "add", str(file_path.relative_to(repo_root))],
+            check=False,
+        )
+        subprocess.run(
+            ["git", "-C", str(repo_root), "commit", "-m", message], check=False
+        )
     except Exception as e:
         print(f"⚠️  Git commit failed: {e}")
 
@@ -333,7 +347,9 @@ def _create_sprint_review(reviews_dir: Path, sprint_id: str) -> Path:
     base = reviews_dir / f"sprint-{sprint_id}-review.md"
     path = _unique_path(base)
     fm = _sprint_review_frontmatter(sprint_id)
-    body = SPRINT_REVIEW_BODY.format(sprint_id=sprint_id, date=datetime.now().strftime("%Y-%m-%d"))
+    body = SPRINT_REVIEW_BODY.format(
+        sprint_id=sprint_id, date=datetime.now().strftime("%Y-%m-%d")
+    )
     content = _build_note(fm, body)
     safe_write(path, content)
     return path
@@ -343,7 +359,9 @@ def _create_sprint_retro(reviews_dir: Path, sprint_id: str) -> Path:
     base = reviews_dir / f"sprint-{sprint_id}-retro.md"
     path = _unique_path(base)
     fm = _sprint_retro_frontmatter(sprint_id)
-    body = SPRINT_RETRO_BODY.format(sprint_id=sprint_id, date=datetime.now().strftime("%Y-%m-%d"))
+    body = SPRINT_RETRO_BODY.format(
+        sprint_id=sprint_id, date=datetime.now().strftime("%Y-%m-%d")
+    )
     content = _build_note(fm, body)
     safe_write(path, content)
     return path
@@ -371,14 +389,34 @@ Examples:
     kind = new_p.add_mutually_exclusive_group(required=True)
     kind.add_argument("--daily", action="store_true", help="Create daily review note")
     kind.add_argument("--weekly", action="store_true", help="Create weekly review note")
-    kind.add_argument("--sprint-review", action="store_true", help="Create sprint review note")
-    kind.add_argument("--sprint-retro", action="store_true", help="Create sprint retrospective note")
+    kind.add_argument(
+        "--sprint-review", action="store_true", help="Create sprint review note"
+    )
+    kind.add_argument(
+        "--sprint-retro", action="store_true", help="Create sprint retrospective note"
+    )
 
     new_p.add_argument("--sprint-id", help="Sprint ID for sprint notes (e.g., 001)")
-    new_p.add_argument("--dir", dest="reviews_dir", help="Override Reviews directory path")
-    new_p.add_argument("--open", dest="open_in_editor", action="store_true", help="Open the created note in your editor")
-    new_p.add_argument("--editor", dest="editor", help="Editor command to use (overrides $VISUAL/$EDITOR)")
-    new_p.add_argument("--git", dest="git_commit", action="store_true", help="git add + commit after creation")
+    new_p.add_argument(
+        "--dir", dest="reviews_dir", help="Override Reviews directory path"
+    )
+    new_p.add_argument(
+        "--open",
+        dest="open_in_editor",
+        action="store_true",
+        help="Open the created note in your editor",
+    )
+    new_p.add_argument(
+        "--editor",
+        dest="editor",
+        help="Editor command to use (overrides $VISUAL/$EDITOR)",
+    )
+    new_p.add_argument(
+        "--git",
+        dest="git_commit",
+        action="store_true",
+        help="git add + commit after creation",
+    )
 
     args = parser.parse_args()
 
@@ -392,10 +430,14 @@ Examples:
     created: Path
     if args.daily:
         created = _create_daily(reviews_dir)
-        commit_message = f"docs(reviews): add daily review {created.stem.replace('daily-','')}"
+        commit_message = (
+            f"docs(reviews): add daily review {created.stem.replace('daily-','')}"
+        )
     elif args.weekly:
         created = _create_weekly(reviews_dir)
-        commit_message = f"docs(reviews): add weekly review {created.stem.replace('weekly-','')}"
+        commit_message = (
+            f"docs(reviews): add weekly review {created.stem.replace('weekly-','')}"
+        )
     elif args.sprint_review:
         if not args.sprint_id:
             print("❌ --sprint-id is required for sprint-review")

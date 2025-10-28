@@ -22,11 +22,11 @@ from .terminal_dashboard_utils import (
     StatusFormatter,
     TableRenderer,
     DashboardOrchestrator,
-    RICH_AVAILABLE
+    RICH_AVAILABLE,
 )
 
 # Phase 3.1: Import metrics for dashboard integration
-from src.monitoring import MetricsCollector, MetricsStorage, MetricsDisplayFormatter
+from src.monitoring import MetricsCollector
 
 try:
     from rich.console import Console
@@ -39,10 +39,10 @@ except ImportError:
 def fetch_health_status(url: str) -> Dict[str, Any]:
     """
     Fetch health status from daemon HTTP endpoint.
-    
+
     Args:
         url: Base URL of daemon (e.g., 'http://localhost:8080')
-        
+
     Returns:
         Health data dictionary or error structure
     """
@@ -53,10 +53,10 @@ def fetch_health_status(url: str) -> Dict[str, Any]:
 def format_status_indicator(is_healthy: bool) -> str:
     """
     Format status indicator with color coding.
-    
+
     Args:
         is_healthy: Health status boolean
-        
+
     Returns:
         Formatted status string with emoji and color
     """
@@ -66,10 +66,10 @@ def format_status_indicator(is_healthy: bool) -> str:
 def create_status_table(health_data: Dict[str, Any]) -> Optional[Any]:
     """
     Create Rich Table from health data.
-    
+
     Args:
         health_data: Health status dictionary
-        
+
     Returns:
         Rich Table instance or None if Rich not available
     """
@@ -78,10 +78,14 @@ def create_status_table(health_data: Dict[str, Any]) -> Optional[Any]:
     return renderer.create_status_table(health_data)
 
 
-def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1, metrics_collector=None):
+def run_dashboard(
+    url: str = "http://localhost:8080",
+    refresh_interval: int = 1,
+    metrics_collector=None,
+):
     """
     Run live-updating terminal dashboard.
-    
+
     Args:
         url: Base URL of daemon
         refresh_interval: Seconds between refreshes
@@ -91,20 +95,20 @@ def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1,
         print("Error: 'rich' library required for dashboard")
         print("Install with: pip install rich")
         return
-    
+
     # Phase 3.1: Initialize metrics if not provided
     if metrics_collector is None:
         metrics_collector = MetricsCollector()
-    
+
     # Initialize components
     poller = HealthPoller(url)
     formatter = StatusFormatter()
     renderer = TableRenderer(formatter, metrics_collector=metrics_collector)
     orchestrator = DashboardOrchestrator(poller, renderer, refresh_interval)
-    
+
     # Setup display
     console = Console()
-    
+
     try:
         with Live(console=console, refresh_per_second=1) as live:
             orchestrator.run(lambda content: live.update(content))
@@ -115,29 +119,29 @@ def run_dashboard(url: str = 'http://localhost:8080', refresh_interval: int = 1,
 def main():
     """CLI entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="InnerOS Automation Daemon Terminal Dashboard"
     )
     parser.add_argument(
-        '--url',
-        default='http://localhost:8080',
-        help='Daemon HTTP server URL (default: http://localhost:8080)'
+        "--url",
+        default="http://localhost:8080",
+        help="Daemon HTTP server URL (default: http://localhost:8080)",
     )
     parser.add_argument(
-        '--refresh',
+        "--refresh",
         type=int,
         default=1,
-        help='Refresh interval in seconds (default: 1)'
+        help="Refresh interval in seconds (default: 1)",
     )
-    
+
     args = parser.parse_args()
-    
+
     print(f"Starting dashboard monitoring {args.url}")
     print("Press Ctrl+C to stop\n")
-    
+
     run_dashboard(url=args.url, refresh_interval=args.refresh)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

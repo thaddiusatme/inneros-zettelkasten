@@ -1,18 +1,21 @@
 ---
 created: 2025-10-07 10:47
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [youtube, video-content]
+tags:
+- youtube
+- video-content
 source: youtube
 url: https://www.youtube.com/watch?v=_zfN9wnPvU0
-author: Kurzgesagt – In a Nutshell
+author: "Kurzgesagt \u2013 In a Nutshell"
 video_id: _zfN9wnPvU0
-channel: Kurzgesagt – In a Nutshell
+channel: "Kurzgesagt \u2013 In a Nutshell"
 ai_processed: true
 processed_at: 2025-10-08 08:29
 quote_count: 3
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.703975'
 ---
 
 

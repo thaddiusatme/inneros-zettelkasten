@@ -29,3 +29,5 @@ requests==2.31.0  # Required by ollama_client.py for AI API calls
 
 # Terminal UI (for workflow dashboard)
 rich==13.7.0
+
+psutil==5.9.8

@@ -1,0 +1,36 @@
+# Automation Daemon Registry
+# Defines all automation daemons for status monitoring and management
+# 
+# MAINTENANCE:
+# - When adding new daemons: Copy an existing entry and update all fields
+# - Test with: cd development && pytest tests/unit/cli/test_automation_status_cli.py
+# - Validate schema: All 5 fields (name, script_path, log_path, pid_file, description) are REQUIRED
+# - Keep alphabetically sorted by name for easy discovery
+#
+# SCHEMA:
+#   name: Unique identifier (alphanumeric + underscore, no spaces)
+#   script_path: Relative path from repo root to daemon script
+#   log_path: Relative path from repo root to log file
+#   pid_file: Relative path from repo root to PID file (for future use)
+#   description: Human-readable description (used in status output)
+#
+# Last updated: 2025-10-23
+
+daemons:
+  - name: youtube_watcher
+    script_path: process_youtube_note.sh
+    log_path: .automation/logs/youtube_watcher.log
+    pid_file: .automation/logs/youtube_watcher.pid
+    description: Monitors YouTube content for processing
+    
+  - name: screenshot_processor
+    script_path: .automation/scripts/automated_screenshot_import.sh
+    log_path: .automation/logs/screenshot_processor.log
+    pid_file: .automation/logs/screenshot_processor.pid
+    description: Processes Samsung screenshot imports
+    
+  - name: health_monitor
+    script_path: .automation/scripts/health_monitor.sh
+    log_path: .automation/logs/health_monitor.log
+    pid_file: .automation/logs/health_monitor.pid
+    description: System health monitoring daemon
