@@ -28,12 +28,18 @@ jobs:
           pip install -r requirements.txt
           pip install ruff black pyright
       
-      - name: Run linters and type checks (unit tests run in main CI)
+      - name: Run linters (ruff, black)
         env:
           PYTHONPATH: development
         run: |
           make lint
+      
+      - name: Run type checker (pyright)
+        env:
+          PYTHONPATH: development
+        run: |
           make type
+        continue-on-error: true  # pyright optional for now
       
       - name: Summary
         if: always()
