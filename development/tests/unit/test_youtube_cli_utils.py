@@ -24,6 +24,7 @@ from unittest.mock import Mock, patch
 
 # Add development directory to path for imports
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.cli.youtube_cli_utils import (
@@ -33,13 +34,14 @@ from src.cli.youtube_cli_utils import (
     CLIOutputFormatter,
     CLIExportManager,
     ProcessingResult,
-    BatchStatistics
+    BatchStatistics,
 )
 
 
 # ============================================================================
 # YouTubeCLIProcessor Tests (5 tests)
 # ============================================================================
+
 
 class TestYouTubeCLIProcessor:
     """Test main orchestrator class"""
@@ -50,7 +52,8 @@ class TestYouTubeCLIProcessor:
 
         # Setup: Create test note with YouTube metadata
         note_path = tmp_path / "test-youtube-note.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test123
@@ -62,20 +65,30 @@ ai_processed: false
 
 ## Why I'm Saving This
 Interesting AI content
-""")
+"""
+        )
 
         # Mock YouTube components since test uses fake video ID
-        with patch('src.cli.youtube_processor.YouTubeProcessor') as MockProcessor, \
-             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as MockEnhancer:
+        with patch(
+            "src.cli.youtube_processor.YouTubeProcessor"
+        ) as MockProcessor, patch(
+            "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
+        ) as MockEnhancer:
 
             # Setup mocks
             mock_processor_instance = MockProcessor.return_value
-            mock_processor_instance.fetcher.fetch_transcript.return_value = "Test transcript"
+            mock_processor_instance.fetcher.fetch_transcript.return_value = (
+                "Test transcript"
+            )
             mock_processor_instance.extractor.extract_quotes.return_value = {
-                'key_insights': [{'quote': 'Test quote', 'timestamp': '0:00', 'context': 'Test'}]
+                "key_insights": [
+                    {"quote": "Test quote", "timestamp": "0:00", "context": "Test"}
+                ]
             }
 
-            mock_enhance_result = Mock(success=True, backup_path=tmp_path / "backup.md", error_message=None)
+            mock_enhance_result = Mock(
+                success=True, backup_path=tmp_path / "backup.md", error_message=None
+            )
             MockEnhancer.return_value.enhance_note.return_value = mock_enhance_result
 
             # Execute: Process note
@@ -113,7 +126,8 @@ Interesting AI content
 
         # Setup: Create note without YouTube source
         note_path = tmp_path / "regular-note.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: fleeting
 source: article
 created: 2025-10-06 19:00
@@ -121,7 +135,8 @@ created: 2025-10-06 19:00
 
 # Regular Note
 This is not a YouTube note
-""")
+"""
+        )
 
         # Execute: Try to process
         processor = YouTubeCLIProcessor(str(tmp_path))
@@ -158,7 +173,8 @@ This is not a YouTube note
         inbox = tmp_path / "Inbox"
         inbox.mkdir()
         note_path = inbox / "youtube-note.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test123
@@ -170,20 +186,27 @@ ai_processed: false
 
 ## Why I'm Saving This
 Test content
-""")
+"""
+        )
 
         # Mock YouTubeProcessor and YouTubeNoteEnhancer at their source modules
-        with patch('src.cli.youtube_processor.YouTubeProcessor') as mock_processor, \
-             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer') as mock_enhancer:
+        with patch(
+            "src.cli.youtube_processor.YouTubeProcessor"
+        ) as mock_processor, patch(
+            "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
+        ) as mock_enhancer:
 
             # Setup mocks
-            mock_processor.return_value.fetcher.fetch_transcript.return_value = "Test transcript"
+            mock_processor.return_value.fetcher.fetch_transcript.return_value = (
+                "Test transcript"
+            )
             mock_processor.return_value.extractor.extract_quotes.return_value = {
-                'key_insights': [{'quote': 'Test quote', 'timestamp': '0:00', 'context': 'Test'}]
+                "key_insights": [
+                    {"quote": "Test quote", "timestamp": "0:00", "context": "Test"}
+                ]
             }
             mock_enhancer.return_value.enhance_note.return_value = Mock(
-                success=True,
-                backup_path=tmp_path / "backup.md"
+                success=True, backup_path=tmp_path / "backup.md"
             )
 
             # Execute: Process with integration
@@ -199,6 +222,7 @@ Test content
 # ============================================================================
 # BatchProgressReporter Tests (3 tests)
 # ============================================================================
+
 
 class TestBatchProgressReporter:
     """Test progress tracking and reporting"""
@@ -232,7 +256,7 @@ class TestBatchProgressReporter:
             skipped=1,
             total_quotes=35,
             total_time=120.5,
-            notes_per_second=0.058
+            notes_per_second=0.058,
         )
 
         # Execute: Generate summary
@@ -268,6 +292,7 @@ class TestBatchProgressReporter:
 # YouTubeNoteValidator Tests (3 tests)
 # ============================================================================
 
+
 class TestYouTubeNoteValidator:
     """Test validation logic"""
 
@@ -277,7 +302,8 @@ class TestYouTubeNoteValidator:
 
         # Setup: Create valid YouTube note
         note_path = tmp_path / "youtube-note.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test123
@@ -286,16 +312,19 @@ ai_processed: false
 ---
 
 # Test Video
-""")
+"""
+        )
 
         # Execute: Validate
-        is_valid, error_msg, metadata = YouTubeNoteValidator.validate_youtube_note(note_path)
+        is_valid, error_msg, metadata = YouTubeNoteValidator.validate_youtube_note(
+            note_path
+        )
 
         # Assert: Valid with metadata
         assert is_valid is True
         assert error_msg is None
-        assert metadata['source'] == 'youtube'
-        assert metadata['url'] == 'https://www.youtube.com/watch?v=test123'
+        assert metadata["source"] == "youtube"
+        assert metadata["url"] == "https://www.youtube.com/watch?v=test123"
 
     def test_validate_missing_source(self, tmp_path):
         """Test validation when source field missing"""
@@ -303,16 +332,20 @@ ai_processed: false
 
         # Setup: Note without source field
         note_path = tmp_path / "note-no-source.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: literature
 created: 2025-10-06 19:00
 ---
 
 # Note Without Source
-""")
+"""
+        )
 
         # Execute: Validate
-        is_valid, error_msg, metadata = YouTubeNoteValidator.validate_youtube_note(note_path)
+        is_valid, error_msg, metadata = YouTubeNoteValidator.validate_youtube_note(
+            note_path
+        )
 
         # Assert: Invalid with helpful error
         assert is_valid is False
@@ -325,7 +358,8 @@ created: 2025-10-06 19:00
 
         # Setup: Note with ai_processed: true
         note_path = tmp_path / "processed-note.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test123
@@ -334,7 +368,8 @@ ai_processed: true
 ---
 
 # Already Processed Video
-""")
+"""
+        )
 
         # Execute: Parse and check
         _, _, metadata = YouTubeNoteValidator.validate_youtube_note(note_path)
@@ -347,6 +382,7 @@ ai_processed: true
 # ============================================================================
 # CLIOutputFormatter Tests (2 tests)
 # ============================================================================
+
 
 class TestCLIOutputFormatter:
     """Test output formatting"""
@@ -363,7 +399,7 @@ class TestCLIOutputFormatter:
             failed=1,
             skipped=1,
             total_quotes=40,
-            total_time=150.0
+            total_time=150.0,
         )
 
         # Execute: Format summary
@@ -382,12 +418,7 @@ class TestCLIOutputFormatter:
 
         # Setup: Formatter in quiet mode
         formatter = CLIOutputFormatter(quiet_mode=True)
-        stats = BatchStatistics(
-            total_notes=5,
-            successful=5,
-            failed=0,
-            skipped=0
-        )
+        stats = BatchStatistics(total_notes=5, successful=5, failed=0, skipped=0)
 
         # Execute: Try to print messages and JSON
         formatter.print_output("This should be suppressed")
@@ -400,12 +431,13 @@ class TestCLIOutputFormatter:
         assert "successful" in captured.out
         # Verify it's valid JSON
         parsed = json.loads(json_output)
-        assert parsed['successful'] == 5
+        assert parsed["successful"] == 5
 
 
 # ============================================================================
 # CLIExportManager Tests (2 tests)
 # ============================================================================
+
 
 class TestCLIExportManager:
     """Test export functionality"""
@@ -416,23 +448,17 @@ class TestCLIExportManager:
 
         # Setup: Statistics and results
         stats = BatchStatistics(
-            total_notes=10,
-            successful=8,
-            failed=2,
-            skipped=0,
-            total_quotes=40
+            total_notes=10, successful=8, failed=2, skipped=0, total_quotes=40
         )
         results = [
             ProcessingResult(
-                success=True,
-                note_path=Path("note1.md"),
-                quotes_inserted=5
+                success=True, note_path=Path("note1.md"), quotes_inserted=5
             ),
             ProcessingResult(
                 success=False,
                 note_path=Path("note2.md"),
-                error_message="Transcript unavailable"
-            )
+                error_message="Transcript unavailable",
+            ),
         ]
         export_path = tmp_path / "report.md"
 
@@ -453,11 +479,7 @@ class TestCLIExportManager:
 
         # Setup: Statistics
         stats = BatchStatistics(
-            total_notes=5,
-            successful=4,
-            failed=1,
-            skipped=0,
-            total_quotes=20
+            total_notes=5, successful=4, failed=1, skipped=0, total_quotes=20
         )
         export_path = tmp_path / "stats.json"
 
@@ -466,20 +488,21 @@ class TestCLIExportManager:
 
         # Assert: Valid JSON with correct data
         parsed = json.loads(json_str)
-        assert parsed['successful'] == 4
-        assert parsed['failed'] == 1
-        assert parsed['total'] == 5 or parsed['total_notes'] == 5
+        assert parsed["successful"] == 4
+        assert parsed["failed"] == 1
+        assert parsed["total"] == 5 or parsed["total_notes"] == 5
 
         # Assert: File created if path provided
         if export_path:
             assert export_path.exists()
             file_content = json.loads(export_path.read_text())
-            assert file_content['successful'] == 4
+            assert file_content["successful"] == 4
 
 
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 class TestIntegration:
     """Test utility classes working together"""
@@ -495,7 +518,8 @@ class TestIntegration:
         # Create 3 YouTube notes
         for i in range(3):
             note = inbox / f"youtube-note-{i}.md"
-            note.write_text(f"""---
+            note.write_text(
+                f"""---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test{i}
@@ -507,14 +531,16 @@ ai_processed: false
 
 ## Why I'm Saving This
 Test content {i}
-""")
+"""
+            )
 
         # Execute: Process batch with all utilities
         processor = YouTubeCLIProcessor(str(tmp_path))
         formatter = CLIOutputFormatter()
 
-        with patch('src.cli.youtube_processor.YouTubeProcessor'), \
-             patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer'):
+        with patch("src.cli.youtube_processor.YouTubeProcessor"), patch(
+            "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
+        ):
             stats = processor.process_batch()
             summary = formatter.format_batch_summary(stats)
 

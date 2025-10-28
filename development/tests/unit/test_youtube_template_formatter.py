@@ -13,7 +13,7 @@ class TestYouTubeTemplateFormatterBasic:
     def test_format_quotes_for_markdown(self):
         """
         Test converting quote objects to markdown bullet format.
-        
+
         RED Phase: Should fail - format_quotes_section not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -24,15 +24,15 @@ class TestYouTubeTemplateFormatterBasic:
                 "timestamp": "01:15",
                 "relevance_score": 0.88,
                 "context": "Discusses AI impact on creators",
-                "category": "key-insight"
+                "category": "key-insight",
             },
             {
                 "text": "Start building your empire today",
                 "timestamp": "05:30",
                 "relevance_score": 0.92,
                 "context": "Actionable advice for entrepreneurs",
-                "category": "actionable"
-            }
+                "category": "actionable",
+            },
         ]
 
         result = formatter.format_quotes_section(quotes)
@@ -55,7 +55,7 @@ class TestYouTubeTemplateFormatterBasic:
     def test_group_quotes_by_category(self):
         """
         Test organizing quotes by category (key-insight, actionable, etc).
-        
+
         RED Phase: Should fail - group_quotes_by_category not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -65,7 +65,7 @@ class TestYouTubeTemplateFormatterBasic:
             {"text": "Quote 2", "category": "actionable", "timestamp": "00:20"},
             {"text": "Quote 3", "category": "key-insight", "timestamp": "00:30"},
             {"text": "Quote 4", "category": "definition", "timestamp": "00:40"},
-            {"text": "Quote 5", "category": "actionable", "timestamp": "00:50"}
+            {"text": "Quote 5", "category": "actionable", "timestamp": "00:50"},
         ]
 
         grouped = formatter.group_quotes_by_category(quotes)
@@ -88,12 +88,14 @@ class TestYouTubeTemplateFormatterBasic:
     def test_generate_summary_section(self):
         """
         Test formatting summary with themes.
-        
+
         RED Phase: Should fail - format_summary_section not implemented
         """
         formatter = YouTubeTemplateFormatter()
 
-        summary = "This video discusses AI trends and creator economy opportunities in 2026."
+        summary = (
+            "This video discusses AI trends and creator economy opportunities in 2026."
+        )
         themes = ["AI", "Creator Economy", "Digital Entrepreneurship"]
 
         result = formatter.format_summary_section(summary, themes)
@@ -117,9 +119,9 @@ class TestYouTubeTemplateFormatterTimestamps:
     def test_format_timestamps_as_youtube_links(self):
         """
         Test creating clickable YouTube timestamp links.
-        
+
         Format: [MM:SS](https://youtu.be/VIDEO_ID?t=SECONDS)
-        
+
         RED Phase: Should fail - create_timestamp_link not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -147,7 +149,7 @@ class TestYouTubeTemplateFormatterIntegration:
     def test_template_complete_integration(self):
         """
         Test full template formatting with all sections.
-        
+
         RED Phase: Should fail - format_template not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -160,23 +162,21 @@ class TestYouTubeTemplateFormatterIntegration:
                     "timestamp": "01:15",
                     "relevance_score": 0.88,
                     "context": "Discusses AI impact",
-                    "category": "key-insight"
+                    "category": "key-insight",
                 },
                 {
                     "text": "Start your empire today",
                     "timestamp": "05:30",
                     "relevance_score": 0.92,
                     "context": "Actionable entrepreneurship advice",
-                    "category": "actionable"
-                }
+                    "category": "actionable",
+                },
             ],
-            "key_themes": ["AI", "Creator Economy", "Entrepreneurship"]
+            "key_themes": ["AI", "Creator Economy", "Entrepreneurship"],
         }
 
         result = formatter.format_template(
-            quotes_data=quotes_data,
-            video_id="test123",
-            video_title="Test Video"
+            quotes_data=quotes_data, video_id="test123", video_title="Test Video"
         )
 
         # Should return dict with markdown and metadata
@@ -207,7 +207,7 @@ class TestYouTubeTemplateFormatterIntegration:
     def test_preserve_quote_metadata(self):
         """
         Test that scores and context are preserved in output.
-        
+
         RED Phase: Should fail - metadata preservation not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -220,16 +220,13 @@ class TestYouTubeTemplateFormatterIntegration:
                     "timestamp": "02:30",
                     "relevance_score": 0.95,
                     "context": "Why this matters for users",
-                    "category": "key-insight"
+                    "category": "key-insight",
                 }
             ],
-            "key_themes": ["Test Theme"]
+            "key_themes": ["Test Theme"],
         }
 
-        result = formatter.format_template(
-            quotes_data=quotes_data,
-            video_id="meta123"
-        )
+        result = formatter.format_template(quotes_data=quotes_data, video_id="meta123")
 
         markdown = result["markdown"]
 
@@ -245,7 +242,7 @@ class TestYouTubeTemplateFormatterIntegration:
     def test_handle_empty_quotes_gracefully(self):
         """
         Test template works with zero quotes (edge case).
-        
+
         RED Phase: Should fail - empty quote handling not implemented
         """
         formatter = YouTubeTemplateFormatter()
@@ -253,13 +250,10 @@ class TestYouTubeTemplateFormatterIntegration:
         quotes_data = {
             "summary": "Video summary with no quality quotes found",
             "quotes": [],  # Empty quotes list
-            "key_themes": ["General Topic"]
+            "key_themes": ["General Topic"],
         }
 
-        result = formatter.format_template(
-            quotes_data=quotes_data,
-            video_id="empty123"
-        )
+        result = formatter.format_template(quotes_data=quotes_data, video_id="empty123")
 
         markdown = result["markdown"]
 

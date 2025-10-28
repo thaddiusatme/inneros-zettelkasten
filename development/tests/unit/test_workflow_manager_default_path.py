@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.ai.workflow_manager import WorkflowManager

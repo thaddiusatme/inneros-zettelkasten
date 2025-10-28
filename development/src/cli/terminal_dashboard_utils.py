@@ -20,6 +20,7 @@ from typing import Dict, Any, Optional, Callable
 try:
     from rich.table import Table
     from rich.text import Text
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -28,7 +29,7 @@ except ImportError:
 class HealthPoller:
     """
     Handle HTTP polling of daemon health endpoint.
-    
+
     Responsibilities:
     - HTTP request management
     - Error handling and retries
@@ -38,7 +39,7 @@ class HealthPoller:
     def __init__(self, base_url: str, timeout: int = 5):
         """
         Initialize health poller.
-        
+
         Args:
             base_url: Base URL of daemon (e.g., 'http://localhost:8080')
             timeout: Request timeout in seconds
@@ -50,27 +51,29 @@ class HealthPoller:
     def fetch(self) -> Dict[str, Any]:
         """
         Fetch current health status.
-        
+
         Returns:
             Health data dictionary or error structure
         """
         try:
-            with urllib.request.urlopen(self.health_url, timeout=self.timeout) as response:
-                data = json.loads(response.read().decode('utf-8'))
+            with urllib.request.urlopen(
+                self.health_url, timeout=self.timeout
+            ) as response:
+                data = json.loads(response.read().decode("utf-8"))
                 return data
 
         except HTTPError as e:
             # 503 still contains valid JSON data
             if e.code == 503:
                 try:
-                    data = json.loads(e.read().decode('utf-8'))
+                    data = json.loads(e.read().decode("utf-8"))
                     return data
-                except:
+                except (json.JSONDecodeError, UnicodeDecodeError):
                     pass
-            return self._create_error_response(f'HTTP {e.code}: {e.reason}', e.code)
+            return self._create_error_response(f"HTTP {e.code}: {e.reason}", e.code)
 
         except URLError as e:
-            return self._create_error_response(f'Connection error: {e.reason}', 0)
+            return self._create_error_response(f"Connection error: {e.reason}", 0)
 
         except Exception as e:
             return self._create_error_response(str(e), 0)
@@ -78,17 +81,17 @@ class HealthPoller:
     def _create_error_response(self, message: str, status_code: int) -> Dict[str, Any]:
         """Create standardized error response."""
         return {
-            'error': True,
-            'message': message,
-            'daemon': {'is_healthy': False, 'status_code': status_code},
-            'handlers': {}
+            "error": True,
+            "message": message,
+            "daemon": {"is_healthy": False, "status_code": status_code},
+            "handlers": {},
         }
 
 
 class StatusFormatter:
     """
     Format health data for terminal display.
-    
+
     Responsibilities:
     - Color-coded status indicators
     - Metric formatting
@@ -99,10 +102,10 @@ class StatusFormatter:
     def format_indicator(is_healthy: bool) -> str:
         """
         Format status indicator with color coding.
-        
+
         Args:
             is_healthy: Health status boolean
-            
+
         Returns:
             Formatted status string with emoji and color
         """
@@ -118,22 +121,22 @@ class StatusFormatter:
     def format_metrics(handler_data: Dict[str, Any]) -> str:
         """
         Format handler metrics for display.
-        
+
         Args:
             handler_data: Handler health/metrics dictionary
-            
+
         Returns:
             Formatted metrics string
         """
         parts = []
 
         # Events processed
-        events = handler_data.get('events_processed', 0)
+        events = handler_data.get("events_processed", 0)
         parts.append(f"Events: {events}")
 
         # Average processing time
-        if 'avg_processing_time' in handler_data:
-            avg_time = handler_data['avg_processing_time']
+        if "avg_processing_time" in handler_data:
+            avg_time = handler_data["avg_processing_time"]
             parts.append(f"Avg: {avg_time:.2f}s")
 
         return ", ".join(parts)
@@ -142,21 +145,21 @@ class StatusFormatter:
     def format_daemon_metrics(daemon_data: Dict[str, Any]) -> str:
         """
         Format daemon metrics for display.
-        
+
         Args:
             daemon_data: Daemon health dictionary
-            
+
         Returns:
             Formatted metrics string
         """
-        status_code = daemon_data.get('status_code', 0)
+        status_code = daemon_data.get("status_code", 0)
         return f"HTTP {status_code}"
 
 
 class TableRenderer:
     """
     Create and render Rich tables from health data.
-    
+
     Responsibilities:
     - Table structure creation
     - Row formatting
@@ -167,7 +170,7 @@ class TableRenderer:
     def __init__(self, formatter: StatusFormatter, metrics_collector=None):
         """
         Initialize table renderer.
-        
+
         Args:
             formatter: StatusFormatter instance
             metrics_collector: Optional MetricsCollector for metrics display
@@ -175,13 +178,13 @@ class TableRenderer:
         self.formatter = formatter
         self.metrics_collector = metrics_collector
 
-    def create_status_table(self, health_data: Dict[str, Any]) -> Optional['Table']:
+    def create_status_table(self, health_data: Dict[str, Any]) -> Optional["Table"]:
         """
         Create Rich Table from health data.
-        
+
         Args:
             health_data: Health status dictionary
-            
+
         Returns:
             Rich Table instance or None if Rich not available
         """
@@ -191,7 +194,7 @@ class TableRenderer:
         table = Table(
             title="InnerOS Automation Daemon Status",
             show_header=True,
-            header_style="bold cyan"
+            header_style="bold cyan",
         )
         table.add_column("Component", style="cyan", no_wrap=True)
         table.add_column("Status", style="white")
@@ -205,25 +208,25 @@ class TableRenderer:
 
         return table
 
-    def _add_daemon_row(self, table: 'Table', health_data: Dict[str, Any]):
+    def _add_daemon_row(self, table: "Table", health_data: Dict[str, Any]):
         """Add daemon status row to table."""
-        daemon = health_data.get('daemon', {})
-        is_healthy = daemon.get('is_healthy', False)
+        daemon = health_data.get("daemon", {})
+        is_healthy = daemon.get("is_healthy", False)
 
         status_str = self.formatter.format_indicator(is_healthy)
         metrics_str = self.formatter.format_daemon_metrics(daemon)
 
         table.add_row("Daemon", status_str, metrics_str)
 
-    def _add_handler_rows(self, table: 'Table', health_data: Dict[str, Any]):
+    def _add_handler_rows(self, table: "Table", health_data: Dict[str, Any]):
         """Add handler status rows to table."""
-        handlers = health_data.get('handlers', {})
+        handlers = health_data.get("handlers", {})
 
         for handler_name, handler_data in handlers.items():
             # Determine handler health
-            handler_healthy = handler_data.get('is_healthy', False)
+            handler_healthy = handler_data.get("is_healthy", False)
             if isinstance(handler_healthy, str):
-                handler_healthy = handler_healthy != 'N/A'
+                handler_healthy = handler_healthy != "N/A"
 
             # Format row data
             handler_status = self.formatter.format_indicator(handler_healthy)
@@ -231,11 +234,11 @@ class TableRenderer:
 
             table.add_row(f"  {handler_name}", handler_status, handler_metrics)
 
-    def create_metrics_table(self) -> Optional['Table']:
+    def create_metrics_table(self) -> Optional["Table"]:
         """
         Create Rich Table from metrics collector data.
         Phase 3.1: Real-time metrics display
-        
+
         Returns:
             Rich Table instance with metrics or None if no metrics collector
         """
@@ -243,9 +246,7 @@ class TableRenderer:
             return None
 
         table = Table(
-            title="📊 System Metrics",
-            show_header=True,
-            header_style="bold green"
+            title="📊 System Metrics", show_header=True, header_style="bold green"
         )
         table.add_column("Metric", style="cyan", no_wrap=True)
         table.add_column("Type", style="magenta")
@@ -271,7 +272,7 @@ class TableRenderer:
                 table.add_row(
                     name,
                     "histogram",
-                    f"avg: {avg:.1f}ms (min: {min_val:.0f}, max: {max_val:.0f})"
+                    f"avg: {avg:.1f}ms (min: {min_val:.0f}, max: {max_val:.0f})",
                 )
 
         return table
@@ -280,7 +281,7 @@ class TableRenderer:
 class DashboardOrchestrator:
     """
     Coordinate dashboard lifecycle and updates.
-    
+
     Responsibilities:
     - Polling coordination
     - Display refresh management
@@ -288,14 +289,11 @@ class DashboardOrchestrator:
     """
 
     def __init__(
-        self,
-        poller: HealthPoller,
-        renderer: TableRenderer,
-        refresh_interval: int = 1
+        self, poller: HealthPoller, renderer: TableRenderer, refresh_interval: int = 1
     ):
         """
         Initialize dashboard orchestrator.
-        
+
         Args:
             poller: HealthPoller instance
             renderer: TableRenderer instance
@@ -308,7 +306,7 @@ class DashboardOrchestrator:
     def run(self, on_update: Callable[[Any], None]):
         """
         Run dashboard polling loop.
-        
+
         Args:
             on_update: Callback to update display with table/panel
         """
@@ -318,13 +316,14 @@ class DashboardOrchestrator:
                 health_data = self.poller.fetch()
 
                 # Create display content
-                if health_data.get('error'):
+                if health_data.get("error"):
                     # Error panel for connection issues
                     if RICH_AVAILABLE:
                         from rich.panel import Panel
+
                         error_text = Text(
                             f"⚠️  {health_data.get('message', 'Unknown error')}",
-                            style="bold red"
+                            style="bold red",
                         )
                         content = Panel(error_text, title="Connection Error")
                     else:
@@ -337,6 +336,7 @@ class DashboardOrchestrator:
                     # Combine tables if metrics available
                     if RICH_AVAILABLE and metrics_table:
                         from rich.console import Group
+
                         content = Group(status_table, metrics_table)
                     else:
                         content = status_table

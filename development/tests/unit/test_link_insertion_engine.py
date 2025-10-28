@@ -12,15 +12,20 @@ import sys
 import os
 
 # Add development directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 # Import the engine we created - should work now after GREEN phase completion!
 from ai.link_insertion_engine import LinkInsertionEngine
-from ai.link_insertion_utils import InsertionResult, SafetyBackupManager as BackupManager
+from ai.link_insertion_utils import (
+    InsertionResult,
+    SafetyBackupManager as BackupManager,
+)
+
 
 @dataclass
 class MockSuggestionForInsertion:
     """Mock LinkSuggestion for insertion testing"""
+
     source_note: str
     target_note: str
     suggested_link_text: str
@@ -28,6 +33,7 @@ class MockSuggestionForInsertion:
     insertion_context: str
     quality_score: float = 0.8
     confidence: str = "high"
+
 
 class TestLinkInsertionEngine:
     """Test suite for LinkInsertionEngine - actual note modification with safety"""
@@ -46,7 +52,8 @@ class TestLinkInsertionEngine:
 
             # Create test notes with realistic content
             ai_note = vault_path / "Permanent Notes" / "ai-concepts.md"
-            ai_note.write_text("""---
+            ai_note.write_text(
+                """---
 type: permanent
 tags: [ai, machine-learning, concepts]
 created: 2025-09-24 10:00
@@ -65,10 +72,12 @@ machine learning algorithms and neural networks.
 Machine learning has many practical applications in modern technology.
 
 ## Related Concepts
-""")
+"""
+            )
 
             ml_note = vault_path / "Permanent Notes" / "machine-learning-basics.md"
-            ml_note.write_text("""---
+            ml_note.write_text(
+                """---
 type: permanent
 tags: [machine-learning, algorithms]
 created: 2025-09-24 09:30
@@ -83,17 +92,20 @@ Introduction to machine learning algorithms and their applications.
 - Deep neural networks
 
 ## See Also
-""")
+"""
+            )
 
             # Create note without structure for testing fallback insertion
             simple_note = vault_path / "Fleeting Notes" / "simple-note.md"
-            simple_note.write_text("""---
+            simple_note.write_text(
+                """---
 type: fleeting
 ---
 # Simple Note
 
 Just some basic content without special sections.
-""")
+"""
+            )
 
             yield vault_path
 
@@ -107,11 +119,13 @@ Just some basic content without special sections.
         # This will fail because LinkInsertionEngine doesn't exist yet
         engine = LinkInsertionEngine(vault_path=str(temp_vault))
         assert engine.vault_path == str(temp_vault)
-        assert hasattr(engine, 'backup_manager')
-        assert hasattr(engine, 'insertion_validator')
+        assert hasattr(engine, "backup_manager")
+        assert hasattr(engine, "insertion_validator")
         assert engine.backup_enabled is True
 
-    def test_insert_single_suggestion_into_structured_note_fails(self, insertion_engine, temp_vault):
+    def test_insert_single_suggestion_into_structured_note_fails(
+        self, insertion_engine, temp_vault
+    ):
         """TEST 2: Insert single link suggestion into note with Related Concepts section - WILL FAIL"""
         # Arrange - Create suggestion for structured note
         suggestion = MockSuggestionForInsertion(
@@ -119,13 +133,12 @@ Just some basic content without special sections.
             target_note="Permanent Notes/machine-learning-basics.md",
             suggested_link_text="[[Machine Learning Basics]]",
             suggested_location="related_concepts",
-            insertion_context="## Related Concepts"
+            insertion_context="## Related Concepts",
         )
 
         # Act - Insert suggestion (will fail - method doesn't exist)
         result = insertion_engine.insert_suggestions_into_note(
-            note_path="Permanent Notes/ai-concepts.md",
-            suggestions=[suggestion]
+            note_path="Permanent Notes/ai-concepts.md", suggestions=[suggestion]
         )
 
         # Assert - Should successfully insert with backup created
@@ -151,7 +164,7 @@ Just some basic content without special sections.
             target_note="Permanent Notes/machine-learning-basics.md",
             suggested_link_text="[[ML Basics]]",
             suggested_location="related_concepts",
-            insertion_context="## Related Concepts"
+            insertion_context="## Related Concepts",
         )
 
         # Act - Insert with backup
@@ -178,14 +191,12 @@ Just some basic content without special sections.
             target_note="nonexistent-note.md",  # Invalid target
             suggested_link_text="[[Nonexistent Note]]",
             suggested_location="invalid_section",  # Invalid location
-            insertion_context="## Nonexistent Section"
+            insertion_context="## Nonexistent Section",
         )
 
         # Act - Attempt insertion (should fail and rollback)
         result = insertion_engine.insert_suggestions_into_note(
-            note_path,
-            [invalid_suggestion],
-            validate_targets=True
+            note_path, [invalid_suggestion], validate_targets=True
         )
 
         # Assert - Should fail with rollback
@@ -204,18 +215,19 @@ Just some basic content without special sections.
             target_note="Permanent Notes/ai-concepts.md",
             suggested_link_text="[[AI Concepts]]",
             suggested_location="see_also",
-            insertion_context="## See Also"
+            insertion_context="## See Also",
         )
 
         # Act
         result = insertion_engine.insert_suggestions_into_note(
-            "Permanent Notes/machine-learning-basics.md",
-            [suggestion]
+            "Permanent Notes/machine-learning-basics.md", [suggestion]
         )
 
         # Assert - Markdown syntax should be preserved
         assert result.success is True
-        note_content = (temp_vault / "Permanent Notes" / "machine-learning-basics.md").read_text()
+        note_content = (
+            temp_vault / "Permanent Notes" / "machine-learning-basics.md"
+        ).read_text()
 
         # Should maintain YAML frontmatter
         assert note_content.startswith("---")
@@ -227,9 +239,11 @@ Just some basic content without special sections.
         assert "## See Also" in note_content
 
         # Should properly insert under See Also section
-        lines = note_content.split('\n')
-        see_also_index = next(i for i, line in enumerate(lines) if line.strip() == "## See Also")
-        see_also_lines = lines[see_also_index + 1:see_also_index + 5]
+        lines = note_content.split("\n")
+        see_also_index = next(
+            i for i, line in enumerate(lines) if line.strip() == "## See Also"
+        )
+        see_also_lines = lines[see_also_index + 1 : see_also_index + 5]
         assert any("[[AI Concepts]]" in line for line in see_also_lines)
 
     def test_duplicate_link_prevention_fails(self, insertion_engine, temp_vault):
@@ -237,7 +251,9 @@ Just some basic content without special sections.
         # Arrange - Pre-insert a link manually
         note_path = temp_vault / "Permanent Notes" / "ai-concepts.md"
         content = note_path.read_text()
-        content = content.replace("## Related Concepts", "## Related Concepts\n- [[Machine Learning Basics]]")
+        content = content.replace(
+            "## Related Concepts", "## Related Concepts\n- [[Machine Learning Basics]]"
+        )
         note_path.write_text(content)
 
         # Try to insert the same link again
@@ -246,14 +262,14 @@ Just some basic content without special sections.
             target_note="Permanent Notes/machine-learning-basics.md",
             suggested_link_text="[[Machine Learning Basics]]",
             suggested_location="related_concepts",
-            insertion_context="## Related Concepts"
+            insertion_context="## Related Concepts",
         )
 
         # Act
         result = insertion_engine.insert_suggestions_into_note(
             "Permanent Notes/ai-concepts.md",
             [duplicate_suggestion],
-            check_duplicates=True
+            check_duplicates=True,
         )
 
         # Assert - Should detect duplicate and skip
@@ -265,7 +281,9 @@ Just some basic content without special sections.
         final_content = note_path.read_text()
         assert final_content.count("[[Machine Learning Basics]]") == 1
 
-    def test_batch_insertion_with_progress_tracking_fails(self, insertion_engine, temp_vault):
+    def test_batch_insertion_with_progress_tracking_fails(
+        self, insertion_engine, temp_vault
+    ):
         """TEST 7: Batch insertion of multiple suggestions with progress tracking - WILL FAIL"""
         suggestions = [
             MockSuggestionForInsertion(
@@ -273,21 +291,20 @@ Just some basic content without special sections.
                 target_note="Permanent Notes/machine-learning-basics.md",
                 suggested_link_text="[[ML Basics]]",
                 suggested_location="related_concepts",
-                insertion_context="## Related Concepts"
+                insertion_context="## Related Concepts",
             ),
             MockSuggestionForInsertion(
                 source_note="Permanent Notes/machine-learning-basics.md",
                 target_note="Permanent Notes/ai-concepts.md",
                 suggested_link_text="[[AI Concepts]]",
                 suggested_location="see_also",
-                insertion_context="## See Also"
-            )
+                insertion_context="## See Also",
+            ),
         ]
 
         # Act - Batch insert
         results = insertion_engine.insert_multiple_suggestions(
-            suggestions,
-            progress_callback=lambda x: None  # Mock progress callback
+            suggestions, progress_callback=lambda x: None  # Mock progress callback
         )
 
         # Assert - Should process all suggestions
@@ -297,25 +314,27 @@ Just some basic content without special sections.
 
         # Both notes should be modified
         ai_content = (temp_vault / "Permanent Notes" / "ai-concepts.md").read_text()
-        ml_content = (temp_vault / "Permanent Notes" / "machine-learning-basics.md").read_text()
+        ml_content = (
+            temp_vault / "Permanent Notes" / "machine-learning-basics.md"
+        ).read_text()
         assert "[[ML Basics]]" in ai_content
         assert "[[AI Concepts]]" in ml_content
 
-    def test_insertion_into_note_without_structure_fails(self, insertion_engine, temp_vault):
+    def test_insertion_into_note_without_structure_fails(
+        self, insertion_engine, temp_vault
+    ):
         """TEST 8: Handle insertion into notes without predefined sections - WILL FAIL"""
         suggestion = MockSuggestionForInsertion(
             source_note="Fleeting Notes/simple-note.md",
             target_note="Permanent Notes/ai-concepts.md",
             suggested_link_text="[[AI Concepts]]",
             suggested_location="main_content",  # Will need to create structure
-            insertion_context="# Simple Note"
+            insertion_context="# Simple Note",
         )
 
         # Act
         result = insertion_engine.insert_suggestions_into_note(
-            "Fleeting Notes/simple-note.md",
-            [suggestion],
-            create_sections=True
+            "Fleeting Notes/simple-note.md", [suggestion], create_sections=True
         )
 
         # Assert - Should create appropriate section and insert
@@ -335,25 +354,27 @@ Just some basic content without special sections.
                 target_note="Permanent Notes/machine-learning-basics.md",
                 suggested_link_text="[[ML Basics]]",
                 suggested_location="related_concepts",
-                insertion_context="## Related Concepts"
+                insertion_context="## Related Concepts",
             ),
             MockSuggestionForInsertion(  # Invalid suggestion to cause failure
                 source_note="Permanent Notes/ai-concepts.md",
                 target_note="nonexistent.md",
                 suggested_link_text="[[Nonexistent]]",
                 suggested_location="related_concepts",
-                insertion_context="## Related Concepts"
-            )
+                insertion_context="## Related Concepts",
+            ),
         ]
 
-        original_content = (temp_vault / "Permanent Notes" / "ai-concepts.md").read_text()
+        original_content = (
+            temp_vault / "Permanent Notes" / "ai-concepts.md"
+        ).read_text()
 
         # Act - Should fail atomically
         result = insertion_engine.insert_suggestions_into_note(
             "Permanent Notes/ai-concepts.md",
             suggestions,
             atomic=True,
-            validate_targets=True
+            validate_targets=True,
         )
 
         # Assert - Complete failure with rollback
@@ -361,10 +382,14 @@ Just some basic content without special sections.
         assert result.insertions_made == 0
 
         # File should be unchanged (atomic rollback)
-        current_content = (temp_vault / "Permanent Notes" / "ai-concepts.md").read_text()
+        current_content = (
+            temp_vault / "Permanent Notes" / "ai-concepts.md"
+        ).read_text()
         assert current_content == original_content
 
-    def test_insertion_context_detector_integration_fails(self, insertion_engine, temp_vault):
+    def test_insertion_context_detector_integration_fails(
+        self, insertion_engine, temp_vault
+    ):
         """TEST 10: Integration with existing InsertionContextDetector for smart placement - WILL FAIL"""
         # Create suggestion without specifying location (should auto-detect)
         suggestion = MockSuggestionForInsertion(
@@ -372,14 +397,12 @@ Just some basic content without special sections.
             target_note="Permanent Notes/machine-learning-basics.md",
             suggested_link_text="[[Machine Learning Basics]]",
             suggested_location="auto_detect",  # Trigger auto-detection
-            insertion_context="auto_detect"
+            insertion_context="auto_detect",
         )
 
         # Act - Should use InsertionContextDetector to find best location
         result = insertion_engine.insert_suggestions_into_note(
-            "Permanent Notes/ai-concepts.md",
-            [suggestion],
-            auto_detect_location=True
+            "Permanent Notes/ai-concepts.md", [suggestion], auto_detect_location=True
         )
 
         # Assert - Should successfully detect and insert in Related Concepts section
@@ -391,9 +414,15 @@ Just some basic content without special sections.
         assert "[[Machine Learning Basics]]" in content
 
         # Should be inserted in the Related Concepts section
-        lines = content.split('\n')
-        related_index = next(i for i, line in enumerate(lines) if "## Related Concepts" in line)
-        assert any("[[Machine Learning Basics]]" in line for line in lines[related_index:related_index + 5])
+        lines = content.split("\n")
+        related_index = next(
+            i for i, line in enumerate(lines) if "## Related Concepts" in line
+        )
+        assert any(
+            "[[Machine Learning Basics]]" in line
+            for line in lines[related_index : related_index + 5]
+        )
+
 
 class TestInsertionResult:
     """Test InsertionResult dataclass - WILL FAIL"""
@@ -406,7 +435,7 @@ class TestInsertionResult:
             duplicates_skipped=1,
             backup_path="/path/to/backup.md",
             error_message=None,
-            auto_detected_locations=2
+            auto_detected_locations=2,
         )
 
         assert result.success is True
@@ -415,6 +444,7 @@ class TestInsertionResult:
         assert result.backup_path == "/path/to/backup.md"
         assert result.error_message is None
         assert result.auto_detected_locations == 2
+
 
 class TestBackupManager:
     """Test BackupManager utility class - WILL FAIL"""
@@ -435,6 +465,7 @@ class TestBackupManager:
             assert backup_path.exists()
             assert backup_path.read_text() == "Original content"
             assert "backup" in backup_path.name.lower()
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

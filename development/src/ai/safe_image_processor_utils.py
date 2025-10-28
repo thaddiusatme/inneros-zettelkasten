@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BackupMetadata:
     """Structured information about backup operations"""
+
     session_id: str
     operation_name: str
     backup_path: Path
@@ -30,6 +31,7 @@ class BackupMetadata:
 @dataclass
 class AtomicOperationResult:
     """Result of atomic operation execution"""
+
     success: bool
     operation_id: str
     files_affected: List[Path]
@@ -46,7 +48,9 @@ class ImageBackupManager:
         self.backup_root = vault_path / ".image_backups"
         logger.debug("ImageBackupManager initialized")
 
-    def create_session_backup(self, session_id: str, images: List[Path]) -> BackupMetadata:
+    def create_session_backup(
+        self, session_id: str, images: List[Path]
+    ) -> BackupMetadata:
         """Create backup for a specific session with comprehensive metadata"""
         backup_dir = self.backup_root / session_id
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -80,7 +84,7 @@ class ImageBackupManager:
             backup_path=backup_dir,
             images_backed_up=images_count,
             created_at=datetime.now(),
-            is_valid=backup_dir.exists() and images_count > 0
+            is_valid=backup_dir.exists() and images_count > 0,
         )
 
         # Store backup mapping for restoration
@@ -144,6 +148,7 @@ class ImageBackupManager:
         mapping_file = self.backup_root / f"{session_id}_mapping.json"
         try:
             import json
+
             # Convert Path objects to strings for JSON serialization
             serializable_mapping = {k: str(v) for k, v in mapping.items()}
             mapping_file.write_text(json.dumps(serializable_mapping, indent=2))
@@ -158,6 +163,7 @@ class ImageBackupManager:
 
         try:
             import json
+
             data = json.loads(mapping_file.read_text())
             # Convert strings back to Path objects
             return {k: Path(v) for k, v in data.items()}
@@ -188,7 +194,8 @@ class AtomicOperationEngine:
         operation_name: str,
         images: List[Path],
         operation_func: Callable,
-        *args, **kwargs
+        *args,
+        **kwargs,
     ) -> AtomicOperationResult:
         """Execute operation atomically with automatic rollback on failure"""
         start_time = datetime.now()
@@ -197,7 +204,9 @@ class AtomicOperationEngine:
 
         try:
             # Create backup
-            backup_metadata = self.backup_manager.create_session_backup(session_id, images)
+            backup_metadata = self.backup_manager.create_session_backup(
+                session_id, images
+            )
             if not backup_metadata.is_valid:
                 raise RuntimeError("Failed to create valid backup")
 
@@ -215,7 +224,7 @@ class AtomicOperationEngine:
                     operation_id=operation_id,
                     files_affected=images,
                     backup_session_id=session_id,
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
                 self.operation_history.append(result)
                 return result
@@ -233,7 +242,7 @@ class AtomicOperationEngine:
                 files_affected=images,
                 backup_session_id=session_id,
                 execution_time=execution_time,
-                error_details=str(e)
+                error_details=str(e),
             )
             self.operation_history.append(result)
             return result
@@ -241,11 +250,11 @@ class AtomicOperationEngine:
     def _validate_operation_success(self, operation_result, images: List[Path]) -> bool:
         """Validate that operation completed successfully"""
         # Check if operation result indicates success
-        if hasattr(operation_result, 'success'):
+        if hasattr(operation_result, "success"):
             if not operation_result.success:
                 return False
         elif isinstance(operation_result, dict):
-            if not operation_result.get('success', True):
+            if not operation_result.get("success", True):
                 return False
 
         # Check if all images still exist
@@ -263,16 +272,18 @@ class AtomicOperationEngine:
         failed_ops = total_ops - successful_ops
 
         if total_ops > 0:
-            avg_execution_time = sum(op.execution_time for op in self.operation_history) / total_ops
+            avg_execution_time = (
+                sum(op.execution_time for op in self.operation_history) / total_ops
+            )
         else:
             avg_execution_time = 0.0
 
         return {
-            'total_operations': total_ops,
-            'successful_operations': successful_ops,
-            'failed_operations': failed_ops,
-            'success_rate': successful_ops / total_ops if total_ops > 0 else 0.0,
-            'average_execution_time': avg_execution_time
+            "total_operations": total_ops,
+            "successful_operations": successful_ops,
+            "failed_operations": failed_ops,
+            "success_rate": successful_ops / total_ops if total_ops > 0 else 0.0,
+            "average_execution_time": avg_execution_time,
         }
 
 
@@ -281,7 +292,16 @@ class ImageExtractor:
 
     def __init__(self, vault_path: Path):
         self.vault_path = vault_path
-        self.image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff'}
+        self.image_extensions = {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".svg",
+            ".webp",
+            ".tiff",
+        }
         logger.debug("ImageExtractor initialized")
 
     def extract_images_from_note(self, note_path: Path) -> List[Path]:
@@ -290,7 +310,7 @@ class ImageExtractor:
             return []
 
         try:
-            content = note_path.read_text(encoding='utf-8')
+            content = note_path.read_text(encoding="utf-8")
             return self._parse_image_references(content)
         except Exception as e:
             logger.error(f"Failed to extract images from {note_path}: {e}")
@@ -305,11 +325,11 @@ class ImageExtractor:
         images = []
 
         # Pattern 1: ![alt](path) - Standard markdown
-        markdown_pattern = r'!\[.*?\]\(([^)]+)\)'
+        markdown_pattern = r"!\[.*?\]\(([^)]+)\)"
         markdown_matches = re.findall(markdown_pattern, content)
 
         # Pattern 2: ![[path]] - Wiki-style links
-        wiki_pattern = r'!\[\[([^\]]+)\]\]'
+        wiki_pattern = r"!\[\[([^\]]+)\]\]"
         wiki_matches = re.findall(wiki_pattern, content)
 
         # Pattern 3: <img src="path"> - HTML tags
@@ -324,7 +344,7 @@ class ImageExtractor:
             image_ref = match.strip()
 
             # Skip data URLs and external URLs
-            if image_ref.startswith(('data:', 'http://', 'https://')):
+            if image_ref.startswith(("data:", "http://", "https://")):
                 continue
 
             # Convert to absolute path
@@ -340,7 +360,7 @@ class ImageExtractor:
         """Resolve image reference to absolute path"""
         try:
             # Handle absolute paths
-            if image_ref.startswith('/'):
+            if image_ref.startswith("/"):
                 return Path(image_ref)
 
             # Handle relative paths
@@ -350,7 +370,7 @@ class ImageExtractor:
                 return vault_relative
 
             # Try common media directories
-            media_dirs = ['Media', 'Images', 'Assets', 'attachments']
+            media_dirs = ["Media", "Images", "Assets", "attachments"]
             for media_dir in media_dirs:
                 media_path = self.vault_path / media_dir / image_ref
                 if media_path.exists():
@@ -381,36 +401,40 @@ class SessionManager:
         self.session_history: List[Dict] = []
         logger.debug("SessionManager initialized")
 
-    def create_session(self, operation_name: str, metadata: Optional[Dict] = None) -> str:
+    def create_session(
+        self, operation_name: str, metadata: Optional[Dict] = None
+    ) -> str:
         """Create new backup session with unique ID"""
         session_id = f"{operation_name}_{uuid.uuid4().hex[:8]}"
 
         session_info = {
-            'session_id': session_id,
-            'operation_name': operation_name,
-            'created_at': datetime.now(),
-            'status': 'created',
-            'metadata': metadata or {}
+            "session_id": session_id,
+            "operation_name": operation_name,
+            "created_at": datetime.now(),
+            "status": "created",
+            "metadata": metadata or {},
         }
 
         self.active_sessions[session_id] = session_info
         logger.debug(f"Created session: {session_id}")
         return session_id
 
-    def update_session_status(self, session_id: str, status: str, details: Optional[Dict] = None):
+    def update_session_status(
+        self, session_id: str, status: str, details: Optional[Dict] = None
+    ):
         """Update session status and details"""
         if session_id in self.active_sessions:
-            self.active_sessions[session_id]['status'] = status
-            self.active_sessions[session_id]['updated_at'] = datetime.now()
+            self.active_sessions[session_id]["status"] = status
+            self.active_sessions[session_id]["updated_at"] = datetime.now()
             if details:
-                self.active_sessions[session_id]['metadata'].update(details)
+                self.active_sessions[session_id]["metadata"].update(details)
 
-    def close_session(self, session_id: str, final_status: str = 'completed'):
+    def close_session(self, session_id: str, final_status: str = "completed"):
         """Close session and move to history"""
         if session_id in self.active_sessions:
             session_info = self.active_sessions.pop(session_id)
-            session_info['status'] = final_status
-            session_info['closed_at'] = datetime.now()
+            session_info["status"] = final_status
+            session_info["closed_at"] = datetime.now()
             self.session_history.append(session_info)
             logger.debug(f"Closed session: {session_id}")
 
@@ -425,10 +449,14 @@ class SessionManager:
     def get_session_stats(self) -> Dict:
         """Get statistics about session management"""
         return {
-            'active_sessions': len(self.active_sessions),
-            'total_sessions': len(self.session_history) + len(self.active_sessions),
-            'completed_sessions': len([s for s in self.session_history if s['status'] == 'completed']),
-            'failed_sessions': len([s for s in self.session_history if s['status'] == 'failed'])
+            "active_sessions": len(self.active_sessions),
+            "total_sessions": len(self.session_history) + len(self.active_sessions),
+            "completed_sessions": len(
+                [s for s in self.session_history if s["status"] == "completed"]
+            ),
+            "failed_sessions": len(
+                [s for s in self.session_history if s["status"] == "failed"]
+            ),
         }
 
 
@@ -445,7 +473,7 @@ class ProcessingResultBuilder:
         preserved_images: List[Path],
         processing_time: float,
         backup_session_id: str,
-        additional_data: Optional[Dict] = None
+        additional_data: Optional[Dict] = None,
     ):
         """Build successful processing result"""
         from . import safe_image_processor  # Avoid circular import
@@ -456,7 +484,7 @@ class ProcessingResultBuilder:
             note_path=note_path,
             preserved_images=preserved_images,
             processing_time=processing_time,
-            backup_session_id=backup_session_id
+            backup_session_id=backup_session_id,
         )
 
         if additional_data:
@@ -473,7 +501,7 @@ class ProcessingResultBuilder:
         processing_time: float,
         backup_session_id: str,
         error_message: str,
-        preserved_images: Optional[List[Path]] = None
+        preserved_images: Optional[List[Path]] = None,
     ):
         """Build failed processing result"""
         from . import safe_image_processor  # Avoid circular import
@@ -485,7 +513,7 @@ class ProcessingResultBuilder:
             preserved_images=preserved_images or [],
             processing_time=processing_time,
             backup_session_id=backup_session_id,
-            error_message=error_message
+            error_message=error_message,
         )
 
     def build_batch_results_summary(self, results: List) -> Dict:
@@ -498,12 +526,16 @@ class ProcessingResultBuilder:
         total_images_preserved = sum(len(r.preserved_images) for r in results)
 
         return {
-            'total_notes_processed': total_results,
-            'successful_operations': successful_results,
-            'failed_operations': failed_results,
-            'success_rate': successful_results / total_results if total_results > 0 else 0.0,
-            'total_processing_time': total_processing_time,
-            'average_processing_time': total_processing_time / total_results if total_results > 0 else 0.0,
-            'total_images_preserved': total_images_preserved,
-            'operations_requiring_rollback': failed_results
+            "total_notes_processed": total_results,
+            "successful_operations": successful_results,
+            "failed_operations": failed_results,
+            "success_rate": (
+                successful_results / total_results if total_results > 0 else 0.0
+            ),
+            "total_processing_time": total_processing_time,
+            "average_processing_time": (
+                total_processing_time / total_results if total_results > 0 else 0.0
+            ),
+            "total_images_preserved": total_images_preserved,
+            "operations_requiring_rollback": failed_results,
         }

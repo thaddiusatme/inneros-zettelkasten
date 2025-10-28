@@ -108,7 +108,9 @@ class TestAnalyticsCoordinatorCore:
         # Inbox notes should not be flagged as orphaned
         assert not any("Inbox" in path for path in orphan_paths)
 
-    def test_detect_orphaned_notes_comprehensive_scans_all_files(self, coordinator, temp_vault):
+    def test_detect_orphaned_notes_comprehensive_scans_all_files(
+        self, coordinator, temp_vault
+    ):
         """Test comprehensive scan includes all markdown files in repo."""
         # Create note outside standard directories
         (temp_vault / "Projects").mkdir()
@@ -369,7 +371,7 @@ class TestAnalyticsCoordinatorEdgeCases:
 
             # Create file with potential encoding issues
             normal_note = vault_path / "Permanent Notes" / "normal.md"
-            normal_note.write_text("# Normal\n\nLinks: [[other]]", encoding='utf-8')
+            normal_note.write_text("# Normal\n\nLinks: [[other]]", encoding="utf-8")
 
             if AnalyticsCoordinator is None:
                 pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")

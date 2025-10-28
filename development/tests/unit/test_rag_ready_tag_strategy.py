@@ -4,6 +4,7 @@ Test suite for RAG-Ready Tag Strategy TDD Iteration 1
 Comprehensive test coverage for tag cleanup, namespace classification,
 rules engine, and safety systems following Enhanced Connection Discovery patterns.
 """
+
 import pytest
 import tempfile
 from pathlib import Path
@@ -23,7 +24,7 @@ try:
         TagCleanupEngine,
         NamespaceClassifier,
         TagRulesEngine,
-        SessionBackupManager
+        SessionBackupManager,
     )
 except ImportError:
     # Classes don't exist yet - will be implemented in GREEN phase
@@ -70,7 +71,14 @@ class TestTagCleanupEngine:
         engine = TagCleanupEngine()
 
         # Test various parsing errors
-        error_tags = ["", "   ", "123", "tag with spaces", "tag/with/slashes", "tag@symbol"]
+        error_tags = [
+            "",
+            "   ",
+            "123",
+            "tag with spaces",
+            "tag/with/slashes",
+            "tag@symbol",
+        ]
         clean_tags = ["valid-tag", "another-valid-tag"]
 
         result = engine.detect_parsing_error_tags(error_tags + clean_tags)
@@ -85,13 +93,22 @@ class TestTagCleanupEngine:
         engine = TagCleanupEngine()
 
         # Test semantic duplicates
-        tags = ["ai", "artificial-intelligence", "machine-learning", "ml", "deep-learning", "neural-networks"]
+        tags = [
+            "ai",
+            "artificial-intelligence",
+            "machine-learning",
+            "ml",
+            "deep-learning",
+            "neural-networks",
+        ]
 
         result = engine.detect_duplicate_semantic_tags(tags)
 
         # Should group related tags
         assert len(result) > 0
-        assert any("ai" in group and "artificial-intelligence" in group for group in result)
+        assert any(
+            "ai" in group and "artificial-intelligence" in group for group in result
+        )
         assert any("machine-learning" in group and "ml" in group for group in result)
 
     def test_comprehensive_cleanup_analysis(self):
@@ -100,11 +117,17 @@ class TestTagCleanupEngine:
 
         # Mix of problematic tags
         all_tags = [
-            "permanent", "fleeting",  # metadata redundant
-            "ai-generated", "auto-tagged",  # AI artifacts
-            "", "123", "tag with spaces",  # parsing errors
-            "ai", "artificial-intelligence",  # semantic duplicates
-            "quantum-computing", "note-taking"  # clean tags
+            "permanent",
+            "fleeting",  # metadata redundant
+            "ai-generated",
+            "auto-tagged",  # AI artifacts
+            "",
+            "123",
+            "tag with spaces",  # parsing errors
+            "ai",
+            "artificial-intelligence",  # semantic duplicates
+            "quantum-computing",
+            "note-taking",  # clean tags
         ]
 
         result = engine.analyze_all_tags(all_tags)
@@ -139,7 +162,12 @@ class TestNamespaceClassifier:
         """RED: Should classify tags into topic/ namespace"""
         classifier = NamespaceClassifier()
 
-        topic_tags = ["quantum-computing", "machine-learning", "productivity", "zettelkasten"]
+        topic_tags = [
+            "quantum-computing",
+            "machine-learning",
+            "productivity",
+            "zettelkasten",
+        ]
 
         for tag in topic_tags:
             result = classifier.classify_tag(tag)
@@ -161,7 +189,13 @@ class TestNamespaceClassifier:
         """RED: Should classify multiple tags efficiently"""
         classifier = NamespaceClassifier()
 
-        mixed_tags = ["permanent", "quantum-computing", "inbox", "machine-learning", "draft"]
+        mixed_tags = [
+            "permanent",
+            "quantum-computing",
+            "inbox",
+            "machine-learning",
+            "draft",
+        ]
 
         result = classifier.classify_batch(mixed_tags)
 
@@ -174,12 +208,21 @@ class TestNamespaceClassifier:
         """RED: Should provide classification statistics"""
         classifier = NamespaceClassifier()
 
-        mixed_tags = ["permanent", "fleeting", "quantum-computing", "ai", "inbox", "draft"]
+        mixed_tags = [
+            "permanent",
+            "fleeting",
+            "quantum-computing",
+            "ai",
+            "inbox",
+            "draft",
+        ]
 
         stats = classifier.get_classification_stats(mixed_tags)
 
         # Enhanced API returns different structure with counts/percentages
-        assert "counts" in stats or "type" in stats  # Support both enhanced and basic API
+        assert (
+            "counts" in stats or "type" in stats
+        )  # Support both enhanced and basic API
         assert "total" in stats or "total_tags" in stats
         total_tags = stats.get("total", stats.get("total_tags", 0))
         assert total_tags == 6
@@ -194,7 +237,13 @@ class TestTagRulesEngine:
         """RED: Should generate tag_rules.yaml from vault analysis"""
         engine = TagRulesEngine()
 
-        vault_tags = ["ai", "artificial-intelligence", "permanent", "fleeting", "quantum-computing"]
+        vault_tags = [
+            "ai",
+            "artificial-intelligence",
+            "permanent",
+            "fleeting",
+            "quantum-computing",
+        ]
 
         rules = engine.generate_cleanup_rules(vault_tags)
 
@@ -212,7 +261,7 @@ class TestTagRulesEngine:
         rules = {
             "canonicalization": {
                 "ai": "artificial-intelligence",
-                "ml": "machine-learning"
+                "ml": "machine-learning",
             }
         }
 
@@ -229,9 +278,7 @@ class TestTagRulesEngine:
         engine = TagRulesEngine()
 
         rules = {
-            "merges": {
-                "artificial-intelligence": ["ai", "machine-learning", "ml"]
-            }
+            "merges": {"artificial-intelligence": ["ai", "machine-learning", "ml"]}
         }
 
         result = engine.apply_merges(["ai", "ml", "quantum-computing"], rules)
@@ -278,8 +325,11 @@ class TestSessionBackupManager:
         manager = SessionBackupManager("/tmp")
 
         changes = {
-            "file1.md": {"old_tags": ["ai", "permanent"], "new_tags": ["type/permanent", "topic/artificial-intelligence"]},
-            "file2.md": {"old_tags": ["ml"], "new_tags": ["topic/machine-learning"]}
+            "file1.md": {
+                "old_tags": ["ai", "permanent"],
+                "new_tags": ["type/permanent", "topic/artificial-intelligence"],
+            },
+            "file2.md": {"old_tags": ["ml"], "new_tags": ["topic/machine-learning"]},
         }
 
         preview = manager.preview_changes(changes)
@@ -312,7 +362,10 @@ class TestSessionBackupManager:
         manager = SessionBackupManager("/tmp")
 
         unsafe_changes = {
-            "critical-note.md": {"old_tags": ["important"], "new_tags": []}  # Removing all tags
+            "critical-note.md": {
+                "old_tags": ["important"],
+                "new_tags": [],
+            }  # Removing all tags
         }
 
         validation = manager.validate_safety(unsafe_changes)
@@ -329,18 +382,24 @@ class TestRAGReadyTagEngine:
         """RED: Should initialize with all components"""
         engine = RAGReadyTagEngine("/tmp")
 
-        assert hasattr(engine, 'cleanup_engine')
-        assert hasattr(engine, 'namespace_classifier')
-        assert hasattr(engine, 'rules_engine')
-        assert hasattr(engine, 'backup_manager')
+        assert hasattr(engine, "cleanup_engine")
+        assert hasattr(engine, "namespace_classifier")
+        assert hasattr(engine, "rules_engine")
+        assert hasattr(engine, "backup_manager")
 
     def test_analyze_vault_tags(self):
         """RED: Should analyze entire vault tag system"""
         engine = RAGReadyTagEngine("/tmp")
 
         # Mock vault with problematic tags
-        with patch.object(engine, '_scan_vault_tags') as mock_scan:
-            mock_scan.return_value = ["ai", "permanent", "ai-generated", "", "quantum-computing"]
+        with patch.object(engine, "_scan_vault_tags") as mock_scan:
+            mock_scan.return_value = [
+                "ai",
+                "permanent",
+                "ai-generated",
+                "",
+                "quantum-computing",
+            ]
 
             analysis = engine.analyze_vault_tags()
 
@@ -378,11 +437,12 @@ class TestRAGReadyTagEngine:
         engine = RAGReadyTagEngine("/tmp")
 
         # Mock large vault analysis
-        with patch.object(engine, '_scan_vault_tags') as mock_scan:
+        with patch.object(engine, "_scan_vault_tags") as mock_scan:
             # Simulate 698 tags as mentioned in requirements
             mock_scan.return_value = [f"tag-{i}" for i in range(698)]
 
             import time
+
             start_time = time.time()
             analysis = engine.analyze_vault_tags()
             end_time = time.time()

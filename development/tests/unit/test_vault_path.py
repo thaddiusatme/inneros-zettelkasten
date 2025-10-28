@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.utils.vault_path import get_default_vault_path
@@ -18,7 +19,7 @@ def test_yaml_config_resolution(tmp_path, monkeypatch):
     vault_dir.mkdir()
 
     config_file = tmp_path / ".inneros.yaml"
-    config_file.write_text("vault_path: \"{}\"\n".format(vault_dir))
+    config_file.write_text('vault_path: "{}"\n'.format(vault_dir))
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("INNEROS_VAULT_PATH", raising=False)
@@ -31,7 +32,7 @@ def test_home_config_resolution(tmp_path, monkeypatch):
     vault_dir.mkdir()
 
     config_file = tmp_path / ".inneros.json"
-    config_file.write_text("{\"vault_path\": \"%s\"}" % vault_dir)
+    config_file.write_text('{"vault_path": "%s"}' % vault_dir)
 
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("INNEROS_VAULT_PATH", raising=False)

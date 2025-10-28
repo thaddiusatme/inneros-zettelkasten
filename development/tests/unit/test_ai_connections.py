@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -34,9 +34,7 @@ class TestAIConnections:
         """Test connections initialization with custom config."""
         config = {"model": "custom-model"}
         connections = AIConnections(
-            similarity_threshold=0.8,
-            max_suggestions=10,
-            config=config
+            similarity_threshold=0.8, max_suggestions=10, config=config
         )
         assert connections.similarity_threshold == 0.8
         assert connections.max_suggestions == 10
@@ -72,14 +70,14 @@ It discusses artificial intelligence research.
         assert self.connections._normalize_text("") == ""
         assert self.connections._normalize_text("   ") == ""
 
-    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch("ai.connections.AIConnections._calculate_semantic_similarity")
     def test_find_similar_notes_success(self, mock_similarity):
         """Test finding similar notes successfully."""
         target_note = "This note is about machine learning and AI."
         note_corpus = {
             "note1.md": "Deep learning is a subset of machine learning.",
             "note2.md": "Cooking recipes for Italian pasta dishes.",
-            "note3.md": "Artificial intelligence applications in healthcare."
+            "note3.md": "Artificial intelligence applications in healthcare.",
         }
 
         # Mock similarity scores
@@ -91,13 +89,13 @@ It discusses artificial intelligence research.
         assert result[0] == ("note1.md", 0.85)
         assert result[1] == ("note3.md", 0.75)
 
-    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch("ai.connections.AIConnections._calculate_semantic_similarity")
     def test_find_similar_notes_no_matches(self, mock_similarity):
         """Test finding similar notes with no matches above threshold."""
         target_note = "This note is about quantum physics."
         note_corpus = {
             "note1.md": "Cooking recipes for pasta.",
-            "note2.md": "Travel guide to Japan."
+            "note2.md": "Travel guide to Japan.",
         }
 
         mock_similarity.side_effect = [0.1, 0.15]
@@ -106,7 +104,7 @@ It discusses artificial intelligence research.
 
         assert len(result) == 0
 
-    @patch('ai.connections.AIConnections._calculate_semantic_similarity')
+    @patch("ai.connections.AIConnections._calculate_semantic_similarity")
     def test_find_similar_notes_max_suggestions(self, mock_similarity):
         """Test that max_suggestions limit is respected."""
         target_note = "AI research note."
@@ -125,36 +123,38 @@ It discusses artificial intelligence research.
         result = self.connections.suggest_links(target_note, {})
         assert result == []
 
-    @patch('ai.connections.AIConnections.find_similar_notes')
+    @patch("ai.connections.AIConnections.find_similar_notes")
     def test_suggest_links_success(self, mock_find_similar):
         """Test successful link suggestions."""
         target_note = "Machine learning research."
         note_corpus = {"note1.md": "AI content", "note2.md": "ML algorithms"}
 
-        mock_find_similar.return_value = [
-            ("note1.md", 0.85),
-            ("note2.md", 0.78)
-        ]
+        mock_find_similar.return_value = [("note1.md", 0.85), ("note2.md", 0.78)]
 
         result = self.connections.suggest_links(target_note, note_corpus)
 
         expected = [
-            {"filename": "note1.md", "similarity": 0.85, "reason": "High semantic similarity (85%)"},
-            {"filename": "note2.md", "similarity": 0.78, "reason": "High semantic similarity (78%)"}
+            {
+                "filename": "note1.md",
+                "similarity": 0.85,
+                "reason": "High semantic similarity (85%)",
+            },
+            {
+                "filename": "note2.md",
+                "similarity": 0.78,
+                "reason": "High semantic similarity (78%)",
+            },
         ]
         assert result == expected
 
-    @patch('ai.connections.AIConnections._generate_ollama_embedding')
+    @patch("ai.connections.AIConnections._generate_ollama_embedding")
     def test_calculate_semantic_similarity_success(self, mock_embedding):
         """Test semantic similarity calculation."""
         text1 = "Machine learning algorithms"
         text2 = "Deep learning neural networks"
 
         # Mock embeddings (simplified vectors)
-        mock_embedding.side_effect = [
-            [0.1, 0.2, 0.3, 0.4],
-            [0.15, 0.25, 0.35, 0.45]
-        ]
+        mock_embedding.side_effect = [[0.1, 0.2, 0.3, 0.4], [0.15, 0.25, 0.35, 0.45]]
 
         result = self.connections._calculate_semantic_similarity(text1, text2)
 
@@ -162,7 +162,7 @@ It discusses artificial intelligence research.
         assert 0 <= result <= 1
         assert isinstance(result, float)
 
-    @patch('ai.connections.AIConnections._generate_ollama_embedding')
+    @patch("ai.connections.AIConnections._generate_ollama_embedding")
     def test_calculate_semantic_similarity_api_error(self, mock_embedding):
         """Test semantic similarity with API error."""
         text1 = "Test text 1"
@@ -198,7 +198,7 @@ It discusses artificial intelligence research.
     def test_generate_ollama_embedding_success(self):
         """Test Ollama embedding generation."""
         # Mock the embedding cache to return our test embedding
-        with patch.object(self.connections, 'embedding_cache') as mock_cache:
+        with patch.object(self.connections, "embedding_cache") as mock_cache:
             mock_cache.get_or_generate_embedding.return_value = [0.1, 0.2, 0.3, 0.4]
 
             text = "Test text for embedding"
@@ -210,8 +210,10 @@ It discusses artificial intelligence research.
     def test_generate_ollama_embedding_api_down(self):
         """Test Ollama embedding when API is down."""
         # Mock the embedding cache to raise an exception (simulating API failure)
-        with patch.object(self.connections, 'embedding_cache') as mock_cache:
-            mock_cache.get_or_generate_embedding.side_effect = Exception("Failed to generate embedding: Ollama service is not available")
+        with patch.object(self.connections, "embedding_cache") as mock_cache:
+            mock_cache.get_or_generate_embedding.side_effect = Exception(
+                "Failed to generate embedding: Ollama service is not available"
+            )
 
             text = "Test text"
 
@@ -243,20 +245,20 @@ It discusses artificial intelligence research.
         result = self.connections.build_connection_map({})
         assert result == {}
 
-    @patch('ai.connections.AIConnections.find_similar_notes')
+    @patch("ai.connections.AIConnections.find_similar_notes")
     def test_build_connection_map_success(self, mock_find_similar):
         """Test successful connection map building."""
         note_corpus = {
             "note1.md": "AI content",
             "note2.md": "ML content",
-            "note3.md": "Cooking content"
+            "note3.md": "Cooking content",
         }
 
         # Mock different similarity results for each note
         mock_find_similar.side_effect = [
             [("note2.md", 0.8)],  # note1 similar to note2
             [("note1.md", 0.8)],  # note2 similar to note1
-            []  # note3 has no similar notes
+            [],  # note3 has no similar notes
         ]
 
         result = self.connections.build_connection_map(note_corpus)
@@ -264,6 +266,6 @@ It discusses artificial intelligence research.
         expected = {
             "note1.md": [("note2.md", 0.8)],
             "note2.md": [("note1.md", 0.8)],
-            "note3.md": []
+            "note3.md": [],
         }
         assert result == expected

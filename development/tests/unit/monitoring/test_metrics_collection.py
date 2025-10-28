@@ -85,7 +85,7 @@ class TestMetricsStorage:
         metrics = {
             "counters": {"notes_processed": 10},
             "gauges": {"daemon_status": 1},
-            "histograms": {"processing_time_ms": [100, 200]}
+            "histograms": {"processing_time_ms": [100, 200]},
         }
 
         storage.store(metrics)

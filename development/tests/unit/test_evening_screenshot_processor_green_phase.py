@@ -30,7 +30,7 @@ from src.cli.evening_screenshot_utils import (
     ScreenshotOCRProcessor,
     DailyNoteGenerator,
     SmartLinkIntegrator,
-    SafeScreenshotManager
+    SafeScreenshotManager,
 )
 
 
@@ -52,13 +52,13 @@ class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
         self.test_screenshots = [
             f"Screenshot_{date.today().strftime('%Y%m%d')}_180000_Instagram.jpg",
             f"Screenshot_{date.today().strftime('%Y%m%d')}_181500_Samsung Internet.jpg",
-            f"Screenshot_{date.today().strftime('%Y%m%d')}_183000_Gmail.jpg"
+            f"Screenshot_{date.today().strftime('%Y%m%d')}_183000_Gmail.jpg",
         ]
 
         for screenshot in self.test_screenshots:
             screenshot_path = self.onedrive_dir / screenshot
             # Create minimal JPG file (empty file for testing)
-            screenshot_path.write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')
+            screenshot_path.write_bytes(b"\xff\xd8\xff\xe0\x00\x10JFIF")
 
     def tearDown(self):
         """Clean up test environment"""
@@ -67,8 +67,7 @@ class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
     def test_evening_processor_initialization_success(self):
         """GREEN: Test successful EveningScreenshotProcessor initialization"""
         processor = EveningScreenshotProcessor(
-            onedrive_path=str(self.onedrive_dir),
-            knowledge_path=str(self.knowledge_dir)
+            onedrive_path=str(self.onedrive_dir), knowledge_path=str(self.knowledge_dir)
         )
 
         self.assertIsInstance(processor, EveningScreenshotProcessor)
@@ -85,8 +84,7 @@ class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
     def test_scan_todays_screenshots_success(self):
         """GREEN: Test successful screenshot scanning"""
         processor = EveningScreenshotProcessor(
-            onedrive_path=str(self.onedrive_dir),
-            knowledge_path=str(self.knowledge_dir)
+            onedrive_path=str(self.onedrive_dir), knowledge_path=str(self.knowledge_dir)
         )
 
         screenshots = processor.scan_todays_screenshots()
@@ -97,16 +95,15 @@ class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
             self.assertIsInstance(screenshot, Path)
             self.assertTrue(screenshot.exists())
 
-    @patch('src.cli.evening_screenshot_processor.logger')
+    @patch("src.cli.evening_screenshot_processor.logger")
     def test_process_evening_batch_success(self, mock_logger):
         """GREEN: Test successful evening batch processing"""
         processor = EveningScreenshotProcessor(
-            onedrive_path=str(self.onedrive_dir),
-            knowledge_path=str(self.knowledge_dir)
+            onedrive_path=str(self.onedrive_dir), knowledge_path=str(self.knowledge_dir)
         )
 
         # Mock OCR processing to avoid actual API calls in tests
-        with patch.object(processor.ocr_processor, 'process_batch') as mock_ocr:
+        with patch.object(processor.ocr_processor, "process_batch") as mock_ocr:
             mock_ocr_result = VisionAnalysisResult(
                 extracted_text="Test screenshot content",
                 content_summary="Test summary",
@@ -115,25 +112,29 @@ class TestEveningScreenshotProcessorGreenPhase(unittest.TestCase):
                 suggested_connections=["test-connection"],
                 content_type="social_media",
                 confidence_score=0.85,
-                processing_time=1.5
+                processing_time=1.5,
             )
             mock_ocr.return_value = {"test.jpg": mock_ocr_result}
 
-            with patch.object(processor.note_generator, 'generate_daily_note') as mock_note:
-                mock_note.return_value = str(self.knowledge_dir / "Inbox" / "daily-screenshots-2025-09-25.md")
+            with patch.object(
+                processor.note_generator, "generate_daily_note"
+            ) as mock_note:
+                mock_note.return_value = str(
+                    self.knowledge_dir / "Inbox" / "daily-screenshots-2025-09-25.md"
+                )
 
                 result = processor.process_evening_batch()
 
                 # Verify result structure
-                self.assertIn('processed_count', result)
-                self.assertIn('daily_note_path', result)
-                self.assertIn('processing_time', result)
-                self.assertIn('backup_path', result)
+                self.assertIn("processed_count", result)
+                self.assertIn("daily_note_path", result)
+                self.assertIn("processing_time", result)
+                self.assertIn("backup_path", result)
 
                 # Verify processing occurred
-                self.assertGreater(result['processed_count'], 0)
-                self.assertIsNotNone(result['daily_note_path'])
-                self.assertGreater(result['processing_time'], 0)
+                self.assertGreater(result["processed_count"], 0)
+                self.assertIsNotNone(result["daily_note_path"])
+                self.assertGreater(result["processing_time"], 0)
 
 
 class TestOneDriveScreenshotDetectorGreenPhase(unittest.TestCase):
@@ -149,16 +150,18 @@ class TestOneDriveScreenshotDetectorGreenPhase(unittest.TestCase):
         today_str = date.today().strftime("%Y%m%d")
         self.today_screenshots = [
             f"Screenshot_{today_str}_120000_Instagram.jpg",
-            f"Screenshot_{today_str}_140000_Gmail.jpg"
+            f"Screenshot_{today_str}_140000_Gmail.jpg",
         ]
 
         self.old_screenshots = [
             "Screenshot_20250920_120000_Facebook.jpg",
-            "Screenshot_20250921_140000_Twitter.jpg"
+            "Screenshot_20250921_140000_Twitter.jpg",
         ]
 
         for screenshot in self.today_screenshots + self.old_screenshots:
-            (self.onedrive_dir / screenshot).write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')
+            (self.onedrive_dir / screenshot).write_bytes(
+                b"\xff\xd8\xff\xe0\x00\x10JFIF"
+            )
 
     def tearDown(self):
         """Clean up test environment"""
@@ -190,8 +193,12 @@ class TestOneDriveScreenshotDetectorGreenPhase(unittest.TestCase):
         detector = OneDriveScreenshotDetector(str(self.onedrive_dir))
 
         # Test valid Samsung patterns
-        self.assertTrue(detector.is_samsung_screenshot("Screenshot_20250925_180000_Instagram.jpg"))
-        self.assertTrue(detector.is_samsung_screenshot("Screenshot_20250925_120000_Gmail.jpg"))
+        self.assertTrue(
+            detector.is_samsung_screenshot("Screenshot_20250925_180000_Instagram.jpg")
+        )
+        self.assertTrue(
+            detector.is_samsung_screenshot("Screenshot_20250925_120000_Gmail.jpg")
+        )
 
         # Test invalid patterns
         self.assertFalse(detector.is_samsung_screenshot("regular_image.jpg"))
@@ -200,13 +207,15 @@ class TestOneDriveScreenshotDetectorGreenPhase(unittest.TestCase):
     def test_screenshot_metadata_extraction_success(self):
         """GREEN: Test successful screenshot metadata extraction"""
         detector = OneDriveScreenshotDetector(str(self.onedrive_dir))
-        metadata = detector.extract_screenshot_metadata("Screenshot_20250925_180000_Instagram.jpg")
+        metadata = detector.extract_screenshot_metadata(
+            "Screenshot_20250925_180000_Instagram.jpg"
+        )
 
-        self.assertIn('timestamp', metadata)
-        self.assertIn('app_name', metadata)
-        self.assertEqual(metadata['app_name'], 'Instagram')
-        self.assertEqual(metadata['date_str'], '20250925')
-        self.assertEqual(metadata['time_str'], '180000')
+        self.assertIn("timestamp", metadata)
+        self.assertIn("app_name", metadata)
+        self.assertEqual(metadata["app_name"], "Instagram")
+        self.assertEqual(metadata["date_str"], "20250925")
+        self.assertEqual(metadata["time_str"], "180000")
 
 
 class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
@@ -216,7 +225,7 @@ class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
         """Set up test environment"""
         self.temp_dir = tempfile.mkdtemp()
         self.test_image = Path(self.temp_dir) / "test_screenshot.jpg"
-        self.test_image.write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')
+        self.test_image.write_bytes(b"\xff\xd8\xff\xe0\x00\x10JFIF")
 
     def tearDown(self):
         """Clean up test environment"""
@@ -229,7 +238,7 @@ class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
         self.assertIsInstance(processor, ScreenshotOCRProcessor)
         self.assertIsNotNone(processor.vision_ocr)
 
-    @patch('src.cli.evening_screenshot_utils.LlamaVisionOCR')
+    @patch("src.cli.evening_screenshot_utils.LlamaVisionOCR")
     def test_process_screenshot_success(self, mock_vision_class):
         """GREEN: Test successful OCR processing of screenshot"""
         # Mock the vision OCR to avoid actual API calls
@@ -242,7 +251,7 @@ class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
             suggested_connections=["connection"],
             content_type="social_media",
             confidence_score=0.8,
-            processing_time=1.0
+            processing_time=1.0,
         )
         mock_vision.analyze_screenshot.return_value = mock_result
         mock_vision_class.return_value = mock_vision
@@ -254,7 +263,7 @@ class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
         self.assertEqual(result.extracted_text, "Test content")
         self.assertEqual(result.confidence_score, 0.8)
 
-    @patch('src.cli.evening_screenshot_utils.LlamaVisionOCR')
+    @patch("src.cli.evening_screenshot_utils.LlamaVisionOCR")
     def test_batch_ocr_processing_success(self, mock_vision_class):
         """GREEN: Test successful batch OCR processing"""
         mock_vision = Mock()
@@ -266,7 +275,7 @@ class TestScreenshotOCRProcessorGreenPhase(unittest.TestCase):
             suggested_connections=["batch-connection"],
             content_type="social_media",
             confidence_score=0.75,
-            processing_time=1.2
+            processing_time=1.2,
         )
         mock_vision.analyze_screenshot.return_value = mock_result
         mock_vision_class.return_value = mock_vision
@@ -300,7 +309,7 @@ class TestDailyNoteGeneratorGreenPhase(unittest.TestCase):
                 suggested_connections=["machine-learning"],
                 content_type="social_media",
                 confidence_score=0.85,
-                processing_time=2.5
+                processing_time=2.5,
             )
         ]
 
@@ -322,7 +331,7 @@ class TestDailyNoteGeneratorGreenPhase(unittest.TestCase):
         note_path = generator.generate_daily_note(
             ocr_results=self.mock_ocr_results,
             screenshot_paths=["test1.jpg", "test2.jpg"],
-            date_str="2025-09-25"
+            date_str="2025-09-25",
         )
 
         self.assertIsNotNone(note_path)
@@ -338,15 +347,14 @@ class TestDailyNoteGeneratorGreenPhase(unittest.TestCase):
         """GREEN: Test successful YAML frontmatter generation"""
         generator = DailyNoteGenerator(str(self.knowledge_dir))
         yaml_content = generator.generate_yaml_frontmatter(
-            ocr_results=self.mock_ocr_results,
-            screenshot_count=2
+            ocr_results=self.mock_ocr_results, screenshot_count=2
         )
 
-        self.assertIn('type: fleeting', yaml_content)
-        self.assertIn('status: inbox', yaml_content)
-        self.assertIn('created:', yaml_content)
-        self.assertIn('tags:', yaml_content)
-        self.assertIn('screenshot_count: 2', yaml_content)
+        self.assertIn("type: fleeting", yaml_content)
+        self.assertIn("status: inbox", yaml_content)
+        self.assertIn("created:", yaml_content)
+        self.assertIn("tags:", yaml_content)
+        self.assertIn("screenshot_count: 2", yaml_content)
 
     def test_embedded_images_generation_success(self):
         """GREEN: Test successful embedded image generation"""
@@ -354,11 +362,11 @@ class TestDailyNoteGeneratorGreenPhase(unittest.TestCase):
         screenshot_paths = ["screenshot1.jpg", "screenshot2.jpg"]
         embedded_content = generator.generate_embedded_images(screenshot_paths)
 
-        self.assertIn('![screenshot1.jpg]', embedded_content)
-        self.assertIn('![screenshot2.jpg]', embedded_content)
-        self.assertIn('### Screenshot 1:', embedded_content)
-        self.assertIn('### Screenshot 2:', embedded_content)
+        self.assertIn("![screenshot1.jpg]", embedded_content)
+        self.assertIn("![screenshot2.jpg]", embedded_content)
+        self.assertIn("### Screenshot 1:", embedded_content)
+        self.assertIn("### Screenshot 2:", embedded_content)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

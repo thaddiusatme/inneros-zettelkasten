@@ -16,7 +16,7 @@ class TestCLIImports:
             [sys.executable, "development/src/cli/analytics_demo.py", "--help"],
             cwd=Path(__file__).parent.parent.parent.parent,
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode == 0
         assert "Analytics Demo" in result.stdout or "usage:" in result.stdout
@@ -27,7 +27,7 @@ class TestCLIImports:
             [sys.executable, "development/src/cli/workflow_demo.py", "--help"],
             cwd=Path(__file__).parent.parent.parent.parent,
             capture_output=True,
-            text=True
+            text=True,
         )
         assert result.returncode == 0
         assert "Workflow Demo" in result.stdout or "usage:" in result.stdout

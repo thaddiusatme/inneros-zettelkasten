@@ -28,10 +28,10 @@ from src.ai.types import ConnectionResult, ConfigDict, LinkFeedback
 class ConnectionManager:
     """
     Semantic link discovery and suggestion manager.
-    
+
     Uses embeddings for intelligent link predictions based on semantic similarity.
     Collects user feedback (accept/reject) to improve future suggestions.
-    
+
     NO Analytics dependencies - can run in parallel with AnalyticsManager.
     """
 
@@ -39,11 +39,11 @@ class ConnectionManager:
         self,
         base_dir: Path,
         config: ConfigDict,
-        embeddings_service: Optional[Any] = None
+        embeddings_service: Optional[Any] = None,
     ) -> None:
         """
         Initialize ConnectionManager.
-        
+
         Args:
             base_dir: Base directory of the Zettelkasten vault
             config: Configuration dict with similarity thresholds
@@ -54,21 +54,17 @@ class ConnectionManager:
         self.embeddings = embeddings_service
         self.feedback_history = []
 
-    def discover_links(
-        self,
-        note_path: str,
-        dry_run: bool = False
-    ) -> ConnectionResult:
+    def discover_links(self, note_path: str, dry_run: bool = False) -> ConnectionResult:
         """
         Discover potential link suggestions for a note.
-        
+
         Uses semantic similarity via embeddings to find conceptually related notes
         in the knowledge graph. Returns ranked suggestions based on relevance.
-        
+
         Args:
             note_path: Path to the note file (relative to base_dir)
             dry_run: If True, don't write link suggestions to file
-            
+
         Returns:
             List of link suggestions ranked by relevance score:
             [{
@@ -77,7 +73,7 @@ class ConnectionManager:
                 'reason': str (why this link is suggested)
             }]
             Returns empty list if embeddings service unavailable or errors occur.
-            
+
         Examples:
             >>> # Example 1: Basic link discovery
             >>> connection_mgr = ConnectionManager(
@@ -97,7 +93,7 @@ class ConnectionManager:
               Reason: semantic_similarity
             → [[Literature Notes/ai-fundamentals.md]] (score: 0.72)
               Reason: semantic_similarity
-            
+
             >>> # Example 2: No embeddings service available
             >>> connection_mgr_no_embed = ConnectionManager(
             ...     base_dir=Path('knowledge'),
@@ -108,7 +104,7 @@ class ConnectionManager:
             >>> print(f"Suggestions: {suggestions}")
             Suggestions: []
             >>> # Returns empty list gracefully when embeddings unavailable
-            
+
             >>> # Example 3: Dry run mode
             >>> suggestions = connection_mgr.discover_links(
             ...     'Inbox/test-note.md',
@@ -117,7 +113,7 @@ class ConnectionManager:
             >>> # Suggestions discovered but not written to file
             >>> print(f"Preview: {len(suggestions)} links would be suggested")
             Preview: 2 links would be suggested
-            
+
             >>> # Example 4: Filtering by quality threshold
             >>> # Only high-quality connections (>0.7 similarity) are returned
             >>> suggestions = connection_mgr.discover_links('Inbox/specific-topic.md')
@@ -127,7 +123,7 @@ class ConnectionManager:
             >>> print(f"Medium quality (0.7-0.8): {len(medium_quality)} suggestions")
             High quality (≥0.8): 2 suggestions
             Medium quality (0.7-0.8): 1 suggestions
-            
+
             >>> # Example 5: Using suggestions for automatic linking
             >>> suggestions = connection_mgr.discover_links('Inbox/new-note.md')
             >>> for suggestion in suggestions:
@@ -137,7 +133,7 @@ class ConnectionManager:
             ...         print(f"Manual review: [[{suggestion['target']}]] ({suggestion['score']:.2f})")
             Auto-accept: [[Permanent Notes/core-concept.md]]
             Manual review: [[Literature Notes/related-work.md]] (0.75)
-            
+
             >>> # Example 6: Integration with workflow
             >>> from pathlib import Path
             >>> inbox_dir = Path('knowledge/Inbox')
@@ -149,7 +145,7 @@ class ConnectionManager:
             ...         print(f"{note_file.name}: {len(suggestions)} connections found")
             machine-learning-basics.md: 5 connections found
             productivity-system.md: 3 connections found
-            
+
             >>> # Example 7: Error handling
             >>> # Gracefully handles missing notes or embedding errors
             >>> suggestions = connection_mgr.discover_links('NonExistent/note.md')
@@ -171,21 +167,19 @@ class ConnectionManager:
             return []
 
     def predict_links(
-        self,
-        note_path: str,
-        similar_notes: Optional[ConnectionResult] = None
+        self, note_path: str, similar_notes: Optional[ConnectionResult] = None
     ) -> ConnectionResult:
         """
         Predict and rank link suggestions.
-        
+
         Filters by similarity threshold and ranks by relevance score.
         Lower-level method used by discover_links() with explicit similar notes input.
-        
+
         Args:
             note_path: Path to the source note (relative to base_dir)
             similar_notes: List of similar notes with scores (optional, will fetch if None):
                 [{'note': str, 'score': float}] or [{'target': str, 'score': float}]
-            
+
         Returns:
             List of link predictions ranked by score (descending):
             [{
@@ -194,7 +188,7 @@ class ConnectionManager:
                 'reason': str ('semantic_similarity')
             }]
             Limited to max_suggestions from config (default: 5).
-            
+
         Examples:
             >>> # Example 1: Basic link prediction with provided similar notes
             >>> connection_mgr = ConnectionManager(
@@ -226,13 +220,13 @@ class ConnectionManager:
             Permanent Notes/ai-concepts.md: 0.92
             Literature Notes/ml-paper.md: 0.85
             Permanent Notes/neural-nets.md: 0.78
-            
+
             >>> # Example 2: Automatic fetching when similar_notes not provided
             >>> predictions = connection_mgr.predict_links('Inbox/test-note.md')
             >>> # Automatically calls embeddings.get_similar() if similar_notes is None
             >>> print(f"Auto-fetched {len(predictions)} predictions")
             Auto-fetched 4 predictions
-            
+
             >>> # Example 3: Custom threshold configuration
             >>> connection_mgr_strict = ConnectionManager(
             ...     base_dir=Path('knowledge'),
@@ -251,7 +245,7 @@ class ConnectionManager:
             >>> print(f"With 0.8 threshold: {len(predictions)} predictions")
             With 0.8 threshold: 2 predictions
             >>> # Only notes with score ≥0.8 included
-            
+
             >>> # Example 4: Max suggestions limit
             >>> connection_mgr_limited = ConnectionManager(
             ...     base_dir=Path('knowledge'),
@@ -271,7 +265,7 @@ class ConnectionManager:
             >>> # Top 3 by score returned
             >>> assert all(predictions[i]['score'] >= predictions[i+1]['score']
             ...            for i in range(len(predictions)-1))
-            
+
             >>> # Example 5: Format compatibility (note vs target key)
             >>> # Handles both 'note' and 'target' keys for flexibility
             >>> similar_v1 = [{'note': 'file1.md', 'score': 0.8}]
@@ -281,7 +275,7 @@ class ConnectionManager:
             >>> assert pred1[0]['target'] == 'file1.md'
             >>> assert pred2[0]['target'] == 'file2.md'
             >>> # Output format always uses 'target' key
-            
+
             >>> # Example 6: Empty results handling
             >>> # When no notes meet threshold
             >>> low_similarity = [
@@ -295,7 +289,7 @@ class ConnectionManager:
             >>> print(f"Below threshold: {predictions}")
             Below threshold: []
             >>> # Returns empty list when all scores below threshold
-            
+
             >>> # Example 7: Ranking verification
             >>> similar_notes = [
             ...     {'note': 'low.md', 'score': 0.72},
@@ -317,28 +311,26 @@ class ConnectionManager:
                 similar_notes = []
 
         # Get threshold from config
-        threshold = self.config.get('connections', {}).get(
-            'similarity_threshold', 0.7
-        )
-        max_suggestions = self.config.get('connections', {}).get(
-            'max_suggestions', 5
-        )
+        threshold = self.config.get("connections", {}).get("similarity_threshold", 0.7)
+        max_suggestions = self.config.get("connections", {}).get("max_suggestions", 5)
 
         # Filter by threshold
         predictions = []
         for note in similar_notes:
-            score = note.get('score', 0.0)
+            score = note.get("score", 0.0)
             # Handle both 'note' and 'target' keys for compatibility
-            note_path = note.get('note', note.get('target', ''))
+            note_path = note.get("note", note.get("target", ""))
             if score >= threshold and note_path:
-                predictions.append({
-                    'target': note_path,
-                    'score': score,
-                    'reason': 'semantic_similarity'
-                })
+                predictions.append(
+                    {
+                        "target": note_path,
+                        "score": score,
+                        "reason": "semantic_similarity",
+                    }
+                )
 
         # Sort by score descending
-        predictions.sort(key=lambda x: x['score'], reverse=True)
+        predictions.sort(key=lambda x: x["score"], reverse=True)
 
         # Limit to max suggestions
         return predictions[:max_suggestions]
@@ -349,22 +341,22 @@ class ConnectionManager:
         target: str,
         accepted: bool,
         similarity_score: float,
-        reason: Optional[str] = None
+        reason: Optional[str] = None,
     ) -> None:
         """
         Record user decision on link suggestion for learning.
-        
+
         Stores feedback in history for analyzing suggestion quality and
         improving future recommendations. Enables feedback loop for
         continuous system improvement.
-        
+
         Args:
             source: Source note path (where link would be added)
             target: Target note path (what link points to)
             accepted: Whether user accepted the suggestion (True) or rejected (False)
             similarity_score: Similarity score of the suggestion (0.0-1.0)
             reason: Optional reason for decision (user-provided or system-generated)
-            
+
         Examples:
             >>> # Example 1: Record accepted link suggestion
             >>> connection_mgr = ConnectionManager(
@@ -384,7 +376,7 @@ class ConnectionManager:
             Recorded 1 decisions
             >>> print(f"Last decision: {'accepted' if history[-1]['accepted'] else 'rejected'}")
             Last decision: accepted
-            
+
             >>> # Example 2: Record rejected link suggestion
             >>> connection_mgr.record_link_decision(
             ...     source='Inbox/productivity.md',
@@ -394,7 +386,7 @@ class ConnectionManager:
             ...     reason='Not conceptually related despite similarity score'
             ... )
             >>> # Records rejection with explanation
-            
+
             >>> # Example 3: Interactive workflow integration
             >>> suggestions = connection_mgr.discover_links('Inbox/new-note.md')
             >>> for suggestion in suggestions:
@@ -408,7 +400,7 @@ class ConnectionManager:
             ...         similarity_score=suggestion['score']
             ...     )
             ...     print(f"Feedback recorded: {'✓ accepted' if accepted else '✗ rejected'}")
-            
+
             >>> # Example 4: Analyze acceptance patterns
             >>> history = connection_mgr.get_feedback_history()
             >>> accepted = [d for d in history if d['accepted']]
@@ -420,7 +412,7 @@ class ConnectionManager:
             >>> avg_rejected = sum(d['similarity_score'] for d in rejected) / len(rejected)
             >>> print(f"Avg score - Accepted: {avg_accepted:.2f}, Rejected: {avg_rejected:.2f}")
             Avg score - Accepted: 0.87, Rejected: 0.72
-            
+
             >>> # Example 5: Quality threshold tuning
             >>> # Use feedback to determine optimal similarity threshold
             >>> history = connection_mgr.get_feedback_history()
@@ -430,7 +422,7 @@ class ConnectionManager:
             ...     print("Consider raising similarity threshold")
             Warning: 2 high-score rejections
             Consider raising similarity threshold
-            
+
             >>> # Example 6: Reason-based analysis
             >>> history = connection_mgr.get_feedback_history()
             >>> rejection_reasons = {}
@@ -445,7 +437,7 @@ class ConnectionManager:
               - Not conceptually related: 3 times
               - Too general: 2 times
               - Already linked: 1 times
-            
+
             >>> # Example 7: Timestamp tracking
             >>> connection_mgr.record_link_decision(
             ...     source='note1.md',
@@ -459,12 +451,12 @@ class ConnectionManager:
             >>> # ISO format timestamp automatically recorded
         """
         decision = {
-            'timestamp': datetime.now().isoformat(),
-            'source': source,
-            'target': target,
-            'accepted': accepted,
-            'similarity_score': similarity_score,
-            'reason': reason
+            "timestamp": datetime.now().isoformat(),
+            "source": source,
+            "target": target,
+            "accepted": accepted,
+            "similarity_score": similarity_score,
+            "reason": reason,
         }
 
         self.feedback_history.append(decision)
@@ -472,7 +464,7 @@ class ConnectionManager:
     def get_feedback_history(self) -> List[LinkFeedback]:
         """
         Get history of user link decisions.
-        
+
         Returns:
             List of feedback decisions
         """
@@ -481,11 +473,11 @@ class ConnectionManager:
     def analyze_bidirectional_links(self) -> Dict[str, Any]:
         """
         Analyze bidirectional link patterns.
-        
+
         Identifies:
         - One-way links (A→B but not B→A)
         - Suggestions for backlinks
-        
+
         Returns:
             Dict with bidirectional analysis:
             {
@@ -498,15 +490,15 @@ class ConnectionManager:
         link_graph = {}
 
         # Build link graph
-        for md_file in self.base_dir.rglob('*.md'):
-            if '.git' in str(md_file):
+        for md_file in self.base_dir.rglob("*.md"):
+            if ".git" in str(md_file):
                 continue
 
             note_path = str(md_file.relative_to(self.base_dir))
 
             try:
-                content = md_file.read_text(encoding='utf-8')
-                outgoing = re.findall(r'\[\[(.*?)\]\]', content)
+                content = md_file.read_text(encoding="utf-8")
+                outgoing = re.findall(r"\[\[(.*?)\]\]", content)
                 link_graph[note_path] = outgoing
             except Exception:
                 continue
@@ -519,15 +511,16 @@ class ConnectionManager:
                 target_links = link_graph.get(target, [])
                 if source not in target_links:
                     # Ensure target has .md extension
-                    target_with_ext = target if target.endswith('.md') else f"{target}.md"
-                    one_way_links.append({
-                        'source': Path(source).name,
-                        'target': target_with_ext,
-                        'bidirectional': False,
-                        'suggest_backlink': True
-                    })
+                    target_with_ext = (
+                        target if target.endswith(".md") else f"{target}.md"
+                    )
+                    one_way_links.append(
+                        {
+                            "source": Path(source).name,
+                            "target": target_with_ext,
+                            "bidirectional": False,
+                            "suggest_backlink": True,
+                        }
+                    )
 
-        return {
-            'one_way_links': one_way_links,
-            'count': len(one_way_links)
-        }
+        return {"one_way_links": one_way_links, "count": len(one_way_links)}

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List
 
 # Add development directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 # This import will fail until we create the class - that's the RED phase!
 try:
@@ -71,19 +71,23 @@ class TestImageIntegrityMonitorBugReproduction:
         # Create sample image files (dummy content)
         image_data = b"FAKE_IMAGE_DATA_FOR_TESTING"
 
-        for i, name in enumerate([
-            "screenshot_messenger.jpg",
-            "diagram_workflow.png",
-            "code_snippet.png",
-            "pasted_image.png"
-        ]):
+        for i, name in enumerate(
+            [
+                "screenshot_messenger.jpg",
+                "diagram_workflow.png",
+                "code_snippet.png",
+                "pasted_image.png",
+            ]
+        ):
             image_path = self.vault_path / "Media" / name
-            image_path.write_bytes(image_data + bytes(str(i), 'utf-8'))
+            image_path.write_bytes(image_data + bytes(str(i), "utf-8"))
             test_images.append(image_path)
 
         return test_images
 
-    def _create_note_with_images(self, note_path: Path, image_paths: List[Path]) -> Path:
+    def _create_note_with_images(
+        self, note_path: Path, image_paths: List[Path]
+    ) -> Path:
         """Create a test note with embedded image references"""
         content = """---
 type: fleeting
@@ -130,7 +134,9 @@ This note should preserve all images during AI processing.
 
     def test_screenshot_ocr_processing_loses_images(self):
         """RED: Screenshot OCR processing causes image loss (BUG REPRODUCTION)"""
-        pytest.skip("RED Phase: This test reproduces the actual bug - will implement in GREEN phase")
+        pytest.skip(
+            "RED Phase: This test reproduces the actual bug - will implement in GREEN phase"
+        )
 
         # Create note with screenshot reference
         note_path = self.vault_path / "Inbox" / "test_screenshot_note.md"
@@ -138,7 +144,9 @@ This note should preserve all images during AI processing.
 
         # Verify images exist before processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"Test image {image_path} should exist before processing"
+            assert (
+                image_path.exists()
+            ), f"Test image {image_path} should exist before processing"
 
         # Simulate LLaVA OCR processing (this should preserve images but currently doesn't)
         if LlamaVisionOCR:
@@ -148,11 +156,15 @@ This note should preserve all images during AI processing.
 
         # EXPECTED TO FAIL: Images should still exist after processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"BUG: Image {image_path} disappeared during OCR processing!"
+            assert (
+                image_path.exists()
+            ), f"BUG: Image {image_path} disappeared during OCR processing!"
 
     def test_note_promotion_workflow_loses_images(self):
         """RED: Note promotion from Inbox to Permanent Notes loses images"""
-        pytest.skip("RED Phase: This test reproduces the actual bug - will implement in GREEN phase")
+        pytest.skip(
+            "RED Phase: This test reproduces the actual bug - will implement in GREEN phase"
+        )
 
         # Create fleeting note with images in Inbox
         note_path = self.vault_path / "Inbox" / "fleeting_with_images.md"
@@ -160,21 +172,29 @@ This note should preserve all images during AI processing.
 
         # Verify images exist before promotion
         for image_path in self.test_images:
-            assert image_path.exists(), f"Image {image_path} should exist before promotion"
+            assert (
+                image_path.exists()
+            ), f"Image {image_path} should exist before promotion"
 
         # Simulate note promotion workflow
         if WorkflowManager:
             workflow = WorkflowManager(str(self.vault_path))
             # This promotion process may lose images
-            promotion_result = workflow.promote_fleeting_note(str(note_path), target_type="permanent")
+            promotion_result = workflow.promote_fleeting_note(
+                str(note_path), target_type="permanent"
+            )
 
         # EXPECTED TO FAIL: Images should still exist after promotion
         for image_path in self.test_images:
-            assert image_path.exists(), f"BUG: Image {image_path} disappeared during note promotion!"
+            assert (
+                image_path.exists()
+            ), f"BUG: Image {image_path} disappeared during note promotion!"
 
     def test_template_processing_loses_images(self):
         """RED: Template processing with Templater causes image loss"""
-        pytest.skip("RED Phase: This test reproduces the actual bug - will implement in GREEN phase")
+        pytest.skip(
+            "RED Phase: This test reproduces the actual bug - will implement in GREEN phase"
+        )
 
         # Create template with image references
         template_path = self.vault_path / "Templates" / "test_template.md"
@@ -196,7 +216,9 @@ Template processing should preserve image references.
 
         # Verify images exist before template processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"Image {image_path} should exist before template processing"
+            assert (
+                image_path.exists()
+            ), f"Image {image_path} should exist before template processing"
 
         # Simulate template processing (this may cause image loss)
         # Note: This would typically involve Templater plugin processing
@@ -204,21 +226,29 @@ Template processing should preserve image references.
 
         # EXPECTED TO FAIL: Images should still exist after template processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"BUG: Image {image_path} disappeared during template processing!"
+            assert (
+                image_path.exists()
+            ), f"BUG: Image {image_path} disappeared during template processing!"
 
     def test_batch_ai_processing_loses_images(self):
         """RED: Batch AI processing of multiple notes causes image loss"""
-        pytest.skip("RED Phase: This test reproduces the actual bug - will implement in GREEN phase")
+        pytest.skip(
+            "RED Phase: This test reproduces the actual bug - will implement in GREEN phase"
+        )
 
         # Create multiple notes with images
         notes_with_images = []
         for i in range(3):
             note_path = self.vault_path / "Inbox" / f"batch_note_{i}.md"
-            notes_with_images.append(self._create_note_with_images(note_path, self.test_images))
+            notes_with_images.append(
+                self._create_note_with_images(note_path, self.test_images)
+            )
 
         # Verify all images exist before batch processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"Image {image_path} should exist before batch processing"
+            assert (
+                image_path.exists()
+            ), f"Image {image_path} should exist before batch processing"
 
         # Simulate batch AI processing
         if WorkflowManager:
@@ -229,11 +259,15 @@ Template processing should preserve image references.
 
         # EXPECTED TO FAIL: Images should still exist after batch processing
         for image_path in self.test_images:
-            assert image_path.exists(), f"BUG: Image {image_path} disappeared during batch AI processing!"
+            assert (
+                image_path.exists()
+            ), f"BUG: Image {image_path} disappeared during batch AI processing!"
 
     def test_weekly_review_automation_loses_images(self):
         """RED: Weekly review automation process causes image loss"""
-        pytest.skip("RED Phase: This test reproduces the actual bug - will implement in GREEN phase")
+        pytest.skip(
+            "RED Phase: This test reproduces the actual bug - will implement in GREEN phase"
+        )
 
         # Create notes that would be processed during weekly review
         note_path = self.vault_path / "Inbox" / "weekly_review_candidate.md"
@@ -241,7 +275,9 @@ Template processing should preserve image references.
 
         # Verify images exist before weekly review
         for image_path in self.test_images:
-            assert image_path.exists(), f"Image {image_path} should exist before weekly review"
+            assert (
+                image_path.exists()
+            ), f"Image {image_path} should exist before weekly review"
 
         # Simulate weekly review automation
         if WorkflowManager:
@@ -251,7 +287,9 @@ Template processing should preserve image references.
 
         # EXPECTED TO FAIL: Images should still exist after weekly review
         for image_path in self.test_images:
-            assert image_path.exists(), f"BUG: Image {image_path} disappeared during weekly review!"
+            assert (
+                image_path.exists()
+            ), f"BUG: Image {image_path} disappeared during weekly review!"
 
     # ============================================================================
     # GREEN PHASE TESTS: Basic functionality should work
@@ -267,7 +305,7 @@ Template processing should preserve image references.
             assert len(self.monitor.tracked_images) == 1
             image_key = str(self.test_images[0])
             assert image_key in self.monitor.tracked_images
-            assert self.monitor.tracked_images[image_key]['context'] == "test_context"
+            assert self.monitor.tracked_images[image_key]["context"] == "test_context"
 
     def test_verify_image_exists_works(self):
         """GREEN: Image existence verification works"""
@@ -290,8 +328,8 @@ Template processing should preserve image references.
             # Verify workflow step was tracked
             assert len(self.monitor.workflow_steps) == 1
             step = self.monitor.workflow_steps[0]
-            assert step['step_name'] == "test_step"
-            assert len(step['images']) == len(self.test_images)
+            assert step["step_name"] == "test_step"
+            assert len(step["images"]) == len(self.test_images)
 
     def test_generate_audit_report_works(self):
         """GREEN: Audit report generation works"""
@@ -304,11 +342,11 @@ Template processing should preserve image references.
             report = self.monitor.generate_audit_report()
 
             # Verify report structure (detailed report format)
-            assert report['summary']['total_tracked_images'] == len(self.test_images)
-            assert 'vault_path' in report
-            assert 'generated_at' in report
-            assert 'tracked_images' in report
-            assert 'analysis' in report  # New detailed analysis section
+            assert report["summary"]["total_tracked_images"] == len(self.test_images)
+            assert "vault_path" in report
+            assert "generated_at" in report
+            assert "tracked_images" in report
+            assert "analysis" in report  # New detailed analysis section
 
     def test_image_integrity_validation_works(self):
         """GREEN: Comprehensive image integrity validation works"""

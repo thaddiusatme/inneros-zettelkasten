@@ -14,7 +14,7 @@ from .ollama_client import OllamaClient
 class AIEnhancer:
     """
     AI-powered content enhancement system for zettelkasten notes.
-    
+
     Provides intelligent analysis and suggestions for:
     - Note quality assessment
     - Missing content identification
@@ -23,10 +23,12 @@ class AIEnhancer:
     - Content enhancement recommendations
     """
 
-    def __init__(self, model_name: str = "llama3:latest", min_quality_score: float = 0.6):
+    def __init__(
+        self, model_name: str = "llama3:latest", min_quality_score: float = 0.6
+    ):
         """
         Initialize the AI enhancer with Ollama client.
-        
+
         Args:
             model_name: Name of the Ollama model to use
             min_quality_score: Minimum quality score threshold (0-1)
@@ -37,20 +39,23 @@ class AIEnhancer:
     def analyze_note_quality(self, content: str) -> Dict[str, Any]:
         """
         Analyze note quality and provide detailed assessment.
-        
+
         Args:
             content: The note content to analyze
-            
+
         Returns:
             Dictionary containing quality score, suggestions, and missing elements
         """
         if not content or not content.strip():
             return {
-                'quality_score': 0.0,
-                'suggestions': ['Add meaningful content to the note'],
-                'missing_elements': [
-                    {'type': 'content', 'description': 'Note appears to be empty or minimal'}
-                ]
+                "quality_score": 0.0,
+                "suggestions": ["Add meaningful content to the note"],
+                "missing_elements": [
+                    {
+                        "type": "content",
+                        "description": "Note appears to be empty or minimal",
+                    }
+                ],
             }
 
         # Strip YAML frontmatter for analysis
@@ -65,10 +70,10 @@ class AIEnhancer:
     def suggest_missing_links(self, content: str) -> List[str]:
         """
         Suggest relevant internal links based on note content.
-        
+
         Args:
             content: The note content to analyze
-            
+
         Returns:
             List of suggested wiki-style links [[note-name]]
         """
@@ -83,23 +88,23 @@ class AIEnhancer:
     def identify_content_gaps(self, content: str) -> List[Dict[str, str]]:
         """
         Identify missing content sections or explanations.
-        
+
         Args:
             content: The note content to analyze
-            
+
         Returns:
             List of dictionaries with gap type and description
         """
         analysis = self.analyze_note_quality(content)
-        return analysis.get('missing_elements', [])
+        return analysis.get("missing_elements", [])
 
     def suggest_improved_structure(self, content: str) -> Dict[str, Any]:
         """
         Suggest better note structure and organization.
-        
+
         Args:
             content: The note content to analyze
-            
+
         Returns:
             Dictionary with recommended structure and reasoning
         """
@@ -110,11 +115,15 @@ class AIEnhancer:
             # Validate structure to avoid flaky outputs from LLMs
             if not isinstance(result, dict):
                 return self._basic_structure_suggestion(content_to_analyze)
-            if 'recommended_structure' not in result or not isinstance(result.get('recommended_structure'), list):
+            if "recommended_structure" not in result or not isinstance(
+                result.get("recommended_structure"), list
+            ):
                 return self._basic_structure_suggestion(content_to_analyze)
-            if 'reasoning' not in result:
+            if "reasoning" not in result:
                 # Provide default reasoning if missing
-                result['reasoning'] = 'Suggested based on standard technical note organization'
+                result["reasoning"] = (
+                    "Suggested based on standard technical note organization"
+                )
             return result
         except Exception:
             # Fallback to basic structure suggestion
@@ -123,10 +132,10 @@ class AIEnhancer:
     def enhance_note(self, content: str) -> Dict[str, Any]:
         """
         Comprehensive note enhancement with all available suggestions.
-        
+
         Args:
             content: The note content to enhance
-            
+
         Returns:
             Complete enhancement report with all suggestions
         """
@@ -135,20 +144,20 @@ class AIEnhancer:
         structure_suggestions = self.suggest_improved_structure(content)
 
         return {
-            'quality_score': quality_analysis['quality_score'],
-            'suggestions': quality_analysis['suggestions'],
-            'missing_elements': quality_analysis['missing_elements'],
-            'link_suggestions': link_suggestions,
-            'structure_suggestions': structure_suggestions,
-            'enhanced_content': None  # Future: could include AI-rewritten content
+            "quality_score": quality_analysis["quality_score"],
+            "suggestions": quality_analysis["suggestions"],
+            "missing_elements": quality_analysis["missing_elements"],
+            "link_suggestions": link_suggestions,
+            "structure_suggestions": structure_suggestions,
+            "enhanced_content": None,  # Future: could include AI-rewritten content
         }
 
     def _strip_yaml_frontmatter(self, content: str) -> str:
         """Remove YAML frontmatter from content for analysis."""
-        yaml_pattern = r'^---\s*\n(.*?)\n---\s*\n'
+        yaml_pattern = r"^---\s*\n(.*?)\n---\s*\n"
         match = re.match(yaml_pattern, content, re.DOTALL)
         if match:
-            return content[match.end():]
+            return content[match.end() :]
         return content
 
     def _generate_ollama_analysis(self, content: str) -> Dict[str, Any]:
@@ -191,7 +200,7 @@ class AIEnhancer:
 
         try:
             # Extract JSON from response
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
             else:
@@ -221,11 +230,13 @@ class AIEnhancer:
 
         try:
             # Extract JSON array from response
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
+            json_match = re.search(r"\[.*\]", response, re.DOTALL)
             if json_match:
                 links = json.loads(json_match.group())
                 # Ensure proper wiki link format
-                return [link if link.startswith('[[') else f'[[{link}]]' for link in links]
+                return [
+                    link if link.startswith("[[") else f"[[{link}]]" for link in links
+                ]
             return []
         except (json.JSONDecodeError, ValueError):
             return []
@@ -254,7 +265,7 @@ class AIEnhancer:
         response = self.ollama_client.generate(prompt)
 
         try:
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
             return self._basic_structure_suggestion(content)
@@ -266,10 +277,10 @@ class AIEnhancer:
         content_lower = content.lower().strip()
 
         # Simple heuristics for quality assessment
-        has_heading = bool(re.search(r'^#+\s+.+$', content, re.MULTILINE))
-        has_sections = bool(re.search(r'^##+\s+.+$', content, re.MULTILINE))
-        has_lists = bool(re.search(r'^\s*[-*+]\s+.+$', content, re.MULTILINE))
-        has_links = bool(re.search(r'\[\[.+?\]\]', content))
+        has_heading = bool(re.search(r"^#+\s+.+$", content, re.MULTILINE))
+        has_sections = bool(re.search(r"^##+\s+.+$", content, re.MULTILINE))
+        has_lists = bool(re.search(r"^\s*[-*+]\s+.+$", content, re.MULTILINE))
+        has_links = bool(re.search(r"\[\[.+?\]\]", content))
         word_count = len(content.split())
 
         # Calculate basic quality score
@@ -281,19 +292,25 @@ class AIEnhancer:
             score += 0.2
         else:
             suggestions.append("Expand the content with more detail")
-            missing_elements.append({"type": "content", "description": "Content appears too brief"})
+            missing_elements.append(
+                {"type": "content", "description": "Content appears too brief"}
+            )
 
         if has_heading:
             score += 0.2
         else:
             suggestions.append("Add a clear main heading")
-            missing_elements.append({"type": "structure", "description": "Missing main heading"})
+            missing_elements.append(
+                {"type": "structure", "description": "Missing main heading"}
+            )
 
         if has_sections:
             score += 0.2
         else:
             suggestions.append("Break content into logical sections")
-            missing_elements.append({"type": "structure", "description": "Content lacks clear sections"})
+            missing_elements.append(
+                {"type": "structure", "description": "Content lacks clear sections"}
+            )
 
         if has_lists:
             score += 0.2
@@ -304,24 +321,26 @@ class AIEnhancer:
             score += 0.2
         else:
             suggestions.append("Add internal links to related notes")
-            missing_elements.append({"type": "links", "description": "No internal links found"})
+            missing_elements.append(
+                {"type": "links", "description": "No internal links found"}
+            )
 
         return {
-            'quality_score': min(score, 1.0),
-            'suggestions': suggestions,
-            'missing_elements': missing_elements
+            "quality_score": min(score, 1.0),
+            "suggestions": suggestions,
+            "missing_elements": missing_elements,
         }
 
     def _basic_structure_suggestion(self, content: str) -> Dict[str, Any]:
         """Fallback basic structure suggestion when API fails."""
         return {
-            'recommended_structure': [
-                '# Main Topic',
-                '## Overview',
-                '## Key Concepts',
-                '## Practical Applications',
-                '## Related Notes',
-                '## References'
+            "recommended_structure": [
+                "# Main Topic",
+                "## Overview",
+                "## Key Concepts",
+                "## Practical Applications",
+                "## Related Notes",
+                "## References",
             ],
-            'reasoning': 'Standard zettelkasten note structure for comprehensive coverage'
+            "reasoning": "Standard zettelkasten note structure for comprehensive coverage",
         }

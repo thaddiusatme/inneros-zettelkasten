@@ -27,7 +27,7 @@ class TestDaemonDetection:
 
     def test_detect_daemon_running(self):
         """Test detection when daemon process is running.
-        
+
         Acceptance Criteria:
         - Returns True when PID file exists and process is running
         - Returns daemon PID for display
@@ -48,7 +48,7 @@ class TestDaemonDetection:
 
     def test_detect_daemon_stopped(self):
         """Test detection when daemon is not running.
-        
+
         Acceptance Criteria:
         - Returns False when no PID file exists
         - Returns False when PID file exists but process is dead
@@ -59,7 +59,7 @@ class TestDaemonDetection:
         detector = StatusDetector()
 
         # Mock environment where daemon is NOT running
-        with patch('os.path.exists', return_value=False):
+        with patch("os.path.exists", return_value=False):
             is_running, pid = detector.detect_daemon_status()
 
             assert is_running is False
@@ -71,7 +71,7 @@ class TestCronStatusParsing:
 
     def test_parse_crontab_disabled(self):
         """Test parsing of disabled cron jobs with #DISABLED# markers.
-        
+
         Acceptance Criteria:
         - Detects #DISABLED# prefix in crontab entries
         - Returns disabled status for marked jobs
@@ -88,18 +88,18 @@ class TestCronStatusParsing:
 0 * * * * /usr/local/bin/some_job
 """
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value.stdout = mock_crontab
             mock_run.return_value.returncode = 0
 
             cron_status = detector.parse_cron_status()
 
-            assert 'automation_disabled' in cron_status
-            assert cron_status['automation_disabled'] is True
+            assert "automation_disabled" in cron_status
+            assert cron_status["automation_disabled"] is True
 
     def test_parse_crontab_enabled(self):
         """Test parsing of active (enabled) cron jobs.
-        
+
         Acceptance Criteria:
         - Detects jobs without #DISABLED# markers
         - Returns enabled status
@@ -115,15 +115,15 @@ class TestCronStatusParsing:
 0 * * * * /usr/local/bin/some_job
 """
 
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value.stdout = mock_crontab
             mock_run.return_value.returncode = 0
 
             cron_status = detector.parse_cron_status()
 
-            assert 'automation_disabled' in cron_status
-            assert cron_status['automation_disabled'] is False
-            assert cron_status['enabled_jobs_count'] >= 2
+            assert "automation_disabled" in cron_status
+            assert cron_status["automation_disabled"] is False
+            assert cron_status["enabled_jobs_count"] >= 2
 
 
 class TestActivityTimestamps:
@@ -131,7 +131,7 @@ class TestActivityTimestamps:
 
     def test_read_last_activity_timestamp(self):
         """Test extraction of most recent log timestamp.
-        
+
         Acceptance Criteria:
         - Scans .automation/logs/ directory
         - Returns most recent timestamp
@@ -169,7 +169,7 @@ class TestInboxStatus:
 
     def test_count_inbox_notes(self):
         """Test counting notes in Inbox with quality thresholds.
-        
+
         Acceptance Criteria:
         - Counts total notes in Inbox/
         - Counts notes with quality_score >= 0.7
@@ -187,23 +187,27 @@ class TestInboxStatus:
 
             # Create mock notes with quality scores
             note1 = inbox_dir / "note1.md"
-            note1.write_text("""---
+            note1.write_text(
+                """---
 quality_score: 0.85
 ---
-High quality note""")
+High quality note"""
+            )
 
             note2 = inbox_dir / "note2.md"
-            note2.write_text("""---
+            note2.write_text(
+                """---
 quality_score: 0.45
 ---
-Low quality note""")
+Low quality note"""
+            )
 
             inbox_status = reader.get_inbox_status(str(tmpdir))
 
-            assert 'total_notes' in inbox_status
-            assert 'high_quality_count' in inbox_status
-            assert inbox_status['total_notes'] == 2
-            assert inbox_status['high_quality_count'] == 1
+            assert "total_notes" in inbox_status
+            assert "high_quality_count" in inbox_status
+            assert inbox_status["total_notes"] == 2
+            assert inbox_status["high_quality_count"] == 1
 
 
 class TestStatusFormatting:
@@ -211,7 +215,7 @@ class TestStatusFormatting:
 
     def test_format_status_display(self):
         """Test formatting of status information for terminal display.
-        
+
         Acceptance Criteria:
         - Uses emoji indicators (🟢/🔴/⚠️)
         - Formats timestamps human-readable
@@ -224,20 +228,24 @@ class TestStatusFormatting:
 
         # Mock status data
         status_data = {
-            'daemon_running': True,
-            'daemon_pid': 12345,
-            'cron_enabled': False,
-            'last_activity': datetime.now() - timedelta(hours=2),
-            'inbox_total': 15,
-            'inbox_high_quality': 8
+            "daemon_running": True,
+            "daemon_pid": 12345,
+            "cron_enabled": False,
+            "last_activity": datetime.now() - timedelta(hours=2),
+            "inbox_total": 15,
+            "inbox_high_quality": 8,
         }
 
         formatted_output = formatter.format_status(status_data)
 
         assert isinstance(formatted_output, str)
-        assert '🟢' in formatted_output or '🔴' in formatted_output or '⚠️' in formatted_output
-        assert 'daemon' in formatted_output.lower()
-        assert 'inbox' in formatted_output.lower()
+        assert (
+            "🟢" in formatted_output
+            or "🔴" in formatted_output
+            or "⚠️" in formatted_output
+        )
+        assert "daemon" in formatted_output.lower()
+        assert "inbox" in formatted_output.lower()
 
 
 class TestStatusCLIIntegration:
@@ -245,7 +253,7 @@ class TestStatusCLIIntegration:
 
     def test_status_command_integration(self):
         """Test complete status command execution.
-        
+
         Acceptance Criteria:
         - get_system_status() orchestrates all detection
         - Returns complete status dictionary
@@ -255,6 +263,7 @@ class TestStatusCLIIntegration:
         from src.cli.status_cli import get_system_status
 
         import time
+
         start_time = time.time()
 
         # Execute complete status check
@@ -267,7 +276,7 @@ class TestStatusCLIIntegration:
 
         # Verify status structure
         assert isinstance(status, dict)
-        assert 'daemon' in status
-        assert 'cron' in status
-        assert 'activity' in status
-        assert 'inbox' in status
+        assert "daemon" in status
+        assert "cron" in status
+        assert "activity" in status
+        assert "inbox" in status

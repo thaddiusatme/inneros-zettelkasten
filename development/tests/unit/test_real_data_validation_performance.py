@@ -17,8 +17,10 @@ from typing import Dict, List, Any
 
 # Import our CLI utilities from Iteration 4
 import sys
-sys.path.append('/Users/thaddius/repos/inneros-zettelkasten/development/src')
 
+sys.path.append("/Users/thaddius/repos/inneros-zettelkasten/development/src")
+
+from cli.real_data_performance_validator import RealDataPerformanceValidator
 
 
 class TestRealDataValidationPerformance(unittest.TestCase):
@@ -35,7 +37,7 @@ class TestRealDataValidationPerformance(unittest.TestCase):
             "medium_batch_50_notes": 120,  # <2 minutes
             "large_batch_100_notes": 300,  # <5 minutes
             "memory_usage_mb": 512,  # <512MB peak memory
-            "concurrent_sessions": 3   # Support 3 concurrent sessions
+            "concurrent_sessions": 3,  # Support 3 concurrent sessions
         }
 
     def tearDown(self):
@@ -63,7 +65,9 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         processing_time = time.time() - start_time
 
         # Performance assertions
-        self.assertLess(processing_time, self.performance_targets["small_batch_10_notes"])
+        self.assertLess(
+            processing_time, self.performance_targets["small_batch_10_notes"]
+        )
         self.assertTrue(result["success"])
         self.assertEqual(result["processed_count"], 10)
         self.assertIn("performance_metrics", result)
@@ -83,7 +87,9 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         result = validator.process_notes_with_performance_tracking(test_notes)
         processing_time = time.time() - start_time
 
-        self.assertLess(processing_time, self.performance_targets["medium_batch_50_notes"])
+        self.assertLess(
+            processing_time, self.performance_targets["medium_batch_50_notes"]
+        )
         self.assertTrue(result["success"])
         self.assertEqual(result["processed_count"], 50)
 
@@ -103,7 +109,9 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         processing_time = time.time() - start_time
 
         # CRITICAL performance requirement
-        self.assertLess(processing_time, self.performance_targets["large_batch_100_notes"])
+        self.assertLess(
+            processing_time, self.performance_targets["large_batch_100_notes"]
+        )
         self.assertTrue(result["success"])
         self.assertGreaterEqual(result["processed_count"], 100)
 
@@ -172,7 +180,7 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         note_sets = [
             self._create_realistic_test_notes(20),
             self._create_realistic_test_notes(15),
-            self._create_realistic_test_notes(25)
+            self._create_realistic_test_notes(25),
         ]
 
         start_time = time.time()
@@ -181,7 +189,9 @@ class TestRealDataValidationPerformance(unittest.TestCase):
 
         # Should be faster than sequential processing
         sequential_estimate = len(note_sets) * 60  # Estimate 60s per session
-        self.assertLess(processing_time, sequential_estimate * 0.7)  # At least 30% faster
+        self.assertLess(
+            processing_time, sequential_estimate * 0.7
+        )  # At least 30% faster
 
         # All sessions should succeed
         self.assertEqual(len(results), 3)
@@ -201,7 +211,7 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         # Create notes with potential conflicts
         note_sets = [
             self._create_notes_with_same_images(10),
-            self._create_notes_with_same_tags(10)
+            self._create_notes_with_same_tags(10),
         ]
 
         results = manager.process_concurrent_sessions(note_sets)
@@ -228,6 +238,7 @@ class TestRealDataValidationPerformance(unittest.TestCase):
         test_notes = self._create_realistic_test_notes(30)
 
         progress_updates = []
+
         def capture_progress(update):
             progress_updates.append(update)
 
@@ -267,9 +278,14 @@ class TestRealDataValidationPerformance(unittest.TestCase):
 
         # Required metrics
         required_metrics = [
-            "total_processing_time", "average_note_processing_time",
-            "peak_memory_usage", "cpu_usage_average", "io_operations_count",
-            "successful_notes", "failed_notes", "error_rate"
+            "total_processing_time",
+            "average_note_processing_time",
+            "peak_memory_usage",
+            "cpu_usage_average",
+            "io_operations_count",
+            "successful_notes",
+            "failed_notes",
+            "error_rate",
         ]
 
         for metric in required_metrics:
@@ -296,7 +312,9 @@ class TestRealDataValidationPerformance(unittest.TestCase):
 
         self.assertTrue(result["completed"])
         self.assertFalse(result["crashed"])
-        self.assertGreaterEqual(result["processed_count"], 180)  # 90% success rate minimum
+        self.assertGreaterEqual(
+            result["processed_count"], 180
+        )  # 90% success rate minimum
 
     def test_memory_pressure_stress_test(self):
         """
@@ -344,8 +362,8 @@ Tags: #performance-test #tdd-iteration-5 #real-data-validation
                 "metadata": {
                     "created": f"2025-09-25 08:1{i % 60:02d}",
                     "tags": ["performance-test", "tdd-iteration-5", f"batch-{i // 10}"],
-                    "status": "inbox"
-                }
+                    "status": "inbox",
+                },
             }
             notes.append(note)
         return notes
@@ -369,13 +387,13 @@ Tags: #performance-test #tdd-iteration-5 #real-data-validation
             note = {
                 "path": self.test_vault_path / f"large-note-{i:03d}.md",
                 "content": f"# Large Note {i}\n\n{large_content}",
-                "metadata": {"size": "large", "index": i}
+                "metadata": {"size": "large", "index": i},
             }
             notes.append(note)
         return notes
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("🔴 TDD Iteration 5 RED Phase: Real Data Validation & Performance Tests")
     print("Expected: ALL TESTS SHOULD FAIL (no implementation exists yet)")
     unittest.main(verbosity=2)

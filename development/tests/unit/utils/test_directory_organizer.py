@@ -34,8 +34,7 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         self._create_test_vault_structure()
 
         self.organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(self.backup_root)
+            vault_root=str(self.vault_root), backup_root=str(self.backup_root)
         )
 
     def tearDown(self):
@@ -45,7 +44,13 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
     def _create_test_vault_structure(self):
         """Create a realistic test vault structure."""
         # Create directories
-        dirs = ["Inbox", "Permanent Notes", "Fleeting Notes", "Literature Notes", "Media"]
+        dirs = [
+            "Inbox",
+            "Permanent Notes",
+            "Fleeting Notes",
+            "Literature Notes",
+            "Media",
+        ]
         for dir_name in dirs:
             (self.vault_root / dir_name).mkdir()
 
@@ -56,7 +61,7 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
             "Permanent Notes/existing-permanent.md": "# Existing\n\n---\ntype: permanent\n---\n\nContent.",
             "Media/image.png": "fake image content",
             ".obsidian/config.json": '{"theme": "dark"}',
-            ".hidden-file": "hidden content"
+            ".hidden-file": "hidden content",
         }
 
         for file_path, content in test_files.items():
@@ -89,11 +94,13 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
             relative_path = original_file.relative_to(self.vault_root)
             backup_file = Path(backup_path) / relative_path
 
-            self.assertTrue(backup_file.exists(), f"Missing backup file: {relative_path}")
+            self.assertTrue(
+                backup_file.exists(), f"Missing backup file: {relative_path}"
+            )
             self.assertEqual(
                 original_file.read_text(),
                 backup_file.read_text(),
-                f"Content mismatch in: {relative_path}"
+                f"Content mismatch in: {relative_path}",
             )
 
     def test_backup_includes_hidden_files(self):
@@ -116,7 +123,14 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         backup_path = self.organizer.create_backup()
 
         # Check directory structure is preserved
-        expected_dirs = ["Inbox", "Permanent Notes", "Fleeting Notes", "Literature Notes", "Media", ".obsidian"]
+        expected_dirs = [
+            "Inbox",
+            "Permanent Notes",
+            "Fleeting Notes",
+            "Literature Notes",
+            "Media",
+            ".obsidian",
+        ]
 
         for dir_name in expected_dirs:
             backup_dir = Path(backup_path) / dir_name
@@ -134,7 +148,9 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         after = datetime.now().strftime("%Y%m%d-%H%M%S")
 
         # Verify path format and location (should use the organizer's backup_root)
-        expected_parent = str(self.organizer.backup_root)  # Use organizer's actual backup root
+        expected_parent = str(
+            self.organizer.backup_root
+        )  # Use organizer's actual backup root
         self.assertTrue(backup_path.startswith(expected_parent))
 
         backup_name = Path(backup_path).name
@@ -147,15 +163,13 @@ class TestDirectoryOrganizerBackup(unittest.TestCase):
         """RED: Test that backup raises error for invalid vault."""
         with self.assertRaises(BackupError):
             DirectoryOrganizer(
-                vault_root="/nonexistent/path",
-                backup_root=str(self.backup_root)
+                vault_root="/nonexistent/path", backup_root=str(self.backup_root)
             )
 
     def test_backup_error_on_invalid_backup_root(self):
         """RED: Test that backup raises error for invalid backup root."""
         invalid_organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root="/nonexistent/readonly/path"
+            vault_root=str(self.vault_root), backup_root="/nonexistent/readonly/path"
         )
 
         with self.assertRaises(BackupError):
@@ -198,8 +212,7 @@ class TestDirectoryOrganizerGuardrails(unittest.TestCase):
 
         with self.assertRaises(BackupError) as context:
             DirectoryOrganizer(
-                vault_root=str(self.vault_root),
-                backup_root=str(nested_backup_root)
+                vault_root=str(self.vault_root), backup_root=str(nested_backup_root)
             )
 
         self.assertIn("backup target is inside source", str(context.exception).lower())
@@ -214,8 +227,7 @@ class TestDirectoryOrganizerGuardrails(unittest.TestCase):
 
         with self.assertRaises(BackupError) as context:
             DirectoryOrganizer(
-                vault_root=str(self.vault_root),
-                backup_root=str(nested_backup_root)
+                vault_root=str(self.vault_root), backup_root=str(nested_backup_root)
             )
 
         self.assertIn("backup target is inside source", str(context.exception).lower())
@@ -227,8 +239,7 @@ class TestDirectoryOrganizerGuardrails(unittest.TestCase):
 
         # This should NOT raise an exception
         organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(external_backup_root)
+            vault_root=str(self.vault_root), backup_root=str(external_backup_root)
         )
 
         # Should be able to create backup successfully
@@ -242,8 +253,7 @@ class TestDirectoryOrganizerGuardrails(unittest.TestCase):
 
         # This should NOT raise an exception
         organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(sibling_backup_root)
+            vault_root=str(self.vault_root), backup_root=str(sibling_backup_root)
         )
 
         # Should be able to create backup successfully
@@ -279,8 +289,7 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
         self._create_vault_with_excludable_content()
 
         self.organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(self.backup_root)
+            vault_root=str(self.vault_root), backup_root=str(self.backup_root)
         )
 
     def tearDown(self):
@@ -296,7 +305,9 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
 
         # Content that SHOULD NOT be backed up (heavy/derived directories)
         (self.vault_root / "backups").mkdir()
-        (self.vault_root / "backups" / "old-backup.txt").write_text("Old backup content")
+        (self.vault_root / "backups" / "old-backup.txt").write_text(
+            "Old backup content"
+        )
 
         (self.vault_root / ".git").mkdir()
         (self.vault_root / ".git" / "config").write_text("Git config")
@@ -304,8 +315,17 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
         (self.vault_root / "web_ui_env").mkdir()  # Python virtual environment
         (self.vault_root / "web_ui_env" / "lib").mkdir()
         (self.vault_root / "web_ui_env" / "lib" / "python3.13").mkdir()
-        (self.vault_root / "web_ui_env" / "lib" / "python3.13" / "site-packages").mkdir()
-        (self.vault_root / "web_ui_env" / "lib" / "python3.13" / "site-packages" / "large_package.py").write_text("Large package content")
+        (
+            self.vault_root / "web_ui_env" / "lib" / "python3.13" / "site-packages"
+        ).mkdir()
+        (
+            self.vault_root
+            / "web_ui_env"
+            / "lib"
+            / "python3.13"
+            / "site-packages"
+            / "large_package.py"
+        ).write_text("Large package content")
 
     def test_backup_excludes_backups_directory(self):
         """RED: Test that backup excludes existing backups/ directory."""
@@ -313,11 +333,16 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
 
         # Should NOT contain backups directory
         backups_in_backup = Path(backup_path) / "backups"
-        self.assertFalse(backups_in_backup.exists(), "backups/ directory should be excluded from backup")
+        self.assertFalse(
+            backups_in_backup.exists(),
+            "backups/ directory should be excluded from backup",
+        )
 
         # Should still contain important content
         important_in_backup = Path(backup_path) / "important.md"
-        self.assertTrue(important_in_backup.exists(), "Important content should be included")
+        self.assertTrue(
+            important_in_backup.exists(), "Important content should be included"
+        )
 
     def test_backup_excludes_git_directory(self):
         """RED: Test that backup excludes .git/ directory."""
@@ -325,7 +350,9 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
 
         # Should NOT contain .git directory
         git_in_backup = Path(backup_path) / ".git"
-        self.assertFalse(git_in_backup.exists(), ".git/ directory should be excluded from backup")
+        self.assertFalse(
+            git_in_backup.exists(), ".git/ directory should be excluded from backup"
+        )
 
         # Should still contain important content
         inbox_in_backup = Path(backup_path) / "Inbox" / "note.md"
@@ -337,7 +364,10 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
 
         # Should NOT contain venv directory
         venv_in_backup = Path(backup_path) / "web_ui_env"
-        self.assertFalse(venv_in_backup.exists(), "Virtual environment should be excluded from backup")
+        self.assertFalse(
+            venv_in_backup.exists(),
+            "Virtual environment should be excluded from backup",
+        )
 
     def test_backup_includes_only_essential_content(self):
         """RED: Test that backup includes essential content but excludes derived/heavy directories."""
@@ -348,13 +378,17 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
         essential_files = ["important.md", "Inbox/note.md"]
         for file_path in essential_files:
             backup_file = backup_path_obj / file_path
-            self.assertTrue(backup_file.exists(), f"Essential file {file_path} should be included")
+            self.assertTrue(
+                backup_file.exists(), f"Essential file {file_path} should be included"
+            )
 
         # Should exclude heavy/derived directories
         excluded_dirs = ["backups", ".git", "web_ui_env"]
         for dir_name in excluded_dirs:
             excluded_dir = backup_path_obj / dir_name
-            self.assertFalse(excluded_dir.exists(), f"Directory {dir_name} should be excluded")
+            self.assertFalse(
+                excluded_dir.exists(), f"Directory {dir_name} should be excluded"
+            )
 
     def test_backup_exclude_patterns_configurable(self):
         """RED: Test that exclude patterns can be configured."""
@@ -363,20 +397,25 @@ class TestDirectoryOrganizerExcludes(unittest.TestCase):
 
         # Create custom exclude directory
         (self.vault_root / "custom_exclude").mkdir()
-        (self.vault_root / "custom_exclude" / "file.txt").write_text("Should be excluded")
+        (self.vault_root / "custom_exclude" / "file.txt").write_text(
+            "Should be excluded"
+        )
 
         # This test will fail until we implement configurable excludes
         organizer_with_custom = DirectoryOrganizer(
             vault_root=str(self.vault_root),
             backup_root=str(self.backup_root),
-            exclude_patterns=custom_excludes  # This parameter doesn't exist yet
+            exclude_patterns=custom_excludes,  # This parameter doesn't exist yet
         )
 
         backup_path = organizer_with_custom.create_backup()
 
         # Custom exclude should not be in backup
         custom_exclude_in_backup = Path(backup_path) / "custom_exclude"
-        self.assertFalse(custom_exclude_in_backup.exists(), "Custom exclude directory should not be in backup")
+        self.assertFalse(
+            custom_exclude_in_backup.exists(),
+            "Custom exclude directory should not be in backup",
+        )
 
 
 class TestDirectoryOrganizerRollback(unittest.TestCase):
@@ -396,8 +435,7 @@ class TestDirectoryOrganizerRollback(unittest.TestCase):
         test_file.write_text("original content")
 
         self.organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(self.backup_root)
+            vault_root=str(self.vault_root), backup_root=str(self.backup_root)
         )
 
     def tearDown(self):
@@ -454,8 +492,7 @@ class TestDirectoryOrganizerExecution(unittest.TestCase):
         self._create_misplaced_files_for_execution()
 
         self.organizer = DirectoryOrganizer(
-            vault_root=str(self.vault_root),
-            backup_root=str(self.backup_root)
+            vault_root=str(self.vault_root), backup_root=str(self.backup_root)
         )
 
     def tearDown(self):
@@ -466,41 +503,49 @@ class TestDirectoryOrganizerExecution(unittest.TestCase):
         """Create test files that need actual moving."""
         # Permanent note in Inbox (should move to Permanent Notes/)
         permanent_file = self.vault_root / "Inbox" / "permanent-in-inbox.md"
-        permanent_file.write_text("""---
+        permanent_file.write_text(
+            """---
 type: permanent
 title: Test Permanent Note
 created: 2025-09-16 10:30
 ---
 
-This is a permanent note that should be moved.""")
+This is a permanent note that should be moved."""
+        )
 
         # Literature note in Inbox (should move to Literature Notes/)
         literature_file = self.vault_root / "Inbox" / "literature-in-inbox.md"
-        literature_file.write_text("""---
+        literature_file.write_text(
+            """---
 type: literature
 title: Test Literature Note
 source: https://example.com
 ---
 
-This is a literature note that should be moved.""")
+This is a literature note that should be moved."""
+        )
 
         # Fleeting note in Inbox (should move to Fleeting Notes/)
         fleeting_file = self.vault_root / "Inbox" / "fleeting-in-inbox.md"
-        fleeting_file.write_text("""---
+        fleeting_file.write_text(
+            """---
 type: fleeting
 title: Test Fleeting Note
 ---
 
-This is a fleeting note that should be moved.""")
+This is a fleeting note that should be moved."""
+        )
 
         # Already correctly placed note (should not move)
         correct_file = self.vault_root / "Permanent Notes" / "already-correct.md"
-        correct_file.write_text("""---
+        correct_file.write_text(
+            """---
 type: permanent
 title: Already Correct Note
 ---
 
-This note is already in the correct directory.""")
+This note is already in the correct directory."""
+        )
 
     def test_execute_moves_files_to_correct_directories(self):
         """GREEN: Test that execute_moves() actually moves files based on type."""
@@ -508,13 +553,21 @@ This note is already in the correct directory.""")
         result = self.organizer.execute_moves(create_backup=False)
 
         # Verify files were moved to correct directories
-        self.assertTrue((self.vault_root / "Permanent Notes" / "permanent-in-inbox.md").exists())
-        self.assertTrue((self.vault_root / "Literature Notes" / "literature-in-inbox.md").exists())
-        self.assertTrue((self.vault_root / "Fleeting Notes" / "fleeting-in-inbox.md").exists())
+        self.assertTrue(
+            (self.vault_root / "Permanent Notes" / "permanent-in-inbox.md").exists()
+        )
+        self.assertTrue(
+            (self.vault_root / "Literature Notes" / "literature-in-inbox.md").exists()
+        )
+        self.assertTrue(
+            (self.vault_root / "Fleeting Notes" / "fleeting-in-inbox.md").exists()
+        )
 
         # Verify files no longer in Inbox
         self.assertFalse((self.vault_root / "Inbox" / "permanent-in-inbox.md").exists())
-        self.assertFalse((self.vault_root / "Inbox" / "literature-in-inbox.md").exists())
+        self.assertFalse(
+            (self.vault_root / "Inbox" / "literature-in-inbox.md").exists()
+        )
         self.assertFalse((self.vault_root / "Inbox" / "fleeting-in-inbox.md").exists())
 
         # Verify result stats
@@ -537,13 +590,17 @@ This note is already in the correct directory.""")
     def test_execute_moves_preserves_file_content(self):
         """GREEN: Test that file content is preserved during moves."""
         # Get original content
-        original_content = (self.vault_root / "Inbox" / "permanent-in-inbox.md").read_text()
+        original_content = (
+            self.vault_root / "Inbox" / "permanent-in-inbox.md"
+        ).read_text()
 
         # Execute moves
         self.organizer.execute_moves(create_backup=False)
 
         # Verify content preserved
-        moved_content = (self.vault_root / "Permanent Notes" / "permanent-in-inbox.md").read_text()
+        moved_content = (
+            self.vault_root / "Permanent Notes" / "permanent-in-inbox.md"
+        ).read_text()
         self.assertEqual(original_content, moved_content)
         self.assertIn("This is a permanent note that should be moved", moved_content)
 
@@ -557,7 +614,9 @@ This note is already in the correct directory.""")
 
         # Verify directory was created and file moved
         self.assertTrue((self.vault_root / "Permanent Notes").exists())
-        self.assertTrue((self.vault_root / "Permanent Notes" / "permanent-in-inbox.md").exists())
+        self.assertTrue(
+            (self.vault_root / "Permanent Notes" / "permanent-in-inbox.md").exists()
+        )
         self.assertEqual(result["moves_executed"], 3)
 
     def test_execute_moves_reports_progress_and_results(self):
@@ -607,11 +666,11 @@ class TestDirectoryOrganizerRetention(unittest.TestCase):
 
         # Create some dummy backup directories with valid names
         self.backups = [
-            self.backup_root / "knowledge-20250918-100000", # Oldest
+            self.backup_root / "knowledge-20250918-100000",  # Oldest
             self.backup_root / "knowledge-20250918-110000",
             self.backup_root / "knowledge-20250918-120000",
             self.backup_root / "knowledge-20250918-130000",
-            self.backup_root / "knowledge-20250918-140000"  # Newest
+            self.backup_root / "knowledge-20250918-140000",  # Newest
         ]
         for backup in self.backups:
             backup.mkdir()
@@ -620,7 +679,9 @@ class TestDirectoryOrganizerRetention(unittest.TestCase):
         (self.backup_root / "not-a-backup.txt").touch()
         (self.backup_root / "random-dir").mkdir()
 
-        self.organizer = DirectoryOrganizer(str(self.vault_root), backup_root=str(self.backup_root))
+        self.organizer = DirectoryOrganizer(
+            str(self.vault_root), backup_root=str(self.backup_root)
+        )
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
@@ -629,8 +690,12 @@ class TestDirectoryOrganizerRetention(unittest.TestCase):
         """Should list existing backups, sorted from newest to oldest."""
         sorted_backups = self.organizer.list_backups()
         self.assertEqual(len(sorted_backups), 5)
-        self.assertEqual(sorted_backups[0].resolve(), self.backups[4].resolve()) # Newest first
-        self.assertEqual(sorted_backups[4].resolve(), self.backups[0].resolve()) # Oldest last
+        self.assertEqual(
+            sorted_backups[0].resolve(), self.backups[4].resolve()
+        )  # Newest first
+        self.assertEqual(
+            sorted_backups[4].resolve(), self.backups[0].resolve()
+        )  # Oldest last
 
     def test_prune_backups_dry_run_identifies_correct_backups_to_delete(self):
         """Dry run should identify older backups for deletion without actually deleting."""
@@ -642,8 +707,14 @@ class TestDirectoryOrganizerRetention(unittest.TestCase):
         self.assertEqual(prune_plan["found"], 5)
         self.assertEqual(len(prune_plan["to_prune"]), 2)
         self.assertEqual(len(prune_plan["to_keep"]), 3)
-        self.assertIn(str(self.backups[0].resolve()), [str(p.resolve()) for p in prune_plan["to_prune"]])
-        self.assertIn(str(self.backups[1].resolve()), [str(p.resolve()) for p in prune_plan["to_prune"]])
+        self.assertIn(
+            str(self.backups[0].resolve()),
+            [str(p.resolve()) for p in prune_plan["to_prune"]],
+        )
+        self.assertIn(
+            str(self.backups[1].resolve()),
+            [str(p.resolve()) for p in prune_plan["to_prune"]],
+        )
 
         # Verify no directories were actually deleted
         self.assertTrue(self.backups[0].exists())
@@ -660,7 +731,9 @@ class TestDirectoryOrganizerRetention(unittest.TestCase):
         # Create a new organizer with an empty backup dir
         empty_backup_root = Path(self.test_dir) / "empty_backups"
         empty_backup_root.mkdir()
-        organizer = DirectoryOrganizer(str(self.vault_root), backup_root=str(empty_backup_root))
+        organizer = DirectoryOrganizer(
+            str(self.vault_root), backup_root=str(empty_backup_root)
+        )
 
         prune_plan = organizer.prune_backups(keep=3, dry_run=True)
         self.assertEqual(prune_plan["found"], 0)

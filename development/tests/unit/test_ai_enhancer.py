@@ -14,8 +14,8 @@ class TestAIEnhancer:
         from src.ai.enhancer import AIEnhancer
 
         enhancer = AIEnhancer()
-        assert hasattr(enhancer, 'ollama_client')
-        assert hasattr(enhancer, 'min_quality_score')
+        assert hasattr(enhancer, "ollama_client")
+        assert hasattr(enhancer, "min_quality_score")
         assert enhancer.min_quality_score == 0.6
 
     def test_analyze_note_quality_basic(self):
@@ -45,11 +45,11 @@ class TestAIEnhancer:
         analysis = enhancer.analyze_note_quality(note_content)
 
         assert isinstance(analysis, dict)
-        assert 'quality_score' in analysis
-        assert 'suggestions' in analysis
-        assert 'missing_elements' in analysis
-        assert 0 <= analysis['quality_score'] <= 1
-        assert isinstance(analysis['suggestions'], list)
+        assert "quality_score" in analysis
+        assert "suggestions" in analysis
+        assert "missing_elements" in analysis
+        assert 0 <= analysis["quality_score"] <= 1
+        assert isinstance(analysis["suggestions"], list)
 
     def test_suggest_missing_links(self):
         """Test AI can suggest relevant missing internal links."""
@@ -76,7 +76,9 @@ class TestAIEnhancer:
         assert isinstance(suggestions, list)
         # Should suggest relevant links like [[cross-validation]], [[feature-engineering]], etc.
         assert all(isinstance(link, str) for link in suggestions)
-        assert all(link.startswith('[[') and link.endswith(']]') for link in suggestions)
+        assert all(
+            link.startswith("[[") and link.endswith("]]") for link in suggestions
+        )
 
     def test_identify_content_gaps(self):
         """Test AI can identify missing content sections or explanations."""
@@ -98,7 +100,7 @@ class TestAIEnhancer:
         assert isinstance(gaps, list)
         assert len(gaps) > 0  # Should identify missing elements
         assert all(isinstance(gap, dict) for gap in gaps)
-        assert all('type' in gap and 'description' in gap for gap in gaps)
+        assert all("type" in gap and "description" in gap for gap in gaps)
 
     def test_suggest_improved_structure(self):
         """Test AI can suggest better note structure and organization."""
@@ -115,9 +117,9 @@ class TestAIEnhancer:
         structure_suggestions = enhancer.suggest_improved_structure(note_content)
 
         assert isinstance(structure_suggestions, dict)
-        assert 'recommended_structure' in structure_suggestions
-        assert 'reasoning' in structure_suggestions
-        assert isinstance(structure_suggestions['recommended_structure'], list)
+        assert "recommended_structure" in structure_suggestions
+        assert "reasoning" in structure_suggestions
+        assert isinstance(structure_suggestions["recommended_structure"], list)
 
     def test_enhance_note_with_ai_suggestions(self):
         """Test end-to-end enhancement with mock AI responses."""
@@ -137,26 +139,32 @@ class TestAIEnhancer:
         enhancer = AIEnhancer()
 
         # Test with mock to avoid real API calls in unit tests
-        with patch.object(enhancer, '_generate_ollama_analysis') as mock_generate:
+        with patch.object(enhancer, "_generate_ollama_analysis") as mock_generate:
             mock_generate.return_value = {
-                'quality_score': 0.75,
-                'suggestions': [
-                    'Add practical Docker commands section',
-                    'Include docker-compose example',
-                    'Link to [[microservices]] and [[kubernetes]] concepts'
+                "quality_score": 0.75,
+                "suggestions": [
+                    "Add practical Docker commands section",
+                    "Include docker-compose example",
+                    "Link to [[microservices]] and [[kubernetes]] concepts",
                 ],
-                'missing_elements': [
-                    {'type': 'examples', 'description': 'Missing practical docker commands'},
-                    {'type': 'links', 'description': 'No links to orchestration concepts'}
-                ]
+                "missing_elements": [
+                    {
+                        "type": "examples",
+                        "description": "Missing practical docker commands",
+                    },
+                    {
+                        "type": "links",
+                        "description": "No links to orchestration concepts",
+                    },
+                ],
             }
 
             result = enhancer.enhance_note(note_content)
 
             assert isinstance(result, dict)
-            assert result['quality_score'] == 0.75
-            assert len(result['suggestions']) == 3
-            assert len(result['missing_elements']) == 2
+            assert result["quality_score"] == 0.75
+            assert len(result["suggestions"]) == 3
+            assert len(result["missing_elements"]) == 2
 
     def test_handle_empty_content_gracefully(self):
         """Test enhancer handles empty or minimal content gracefully."""
@@ -166,15 +174,20 @@ class TestAIEnhancer:
 
         # Test empty content
         result = enhancer.analyze_note_quality("")
-        assert result['quality_score'] == 0.0
-        assert len(result['suggestions']) > 0
-        assert 'missing_elements' in result
+        assert result["quality_score"] == 0.0
+        assert len(result["suggestions"]) > 0
+        assert "missing_elements" in result
 
         # Test minimal content - AI may be generous with scoring, but should provide suggestions
         result = enhancer.analyze_note_quality("# Test")
-        assert result['quality_score'] >= 0.0  # AI provides score, may be generous
-        assert len(result['suggestions']) > 0  # Should suggest improvements
-        assert any('examples' in str(suggestion).lower() or 'expand' in str(suggestion).lower() or 'content' in str(suggestion).lower() for suggestion in result['suggestions'])
+        assert result["quality_score"] >= 0.0  # AI provides score, may be generous
+        assert len(result["suggestions"]) > 0  # Should suggest improvements
+        assert any(
+            "examples" in str(suggestion).lower()
+            or "expand" in str(suggestion).lower()
+            or "content" in str(suggestion).lower()
+            for suggestion in result["suggestions"]
+        )
 
     def test_yaml_frontmatter_preservation(self):
         """Test that YAML frontmatter is preserved during enhancement."""
@@ -193,18 +206,18 @@ Docker content here...
 
         enhancer = AIEnhancer()
 
-        with patch.object(enhancer, '_generate_ollama_analysis') as mock_generate:
+        with patch.object(enhancer, "_generate_ollama_analysis") as mock_generate:
             mock_generate.return_value = {
-                'quality_score': 0.8,
-                'suggestions': ['Add more examples'],
-                'missing_elements': []
+                "quality_score": 0.8,
+                "suggestions": ["Add more examples"],
+                "missing_elements": [],
             }
 
             result = enhancer.enhance_note(note_content)
 
             # Ensure YAML frontmatter is preserved (enhanced_content is None for now)
             # This test is for future when enhanced_content will be populated
-            assert result.get('enhanced_content') is None  # Currently not implemented
+            assert result.get("enhanced_content") is None  # Currently not implemented
 
     def test_performance_timing(self):
         """Test that enhancement operations complete within reasonable time."""
@@ -226,8 +239,12 @@ Docker content here...
         enhancer = AIEnhancer()
 
         start_time = time.time()
-        with patch.object(enhancer, '_generate_ollama_analysis') as mock_generate:
-            mock_generate.return_value = {'quality_score': 0.7, 'suggestions': [], 'missing_elements': []}
+        with patch.object(enhancer, "_generate_ollama_analysis") as mock_generate:
+            mock_generate.return_value = {
+                "quality_score": 0.7,
+                "suggestions": [],
+                "missing_elements": [],
+            }
             result = enhancer.analyze_note_quality(note_content)
 
         elapsed_time = time.time() - start_time

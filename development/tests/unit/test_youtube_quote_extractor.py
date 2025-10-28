@@ -19,7 +19,7 @@ from ai.youtube_quote_extractor import (
     ContextAwareQuoteExtractor,
     QuoteExtractionError,
     EmptyTranscriptError,
-    LLMUnavailableError
+    LLMUnavailableError,
 )
 
 
@@ -29,7 +29,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
     def test_extract_quotes_from_transcript(self):
         """
         RED Phase Test 1: Extract 3-7 quotes from valid transcript
-        
+
         Success case: Should return formatted quotes with metadata
         """
         extractor = ContextAwareQuoteExtractor()
@@ -43,7 +43,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         """
 
         # Mock LLM response
-        mock_response = '''```json
+        mock_response = """```json
 {
     "summary": "Discussion of AI's role in modern software development",
     "quotes": [
@@ -71,13 +71,13 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
     ],
     "key_themes": ["ai", "software-development", "best-practices"]
 }
-```'''
+```"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(
-                transcript=sample_transcript,
-                max_quotes=7,
-                min_quality=0.7
+                transcript=sample_transcript, max_quotes=7, min_quality=0.7
             )
 
         # Verify result structure
@@ -105,7 +105,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
     def test_extract_quotes_with_user_context(self):
         """
         RED Phase Test 2: User context influences quote selection
-        
+
         Quotes should be more relevant when user provides context
         """
         extractor = ContextAwareQuoteExtractor()
@@ -121,7 +121,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         user_context = "I'm interested in creator economy and digital entrepreneurship"
 
         # Mock LLM response - context-aware
-        mock_response = '''{
+        mock_response = """{
     "summary": "Overview of creator economy and entrepreneurship opportunities",
     "quotes": [
         {
@@ -140,13 +140,13 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         }
     ],
     "key_themes": ["creator-economy", "entrepreneurship", "opportunities"]
-}'''
+}"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(
-                transcript=sample_transcript,
-                user_context=user_context,
-                max_quotes=5
+                transcript=sample_transcript, user_context=user_context, max_quotes=5
             )
 
         # Verify context influenced selection
@@ -168,7 +168,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
     def test_extract_quotes_without_context(self):
         """
         RED Phase Test 3: Works with no user context (generic mode)
-        
+
         Should extract high-quality quotes based on intrinsic value
         """
         extractor = ContextAwareQuoteExtractor()
@@ -181,7 +181,7 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         """
 
         # Mock LLM response - generic insights
-        mock_response = '''{
+        mock_response = """{
     "summary": "Key insights on success and breakthroughs",
     "quotes": [
         {
@@ -200,13 +200,15 @@ class TestContextAwareQuoteExtractorBasicFunctionality:
         }
     ],
     "key_themes": ["success", "action", "consistency"]
-}'''
+}"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(
                 transcript=sample_transcript,
                 user_context=None,  # No context provided
-                max_quotes=5
+                max_quotes=5,
             )
 
         # Should still extract valuable quotes
@@ -224,7 +226,7 @@ class TestContextAwareQuoteExtractorFormatting:
     def test_quotes_include_timestamps(self):
         """
         RED Phase Test 4: All quotes preserve MM:SS timestamps
-        
+
         Should maintain temporal reference from original transcript
         """
         extractor = ContextAwareQuoteExtractor()
@@ -236,7 +238,7 @@ class TestContextAwareQuoteExtractorFormatting:
         """
 
         # Mock LLM response with various timestamps
-        mock_response = '''{
+        mock_response = """{
     "summary": "Key points with timestamps",
     "quotes": [
         {
@@ -262,9 +264,11 @@ class TestContextAwareQuoteExtractorFormatting:
         }
     ],
     "key_themes": ["insights", "timestamps"]
-}'''
+}"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(transcript=sample_transcript)
 
         quotes = result["quotes"]
@@ -280,13 +284,14 @@ class TestContextAwareQuoteExtractorFormatting:
             assert len(parts) >= 2, f"Invalid timestamp format: {timestamp}"
 
             # Verify it's a valid time format
-            assert all(part.isdigit() or part == "XX" for part in parts), \
-                f"Timestamp should be numeric or XX:XX: {timestamp}"
+            assert all(
+                part.isdigit() or part == "XX" for part in parts
+            ), f"Timestamp should be numeric or XX:XX: {timestamp}"
 
     def test_quote_quality_scoring(self):
         """
         RED Phase Test 5: Each quote has relevance_score 0.0-1.0
-        
+
         Score indicates quality/relevance of the quote
         """
         extractor = ContextAwareQuoteExtractor()
@@ -298,7 +303,7 @@ class TestContextAwareQuoteExtractorFormatting:
         """
 
         # Mock LLM response with varied quality scores
-        mock_response = '''{
+        mock_response = """{
     "summary": "AI safety and ML insights",
     "quotes": [
         {
@@ -317,9 +322,11 @@ class TestContextAwareQuoteExtractorFormatting:
         }
     ],
     "key_themes": ["ai-safety", "machine-learning", "research"]
-}'''
+}"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(transcript=sample_transcript)
 
         quotes = result["quotes"]
@@ -331,8 +338,11 @@ class TestContextAwareQuoteExtractorFormatting:
             assert 0.0 <= score <= 1.0, f"Score {score} out of range"
 
         # High-quality quotes should score higher
-        high_quality_quotes = [q for q in quotes if "critical" in q["text"].lower()
-                               or "groundbreaking" in q["text"].lower()]
+        high_quality_quotes = [
+            q
+            for q in quotes
+            if "critical" in q["text"].lower() or "groundbreaking" in q["text"].lower()
+        ]
         if high_quality_quotes:
             assert any(q["relevance_score"] >= 0.8 for q in high_quality_quotes)
 
@@ -343,7 +353,7 @@ class TestContextAwareQuoteExtractorFiltering:
     def test_filter_low_quality_quotes(self):
         """
         RED Phase Test 6: Quotes below min_quality threshold excluded
-        
+
         Only high-quality quotes should be returned
         """
         extractor = ContextAwareQuoteExtractor()
@@ -355,7 +365,7 @@ class TestContextAwareQuoteExtractorFiltering:
         """
 
         # Mock LLM response with mixed quality scores
-        mock_response = '''{
+        mock_response = """{
     "summary": "Quantum computing and data insights",
     "quotes": [
         {
@@ -381,26 +391,28 @@ class TestContextAwareQuoteExtractorFiltering:
         }
     ],
     "key_themes": ["quantum-computing", "data-quality"]
-}'''
+}"""
 
         # Set high quality threshold
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(
-                transcript=sample_transcript,
-                min_quality=0.75
+                transcript=sample_transcript, min_quality=0.75
             )
 
         quotes = result["quotes"]
 
         # All returned quotes should meet quality threshold
         for quote in quotes:
-            assert quote["relevance_score"] >= 0.75, \
-                f"Quote scored {quote['relevance_score']}, below min_quality 0.75"
+            assert (
+                quote["relevance_score"] >= 0.75
+            ), f"Quote scored {quote['relevance_score']}, below min_quality 0.75"
 
     def test_limit_max_quotes(self):
         """
         RED Phase Test 7: Returns max_quotes or fewer (3-7 target)
-        
+
         Should respect maximum quote limit
         """
         extractor = ContextAwareQuoteExtractor()
@@ -420,7 +432,7 @@ class TestContextAwareQuoteExtractorFiltering:
         """
 
         # Mock LLM response with 8 quotes (more than max_quotes=5)
-        mock_response = '''{
+        mock_response = """{
     "summary": "Comprehensive AI insights",
     "quotes": [
         {"text": "First important insight about AI systems", "timestamp": "00:15", "relevance_score": 0.90, "context": "AI foundation", "category": "key-insight"},
@@ -433,13 +445,14 @@ class TestContextAwareQuoteExtractorFiltering:
         {"text": "Eighth paradigm shift in AI safety", "timestamp": "09:00", "relevance_score": 0.91, "context": "Safety", "category": "key-insight"}
     ],
     "key_themes": ["ai", "machine-learning", "breakthroughs"]
-}'''
+}"""
 
         # Request maximum of 5 quotes
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(
-                transcript=sample_transcript,
-                max_quotes=5
+                transcript=sample_transcript, max_quotes=5
             )
 
         quotes = result["quotes"]
@@ -455,7 +468,7 @@ class TestContextAwareQuoteExtractorErrorHandling:
     def test_handle_empty_transcript(self):
         """
         RED Phase Test 8: Graceful error for empty transcript
-        
+
         Should raise EmptyTranscriptError with clear message
         """
         extractor = ContextAwareQuoteExtractor()
@@ -472,7 +485,7 @@ class TestContextAwareQuoteExtractorErrorHandling:
     def test_handle_ollama_unavailable(self):
         """
         RED Phase Test 9: Fallback when LLM service down
-        
+
         Should raise LLMUnavailableError or return graceful fallback
         """
         extractor = ContextAwareQuoteExtractor()
@@ -480,18 +493,23 @@ class TestContextAwareQuoteExtractorErrorHandling:
         sample_transcript = "[00:15] Test content for error handling"
 
         # Mock OllamaClient to simulate service unavailability
-        with patch.object(extractor, 'ollama_client') as mock_client:
-            mock_client.generate_completion.side_effect = ConnectionError("Service unavailable")
+        with patch.object(extractor, "ollama_client") as mock_client:
+            mock_client.generate_completion.side_effect = ConnectionError(
+                "Service unavailable"
+            )
 
             with pytest.raises(LLMUnavailableError) as exc_info:
                 extractor.extract_quotes(transcript=sample_transcript)
 
-            assert "unavailable" in str(exc_info.value).lower() or "llm" in str(exc_info.value).lower()
+            assert (
+                "unavailable" in str(exc_info.value).lower()
+                or "llm" in str(exc_info.value).lower()
+            )
 
     def test_handle_malformed_llm_json_response(self):
         """
         RED Phase Test 10: Parse quotes even if LLM returns markdown-wrapped or slightly broken JSON
-        
+
         Critical for production reliability - LLMs often wrap JSON in markdown
         """
         extractor = ContextAwareQuoteExtractor()
@@ -499,7 +517,7 @@ class TestContextAwareQuoteExtractorErrorHandling:
         sample_transcript = "[00:15] Important insight about AI systems"
 
         # Test Case 1: Markdown-wrapped JSON
-        markdown_wrapped_response = '''```json
+        markdown_wrapped_response = """```json
 {
     "quotes": [
         {
@@ -513,9 +531,9 @@ class TestContextAwareQuoteExtractorErrorHandling:
     "summary": "Discussion of AI systems",
     "key_themes": ["ai", "systems"]
 }
-```'''
+```"""
 
-        with patch.object(extractor, 'ollama_client') as mock_client:
+        with patch.object(extractor, "ollama_client") as mock_client:
             mock_client.generate_completion.return_value = markdown_wrapped_response
 
             result = extractor.extract_quotes(transcript=sample_transcript)
@@ -526,7 +544,7 @@ class TestContextAwareQuoteExtractorErrorHandling:
             assert result["quotes"][0]["text"] == "Important insight about AI systems"
 
         # Test Case 2: Slightly malformed JSON with trailing comma
-        malformed_json = '''{
+        malformed_json = """{
     "quotes": [{
         "text": "Test quote",
         "timestamp": "00:15",
@@ -536,9 +554,9 @@ class TestContextAwareQuoteExtractorErrorHandling:
     }],
     "summary": "Test summary",
     "key_themes": ["test"]
-}'''
+}"""
 
-        with patch.object(extractor, 'ollama_client') as mock_client:
+        with patch.object(extractor, "ollama_client") as mock_client:
             mock_client.generate_completion.return_value = malformed_json
 
             # Should attempt to repair and parse
@@ -556,7 +574,7 @@ class TestContextAwareQuoteExtractorAdvancedFeatures:
     def test_categorize_quotes_by_type(self):
         """
         RED Phase Test 11: Quotes categorized: key-insight, actionable, quote, definition
-        
+
         Helps users understand the nature of each quote
         """
         extractor = ContextAwareQuoteExtractor()
@@ -569,7 +587,7 @@ class TestContextAwareQuoteExtractorAdvancedFeatures:
         """
 
         # Mock LLM response with all category types
-        mock_response = '''{
+        mock_response = """{
     "summary": "AI definitions and best practices",
     "quotes": [
         {
@@ -602,9 +620,11 @@ class TestContextAwareQuoteExtractorAdvancedFeatures:
         }
     ],
     "key_themes": ["ai", "testing", "machine-learning"]
-}'''
+}"""
 
-        with patch.object(extractor.ollama_client, 'generate_completion', return_value=mock_response):
+        with patch.object(
+            extractor.ollama_client, "generate_completion", return_value=mock_response
+        ):
             result = extractor.extract_quotes(transcript=sample_transcript)
 
         quotes = result["quotes"]
@@ -615,8 +635,9 @@ class TestContextAwareQuoteExtractorAdvancedFeatures:
 
         for quote in quotes:
             assert "category" in quote, "Quote missing category field"
-            assert quote["category"] in valid_categories, \
-                f"Invalid category: {quote['category']}"
+            assert (
+                quote["category"] in valid_categories
+            ), f"Invalid category: {quote['category']}"
 
         # Verify categorization makes sense (if we have all types)
         categories = [q["category"] for q in quotes]

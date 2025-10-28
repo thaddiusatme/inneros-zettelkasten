@@ -26,7 +26,7 @@ class TestAutoPromoteIntegration:
     def temp_vault(self, tmp_path):
         """
         Create temporary vault with realistic directory structure.
-        
+
         Structure:
         - Inbox/ (with notes of varying quality)
         - Fleeting Notes/
@@ -46,33 +46,40 @@ class TestAutoPromoteIntegration:
             vault_path / "Inbox" / "high-quality-note.md",
             status="inbox",
             quality_score=0.85,
-            content="# High Quality Note\n\nThis is a well-formed note with good structure.\n\n## Section\nWith detailed content and [[connections]]."
+            content="# High Quality Note\n\nThis is a well-formed note with good structure.\n\n## Section\nWith detailed content and [[connections]].",
         )
 
         self._create_test_note(
             vault_path / "Inbox" / "medium-quality-note.md",
             status="inbox",
             quality_score=0.75,
-            content="# Medium Quality\n\nDecent note with some structure."
+            content="# Medium Quality\n\nDecent note with some structure.",
         )
 
         self._create_test_note(
             vault_path / "Inbox" / "low-quality-note.md",
             status="inbox",
             quality_score=0.50,
-            content="# Low Quality\n\nBrief note."
+            content="# Low Quality\n\nBrief note.",
         )
 
         self._create_test_note(
             vault_path / "Inbox" / "no-score-note.md",
             status="inbox",
             quality_score=None,
-            content="# No Score\n\nNote without quality score."
+            content="# No Score\n\nNote without quality score.",
         )
 
         return vault_path
 
-    def _create_test_note(self, path: Path, status: str, quality_score: Optional[float] = None, content: str = "", note_type: str = "permanent"):
+    def _create_test_note(
+        self,
+        path: Path,
+        status: str,
+        quality_score: Optional[float] = None,
+        content: str = "",
+        note_type: str = "permanent",
+    ):
         """Helper to create test note with YAML frontmatter."""
         frontmatter = f"""---
 status: {status}
@@ -86,26 +93,29 @@ created: 2025-10-14 20:00
 
         path.write_text(frontmatter + content)
 
-    def _run_cli_command(self, vault_path: Path, args: List[str]) -> subprocess.CompletedProcess:
+    def _run_cli_command(
+        self, vault_path: Path, args: List[str]
+    ) -> subprocess.CompletedProcess:
         """Execute CLI command and return result."""
         cmd = [
             "python",
-            str(Path(__file__).parent.parent.parent / "src" / "cli" / "core_workflow_cli.py"),
+            str(
+                Path(__file__).parent.parent.parent
+                / "src"
+                / "cli"
+                / "core_workflow_cli.py"
+            ),
             str(vault_path),
-            "auto-promote"
+            "auto-promote",
         ] + args
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True)
         return result
 
     def test_auto_promote_moves_notes_end_to_end(self, temp_vault):
         """
         Test that auto-promote actually moves files from Inbox to target directories.
-        
+
         Expected behavior:
         - Notes with quality ≥0.7 moved to Permanent Notes/
         - Notes with quality <0.7 remain in Inbox
@@ -145,7 +155,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_dry_run_no_file_changes(self, temp_vault):
         """
         Test that --dry-run prevents ANY file system modifications.
-        
+
         Expected behavior:
         - No files moved
         - Preview output shown
@@ -171,7 +181,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_quality_threshold_filtering(self, temp_vault):
         """
         Test that --quality-threshold correctly filters notes.
-        
+
         Expected behavior:
         - threshold 0.8: Only 0.85 note promoted
         - threshold 0.6: Both 0.75 and 0.85 promoted
@@ -190,7 +200,7 @@ created: 2025-10-14 20:00
             temp_vault / "Inbox" / "high-quality-note.md",
             status="inbox",
             quality_score=0.85,
-            content="# High Quality Note\n\nContent"
+            content="# High Quality Note\n\nContent",
         )
 
         # Test with threshold 0.6 (both high and medium)
@@ -203,7 +213,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_json_output_valid(self, temp_vault):
         """
         Test that --format json produces valid JSON with correct structure.
-        
+
         Expected structure:
         {
             "promoted": [...],
@@ -237,7 +247,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_error_invalid_vault_path(self):
         """
         Test error handling with non-existent vault path.
-        
+
         Expected behavior:
         - Exit code 1
         - Error message in stderr
@@ -250,7 +260,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_error_malformed_yaml(self, temp_vault):
         """
         Test handling of malformed YAML frontmatter.
-        
+
         Expected behavior:
         - Skip malformed notes gracefully
         - Continue processing valid notes
@@ -258,7 +268,9 @@ created: 2025-10-14 20:00
         """
         # Create note with malformed YAML
         malformed_path = temp_vault / "Inbox" / "malformed.md"
-        malformed_path.write_text("---\nstatus: inbox\nbad yaml: [unclosed\n---\n\nContent")
+        malformed_path.write_text(
+            "---\nstatus: inbox\nbad yaml: [unclosed\n---\n\nContent"
+        )
 
         result = self._run_cli_command(temp_vault, [])
 
@@ -274,7 +286,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_empty_inbox(self, tmp_path):
         """
         Test behavior with empty Inbox.
-        
+
         Expected behavior:
         - Exit code 0
         - Report zero candidates
@@ -292,13 +304,12 @@ created: 2025-10-14 20:00
     def test_auto_promote_combined_flags(self, temp_vault):
         """
         Test combined flag scenarios.
-        
+
         Test: --dry-run --quality-threshold 0.8 --format json
         Expected: JSON output, no file moves, only high quality in results
         """
         result = self._run_cli_command(
-            temp_vault,
-            ["--dry-run", "--quality-threshold", "0.8", "--format", "json"]
+            temp_vault, ["--dry-run", "--quality-threshold", "0.8", "--format", "json"]
         )
 
         assert result.returncode == 0
@@ -323,7 +334,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_preserves_file_content_exactly(self, temp_vault):
         """
         Test that file contents are preserved exactly (no data loss).
-        
+
         Expected behavior:
         - All markdown content preserved
         - Wiki-links preserved
@@ -370,12 +381,19 @@ class TestAutoPromotePerformance:
                 vault_path / "Inbox" / f"note-{i:03d}.md",
                 status="inbox",
                 quality_score=quality,
-                content=f"# Note {i}\n\nTest content for note {i}."
+                content=f"# Note {i}\n\nTest content for note {i}.",
             )
 
         return vault_path
 
-    def _create_test_note(self, path: Path, status: str, quality_score: float, content: str, note_type: str = "permanent"):
+    def _create_test_note(
+        self,
+        path: Path,
+        status: str,
+        quality_score: float,
+        content: str,
+        note_type: str = "permanent",
+    ):
         """Helper to create test note."""
         frontmatter = f"""---
 status: {status}
@@ -390,7 +408,7 @@ created: 2025-10-14 20:00
     def test_auto_promote_performance_50_notes(self, large_vault):
         """
         Test that auto-promote completes within performance target.
-        
+
         Target: <10 seconds for 50 notes
         """
         import time
@@ -400,12 +418,17 @@ created: 2025-10-14 20:00
         result = subprocess.run(
             [
                 "python",
-                str(Path(__file__).parent.parent.parent / "src" / "cli" / "core_workflow_cli.py"),
+                str(
+                    Path(__file__).parent.parent.parent
+                    / "src"
+                    / "cli"
+                    / "core_workflow_cli.py"
+                ),
                 str(large_vault),
-                "auto-promote"
+                "auto-promote",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         elapsed = time.time() - start_time

@@ -34,7 +34,7 @@ class TestTerminalDashboardMetricsDisplay:
         import src.cli.terminal_dashboard as dashboard
 
         # Should have MetricsCollector imported
-        assert hasattr(dashboard, 'MetricsCollector')
+        assert hasattr(dashboard, "MetricsCollector")
         assert dashboard.MetricsCollector is not None
 
     def test_dashboard_can_create_metrics_display_formatter(self):
@@ -92,7 +92,7 @@ class TestWorkflowManagerMetricsInstrumentation:
         wm = WorkflowManager(base_directory=str(vault_dir))
 
         # Should have metrics_coordinator attribute
-        assert hasattr(wm, 'metrics_coordinator')
+        assert hasattr(wm, "metrics_coordinator")
         assert isinstance(wm.metrics_coordinator, WorkflowMetricsCoordinator)
 
     def test_workflow_manager_increments_notes_processed(self, vault_dir):
@@ -104,7 +104,11 @@ class TestWorkflowManagerMetricsInstrumentation:
         initial_count = initial_metrics.get("counters", {}).get("notes_processed", 0)
 
         # Process a note (mocked) - mock the coordinator's process_note method
-        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
+        with patch.object(
+            wm.note_processing_coordinator,
+            "process_note",
+            return_value={"success": True},
+        ):
             wm.process_inbox_note("test_note.md")
 
         final_metrics = wm.metrics_coordinator.get_metrics()
@@ -117,14 +121,22 @@ class TestWorkflowManagerMetricsInstrumentation:
 
         wm = WorkflowManager(base_directory=str(vault_dir))
         initial_metrics = wm.metrics_coordinator.get_metrics()
-        initial_samples = len(initial_metrics.get("histograms", {}).get("processing_time_ms", []))
+        initial_samples = len(
+            initial_metrics.get("histograms", {}).get("processing_time_ms", [])
+        )
 
         # Process a note (mocked)
-        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
+        with patch.object(
+            wm.note_processing_coordinator,
+            "process_note",
+            return_value={"success": True},
+        ):
             wm.process_inbox_note("test_note.md")
 
         final_metrics = wm.metrics_coordinator.get_metrics()
-        final_samples = len(final_metrics.get("histograms", {}).get("processing_time_ms", []))
+        final_samples = len(
+            final_metrics.get("histograms", {}).get("processing_time_ms", [])
+        )
         assert final_samples == initial_samples + 1
 
         # Should record a positive time value
@@ -138,7 +150,11 @@ class TestWorkflowManagerMetricsInstrumentation:
         wm = WorkflowManager(base_directory=str(vault_dir))
 
         # Process_inbox_note sets daemon_status to 1
-        with patch.object(wm.note_processing_coordinator, 'process_note', return_value={'success': True}):
+        with patch.object(
+            wm.note_processing_coordinator,
+            "process_note",
+            return_value={"success": True},
+        ):
             wm.process_inbox_note("test_note.md")
 
         final_metrics = wm.metrics_coordinator.get_metrics()

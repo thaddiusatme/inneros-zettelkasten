@@ -24,14 +24,14 @@ from src.utils.io import safe_write
 class OrphanRemediationCoordinator:
     """
     Coordinates orphan note remediation through bidirectional link insertion.
-    
+
     Follows composition pattern established in ADR-002 phases 1-7.
     """
 
     def __init__(self, base_dir: str, analytics_coordinator):
         """
         Initialize coordinator with required dependencies.
-        
+
         Args:
             base_dir: Base directory of the Zettelkasten vault
             analytics_coordinator: AnalyticsCoordinator for orphan detection
@@ -49,14 +49,14 @@ class OrphanRemediationCoordinator:
     ) -> Dict:
         """
         Remediate orphaned notes by inserting bidirectional links.
-        
+
         Args:
             mode: "link" (insert links) or "checklist" (output markdown checklist)
             scope: "permanent", "fleeting", or "all"
             limit: maximum number of orphaned notes to process
             target: explicit path to target MOC/note for inserting links
             dry_run: when True, do not modify files; preview only
-        
+
         Returns:
             Dictionary with summary and actions performed or planned.
         """
@@ -121,7 +121,9 @@ class OrphanRemediationCoordinator:
         for o in selected:
             orphan_fp = Path(o["path"])
             try:
-                changed = self.insert_bidirectional_links(orphan_fp, target_path, dry_run=dry_run)
+                changed = self.insert_bidirectional_links(
+                    orphan_fp, target_path, dry_run=dry_run
+                )
                 result["actions"].append(
                     {
                         "orphan": str(orphan_fp),
@@ -134,20 +136,26 @@ class OrphanRemediationCoordinator:
                 result["summary"]["processed"] += 1
             except Exception as e:
                 result["actions"].append(
-                    {"orphan": str(orphan_fp), "target": str(target_path), "error": str(e)}
+                    {
+                        "orphan": str(orphan_fp),
+                        "target": str(target_path),
+                        "error": str(e),
+                    }
                 )
                 result["summary"]["errors"] += 1
 
-        result["summary"]["skipped"] = max(0, result["summary"]["considered"] - result["summary"]["processed"])
+        result["summary"]["skipped"] = max(
+            0, result["summary"]["considered"] - result["summary"]["processed"]
+        )
         return result
 
     def list_orphans_by_scope(self, scope: str) -> List[Dict]:
         """
         Return orphaned notes filtered by scope and sorted deterministically.
-        
+
         Args:
             scope: "permanent", "fleeting", or "all"
-        
+
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
@@ -157,7 +165,9 @@ class OrphanRemediationCoordinator:
 
         def in_dir(p: str, name: str) -> bool:
             try:
-                return (root / name) in Path(p).parents or Path(p).parent == (root / name)
+                return (root / name) in Path(p).parents or Path(p).parent == (
+                    root / name
+                )
             except Exception:
                 return False
 
@@ -169,7 +179,8 @@ class OrphanRemediationCoordinator:
             filtered = [
                 o
                 for o in all_orphans
-                if in_dir(o["path"], "Permanent Notes") or in_dir(o["path"], "Fleeting Notes")
+                if in_dir(o["path"], "Permanent Notes")
+                or in_dir(o["path"], "Fleeting Notes")
             ]
 
         # Sort: Permanent first, then by title
@@ -182,10 +193,10 @@ class OrphanRemediationCoordinator:
     def resolve_target_note(self, target: Optional[str] = None) -> Optional[Path]:
         """
         Resolve target note for link insertion.
-        
+
         Args:
             target: Optional explicit path to target note
-        
+
         Returns:
             Path to target note, or None if not found
         """
@@ -201,12 +212,12 @@ class OrphanRemediationCoordinator:
     ) -> Dict:
         """
         Insert [[orphan]] in target and [[target]] in orphan, creating backups if not dry-run.
-        
+
         Args:
             orphan_path: Path to orphan note
             target_path: Path to target note
             dry_run: If True, don't modify files
-        
+
         Returns:
             Dict with modified flags and backup paths
         """
@@ -240,11 +251,11 @@ class OrphanRemediationCoordinator:
     def has_wikilink(self, text: str, key: str) -> bool:
         """
         Check if text contains wiki-link to key.
-        
+
         Args:
             text: Content to search
             key: Note key to find (matches [[key]] or [[key|alias]])
-        
+
         Returns:
             True if wiki-link found, False otherwise
         """
@@ -259,18 +270,20 @@ class OrphanRemediationCoordinator:
     ) -> str:
         """
         Append a bullet to a dedicated section, creating it if missing.
-        
+
         Args:
             text: Original note content
             bullet_line: Link text to append (e.g., "[[note-name]]")
             section_title: Section heading to append to
-        
+
         Returns:
             Modified text with link appended
         """
         lines = text.splitlines()
         # Find section heading index
-        heading_re = re.compile(rf"^#+\s+{re.escape(section_title.lstrip('#').strip())}$", re.IGNORECASE)
+        heading_re = re.compile(
+            rf"^#+\s+{re.escape(section_title.lstrip('#').strip())}$", re.IGNORECASE
+        )
         idx = None
         for i, ln in enumerate(lines):
             if heading_re.match(ln.strip()):
@@ -297,10 +310,10 @@ class OrphanRemediationCoordinator:
     def backup_file(self, path: Path) -> Optional[Path]:
         """
         Create timestamped backup of file.
-        
+
         Args:
             path: File to backup
-        
+
         Returns:
             Path to backup file, or None if backup failed
         """

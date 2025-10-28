@@ -9,6 +9,7 @@ Critical path: Prevention-first approach to stop creating bad tags
 
 REFACTOR phase: Enhanced with extracted utility classes for production-ready architecture
 """
+
 import re
 import time
 from typing import List, Dict, Any, Optional
@@ -17,7 +18,7 @@ from .ai_tagging_prevention_utils import (
     SemanticTagExtractor,
     TagQualityScorer,
     PreventionStatisticsCollector,
-    IntegrationSafetyValidator
+    IntegrationSafetyValidator,
 )
 
 
@@ -30,15 +31,25 @@ class AITagValidator:
         self.paragraph_threshold = 100  # Paragraph detection threshold
 
         # Patterns for detecting problematic tags
-        self.sentence_indicators = ['this', 'the', 'is', 'are', 'about', 'for', 'of', 'in', 'to']
+        self.sentence_indicators = [
+            "this",
+            "the",
+            "is",
+            "are",
+            "about",
+            "for",
+            "of",
+            "in",
+            "to",
+        ]
         self.artifact_patterns = [
-            r'ai[_-]?generated',
-            r'llm[_-]?output',
-            r'auto[_-]?tag',
-            r'processing[_-]?artifact',
-            r'\[ai[_-]?suggested\]',
-            r'##.*##',
-            r'claude[_-]?\d*[_-]?processing'
+            r"ai[_-]?generated",
+            r"llm[_-]?output",
+            r"auto[_-]?tag",
+            r"processing[_-]?artifact",
+            r"\[ai[_-]?suggested\]",
+            r"##.*##",
+            r"claude[_-]?\d*[_-]?processing",
         ]
 
     def detect_paragraph_tags(self, tags: List[str]) -> List[str]:
@@ -55,7 +66,9 @@ class AITagValidator:
         for tag in tags:
             # Check for sentence indicators and grammatical patterns
             words = tag.lower().split()
-            if len(words) > 3 and any(indicator in words for indicator in self.sentence_indicators):
+            if len(words) > 3 and any(
+                indicator in words for indicator in self.sentence_indicators
+            ):
                 fragments.append(tag)
         return fragments
 
@@ -83,21 +96,22 @@ class AITagValidator:
         conflicts = []
 
         # Check for level conflicts
-        level_terms = ['beginner', 'intermediate', 'advanced', 'expert']
-        found_levels = [tag for tag in tags if any(level in tag.lower() for level in level_terms)]
+        level_terms = ["beginner", "intermediate", "advanced", "expert"]
+        found_levels = [
+            tag for tag in tags if any(level in tag.lower() for level in level_terms)
+        ]
         if len(found_levels) > 1:
             conflicts.append(f"Contradictory skill levels: {found_levels}")
 
         # Check for temporal conflicts
-        temporal_terms = ['temporary', 'permanent', 'delete-this', 'keep-forever']
-        found_temporal = [tag for tag in tags if any(term in tag.lower() for term in temporal_terms)]
+        temporal_terms = ["temporary", "permanent", "delete-this", "keep-forever"]
+        found_temporal = [
+            tag for tag in tags if any(term in tag.lower() for term in temporal_terms)
+        ]
         if len(found_temporal) > 1:
             conflicts.append(f"Contradictory temporal markers: {found_temporal}")
 
-        return {
-            "coherent": len(conflicts) == 0,
-            "conflicts": conflicts
-        }
+        return {"coherent": len(conflicts) == 0, "conflicts": conflicts}
 
     def validate_tag_list(self, tags: List[str]) -> Dict[str, Any]:
         """Run comprehensive validation pipeline"""
@@ -125,7 +139,7 @@ class AITagValidator:
         return {
             "valid_tags": valid_tags,
             "rejected_tags": rejected_tags,
-            "rejection_reasons": rejection_reasons
+            "rejection_reasons": rejection_reasons,
         }
 
 
@@ -135,13 +149,15 @@ class SemanticConceptExtractor:
     def __init__(self):
         # Patterns for concept extraction
         self.concept_patterns = [
-            r'(\w+(?:-\w+)*)\s+(?:computing|learning|processing|intelligence|networks)',
-            r'(?:discusses?|about|concepts?:?)\s+(.+?)(?:\s+and|\s*,|\s*$)',
-            r'(\d+\)\s+(.+?)(?:,|$))',  # Numbered lists
-            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',  # Title case concepts
+            r"(\w+(?:-\w+)*)\s+(?:computing|learning|processing|intelligence|networks)",
+            r"(?:discusses?|about|concepts?:?)\s+(.+?)(?:\s+and|\s*,|\s*$)",
+            r"(\d+\)\s+(.+?)(?:,|$))",  # Numbered lists
+            r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",  # Title case concepts
         ]
 
-    def extract_concepts(self, text: str, min_quality_score: float = 0.5, preserve_domain: bool = False) -> List[str]:
+    def extract_concepts(
+        self, text: str, min_quality_score: float = 0.5, preserve_domain: bool = False
+    ) -> List[str]:
         """Extract individual concepts from AI paragraph responses"""
         concepts = []
 
@@ -176,7 +192,7 @@ class SemanticConceptExtractor:
             concepts.append("superconducting-qubits")
 
         # Clean the text
-        text = re.sub(r'[^\w\s-]', ' ', text)
+        text = re.sub(r"[^\w\s-]", " ", text)
 
         # Extract key phrases and convert to tag format
         words = text.lower().split()
@@ -196,34 +212,72 @@ class SemanticConceptExtractor:
     def _is_valid_concept(self, concept: str, min_quality: float) -> bool:
         """Validate if extracted concept meets quality standards"""
         # Filter out common words, articles, etc.
-        stop_words = {'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-                     'this', 'that', 'these', 'those', 'some', 'other', 'stuff', 'thing', 'about',
-                     'using', 'different', 'approaches', 'solve', 'problems', 'discusses', 'phenomena', 'applications'}
+        stop_words = {
+            "the",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "this",
+            "that",
+            "these",
+            "those",
+            "some",
+            "other",
+            "stuff",
+            "thing",
+            "about",
+            "using",
+            "different",
+            "approaches",
+            "solve",
+            "problems",
+            "discusses",
+            "phenomena",
+            "applications",
+        }
 
         if concept in stop_words or len(concept) < 3:
             return False
 
         # Basic quality scoring (simplified)
-        quality_score = min(1.0, len(concept) / 10.0)  # Longer concepts generally better
-        if '-' in concept:
+        quality_score = min(
+            1.0, len(concept) / 10.0
+        )  # Longer concepts generally better
+        if "-" in concept:
             quality_score += 0.2  # Compound concepts often better
 
         return quality_score >= min_quality
 
-    def _preserve_domain_context(self, concepts: List[str], original_text: str) -> List[str]:
+    def _preserve_domain_context(
+        self, concepts: List[str], original_text: str
+    ) -> List[str]:
         """Preserve domain context during extraction"""
         # Look for domain indicators and enhance concepts
         domain_enhanced = []
 
         for concept in concepts:
             # Enhance with domain context if present
-            if 'quantum' in original_text.lower() and concept in ['computing', 'entanglement']:
-                domain_enhanced.append(f'quantum-{concept}')
-            elif 'machine' in original_text.lower() and concept == 'learning':
-                domain_enhanced.append('machine-learning')
-            elif 'natural' in original_text.lower() and concept in ['language', 'processing']:
-                if 'language' in concepts and 'processing' in concepts:
-                    domain_enhanced.append('natural-language-processing')
+            if "quantum" in original_text.lower() and concept in [
+                "computing",
+                "entanglement",
+            ]:
+                domain_enhanced.append(f"quantum-{concept}")
+            elif "machine" in original_text.lower() and concept == "learning":
+                domain_enhanced.append("machine-learning")
+            elif "natural" in original_text.lower() and concept in [
+                "language",
+                "processing",
+            ]:
+                if "language" in concepts and "processing" in concepts:
+                    domain_enhanced.append("natural-language-processing")
                 else:
                     domain_enhanced.append(concept)
             else:
@@ -247,14 +301,17 @@ class TagQualityGatekeeper:
             return {
                 "valid": False,
                 "reason": "learned from user feedback",
-                "confidence": 0.9
+                "confidence": 0.9,
             }
 
         # Quick checks for obviously problematic tags
         if len(tag) > 100:  # Paragraph tags
             return {"valid": False, "reason": "paragraph tag", "confidence": 0.9}
 
-        if any(artifact in tag.upper() for artifact in ['AI_ARTIFACT', 'AUTO_GENERATED', 'PROCESSING']):
+        if any(
+            artifact in tag.upper()
+            for artifact in ["AI_ARTIFACT", "AUTO_GENERATED", "PROCESSING"]
+        ):
             return {"valid": False, "reason": "technical artifact", "confidence": 0.9}
 
         # Run validation
@@ -264,13 +321,15 @@ class TagQualityGatekeeper:
             return {
                 "valid": True,
                 "reason": "passed all validation checks",
-                "confidence": 0.8
+                "confidence": 0.8,
             }
         else:
             return {
                 "valid": False,
-                "reason": validation_result["rejection_reasons"].get(tag, "failed validation"),
-                "confidence": 0.9
+                "reason": validation_result["rejection_reasons"].get(
+                    tag, "failed validation"
+                ),
+                "confidence": 0.9,
             }
 
     def filter_ai_workflow_tags(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
@@ -282,13 +341,15 @@ class TagQualityGatekeeper:
         rejected_count = len(validation_result["rejected_tags"])
 
         # Calculate quality improvement
-        quality_improvement = rejected_count / len(original_tags) if original_tags else 0
+        quality_improvement = (
+            rejected_count / len(original_tags) if original_tags else 0
+        )
 
         return {
             "filtered_tags": filtered_tags,
             "rejected_count": rejected_count,
             "quality_improvement": quality_improvement,
-            "original_count": len(original_tags)
+            "original_count": len(original_tags),
         }
 
     def validate_batch(self, tags: List[str]) -> Dict[str, Any]:
@@ -303,7 +364,7 @@ class TagQualityGatekeeper:
             "valid_tags": validation_result["valid_tags"],
             "rejected_tags": validation_result["rejected_tags"],
             "processing_time": end_time - start_time,
-            "throughput": len(tags) / (end_time - start_time)
+            "throughput": len(tags) / (end_time - start_time),
         }
 
     def update_from_feedback(self, feedback: Dict[str, Any]):
@@ -333,15 +394,16 @@ class AITagPreventionEngine:
         self.statistics_collector = PreventionStatisticsCollector()
         self.safety_validator = IntegrationSafetyValidator()
 
-    def process_note_with_prevention(self, note_path: str, content: str) -> Dict[str, Any]:
+    def process_note_with_prevention(
+        self, note_path: str, content: str
+    ) -> Dict[str, Any]:
         """Process note with prevention integrated into existing workflow"""
-        result = {
-            "processing_preserved": True,
-            "enhanced_with_prevention": True
-        }
+        result = {"processing_preserved": True, "enhanced_with_prevention": True}
 
         # If workflow manager exists, use it (preserving existing functionality)
-        if self.workflow_manager and hasattr(self.workflow_manager, 'process_inbox_note'):
+        if self.workflow_manager and hasattr(
+            self.workflow_manager, "process_inbox_note"
+        ):
             try:
                 original_result = self.workflow_manager.process_inbox_note(note_path)
                 # Handle case where mock returns non-dict
@@ -349,11 +411,21 @@ class AITagPreventionEngine:
                     result.update(original_result)
                 else:
                     # Convert mock to dict for testing
-                    result.update({
-                        "ai_tags": getattr(original_result, 'ai_tags', ["quantum-computing", "machine-learning"]),
-                        "quality_score": getattr(original_result, 'quality_score', 0.85),
-                        "connections": getattr(original_result, 'connections', ["related-note-1.md"])
-                    })
+                    result.update(
+                        {
+                            "ai_tags": getattr(
+                                original_result,
+                                "ai_tags",
+                                ["quantum-computing", "machine-learning"],
+                            ),
+                            "quality_score": getattr(
+                                original_result, "quality_score", 0.85
+                            ),
+                            "connections": getattr(
+                                original_result, "connections", ["related-note-1.md"]
+                            ),
+                        }
+                    )
 
                 # Apply prevention to AI-generated tags
                 if "ai_tags" in result:
@@ -363,15 +435,19 @@ class AITagPreventionEngine:
                     result["prevented_issues"] = prevention_result["prevented_issues"]
             except Exception:
                 # Graceful fallback for testing
-                result.update({
-                    "ai_tags": ["quantum-computing", "machine-learning"],
-                    "quality_score": 0.85,
-                    "connections": ["related-note-1.md"]
-                })
+                result.update(
+                    {
+                        "ai_tags": ["quantum-computing", "machine-learning"],
+                        "quality_score": 0.85,
+                        "connections": ["related-note-1.md"],
+                    }
+                )
 
         return result
 
-    def apply_comprehensive_prevention(self, ai_output: Dict[str, Any]) -> Dict[str, Any]:
+    def apply_comprehensive_prevention(
+        self, ai_output: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Apply complete prevention pipeline to AI output"""
         start_time = time.time()
 
@@ -385,17 +461,19 @@ class AITagPreventionEngine:
         end_time = time.time()
         prevented_count = len(original_tags) - len(clean_tags)
         self.statistics_collector.record_prevention_event(
-            'comprehensive_prevention',
+            "comprehensive_prevention",
             len(original_tags),
             prevented_count,
-            end_time - start_time
+            end_time - start_time,
         )
 
         return {
             "clean_tags": clean_tags,
             "prevented_issues": prevented_count,
-            "prevention_success_rate": prevented_count / len(original_tags) if original_tags else 0,
-            "processing_time": end_time - start_time
+            "prevention_success_rate": (
+                prevented_count / len(original_tags) if original_tags else 0
+            ),
+            "processing_time": end_time - start_time,
         }
 
     def validate_against_real_problems(self, problem_tags: List[str]) -> Dict[str, Any]:
@@ -409,7 +487,7 @@ class AITagPreventionEngine:
             "parsing_errors_prevented": prevented_problems,
             "prevention_rate": prevented_problems / total_problems,
             "false_positive_rate": 0.05,  # Conservative estimate
-            "total_analyzed": total_problems
+            "total_analyzed": total_problems,
         }
 
     def validate_integration_safety(self) -> Dict[str, Any]:
@@ -418,7 +496,7 @@ class AITagPreventionEngine:
             "safe_to_integrate": True,
             "backup_plan": "Rollback to original AI workflow processing",
             "rollback_capability": True,
-            "performance_impact": "< 5% overhead based on testing"
+            "performance_impact": "< 5% overhead based on testing",
         }
 
     def generate_prevention_report(self) -> Dict[str, Any]:
@@ -434,6 +512,6 @@ class AITagPreventionEngine:
             "recommendations": [
                 "Continue monitoring AI tag quality",
                 "Collect user feedback for improvement",
-                "Review prevention patterns monthly"
-            ]
+                "Review prevention patterns monthly",
+            ],
         }

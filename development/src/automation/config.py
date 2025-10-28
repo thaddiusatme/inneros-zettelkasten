@@ -16,6 +16,7 @@ from .config_utils import ConfigValidator
 @dataclass
 class JobConfig:
     """Job configuration"""
+
     name: str
     schedule: str
     enabled: bool = True
@@ -25,6 +26,7 @@ class JobConfig:
 @dataclass
 class FileWatchConfig:
     """File watching configuration"""
+
     enabled: bool = False
     watch_path: str = ""
     patterns: List[str] = field(default_factory=lambda: ["*.md"])
@@ -35,6 +37,7 @@ class FileWatchConfig:
 @dataclass
 class ScreenshotHandlerConfig:
     """Screenshot handler configuration"""
+
     enabled: bool = False
     onedrive_path: str = ""
     knowledge_path: str = ""
@@ -45,6 +48,7 @@ class ScreenshotHandlerConfig:
 @dataclass
 class SmartLinkHandlerConfig:
     """Smart link handler configuration"""
+
     enabled: bool = False
     vault_path: str = ""
     similarity_threshold: float = 0.75
@@ -55,6 +59,7 @@ class SmartLinkHandlerConfig:
 @dataclass
 class YouTubeHandlerConfig:
     """YouTube handler configuration"""
+
     enabled: bool = False
     vault_path: str = ""
     max_quotes: int = 7
@@ -65,6 +70,7 @@ class YouTubeHandlerConfig:
 @dataclass
 class DaemonConfig:
     """Daemon configuration"""
+
     check_interval: int = 60
     log_level: str = "INFO"
     jobs: List[JobConfig] = field(default_factory=list)
@@ -77,23 +83,23 @@ class DaemonConfig:
 class ConfigurationLoader:
     """
     Configuration loading and validation.
-    
+
     Loads YAML configuration files with schema validation.
     Provides default configuration and validation error reporting.
-    
+
     Size: ~150 LOC (ADR-001 compliant)
     """
 
     def load_config(self, path: Path) -> DaemonConfig:
         """
         Load and validate YAML config file.
-        
+
         Args:
             path: Path to YAML configuration file
-            
+
         Returns:
             DaemonConfig object with validated configuration
-            
+
         Raises:
             FileNotFoundError: If config file doesn't exist
             ValueError: If config is invalid
@@ -103,7 +109,7 @@ class ConfigurationLoader:
             raise FileNotFoundError(f"Configuration file not found: {path}")
 
         # Load YAML
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             raw_config = yaml.safe_load(f)
 
         if not raw_config:
@@ -119,10 +125,10 @@ class ConfigurationLoader:
     def validate_config_file(self, path: Path) -> List[str]:
         """
         Validate config file and return errors.
-        
+
         Args:
             path: Path to configuration file
-            
+
         Returns:
             List of validation error messages (empty if valid)
         """
@@ -135,7 +141,7 @@ class ConfigurationLoader:
 
         # Load and validate YAML
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 raw_config = yaml.safe_load(f)
 
             if not raw_config:
@@ -155,23 +161,19 @@ class ConfigurationLoader:
     def get_default_config(self) -> DaemonConfig:
         """
         Get safe default configuration.
-        
+
         Returns:
             DaemonConfig with default values
         """
-        return DaemonConfig(
-            check_interval=60,
-            log_level="INFO",
-            jobs=[]
-        )
+        return DaemonConfig(check_interval=60, log_level="INFO", jobs=[])
 
     def _parse_config(self, raw_config: dict) -> DaemonConfig:
         """
         Parse raw configuration into DaemonConfig object.
-        
+
         Args:
             raw_config: Raw configuration dictionary
-            
+
         Returns:
             DaemonConfig object
         """
@@ -189,7 +191,7 @@ class ConfigurationLoader:
                 name=job_data["name"],
                 schedule=job_data["schedule"],
                 enabled=job_data.get("enabled", True),
-                description=job_data.get("description")
+                description=job_data.get("description"),
             )
             jobs.append(job)
 
@@ -202,7 +204,7 @@ class ConfigurationLoader:
                 watch_path=fw_data.get("watch_path", ""),
                 patterns=fw_data.get("patterns", ["*.md"]),
                 ignore_patterns=fw_data.get("ignore_patterns", []),
-                debounce_seconds=fw_data.get("debounce_seconds", 2.0)
+                debounce_seconds=fw_data.get("debounce_seconds", 2.0),
             )
 
         # Parse screenshot_handler section
@@ -214,7 +216,7 @@ class ConfigurationLoader:
                 onedrive_path=sh_data.get("onedrive_path", ""),
                 knowledge_path=sh_data.get("knowledge_path", ""),
                 ocr_enabled=sh_data.get("ocr_enabled", True),
-                processing_timeout=sh_data.get("processing_timeout", 600)
+                processing_timeout=sh_data.get("processing_timeout", 600),
             )
 
         # Parse smart_link_handler section
@@ -226,7 +228,7 @@ class ConfigurationLoader:
                 vault_path=sl_data.get("vault_path", ""),
                 similarity_threshold=sl_data.get("similarity_threshold", 0.75),
                 max_suggestions=sl_data.get("max_suggestions", 5),
-                auto_insert=sl_data.get("auto_insert", False)
+                auto_insert=sl_data.get("auto_insert", False),
             )
 
         # Parse youtube_handler section
@@ -238,7 +240,7 @@ class ConfigurationLoader:
                 vault_path=yt_data.get("vault_path", ""),
                 max_quotes=yt_data.get("max_quotes", 7),
                 min_quality=yt_data.get("min_quality", 0.7),
-                processing_timeout=yt_data.get("processing_timeout", 300)
+                processing_timeout=yt_data.get("processing_timeout", 300),
             )
 
         return DaemonConfig(
@@ -248,5 +250,5 @@ class ConfigurationLoader:
             file_watching=file_watching,
             screenshot_handler=screenshot_handler,
             smart_link_handler=smart_link_handler,
-            youtube_handler=youtube_handler
+            youtube_handler=youtube_handler,
         )

@@ -24,7 +24,7 @@ from cli.core_workflow_cli import CoreWorkflowCLI
 class TestWorkflowManagerCLIContract:
     """
     Contract tests ensuring WorkflowManager and CoreWorkflowCLI stay synchronized.
-    
+
     RED → GREEN → REFACTOR approach:
     1. RED: Test fails when keys don't match
     2. GREEN: Fix CLI to use correct keys from WorkflowManager
@@ -42,13 +42,15 @@ class TestWorkflowManagerCLIContract:
     @pytest.fixture
     def cli(self, mock_workflow_manager):
         """CoreWorkflowCLI instance with mocked WorkflowManager."""
-        with patch('cli.core_workflow_cli.WorkflowManager', return_value=mock_workflow_manager):
+        with patch(
+            "cli.core_workflow_cli.WorkflowManager", return_value=mock_workflow_manager
+        ):
             return CoreWorkflowCLI(vault_path="/fake/vault")
 
     def test_batch_process_inbox_returns_expected_keys(self, mock_workflow_manager):
         """
         RED TEST: Verify WorkflowManager.batch_process_inbox() returns expected structure.
-        
+
         This test documents the contract that WorkflowManager MUST maintain.
         If this test fails, either:
         1. WorkflowManager changed its interface (breaking change)
@@ -56,15 +58,15 @@ class TestWorkflowManagerCLIContract:
         """
         # Arrange: Set up realistic WorkflowManager response
         expected_result = {
-            "total_files": 60,      # KEY: Must be "total_files" not "total"
-            "processed": 44,        # KEY: Must be "processed" not "successful"
+            "total_files": 60,  # KEY: Must be "total_files" not "total"
+            "processed": 44,  # KEY: Must be "processed" not "successful"
             "failed": 16,
             "results": [],
             "summary": {
                 "promote_to_permanent": 10,
                 "move_to_fleeting": 20,
-                "needs_improvement": 14
-            }
+                "needs_improvement": 14,
+            },
         }
         mock_workflow_manager.batch_process_inbox.return_value = expected_result
 
@@ -86,7 +88,7 @@ class TestWorkflowManagerCLIContract:
     def test_cli_process_inbox_uses_correct_keys(self, cli, mock_workflow_manager):
         """
         RED TEST: Verify CLI uses the correct keys from WorkflowManager response.
-        
+
         This test would have FAILED with the original bug:
         - CLI was looking for "successful" key (doesn't exist)
         - CLI was looking for "total" key (doesn't exist)
@@ -97,15 +99,15 @@ class TestWorkflowManagerCLIContract:
             "total_files": 60,
             "processed": 44,
             "failed": 16,
-            "results": []
+            "results": [],
         }
 
         # Capture stdout
         captured_output = StringIO()
 
         # Act: Process inbox
-        with patch('sys.stdout', captured_output):
-            exit_code = cli.process_inbox(output_format='normal')
+        with patch("sys.stdout", captured_output):
+            exit_code = cli.process_inbox(output_format="normal")
 
         output = captured_output.getvalue()
 
@@ -122,7 +124,7 @@ class TestWorkflowManagerCLIContract:
     def test_cli_handles_empty_inbox(self, cli, mock_workflow_manager):
         """
         GREEN TEST: Verify CLI correctly displays empty inbox.
-        
+
         Edge case: 0 files should show 0 for all counts.
         """
         # Arrange: Empty inbox
@@ -130,15 +132,15 @@ class TestWorkflowManagerCLIContract:
             "total_files": 0,
             "processed": 0,
             "failed": 0,
-            "results": []
+            "results": [],
         }
 
         # Capture stdout
         captured_output = StringIO()
 
         # Act
-        with patch('sys.stdout', captured_output):
-            exit_code = cli.process_inbox(output_format='normal')
+        with patch("sys.stdout", captured_output):
+            exit_code = cli.process_inbox(output_format="normal")
 
         output = captured_output.getvalue()
 
@@ -151,7 +153,7 @@ class TestWorkflowManagerCLIContract:
     def test_cli_json_output_preserves_keys(self, cli, mock_workflow_manager):
         """
         GREEN TEST: Verify JSON output preserves original keys from WorkflowManager.
-        
+
         JSON mode should pass through the exact structure for automation.
         """
         # Arrange
@@ -159,7 +161,7 @@ class TestWorkflowManagerCLIContract:
             "total_files": 60,
             "processed": 44,
             "failed": 16,
-            "results": [{"note": "test.md", "success": True}]
+            "results": [{"note": "test.md", "success": True}],
         }
         mock_workflow_manager.batch_process_inbox.return_value = expected_data
 
@@ -167,13 +169,14 @@ class TestWorkflowManagerCLIContract:
         captured_output = StringIO()
 
         # Act
-        with patch('sys.stdout', captured_output):
-            exit_code = cli.process_inbox(output_format='json')
+        with patch("sys.stdout", captured_output):
+            exit_code = cli.process_inbox(output_format="json")
 
         output = captured_output.getvalue()
 
         # Assert: JSON output must preserve exact keys
         import json
+
         result = json.loads(output)
         assert result["total_files"] == 60, "JSON must preserve 'total_files' key"
         assert result["processed"] == 44, "JSON must preserve 'processed' key"
@@ -182,7 +185,7 @@ class TestWorkflowManagerCLIContract:
     def test_generate_workflow_report_contract(self, mock_workflow_manager):
         """
         RED TEST: Document the contract for generate_workflow_report().
-        
+
         This prevents future mismatches in the status/report commands.
         """
         # Arrange: Mock the expected structure
@@ -193,20 +196,20 @@ class TestWorkflowManagerCLIContract:
                     "Inbox": 60,
                     "Fleeting Notes": 120,
                     "Permanent Notes": 450,
-                    "Archive": 200
+                    "Archive": 200,
                 },
-                "total_notes": 830
+                "total_notes": 830,
             },
             "ai_features": {
                 "notes_with_ai_tags": 100,
                 "notes_with_ai_summaries": 50,
                 "notes_with_ai_processing": 150,
-                "total_analyzed": 830
+                "total_analyzed": 830,
             },
             "analytics": {},
             "recommendations": [
                 "Process 60 notes in inbox - consider batch processing"
-            ]
+            ],
         }
         mock_workflow_manager.generate_workflow_report.return_value = expected_report
 
@@ -223,36 +226,36 @@ class TestWorkflowManagerCLIContract:
 class TestCLIDisplayFormatting:
     """
     Tests for CLI display layer correctness.
-    
+
     Ensures the CLI correctly formats and displays data from WorkflowManager.
     """
 
     def test_process_inbox_display_with_all_failures(self):
         """
         REFACTOR TEST: Handle edge case where all notes fail.
-        
+
         This was part of the original bug scenario:
         - 60 files attempted
         - 16 failed
         - 0 processed (all timed out)
         """
-        with patch('cli.core_workflow_cli.WorkflowManager') as MockWM:
+        with patch("cli.core_workflow_cli.WorkflowManager") as MockWM:
             # Arrange: All failures scenario
             mock_manager = MockWM.return_value
             mock_manager.inbox_dir = Path("/fake/vault/Inbox")
             mock_manager.batch_process_inbox.return_value = {
                 "total_files": 60,
-                "processed": 0,      # All failed
-                "failed": 16,        # Only 16 attempted before timeout
-                "results": []
+                "processed": 0,  # All failed
+                "failed": 16,  # Only 16 attempted before timeout
+                "results": [],
             }
 
             cli = CoreWorkflowCLI(vault_path="/fake/vault")
             captured_output = StringIO()
 
             # Act
-            with patch('sys.stdout', captured_output):
-                exit_code = cli.process_inbox(output_format='normal')
+            with patch("sys.stdout", captured_output):
+                exit_code = cli.process_inbox(output_format="normal")
 
             output = captured_output.getvalue()
 
@@ -268,14 +271,14 @@ class TestCLIDisplayFormatting:
 class TestKeyConsistencyAcrossCommands:
     """
     REFACTOR: Ensure all commands use consistent key naming.
-    
+
     Future improvement: Extract keys to constants module.
     """
 
     def test_all_commands_use_standard_keys(self):
         """
         Meta-test: Document all keys used across the system.
-        
+
         Future refactor: Create src/constants.py with:
         - BATCH_PROCESS_KEYS = {"total_files", "processed", "failed", "results"}
         - WORKFLOW_STATUS_KEYS = {"workflow_status", "ai_features", ...}
@@ -284,18 +287,18 @@ class TestKeyConsistencyAcrossCommands:
         # If new keys are added, update this test
 
         expected_batch_keys = {
-            "total_files",   # Not "total"
-            "processed",     # Not "successful"
+            "total_files",  # Not "total"
+            "processed",  # Not "successful"
             "failed",
             "results",
-            "summary"
+            "summary",
         }
 
         expected_workflow_status_keys = {
             "workflow_status",
             "ai_features",
             "analytics",
-            "recommendations"
+            "recommendations",
         }
 
         # These sets serve as documentation

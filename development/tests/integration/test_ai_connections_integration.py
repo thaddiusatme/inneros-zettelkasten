@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -42,7 +42,9 @@ class TestAIConnectionsIntegration:
             pytest.skip("Ollama service is not available")
 
         text1 = "Machine learning is a subset of artificial intelligence that focuses on algorithms."
-        text2 = "Deep learning uses neural networks to process data and make predictions."
+        text2 = (
+            "Deep learning uses neural networks to process data and make predictions."
+        )
 
         start_time = time.time()
         similarity = self.connections._calculate_semantic_similarity(text1, text2)
@@ -85,7 +87,7 @@ class TestAIConnectionsIntegration:
             "travel_note.md": """
             Traveling to Japan requires careful planning and understanding of local customs.
             The best time to visit is during spring for cherry blossoms or fall for autumn colors.
-            """
+            """,
         }
 
         similar_notes = self.connections.find_similar_notes(target_note, note_corpus)
@@ -132,7 +134,7 @@ class TestAIConnectionsIntegration:
             "cooking_recipes.md": """
             Traditional Italian cooking emphasizes fresh ingredients and simple preparation methods.
             Pasta, risotto, and pizza are staples of Italian cuisine.
-            """
+            """,
         }
 
         suggestions = self.connections.suggest_links(target_note, note_corpus)
@@ -174,7 +176,7 @@ class TestAIConnectionsIntegration:
             "cooking_tips.md": """
             Good cooking requires understanding flavor profiles and proper technique.
             Fresh ingredients and proper seasoning are essential for delicious meals.
-            """
+            """,
         }
 
         start_time = time.time()
@@ -193,18 +195,25 @@ class TestAIConnectionsIntegration:
 
         # Should find some connections between related notes
         ml_connected_files = [conn[0] for conn in ml_connections]
-        assert "deep_learning.md" in ml_connected_files or "data_science.md" in ml_connected_files
+        assert (
+            "deep_learning.md" in ml_connected_files
+            or "data_science.md" in ml_connected_files
+        )
 
         # Cooking should have weaker connections to technical notes (lower similarity scores)
         cooking_connections = connection_map.get("cooking_tips.md", [])
         cooking_connected_files = [conn[0] for conn in cooking_connections]
         technical_files = ["ml_basics.md", "deep_learning.md", "data_science.md"]
-        technical_connections = [conn for conn in cooking_connections if conn[0] in technical_files]
+        technical_connections = [
+            conn for conn in cooking_connections if conn[0] in technical_files
+        ]
 
         # If there are technical connections, they should have lower similarity scores
         if technical_connections:
             max_tech_similarity = max(conn[1] for conn in technical_connections)
-            assert max_tech_similarity < 0.8  # Technical connections should be weaker than strong related topics
+            assert (
+                max_tech_similarity < 0.8
+            )  # Technical connections should be weaker than strong related topics
 
     @pytest.mark.integration
     def test_real_api_with_yaml_frontmatter(self):

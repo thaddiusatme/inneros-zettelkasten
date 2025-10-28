@@ -15,8 +15,8 @@ class TestAITagger:
         from src.ai.tagger import AITagger
 
         tagger = AITagger()
-        assert hasattr(tagger, 'ollama_client')
-        assert hasattr(tagger, 'min_confidence')
+        assert hasattr(tagger, "ollama_client")
+        assert hasattr(tagger, "min_confidence")
         assert tagger.min_confidence == 0.7
 
     def test_generate_tags_from_permanent_note(self):
@@ -139,7 +139,11 @@ class TestAITagger:
         tagger = AITagger()
 
         # Mock API failure
-        with patch.object(tagger.ollama_client, 'generate_completion', side_effect=Exception("API Error")):
+        with patch.object(
+            tagger.ollama_client,
+            "generate_completion",
+            side_effect=Exception("API Error"),
+        ):
             tags = tagger.generate_tags(note_content)
 
             # Should fallback to mock tags gracefully
@@ -166,4 +170,6 @@ class TestAITagger:
 
         # Should complete within 2 seconds
         processing_time = end_time - start_time
-        assert processing_time < 2.0, f"Processing took {processing_time:.2f}s, expected <2s"
+        assert (
+            processing_time < 2.0
+        ), f"Processing took {processing_time:.2f}s, expected <2s"

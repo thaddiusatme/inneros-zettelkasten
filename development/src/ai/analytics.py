@@ -8,9 +8,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from collections import Counter
 from datetime import datetime, date
+
 try:
     import matplotlib.pyplot as plt
     import networkx as nx
+
     HAS_VISUALIZATION = True
 except ImportError:
     HAS_VISUALIZATION = False
@@ -25,6 +27,7 @@ from src.utils.frontmatter import parse_frontmatter as fm_parse_frontmatter
 @dataclass
 class NoteStats:
     """Statistics for a single note."""
+
     filename: str
     word_count: int
     tag_count: int
@@ -43,7 +46,7 @@ class NoteAnalytics:
     def __init__(self, notes_directory: str):
         """
         Initialize analytics for a notes directory.
-        
+
         Args:
             notes_directory: Path to the notes directory
         """
@@ -73,7 +76,7 @@ class NoteAnalytics:
     def _analyze_note(self, file_path: Path) -> Optional[NoteStats]:
         """Analyze a single note file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
         except Exception:
             return None
@@ -89,7 +92,7 @@ class NoteAnalytics:
         tag_count = len(tags) if isinstance(tags, list) else 0
 
         # Count internal links
-        link_count = len(re.findall(r'\[\[([^\]]+)\]\]', body))
+        link_count = len(re.findall(r"\[\[([^\]]+)\]\]", body))
 
         # Parse dates
         creation_date = self._parse_date(frontmatter.get("created"))
@@ -119,7 +122,7 @@ class NoteAnalytics:
             note_type=note_type,
             status=status,
             has_summary=has_summary,
-            quality_score=quality_score
+            quality_score=quality_score,
         )
 
     def _extract_frontmatter(self, content: str) -> Tuple[Dict, str]:
@@ -150,7 +153,7 @@ class NoteAnalytics:
             "%Y-%m-%d %H:%M",
             "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d %H:%M:%S"
+            "%Y-%m-%d %H:%M:%S",
         ]
 
         for fmt in formats:
@@ -161,8 +164,9 @@ class NoteAnalytics:
 
         return None
 
-    def _calculate_quality_score(self, word_count: int, tag_count: int,
-                                link_count: int, frontmatter: Dict) -> float:
+    def _calculate_quality_score(
+        self, word_count: int, tag_count: int, link_count: int, frontmatter: Dict
+    ) -> float:
         """Calculate a quality score for the note."""
         score = 0.0
 
@@ -232,30 +236,36 @@ class NoteAnalytics:
                 "average_quality_score": round(avg_quality, 2),
                 "notes_with_ai_summaries": notes_with_summaries,
                 "total_internal_links": total_links,
-                "average_links_per_note": round(avg_links, 1)
+                "average_links_per_note": round(avg_links, 1),
             },
             "distributions": {
                 "note_types": dict(type_counts),
-                "note_status": dict(status_counts)
+                "note_status": dict(status_counts),
             },
             "quality_metrics": {
                 "high_quality_notes": len([n for n in notes if n.quality_score > 0.7]),
-                "medium_quality_notes": len([n for n in notes if 0.4 <= n.quality_score <= 0.7]),
+                "medium_quality_notes": len(
+                    [n for n in notes if 0.4 <= n.quality_score <= 0.7]
+                ),
                 "low_quality_notes": len([n for n in notes if n.quality_score < 0.4]),
                 "quality_distribution": {
                     "min": min(quality_scores),
                     "max": max(quality_scores),
-                    "avg": avg_quality
-                }
+                    "avg": avg_quality,
+                },
             },
             "temporal_analysis": {
                 "notes_with_dates": len(creation_dates),
                 "date_range": {
-                    "earliest": min(creation_dates).isoformat() if creation_dates else None,
-                    "latest": max(creation_dates).isoformat() if creation_dates else None
-                }
+                    "earliest": (
+                        min(creation_dates).isoformat() if creation_dates else None
+                    ),
+                    "latest": (
+                        max(creation_dates).isoformat() if creation_dates else None
+                    ),
+                },
             },
-            "recommendations": self._generate_recommendations(notes)
+            "recommendations": self._generate_recommendations(notes),
         }
 
         return report
@@ -307,21 +317,21 @@ class NoteAnalytics:
             return {
                 "error": "Visualization libraries (matplotlib, networkx) not available",
                 "message": "Install with: pip install matplotlib networkx",
-                "output_file": output_file
+                "output_file": output_file,
             }
 
         # This would require parsing all notes to extract links
         # For now, return a placeholder
         return {
             "message": "Connection graph generation requires full note parsing",
-            "output_file": output_file
+            "output_file": output_file,
         }
 
     def export_report(self, output_file: str):
         """Export analytics report to JSON file."""
         report = self.generate_report()
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(report, f, indent=2, default=str)
 
         return f"Report exported to {output_file}"
@@ -334,8 +344,9 @@ def main():
     parser = argparse.ArgumentParser(description="Note collection analytics")
     parser.add_argument("directory", help="Notes directory to analyze")
     parser.add_argument("--output", help="Output file for report (JSON)")
-    parser.add_argument("--format", choices=["json", "text"], default="text",
-                       help="Output format")
+    parser.add_argument(
+        "--format", choices=["json", "text"], default="text", help="Output format"
+    )
 
     args = parser.parse_args()
 

@@ -38,7 +38,7 @@ class PerformanceMetricsCollector:
             "io_operations_count": 0,
             "successful_notes": 0,
             "failed_notes": 0,
-            "error_rate": 0.0
+            "error_rate": 0.0,
         }
 
         # Update with recorded metrics

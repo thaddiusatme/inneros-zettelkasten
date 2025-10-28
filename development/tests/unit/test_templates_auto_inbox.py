@@ -17,6 +17,6 @@ def _has_tp_move(content: str) -> bool:
 def test_template_auto_moves_out_of_templates(template_path: Path):
     """Ensure every Obsidian template auto-moves generated note to Inbox/."""
     content = template_path.read_text(encoding="utf-8")
-    assert _has_tp_move(content), (
-        f"Template {template_path.name} does not contain a `tp.file.move()` call. Ensure the template relocates generated notes out of `Templates/`."
-    )
+    assert _has_tp_move(
+        content
+    ), f"Template {template_path.name} does not contain a `tp.file.move()` call. Ensure the template relocates generated notes out of `Templates/`."

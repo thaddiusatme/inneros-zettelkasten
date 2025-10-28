@@ -24,7 +24,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_save_transcript_creates_file(self, tmp_path):
         """
         RED Phase Test 1: Save transcript creates markdown file
-        
+
         Success case: Should create transcript file in Media/Transcripts/ directory
         """
         vault_path = tmp_path / "vault"
@@ -35,7 +35,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
         # Sample transcript data
         transcript_data = [
             {"text": "Hello world", "start": 0.0, "duration": 2.5},
-            {"text": "This is a test", "start": 2.5, "duration": 3.0}
+            {"text": "This is a test", "start": 2.5, "duration": 3.0},
         ]
 
         metadata = {
@@ -43,7 +43,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
             "video_title": "Test Video",
             "duration": 5.5,
-            "language": "en"
+            "language": "en",
         }
 
         # Save transcript
@@ -51,7 +51,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             video_id="dQw4w9WgXcQ",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="fleeting-youtube-test"
+            parent_note_name="fleeting-youtube-test",
         )
 
         # Verify file was created
@@ -66,7 +66,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_transcript_filename_format(self, tmp_path):
         """
         RED Phase Test 2: Verify transcript filename follows youtube-{id}-{date}.md pattern
-        
+
         File naming convention: youtube-dQw4w9WgXcQ-2025-10-17.md
         """
         vault_path = tmp_path / "vault"
@@ -80,14 +80,14 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=abc123XYZ",
             "video_title": "Test",
             "duration": 1.0,
-            "language": "en"
+            "language": "en",
         }
 
         result_path = saver.save_transcript(
             video_id="abc123XYZ",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="test-note"
+            parent_note_name="test-note",
         )
 
         # Verify filename format: youtube-{video_id}-{YYYY-MM-DD}.md
@@ -103,7 +103,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_transcript_frontmatter_structure(self, tmp_path):
         """
         RED Phase Test 3: Verify transcript frontmatter includes all required fields
-        
+
         Required fields:
         - type: transcript
         - source: youtube
@@ -122,7 +122,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
 
         transcript_data = [
             {"text": "First line", "start": 0.0, "duration": 2.0},
-            {"text": "Second line", "start": 2.0, "duration": 3.0}
+            {"text": "Second line", "start": 2.0, "duration": 3.0},
         ]
 
         metadata = {
@@ -130,14 +130,14 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=testID123",
             "video_title": "Amazing Test Video",
             "duration": 180.5,  # 3 minutes 0.5 seconds
-            "language": "en"
+            "language": "en",
         }
 
         result_path = saver.save_transcript(
             video_id="testID123",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="fleeting-youtube-amazing-video"
+            parent_note_name="fleeting-youtube-amazing-video",
         )
 
         # Read and verify frontmatter
@@ -157,7 +157,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_format_timestamp_seconds_to_mmss(self, tmp_path):
         """
         RED Phase Test 4: Convert seconds to MM:SS timestamp format
-        
+
         Examples:
         - 0.0 → "00:00"
         - 90.0 → "01:30"
@@ -178,7 +178,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_format_duration_with_hours(self, tmp_path):
         """
         RED Phase Test 5: Format duration as HH:MM:SS or MM:SS
-        
+
         Examples:
         - 90 seconds → "1:30" (MM:SS)
         - 3661 seconds → "1:01:01" (HH:MM:SS)
@@ -199,7 +199,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_get_transcript_link(self, tmp_path):
         """
         RED Phase Test 6: Generate wikilink for transcript file
-        
+
         Format: [[youtube-{video_id}-{date}]]
         Example: [[youtube-dQw4w9WgXcQ-2025-10-17]]
         """
@@ -219,7 +219,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_idempotent_save(self, tmp_path):
         """
         RED Phase Test 7: Don't recreate transcript file if already exists
-        
+
         If transcript file already exists for video_id + date, should return
         existing path without overwriting.
         """
@@ -234,7 +234,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=testID123",
             "video_title": "Test Video",
             "duration": 1.0,
-            "language": "en"
+            "language": "en",
         }
 
         # Save once
@@ -242,7 +242,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             video_id="testID123",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="test-note"
+            parent_note_name="test-note",
         )
 
         original_content = path1.read_text()
@@ -253,7 +253,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             video_id="testID123",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="test-note"
+            parent_note_name="test-note",
         )
 
         # Verify same path returned
@@ -266,7 +266,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_bidirectional_parent_note_link(self, tmp_path):
         """
         RED Phase Test 8: Transcript frontmatter includes parent_note link
-        
+
         The saved transcript should include parent_note field in frontmatter
         to create bidirectional link back to the note that triggered processing.
         """
@@ -281,14 +281,14 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=xyz789",
             "video_title": "Parent Link Test",
             "duration": 1.0,
-            "language": "en"
+            "language": "en",
         }
 
         result_path = saver.save_transcript(
             video_id="xyz789",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="fleeting-youtube-my-note"
+            parent_note_name="fleeting-youtube-my-note",
         )
 
         content = result_path.read_text()
@@ -304,7 +304,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
     def test_transcript_body_with_timestamps(self, tmp_path):
         """
         RED Phase Test 9: Transcript body includes timestamps in MM:SS format
-        
+
         Body should contain timestamped transcript entries:
         [00:00] First line of transcript
         [00:05] Second line of transcript
@@ -317,7 +317,7 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
         transcript_data = [
             {"text": "Welcome to the video", "start": 0.0, "duration": 3.0},
             {"text": "Let's get started", "start": 3.0, "duration": 2.5},
-            {"text": "First topic here", "start": 5.5, "duration": 4.0}
+            {"text": "First topic here", "start": 5.5, "duration": 4.0},
         ]
 
         metadata = {
@@ -325,14 +325,14 @@ class TestYouTubeTranscriptSaverBasicFunctionality:
             "video_url": "https://youtube.com/watch?v=timestamp123",
             "video_title": "Timestamp Test",
             "duration": 10.0,
-            "language": "en"
+            "language": "en",
         }
 
         result_path = saver.save_transcript(
             video_id="timestamp123",
             transcript_data=transcript_data,
             metadata=metadata,
-            parent_note_name="test-note"
+            parent_note_name="test-note",
         )
 
         content = result_path.read_text()
@@ -349,7 +349,7 @@ class TestYouTubeTranscriptSaverHelperMethods:
     def test_build_transcript_content_structure(self, tmp_path):
         """
         RED Phase Test 10: Verify _build_transcript_content() assembles complete file
-        
+
         Should assemble: frontmatter + header + timestamped transcript body
         """
         vault_path = tmp_path / "vault"
@@ -359,7 +359,7 @@ class TestYouTubeTranscriptSaverHelperMethods:
 
         transcript_data = [
             {"text": "Line 1", "start": 0.0, "duration": 1.0},
-            {"text": "Line 2", "start": 1.0, "duration": 1.0}
+            {"text": "Line 2", "start": 1.0, "duration": 1.0},
         ]
 
         metadata = {
@@ -367,14 +367,14 @@ class TestYouTubeTranscriptSaverHelperMethods:
             "video_url": "https://youtube.com/watch?v=build123",
             "video_title": "Build Test",
             "duration": 2.0,
-            "language": "en"
+            "language": "en",
         }
 
         content = saver._build_transcript_content(
             transcript_data=transcript_data,
             metadata=metadata,
             parent_note_name="test-parent",
-            date_str="2025-10-17"
+            date_str="2025-10-17",
         )
 
         # Verify structure: frontmatter (---...---) + header + body

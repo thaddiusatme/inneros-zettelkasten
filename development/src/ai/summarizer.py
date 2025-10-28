@@ -12,10 +12,15 @@ from .ollama_client import OllamaClient
 class AISummarizer:
     """Generates summaries for long notes using AI analysis."""
 
-    def __init__(self, min_length: int = 500, max_summary_ratio: float = 0.3, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        min_length: int = 500,
+        max_summary_ratio: float = 0.3,
+        config: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initialize AI summarizer with configuration.
-        
+
         Args:
             min_length: Minimum word count to trigger summarization
             max_summary_ratio: Maximum ratio of summary length to original length
@@ -28,10 +33,10 @@ class AISummarizer:
     def should_summarize(self, content: str) -> bool:
         """
         Determine if content is long enough to warrant summarization.
-        
+
         Args:
             content: Note content to evaluate
-            
+
         Returns:
             bool: True if content should be summarized
         """
@@ -43,14 +48,16 @@ class AISummarizer:
 
         return word_count >= self.min_length
 
-    def generate_summary(self, content: str, summary_type: str = "abstractive") -> Optional[str]:
+    def generate_summary(
+        self, content: str, summary_type: str = "abstractive"
+    ) -> Optional[str]:
         """
         Generate a summary for the given content.
-        
+
         Args:
             content: Note content to summarize
             summary_type: Type of summary ("abstractive" or "extractive")
-            
+
         Returns:
             Generated summary or None if content is too short or API fails
         """
@@ -69,14 +76,16 @@ class AISummarizer:
             # Graceful fallback - return None if summarization fails
             return None
 
-    def generate_extractive_summary(self, content: str, num_sentences: int = 3) -> Optional[str]:
+    def generate_extractive_summary(
+        self, content: str, num_sentences: int = 3
+    ) -> Optional[str]:
         """
         Generate extractive summary by selecting key sentences.
-        
+
         Args:
             content: Note content to summarize
             num_sentences: Number of sentences to include in summary
-            
+
         Returns:
             Extractive summary or None if content is too short
         """
@@ -98,7 +107,9 @@ class AISummarizer:
         sentence_scores = self._score_sentences(sentences)
 
         # Select top sentences
-        top_sentences = sorted(sentence_scores.items(), key=lambda x: x[1], reverse=True)[:num_sentences]
+        top_sentences = sorted(
+            sentence_scores.items(), key=lambda x: x[1], reverse=True
+        )[:num_sentences]
 
         # Sort selected sentences by original order
         selected_indices = sorted([sentences.index(sent) for sent, _ in top_sentences])
@@ -109,13 +120,13 @@ class AISummarizer:
     def _generate_ollama_summary(self, content: str) -> str:
         """
         Generate summary using Ollama API.
-        
+
         Args:
             content: Content to summarize
-            
+
         Returns:
             Generated summary
-            
+
         Raises:
             Exception: If Ollama service is unavailable or API call fails
         """
@@ -141,8 +152,7 @@ Please provide only the summary without any additional commentary or formatting.
 
         try:
             summary = self.ollama_client.generate(
-                prompt=user_prompt,
-                system_prompt=system_prompt
+                prompt=user_prompt, system_prompt=system_prompt
             )
             return summary.strip()
         except Exception as e:
@@ -151,24 +161,24 @@ Please provide only the summary without any additional commentary or formatting.
     def _strip_yaml_frontmatter(self, content: str) -> str:
         """
         Remove YAML frontmatter from content.
-        
+
         Args:
             content: Content that may contain YAML frontmatter
-            
+
         Returns:
             Content without YAML frontmatter
         """
         # Pattern to match YAML frontmatter
-        yaml_pattern = r'^---\s*\n.*?\n---\s*\n'
-        return re.sub(yaml_pattern, '', content, flags=re.DOTALL).strip()
+        yaml_pattern = r"^---\s*\n.*?\n---\s*\n"
+        return re.sub(yaml_pattern, "", content, flags=re.DOTALL).strip()
 
     def _count_words(self, text: str) -> int:
         """
         Count words in text.
-        
+
         Args:
             text: Text to count words in
-            
+
         Returns:
             Number of words
         """
@@ -179,16 +189,16 @@ Please provide only the summary without any additional commentary or formatting.
     def _split_into_sentences(self, text: str) -> List[str]:
         """
         Split text into sentences.
-        
+
         Args:
             text: Text to split
-            
+
         Returns:
             List of sentences
         """
         # Simple sentence splitting on periods, exclamation marks, and question marks
         # followed by whitespace or end of string
-        sentence_pattern = r'[.!?]+\s+'
+        sentence_pattern = r"[.!?]+\s+"
         sentences = re.split(sentence_pattern, text)
 
         # Clean up and filter empty sentences
@@ -198,17 +208,17 @@ Please provide only the summary without any additional commentary or formatting.
     def _score_sentences(self, sentences: List[str]) -> Dict[str, float]:
         """
         Score sentences based on word frequency and position.
-        
+
         Args:
             sentences: List of sentences to score
-            
+
         Returns:
             Dictionary mapping sentences to scores
         """
         # Calculate word frequencies
         all_words = []
         for sentence in sentences:
-            words = re.findall(r'\b\w+\b', sentence.lower())
+            words = re.findall(r"\b\w+\b", sentence.lower())
             all_words.extend(words)
 
         word_freq = Counter(all_words)
@@ -216,7 +226,7 @@ Please provide only the summary without any additional commentary or formatting.
         # Score each sentence
         sentence_scores = {}
         for i, sentence in enumerate(sentences):
-            words = re.findall(r'\b\w+\b', sentence.lower())
+            words = re.findall(r"\b\w+\b", sentence.lower())
 
             if not words:
                 sentence_scores[sentence] = 0.0

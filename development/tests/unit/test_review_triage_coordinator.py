@@ -138,12 +138,14 @@ class TestWeeklyRecommendations:
             workflow_manager = Mock()
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.8,
-                "recommendations": [{
-                    "action": "promote_to_permanent",
-                    "reason": "High quality",
-                    "confidence": 0.9
-                }],
-                "processing": {"ai_tags": ["tag1", "tag2"]}
+                "recommendations": [
+                    {
+                        "action": "promote_to_permanent",
+                        "reason": "High quality",
+                        "confidence": 0.9,
+                    }
+                ],
+                "processing": {"ai_tags": ["tag1", "tag2"]},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -169,8 +171,14 @@ class TestWeeklyRecommendations:
             workflow_manager = Mock()
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.7,
-                "recommendations": [{"action": "promote_to_permanent", "reason": "Good", "confidence": 0.8}],
-                "processing": {"ai_tags": []}
+                "recommendations": [
+                    {
+                        "action": "promote_to_permanent",
+                        "reason": "Good",
+                        "confidence": 0.8,
+                    }
+                ],
+                "processing": {"ai_tags": []},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -195,7 +203,9 @@ class TestWeeklyRecommendations:
             (inbox / "note.md").write_text("---\ntitle: Note\n---\nContent")
 
             workflow_manager = Mock()
-            workflow_manager.process_inbox_note.side_effect = Exception("AI service down")
+            workflow_manager.process_inbox_note.side_effect = Exception(
+                "AI service down"
+            )
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
             candidates = coordinator.scan_review_candidates()
@@ -243,7 +253,7 @@ class TestFleetingTriageReport:
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.6,
                 "ai_tags": ["tag1"],
-                "metadata": {"created": "2025-10-14"}
+                "metadata": {"created": "2025-10-14"},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -338,7 +348,7 @@ class TestFleetingTriageReport:
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.7,
                 "ai_tags": [],
-                "metadata": {}
+                "metadata": {},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -386,8 +396,10 @@ class TestCoordinatorIntegration:
             workflow_manager.base_dir = vault
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.7,
-                "recommendations": [{"action": "promote", "reason": "Good", "confidence": 0.8}],
-                "processing": {"ai_tags": []}
+                "recommendations": [
+                    {"action": "promote", "reason": "Good", "confidence": 0.8}
+                ],
+                "processing": {"ai_tags": []},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -416,8 +428,10 @@ class TestCoordinatorIntegration:
             workflow_manager = Mock()
             workflow_manager.process_inbox_note.return_value = {
                 "quality_score": 0.7,
-                "recommendations": [{"action": "promote", "reason": "Good", "confidence": 0.8}],
-                "processing": {"ai_tags": []}
+                "recommendations": [
+                    {"action": "promote", "reason": "Good", "confidence": 0.8}
+                ],
+                "processing": {"ai_tags": []},
             }
 
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)

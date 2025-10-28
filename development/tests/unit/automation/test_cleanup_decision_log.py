@@ -1,7 +1,6 @@
 """RED phase: Decision log YAML generation from inventory records."""
 
 
-
 def test_decision_log_generates_from_inventory(tmp_path):
     """Transform inventory records into executable move decisions with metadata."""
     inventory_yaml = tmp_path / "inventory.yaml"
@@ -49,7 +48,10 @@ def test_decision_log_generates_from_inventory(tmp_path):
     assert "Projects/COMPLETED-2025-10/draft-todo.md" in data
     assert "Projects/REFERENCE/youtube-integration-maintenance.md" in data
     assert "development/src/automation/tools/audit_design_flaws.sh" in data
-    assert "Projects/REFERENCE/review-queue/automation-reports/fleeting_triage_2025-09-28_08-03-58.md" in data
+    assert (
+        "Projects/REFERENCE/review-queue/automation-reports/fleeting_triage_2025-09-28_08-03-58.md"
+        in data
+    )
 
     # Verify metadata preserved for automation assets
     assert "trigger: schedule" in data

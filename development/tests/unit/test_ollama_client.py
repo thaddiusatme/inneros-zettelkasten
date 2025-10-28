@@ -27,7 +27,7 @@ class TestOllamaClient:
         config = {
             "base_url": "http://custom-host:11434",
             "timeout": 60,
-            "model": "custom-model"
+            "model": "custom-model",
         }
 
         client = OllamaClient(config=config)
@@ -39,7 +39,7 @@ class TestOllamaClient:
         """Test successful health check against Ollama API."""
         from src.ai.ollama_client import OllamaClient
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {"status": "ok"}
@@ -50,15 +50,14 @@ class TestOllamaClient:
 
             assert result is True
             mock_get.assert_called_once_with(
-                "http://localhost:11434/api/tags",
-                timeout=30
+                "http://localhost:11434/api/tags", timeout=30
             )
 
     def test_health_check_failure_connection_error(self):
         """Test health check handles connection errors gracefully."""
         from src.ai.ollama_client import OllamaClient
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_get.side_effect = requests.ConnectionError("Connection failed")
 
             client = OllamaClient()
@@ -70,7 +69,7 @@ class TestOllamaClient:
         """Test health check handles timeout errors gracefully."""
         from src.ai.ollama_client import OllamaClient
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_get.side_effect = requests.Timeout("Request timed out")
 
             client = OllamaClient()
@@ -82,14 +81,11 @@ class TestOllamaClient:
         """Test checking if specific model is available."""
         from src.ai.ollama_client import OllamaClient
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
-                "models": [
-                    {"name": "llama3.1:8b"},
-                    {"name": "mistral:7b"}
-                ]
+                "models": [{"name": "llama3.1:8b"}, {"name": "mistral:7b"}]
             }
             mock_get.return_value = mock_response
 
@@ -102,12 +98,10 @@ class TestOllamaClient:
         """Test checking for unavailable model."""
         from src.ai.ollama_client import OllamaClient
 
-        with patch('requests.get') as mock_get:
+        with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.status_code = 200
-            mock_response.json.return_value = {
-                "models": [{"name": "mistral:7b"}]
-            }
+            mock_response.json.return_value = {"models": [{"name": "mistral:7b"}]}
             mock_get.return_value = mock_response
 
             client = OllamaClient()

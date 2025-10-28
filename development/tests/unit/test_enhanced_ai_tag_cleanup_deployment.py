@@ -22,13 +22,14 @@ from pathlib import Path
 
 # Add development directory to path for imports
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import the enhanced AI features we'll be testing
 try:
     from src.ai.enhanced_ai_features import (
         EnhancedSuggestionEngine,
-        QualityScoringRecalibrator
+        QualityScoringRecalibrator,
     )
     from src.ai.enhanced_ai_tag_cleanup_deployment import (
         LightweightTagCleanupEngine,
@@ -38,7 +39,7 @@ try:
         AISanitizedTagGenerator,
         CleanupWorkflowIntegrator,
         CleanupPerformanceMonitor,
-        WorkflowDemo
+        WorkflowDemo,
     )
 except ImportError:
     # Expected during RED phase
@@ -55,18 +56,33 @@ class TestLightweightTagCleanupEngine(unittest.TestCase):
 
         # Real problematic tags found in the vault (from scan)
         self.garbage_tags = [
-            "#", "|", "2", "8", "a", "",  # Symbols and single chars
-            "   ", " ", "\n", "\t",       # Whitespace variations
+            "#",
+            "|",
+            "2",
+            "8",
+            "a",
+            "",  # Symbols and single chars
+            "   ",
+            " ",
+            "\n",
+            "\t",  # Whitespace variations
         ]
 
         self.ai_artifacts = [
-            "ai_tags", "auto_generated", "placeholder",
-            "template_tag", "default_tag"
+            "ai_tags",
+            "auto_generated",
+            "placeholder",
+            "template_tag",
+            "default_tag",
         ]
 
         self.malformed_tags = [
-            "tag with spaces", "TAG_UNDERSCORE", "CamelCaseTag",
-            "tag#with#hash", "tag|with|pipe", "123numeric"
+            "tag with spaces",
+            "TAG_UNDERSCORE",
+            "CamelCaseTag",
+            "tag#with#hash",
+            "tag|with|pipe",
+            "123numeric",
         ]
 
         # Create test files with problematic tags
@@ -88,7 +104,13 @@ tags: ["#", "|", "2", "8", "a"]
 
 This note has garbage tags that need cleanup.
 """,
-                "expected_cleanup": ["reference-hash", "separator", "year-2", "reference-8", "concept-a"]
+                "expected_cleanup": [
+                    "reference-hash",
+                    "separator",
+                    "year-2",
+                    "reference-8",
+                    "concept-a",
+                ],
             },
             {
                 "path": "knowledge/Fleeting Notes/test-ai-artifacts.md",
@@ -103,7 +125,11 @@ tags: ["ai_tags", "auto_generated", "placeholder"]
 
 This note has AI artifact tags that need cleanup.
 """,
-                "expected_cleanup": ["ai-tagging", "automated-generation", "content-placeholder"]
+                "expected_cleanup": [
+                    "ai-tagging",
+                    "automated-generation",
+                    "content-placeholder",
+                ],
             },
             {
                 "path": "knowledge/Permanent Notes/test-malformed.md",
@@ -118,14 +144,18 @@ tags: ["tag with spaces", "TAG_UNDERSCORE", "CamelCaseTag"]
 
 This note has malformed tags that need standardization.
 """,
-                "expected_cleanup": ["tag-with-spaces", "tag-underscore", "camel-case-tag"]
-            }
+                "expected_cleanup": [
+                    "tag-with-spaces",
+                    "tag-underscore",
+                    "camel-case-tag",
+                ],
+            },
         ]
 
         for file_info in test_files:
             file_path = self.vault_path / file_info["path"]
             file_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(file_info["content"])
 
         # Store expected results for validation
@@ -134,7 +164,10 @@ This note has malformed tags that need standardization.
     def test_lightweight_tag_cleanup_engine_initialization(self):
         """Test LightweightTagCleanupEngine initializes for targeted deployment"""
         # GREEN phase - implementation should exist and work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
         self.assertIsNotNone(engine)
         self.assertEqual(engine.vault_path, self.vault_path)
@@ -142,7 +175,10 @@ This note has malformed tags that need standardization.
     def test_problematic_tag_identification(self):
         """Test accurate identification of 30 problematic tags for cleanup"""
         # GREEN phase - implementation should work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
 
         # Scan vault for problematic tags
@@ -161,7 +197,10 @@ This note has malformed tags that need standardization.
     def test_targeted_cleanup_suggestions(self):
         """Test targeted cleanup suggestions for worst 10-15 tags first"""
         # GREEN phase - implementation should work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
 
         # Get cleanup plan prioritizing worst offenders
@@ -172,17 +211,20 @@ This note has malformed tags that need standardization.
 
         # Should have actionable suggestions
         for item in cleanup_plan:
-            self.assertIn('original_tag', item)
-            self.assertIn('suggested_tag', item)
-            self.assertIn('reason', item)
-            self.assertIn('files_affected', item)
-            self.assertIn('priority', item)
-            self.assertIsInstance(item['files_affected'], list)
+            self.assertIn("original_tag", item)
+            self.assertIn("suggested_tag", item)
+            self.assertIn("reason", item)
+            self.assertIn("files_affected", item)
+            self.assertIn("priority", item)
+            self.assertIsInstance(item["files_affected"], list)
 
     def test_lightweight_processing_performance(self):
         """Test lightweight processing avoids system stalls for <30s deployment"""
         # GREEN phase - implementation should work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
 
         start_time = time.time()
@@ -196,13 +238,16 @@ This note has malformed tags that need standardization.
         self.assertLess(processing_time, 30.0)
 
         # Should avoid system stalls by limiting scope
-        self.assertLessEqual(results['tags_processed'], 30)
-        self.assertIsInstance(results['success_rate'], float)
+        self.assertLessEqual(results["tags_processed"], 30)
+        self.assertIsInstance(results["success_rate"], float)
 
     def test_backup_before_cleanup_safety(self):
         """Test complete backup before any tag modifications for safety"""
         # GREEN phase - implementation should work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
 
         # Should create backup before any modifications
@@ -219,7 +264,10 @@ This note has malformed tags that need standardization.
     def test_dry_run_mode_validation(self):
         """Test dry-run mode shows cleanup plan without making changes"""
         # GREEN phase - implementation should work
-        from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+        from src.ai.enhanced_ai_tag_cleanup_deployment import (
+            LightweightTagCleanupEngine,
+        )
+
         engine = LightweightTagCleanupEngine(self.vault_path)
 
         # Record original state
@@ -227,22 +275,22 @@ This note has malformed tags that need standardization.
         for file_path in self.expected_cleanups.keys():
             full_path = self.vault_path / file_path
             if full_path.exists():
-                with open(full_path, 'r') as f:
+                with open(full_path, "r") as f:
                     original_files[file_path] = f.read()
 
         # Execute dry-run
         dry_run_results = engine.execute_cleanup(dry_run=True)
 
         # Should provide detailed plan
-        self.assertIn('planned_changes', dry_run_results)
-        self.assertIn('affected_files', dry_run_results)
-        self.assertIn('estimated_improvements', dry_run_results)
-        self.assertTrue(dry_run_results.get('dry_run', False))
+        self.assertIn("planned_changes", dry_run_results)
+        self.assertIn("affected_files", dry_run_results)
+        self.assertIn("estimated_improvements", dry_run_results)
+        self.assertTrue(dry_run_results.get("dry_run", False))
 
         # Should NOT modify any files during dry-run
         for file_path, original_content in original_files.items():
             full_path = self.vault_path / file_path
-            with open(full_path, 'r') as f:
+            with open(full_path, "r") as f:
                 current_content = f.read()
             self.assertEqual(original_content, current_content)
 
@@ -260,32 +308,36 @@ class TestTagCleanupValidation(unittest.TestCase):
         # This test will FAIL until validation system is implemented
         with self.assertRaises((ImportError, AttributeError)):
             from src.ai.enhanced_ai_tag_cleanup_deployment import TagCleanupValidator
+
             validator = TagCleanupValidator(self.vault_path)
 
             # Mock cleanup results
             cleanup_results = {
-                'tags_modified': 15,
-                'files_affected': 8,
-                'success_rate': 0.93,
-                'cleanup_details': [
-                    {'original': '#', 'new': 'reference-hash', 'files': 2},
-                    {'original': '|', 'new': 'separator', 'files': 1},
-                    {'original': '2', 'new': 'year-2', 'files': 3}
-                ]
+                "tags_modified": 15,
+                "files_affected": 8,
+                "success_rate": 0.93,
+                "cleanup_details": [
+                    {"original": "#", "new": "reference-hash", "files": 2},
+                    {"original": "|", "new": "separator", "files": 1},
+                    {"original": "2", "new": "year-2", "files": 3},
+                ],
             }
 
             validation_result = validator.validate_cleanup_quality(cleanup_results)
 
             # Should validate quality improvements
-            self.assertTrue(validation_result['quality_improved'])
-            self.assertGreaterEqual(validation_result['semantic_score'], 0.8)
-            self.assertLessEqual(validation_result['problematic_remaining'], 10)
+            self.assertTrue(validation_result["quality_improved"])
+            self.assertGreaterEqual(validation_result["semantic_score"], 0.8)
+            self.assertLessEqual(validation_result["problematic_remaining"], 10)
 
     def test_rollback_capability_validation(self):
         """Test rollback capability if cleanup validation fails"""
         # This test will FAIL until rollback capability is implemented
         with self.assertRaises((ImportError, AttributeError)):
-            from src.ai.enhanced_ai_tag_cleanup_deployment import LightweightTagCleanupEngine
+            from src.ai.enhanced_ai_tag_cleanup_deployment import (
+                LightweightTagCleanupEngine,
+            )
+
             engine = LightweightTagCleanupEngine(self.vault_path)
 
             # Create test scenario where rollback might be needed
@@ -296,8 +348,10 @@ class TestTagCleanupValidation(unittest.TestCase):
 
             if cleanup_failed:
                 rollback_result = engine.rollback_to_backup(original_state)
-                self.assertTrue(rollback_result['rollback_successful'])
-                self.assertEqual(rollback_result['files_restored'], original_state['file_count'])
+                self.assertTrue(rollback_result["rollback_successful"])
+                self.assertEqual(
+                    rollback_result["files_restored"], original_state["file_count"]
+                )
 
 
 class TestTagPollutionPrevention(unittest.TestCase):
@@ -313,21 +367,22 @@ class TestTagPollutionPrevention(unittest.TestCase):
         # This test will FAIL until template sanitization is implemented
         with self.assertRaises((ImportError, AttributeError)):
             from src.ai.enhanced_ai_tag_cleanup_deployment import TemplateSanitizer
+
             sanitizer = TemplateSanitizer(self.vault_path)
 
             # Test problematic template patterns
             problematic_templates = [
                 "tags: ['#tag', 'numeric123', '|separator']",
                 "tags: ['2024', '8', 'a']",
-                "tags: ['   ', '', '#']"
+                "tags: ['   ', '', '#']",
             ]
 
             for template in problematic_templates:
                 sanitized = sanitizer.sanitize_template_tags(template)
 
                 # Should not contain problematic patterns
-                self.assertNotIn('#', sanitized)
-                self.assertNotIn('|', sanitized)
+                self.assertNotIn("#", sanitized)
+                self.assertNotIn("|", sanitized)
                 self.assertNotRegex(sanitized, r"'[0-9]+'")  # No pure numeric tags
                 self.assertNotIn("''", sanitized)  # No empty tags
 
@@ -336,26 +391,31 @@ class TestTagPollutionPrevention(unittest.TestCase):
         # This test will FAIL until weekly review integration is implemented
         with self.assertRaises((ImportError, AttributeError)):
             from src.ai.enhanced_ai_tag_cleanup_deployment import WeeklyReviewSanitizer
+
             sanitizer = WeeklyReviewSanitizer()
 
             # Mock weekly review candidates with problematic tags
             review_candidates = [
                 {"note": "test1.md", "tags": ["#", "good-tag", "123"], "quality": 0.6},
-                {"note": "test2.md", "tags": ["valid-tag", "|", "another-good"], "quality": 0.7}
+                {
+                    "note": "test2.md",
+                    "tags": ["valid-tag", "|", "another-good"],
+                    "quality": 0.7,
+                },
             ]
 
             sanitized_candidates = sanitizer.sanitize_review_tags(review_candidates)
 
             # Should sanitize problematic tags during review
             for candidate in sanitized_candidates:
-                tags = candidate.get('tags', [])
+                tags = candidate.get("tags", [])
                 self.assertTrue(all(self._is_valid_tag(tag) for tag in tags))
 
     def _is_valid_tag(self, tag: str) -> bool:
         """Helper to validate tag format"""
         if not tag or not tag.strip():
             return False
-        if tag in ['#', '|'] or tag.isdigit():
+        if tag in ["#", "|"] or tag.isdigit():
             return False
         if len(tag) < 2:
             return False
@@ -365,11 +425,21 @@ class TestTagPollutionPrevention(unittest.TestCase):
         """Test AI tag generation includes sanitization to prevent pollution"""
         # This test will FAIL until AI generation sanitization is implemented
         with self.assertRaises((ImportError, AttributeError)):
-            from src.ai.enhanced_ai_tag_cleanup_deployment import AISanitizedTagGenerator
+            from src.ai.enhanced_ai_tag_cleanup_deployment import (
+                AISanitizedTagGenerator,
+            )
+
             generator = AISanitizedTagGenerator()
 
             # Mock AI-generated tags that might be problematic
-            mock_ai_output = ["good-tag", "#", "machine-learning", "123", "|", "valid-concept"]
+            mock_ai_output = [
+                "good-tag",
+                "#",
+                "machine-learning",
+                "123",
+                "|",
+                "valid-concept",
+            ]
 
             sanitized_tags = generator.sanitize_ai_generated_tags(mock_ai_output)
 
@@ -396,17 +466,21 @@ class TestCleanupDeploymentIntegration(unittest.TestCase):
         """Test cleanup integrates with existing WorkflowManager"""
         # This test will FAIL until WorkflowManager integration is implemented
         with self.assertRaises((ImportError, AttributeError)):
-            from src.ai.enhanced_ai_tag_cleanup_deployment import CleanupWorkflowIntegrator
+            from src.ai.enhanced_ai_tag_cleanup_deployment import (
+                CleanupWorkflowIntegrator,
+            )
             from src.ai.workflow_manager import WorkflowManager
 
             integrator = CleanupWorkflowIntegrator(self.vault_path)
             workflow_manager = WorkflowManager(self.vault_path)
 
             # Should integrate with existing workflows
-            integration_result = integrator.integrate_with_workflow_manager(workflow_manager)
+            integration_result = integrator.integrate_with_workflow_manager(
+                workflow_manager
+            )
 
-            self.assertTrue(integration_result['integration_successful'])
-            self.assertIn('cleanup_command_added', integration_result)
+            self.assertTrue(integration_result["integration_successful"])
+            self.assertIn("cleanup_command_added", integration_result)
 
     def test_cli_integration_deployment(self):
         """Test CLI integration for cleanup deployment commands"""
@@ -418,37 +492,40 @@ class TestCleanupDeploymentIntegration(unittest.TestCase):
             cli = WorkflowDemo()
 
             # New cleanup commands should be available
-            self.assertTrue(hasattr(cli, 'execute_tag_cleanup'))
-            self.assertTrue(hasattr(cli, 'validate_tag_quality'))
+            self.assertTrue(hasattr(cli, "execute_tag_cleanup"))
+            self.assertTrue(hasattr(cli, "validate_tag_quality"))
 
             # Should maintain existing functionality
-            self.assertTrue(hasattr(cli, 'process_inbox'))
-            self.assertTrue(hasattr(cli, 'weekly_review'))
+            self.assertTrue(hasattr(cli, "process_inbox"))
+            self.assertTrue(hasattr(cli, "weekly_review"))
 
     def test_performance_monitoring_integration(self):
         """Test cleanup deployment includes performance monitoring"""
         # This test will FAIL until performance monitoring is implemented
         with self.assertRaises((ImportError, AttributeError)):
-            from src.ai.enhanced_ai_tag_cleanup_deployment import CleanupPerformanceMonitor
+            from src.ai.enhanced_ai_tag_cleanup_deployment import (
+                CleanupPerformanceMonitor,
+            )
+
             monitor = CleanupPerformanceMonitor()
 
             # Mock cleanup performance data
             cleanup_metrics = {
-                'processing_time': 15.5,
-                'tags_processed': 25,
-                'success_rate': 0.92,
-                'memory_usage': 'acceptable'
+                "processing_time": 15.5,
+                "tags_processed": 25,
+                "success_rate": 0.92,
+                "memory_usage": "acceptable",
             }
 
             performance_report = monitor.analyze_cleanup_performance(cleanup_metrics)
 
             # Should provide performance insights
-            self.assertIn('performance_grade', performance_report)
-            self.assertIn('optimization_suggestions', performance_report)
-            self.assertIn('resource_efficiency', performance_report)
+            self.assertIn("performance_grade", performance_report)
+            self.assertIn("optimization_suggestions", performance_report)
+            self.assertIn("resource_efficiency", performance_report)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run all tests - these will FAIL during RED phase as expected
     print("🔴 TDD ITERATION: Enhanced AI Tag Cleanup Deployment - RED PHASE")
     print("Expected: All tests will FAIL until implementation is complete")

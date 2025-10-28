@@ -13,9 +13,10 @@ from unittest.mock import patch, MagicMock
 from io import StringIO
 
 # Add development directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 from ai.link_suggestion_engine import LinkSuggestion
+
 
 @pytest.fixture
 def temp_vault():
@@ -29,7 +30,8 @@ def temp_vault():
 
         # Create test notes with realistic content
         ai_note = vault_path / "Permanent Notes" / "ai-concepts.md"
-        ai_note.write_text("""---
+        ai_note.write_text(
+            """---
 type: permanent
 tags: [ai, machine-learning, concepts]
 ---
@@ -41,10 +43,12 @@ machine learning algorithms and neural networks.
 ## Core Concepts
 - Deep learning fundamentals  
 - Neural network architectures
-""")
+"""
+        )
 
         ml_note = vault_path / "Permanent Notes" / "machine-learning-basics.md"
-        ml_note.write_text("""---
+        ml_note.write_text(
+            """---
 type: permanent
 tags: [machine-learning, algorithms]  
 ---
@@ -56,9 +60,11 @@ Introduction to machine learning algorithms and their applications.
 - Supervised learning
 - Unsupervised learning
 - Deep neural networks
-""")
+"""
+        )
 
         yield vault_path
+
 
 @pytest.fixture
 def mock_suggestions():
@@ -73,7 +79,7 @@ def mock_suggestions():
             confidence="high",
             explanation="Strong semantic similarity (85%) with shared AI/ML concepts",
             insertion_context="## Core Concepts",
-            suggested_location="related_concepts"
+            suggested_location="related_concepts",
         ),
         LinkSuggestion(
             source_note="ai-concepts.md",
@@ -84,7 +90,7 @@ def mock_suggestions():
             confidence="medium",
             explanation="Moderate semantic relationship (72%) with neural network concepts",
             insertion_context="## Related Topics",
-            suggested_location="see_also"
+            suggested_location="see_also",
         ),
         LinkSuggestion(
             source_note="ai-concepts.md",
@@ -95,9 +101,10 @@ def mock_suggestions():
             confidence="low",
             explanation="Weak connection (45%) - manual review recommended",
             insertion_context="## See Also",
-            suggested_location="see_also"
-        )
+            suggested_location="see_also",
+        ),
     ]
+
 
 class TestCLIArgumentParsing:
     """Test CLI argument parsing for suggest-links command"""
@@ -110,10 +117,10 @@ class TestCLIArgumentParsing:
         parser = create_parser()
 
         # Test basic command parsing
-        args = parser.parse_args(['suggest-links', 'test-note.md', 'knowledge/'])
-        assert args.command == 'suggest-links'
-        assert args.target == 'test-note.md'
-        assert args.corpus_dir == 'knowledge/'
+        args = parser.parse_args(["suggest-links", "test-note.md", "knowledge/"])
+        assert args.command == "suggest-links"
+        assert args.target == "test-note.md"
+        assert args.corpus_dir == "knowledge/"
 
     def test_suggest_links_optional_arguments(self):
         """Test parsing of optional arguments for suggest-links command"""
@@ -122,13 +129,19 @@ class TestCLIArgumentParsing:
         parser = create_parser()
 
         # Test with all optional arguments
-        args = parser.parse_args([
-            'suggest-links', 'test-note.md', 'knowledge/',
-            '--interactive',
-            '--min-quality', '0.7',
-            '--max-results', '10',
-            '--dry-run'
-        ])
+        args = parser.parse_args(
+            [
+                "suggest-links",
+                "test-note.md",
+                "knowledge/",
+                "--interactive",
+                "--min-quality",
+                "0.7",
+                "--max-results",
+                "10",
+                "--dry-run",
+            ]
+        )
 
         assert args.interactive is True
         assert args.min_quality == 0.7
@@ -140,12 +153,12 @@ class TestCLIArgumentParsing:
         from cli.connections_demo import create_parser
 
         parser = create_parser()
-        args = parser.parse_args(['suggest-links', 'test.md', 'vault/'])
+        args = parser.parse_args(["suggest-links", "test.md", "vault/"])
 
         # Should use sensible defaults
         assert args.interactive is False
         assert args.min_quality == 0.6  # Default quality threshold
-        assert args.max_results == 5     # Default max results
+        assert args.max_results == 5  # Default max results
         assert args.dry_run is False
 
     def test_invalid_suggest_links_arguments(self):
@@ -156,22 +169,34 @@ class TestCLIArgumentParsing:
 
         # Test invalid quality threshold
         with pytest.raises(SystemExit):
-            parser.parse_args(['suggest-links', 'test.md', 'vault/', '--min-quality', '1.5'])
+            parser.parse_args(
+                ["suggest-links", "test.md", "vault/", "--min-quality", "1.5"]
+            )
 
         # Test negative max results
         with pytest.raises(SystemExit):
-            parser.parse_args(['suggest-links', 'test.md', 'vault/', '--max-results', '-5'])
+            parser.parse_args(
+                ["suggest-links", "test.md", "vault/", "--max-results", "-5"]
+            )
 
 
 class TestLinkSuggestionEngineIntegration:
     """Test integration between CLI and LinkSuggestionEngine"""
 
-    @patch('cli.connections_demo.LinkInsertionEngine')
-    @patch('cli.connections_demo.AIConnections')
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    @patch('cli.connections_demo.load_single_note')
-    @patch('cli.connections_demo.load_note_corpus')
-    def test_cli_integration_with_link_insertion_engine_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+    @patch("cli.connections_demo.LinkInsertionEngine")
+    @patch("cli.connections_demo.AIConnections")
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    @patch("cli.connections_demo.load_single_note")
+    @patch("cli.connections_demo.load_note_corpus")
+    def test_cli_integration_with_link_insertion_engine_fails(
+        self,
+        mock_corpus,
+        mock_note,
+        mock_engine,
+        mock_ai_connections,
+        mock_insertion_engine,
+        temp_vault,
+    ):
         """TEST: CLI integrates with LinkInsertionEngine when users accept suggestions - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
         from ai.link_insertion_engine import InsertionResult
@@ -180,7 +205,7 @@ class TestLinkSuggestionEngineIntegration:
         # Mock AI connection discovery
         mock_ai_instance = MagicMock()
         mock_ai_instance.find_similar_notes.return_value = [
-            ('machine-learning-basics.md', 0.85),
+            ("machine-learning-basics.md", 0.85),
         ]
         mock_ai_connections.return_value = mock_ai_instance
 
@@ -194,7 +219,7 @@ class TestLinkSuggestionEngineIntegration:
             confidence="high",
             explanation="High semantic similarity",
             insertion_context="## Related Concepts",
-            suggested_location="related_concepts"
+            suggested_location="related_concepts",
         )
 
         mock_engine_instance = MagicMock()
@@ -203,10 +228,10 @@ class TestLinkSuggestionEngineIntegration:
 
         # Mock LinkInsertionEngine
         mock_insertion_instance = MagicMock()
-        mock_insertion_instance.insert_suggestions_into_note.return_value = InsertionResult(
-            success=True,
-            insertions_made=1,
-            backup_path="/path/to/backup.md"
+        mock_insertion_instance.insert_suggestions_into_note.return_value = (
+            InsertionResult(
+                success=True, insertions_made=1, backup_path="/path/to/backup.md"
+            )
         )
         mock_insertion_engine.return_value = mock_insertion_instance
 
@@ -224,7 +249,9 @@ class TestLinkSuggestionEngineIntegration:
         mock_args.dry_run = False
 
         # Mock user accepting the suggestion in interactive mode
-        with patch('builtins.input', side_effect=['a', 'y']):  # User accepts suggestion, then confirms insertion
+        with patch(
+            "builtins.input", side_effect=["a", "y"]
+        ):  # User accepts suggestion, then confirms insertion
             handle_suggest_links_command(mock_args)
 
         # Verify LinkInsertionEngine was initialized and used
@@ -233,22 +260,24 @@ class TestLinkSuggestionEngineIntegration:
             "test-note.md",
             [test_suggestion],
             check_duplicates=True,
-            auto_detect_location=True
+            auto_detect_location=True,
         )
 
-    @patch('cli.connections_demo.AIConnections')
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    @patch('cli.connections_demo.load_single_note')
-    @patch('cli.connections_demo.load_note_corpus')
-    def test_real_connection_discovery_integration(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, temp_vault):
+    @patch("cli.connections_demo.AIConnections")
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    @patch("cli.connections_demo.load_single_note")
+    @patch("cli.connections_demo.load_note_corpus")
+    def test_real_connection_discovery_integration(
+        self, mock_corpus, mock_note, mock_engine, mock_ai_connections, temp_vault
+    ):
         """Test integration with real AIConnections instead of mock data"""
         from cli.connections_demo import handle_suggest_links_command
 
         # Mock the AIConnections instance and its methods
         mock_ai_instance = MagicMock()
         mock_ai_instance.find_similar_notes.return_value = [
-            ('machine-learning-basics.md', 0.85),
-            ('neural-networks.md', 0.72)
+            ("machine-learning-basics.md", 0.85),
+            ("neural-networks.md", 0.72),
         ]
         mock_ai_connections.return_value = mock_ai_instance
 
@@ -277,26 +306,30 @@ class TestLinkSuggestionEngineIntegration:
         mock_ai_connections.assert_called_once()
         mock_ai_instance.find_similar_notes.assert_called_once_with(
             "test note content about AI",
-            {"note1.md": "content1", "note2.md": "content2"}
+            {"note1.md": "content1", "note2.md": "content2"},
         )
 
         # Verify LinkSuggestionEngine received the real connection data
         mock_engine_instance.generate_link_suggestions.assert_called_once()
 
         # Get the actual connections passed to the engine
-        actual_connections_call = mock_engine_instance.generate_link_suggestions.call_args[0][0]
+        actual_connections_call = (
+            mock_engine_instance.generate_link_suggestions.call_args[0][0]
+        )
 
         # Verify the format matches expected connection data structure
         assert len(actual_connections_call) == 2
-        assert actual_connections_call[0]['target'] == 'machine-learning-basics.md'
-        assert actual_connections_call[0]['similarity'] == 0.85
-        assert actual_connections_call[1]['target'] == 'neural-networks.md'
-        assert actual_connections_call[1]['similarity'] == 0.72
+        assert actual_connections_call[0]["target"] == "machine-learning-basics.md"
+        assert actual_connections_call[0]["similarity"] == 0.85
+        assert actual_connections_call[1]["target"] == "neural-networks.md"
+        assert actual_connections_call[1]["similarity"] == 0.72
 
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    @patch('cli.connections_demo.load_single_note')
-    @patch('cli.connections_demo.load_note_corpus')
-    def test_engine_initialization_from_cli(self, mock_corpus, mock_note, mock_engine, temp_vault):
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    @patch("cli.connections_demo.load_single_note")
+    @patch("cli.connections_demo.load_note_corpus")
+    def test_engine_initialization_from_cli(
+        self, mock_corpus, mock_note, mock_engine, temp_vault
+    ):
         """Test LinkSuggestionEngine initialization from CLI command"""
         from cli.connections_demo import handle_suggest_links_command
 
@@ -322,12 +355,10 @@ class TestLinkSuggestionEngineIntegration:
 
         # Verify LinkSuggestionEngine was initialized correctly
         mock_engine.assert_called_once_with(
-            vault_path=str(temp_vault),
-            quality_threshold=0.7,
-            max_suggestions=5
+            vault_path=str(temp_vault), quality_threshold=0.7, max_suggestions=5
         )
 
-    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch("cli.connections_demo.LinkSuggestionEngine")
     def test_suggestion_generation_integration(self, mock_engine, mock_suggestions):
         """Test integration between CLI and suggestion generation"""
         from cli.connections_demo import handle_suggest_links_command
@@ -338,8 +369,9 @@ class TestLinkSuggestionEngineIntegration:
         mock_engine.return_value = mock_engine_instance
 
         # Mock other dependencies
-        with patch('cli.connections_demo.load_single_note') as mock_note, \
-             patch('cli.connections_demo.load_note_corpus') as mock_corpus:
+        with patch("cli.connections_demo.load_single_note") as mock_note, patch(
+            "cli.connections_demo.load_note_corpus"
+        ) as mock_corpus:
 
             mock_note.return_value = "target content"
             mock_corpus.return_value = {"note1.md": "content1"}
@@ -362,14 +394,16 @@ class TestLinkSuggestionEngineIntegration:
 class TestInteractiveReviewWorkflow:
     """Test interactive review workflow with user input handling"""
 
-    @patch('builtins.input')
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_interactive_suggestion_display(self, mock_stdout, mock_input, mock_suggestions):
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_interactive_suggestion_display(
+        self, mock_stdout, mock_input, mock_suggestions
+    ):
         """Test formatted display of suggestions in interactive mode"""
         from cli.smart_link_cli_utils import display_suggestion_interactively
 
         # Mock user accepting first suggestion
-        mock_input.return_value = 'a'
+        mock_input.return_value = "a"
 
         suggestion = mock_suggestions[0]  # High quality suggestion
         result = display_suggestion_interactively(suggestion, 1, 3)
@@ -383,18 +417,18 @@ class TestInteractiveReviewWorkflow:
         assert "Strong semantic similarity" in output  # Explanation
         assert "[A]ccept" in output  # Accept option
         assert "[R]eject" in output  # Reject option
-        assert "[S]kip" in output    # Skip option
+        assert "[S]kip" in output  # Skip option
 
         # Verify user choice is returned
-        assert result == 'accept'
+        assert result == "accept"
 
-    @patch('builtins.input')
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("builtins.input")
+    @patch("sys.stdout", new_callable=StringIO)
     def test_quality_indicator_display(self, mock_stdout, mock_input, mock_suggestions):
         """Test quality indicators for different confidence levels"""
         from cli.smart_link_cli_utils import display_suggestion_interactively
 
-        mock_input.return_value = 's'
+        mock_input.return_value = "s"
 
         # Test high quality (green)
         high_quality = mock_suggestions[0]
@@ -420,43 +454,43 @@ class TestInteractiveReviewWorkflow:
         output_low = mock_stdout.getvalue()
         assert "🔴" in output_low
 
-    @patch('builtins.input')
+    @patch("builtins.input")
     def test_user_input_validation(self, mock_input):
         """Test validation and handling of user input during interactive review"""
         from cli.smart_link_cli_utils import get_user_choice_for_suggestion
 
         # Test valid inputs
-        mock_input.return_value = 'a'
-        assert get_user_choice_for_suggestion() == 'accept'
+        mock_input.return_value = "a"
+        assert get_user_choice_for_suggestion() == "accept"
 
-        mock_input.return_value = 'r'
-        assert get_user_choice_for_suggestion() == 'reject'
+        mock_input.return_value = "r"
+        assert get_user_choice_for_suggestion() == "reject"
 
-        mock_input.return_value = 's'
-        assert get_user_choice_for_suggestion() == 'skip'
+        mock_input.return_value = "s"
+        assert get_user_choice_for_suggestion() == "skip"
 
         # Test case insensitive
-        mock_input.return_value = 'A'
-        assert get_user_choice_for_suggestion() == 'accept'
+        mock_input.return_value = "A"
+        assert get_user_choice_for_suggestion() == "accept"
 
-    @patch('builtins.input')
+    @patch("builtins.input")
     def test_invalid_input_handling(self, mock_input):
         """Test handling of invalid user input with re-prompting"""
         from cli.smart_link_cli_utils import get_user_choice_for_suggestion
 
         # First invalid, then valid input
-        mock_input.side_effect = ['x', 'invalid', 'a']
+        mock_input.side_effect = ["x", "invalid", "a"]
         result = get_user_choice_for_suggestion()
 
         # Should eventually return valid choice after invalid attempts
-        assert result == 'accept'
+        assert result == "accept"
         assert mock_input.call_count == 3  # Two invalid attempts, one valid
 
 
 class TestBatchProcessingCLI:
     """Test batch processing functionality in CLI"""
 
-    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch("cli.connections_demo.LinkSuggestionEngine")
     def test_batch_suggestion_processing(self, mock_engine, mock_suggestions):
         """Test processing multiple suggestions with progress indicators"""
         from cli.connections_demo import process_suggestions_batch
@@ -468,7 +502,7 @@ class TestBatchProcessingCLI:
 
         suggestions = mock_suggestions
 
-        with patch('cli.smart_link_cli_utils.display_progress') as mock_progress:
+        with patch("cli.smart_link_cli_utils.display_progress") as mock_progress:
             result = process_suggestions_batch(suggestions, interactive=False)
 
             # Verify progress display was called
@@ -477,7 +511,7 @@ class TestBatchProcessingCLI:
             # Verify all suggestions were processed
             assert len(result) == len(suggestions)
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_batch_progress_display(self, mock_stdout):
         """Test progress display during batch processing"""
         from cli.smart_link_cli_utils import display_batch_progress
@@ -500,19 +534,23 @@ class TestBatchProcessingCLI:
         assert high_quality[0].confidence == "high"
 
         # Filter with lower threshold
-        medium_quality = filter_suggestions_by_quality(mock_suggestions, min_quality=0.5)
+        medium_quality = filter_suggestions_by_quality(
+            mock_suggestions, min_quality=0.5
+        )
         assert len(medium_quality) == 2  # High and medium quality suggestions
 
 
 class TestOutputFormatting:
     """Test CLI output formatting and presentation"""
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_suggestion_summary_display(self, mock_stdout, mock_suggestions):
         """Test formatted display of suggestion summary"""
         from cli.smart_link_cli_utils import display_suggestions_summary
 
-        display_suggestions_summary(mock_suggestions, processed=2, accepted=1, rejected=1)
+        display_suggestions_summary(
+            mock_suggestions, processed=2, accepted=1, rejected=1
+        )
 
         output = mock_stdout.getvalue()
 
@@ -522,7 +560,7 @@ class TestOutputFormatting:
         assert "1 accepted" in output or "1" in output
         assert "1 rejected" in output or "1" in output
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_dry_run_mode_display(self, mock_stdout, mock_suggestions):
         """Test dry-run mode formatting without actual modifications"""
         from cli.smart_link_cli_utils import display_dry_run_results
@@ -538,7 +576,7 @@ class TestOutputFormatting:
         # Should not contain actual modification language
         assert "added" not in output.lower() or "modified" not in output.lower()
 
-    @patch('sys.stdout', new_callable=StringIO)
+    @patch("sys.stdout", new_callable=StringIO)
     def test_error_formatting(self, mock_stdout):
         """Test formatted error display in CLI"""
         from cli.smart_link_cli_utils import display_cli_error
@@ -554,14 +592,16 @@ class TestOutputFormatting:
 class TestCLIIntegrationEndToEnd:
     """End-to-end integration tests for complete CLI workflow"""
 
-    @patch('builtins.input')
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    def test_complete_interactive_workflow(self, mock_engine, mock_input, mock_suggestions, temp_vault):
+    @patch("builtins.input")
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    def test_complete_interactive_workflow(
+        self, mock_engine, mock_input, mock_suggestions, temp_vault
+    ):
         """Test complete interactive workflow from command to suggestion acceptance"""
         from cli.connections_demo import main
 
         # Mock user accepting all suggestions
-        mock_input.side_effect = ['a', 'a', 'r']  # Accept, Accept, Reject
+        mock_input.side_effect = ["a", "a", "r"]  # Accept, Accept, Reject
 
         # Mock engine
         mock_engine_instance = MagicMock()
@@ -570,16 +610,16 @@ class TestCLIIntegrationEndToEnd:
 
         # Mock sys.argv for CLI
         test_args = [
-            'connections_demo.py',
-            'suggest-links',
+            "connections_demo.py",
+            "suggest-links",
             str(temp_vault / "Permanent Notes" / "ai-concepts.md"),
             str(temp_vault),
-            '--interactive'
+            "--interactive",
         ]
 
-        with patch.object(sys, 'argv', test_args), \
-             patch('cli.connections_demo.load_single_note') as mock_note, \
-             patch('cli.connections_demo.load_note_corpus') as mock_corpus:
+        with patch.object(sys, "argv", test_args), patch(
+            "cli.connections_demo.load_single_note"
+        ) as mock_note, patch("cli.connections_demo.load_note_corpus") as mock_corpus:
 
             mock_note.return_value = "test content"
             mock_corpus.return_value = {"test.md": "content"}
@@ -596,17 +636,17 @@ class TestCLIIntegrationEndToEnd:
 
         # Test with non-existent target file
         test_args = [
-            'connections_demo.py',
-            'suggest-links',
-            'nonexistent-file.md',
-            str(temp_vault)
+            "connections_demo.py",
+            "suggest-links",
+            "nonexistent-file.md",
+            str(temp_vault),
         ]
 
-        with patch.object(sys, 'argv', test_args):
+        with patch.object(sys, "argv", test_args):
             with pytest.raises(SystemExit):
                 main()
 
-    @patch('cli.connections_demo.LinkSuggestionEngine')
+    @patch("cli.connections_demo.LinkSuggestionEngine")
     def test_performance_requirements(self, mock_engine, mock_suggestions):
         """Test that CLI meets performance requirements (<2s response time)"""
         import time
@@ -625,8 +665,9 @@ class TestCLIIntegrationEndToEnd:
         mock_args.min_quality = 0.7
         mock_args.max_results = 5
 
-        with patch('cli.connections_demo.load_single_note') as mock_note, \
-             patch('cli.connections_demo.load_note_corpus') as mock_corpus:
+        with patch("cli.connections_demo.load_single_note") as mock_note, patch(
+            "cli.connections_demo.load_note_corpus"
+        ) as mock_corpus:
 
             mock_note.return_value = "content"
             mock_corpus.return_value = {"test.md": "content"}
@@ -642,12 +683,20 @@ class TestCLIIntegrationEndToEnd:
 class TestBatchProcessingTDDIteration5:
     """Test suite for TDD Iteration 5: Batch Processing & Enhanced UX - WILL FAIL"""
 
-    @patch('cli.connections_demo.LinkInsertionEngine')
-    @patch('cli.connections_demo.AIConnections')
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    @patch('cli.connections_demo.load_single_note')
-    @patch('cli.connections_demo.load_note_corpus')
-    def test_batch_acceptance_mode_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+    @patch("cli.connections_demo.LinkInsertionEngine")
+    @patch("cli.connections_demo.AIConnections")
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    @patch("cli.connections_demo.load_single_note")
+    @patch("cli.connections_demo.load_note_corpus")
+    def test_batch_acceptance_mode_fails(
+        self,
+        mock_corpus,
+        mock_note,
+        mock_engine,
+        mock_ai_connections,
+        mock_insertion_engine,
+        temp_vault,
+    ):
         """TEST: Interactive workflow supports [B]atch option for multiple suggestions - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
         from ai.link_insertion_engine import InsertionResult
@@ -664,7 +713,7 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="Strong semantic similarity",
                 insertion_context="## Core Concepts",
-                suggested_location="core_concepts"
+                suggested_location="core_concepts",
             ),
             LinkSuggestion(
                 source_note="test-note.md",
@@ -675,7 +724,7 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="High conceptual overlap",
                 insertion_context="## Related Topics",
-                suggested_location="related_topics"
+                suggested_location="related_topics",
             ),
             LinkSuggestion(
                 source_note="test-note.md",
@@ -686,16 +735,16 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="Technical connection",
                 insertion_context="## Advanced Topics",
-                suggested_location="advanced_topics"
-            )
+                suggested_location="advanced_topics",
+            ),
         ]
 
         # Mock dependencies
         mock_ai_instance = MagicMock()
         mock_ai_instance.find_similar_notes.return_value = [
-            ('machine-learning-basics.md', 0.95),
-            ('ai-concepts.md', 0.88),
-            ('neural-networks.md', 0.82)
+            ("machine-learning-basics.md", 0.95),
+            ("ai-concepts.md", 0.88),
+            ("neural-networks.md", 0.82),
         ]
         mock_ai_connections.return_value = mock_ai_instance
 
@@ -704,10 +753,10 @@ class TestBatchProcessingTDDIteration5:
         mock_engine.return_value = mock_engine_instance
 
         mock_insertion_instance = MagicMock()
-        mock_insertion_instance.insert_suggestions_into_note.return_value = InsertionResult(
-            success=True,
-            insertions_made=3,
-            backup_path="/path/to/backup.md"
+        mock_insertion_instance.insert_suggestions_into_note.return_value = (
+            InsertionResult(
+                success=True, insertions_made=3, backup_path="/path/to/backup.md"
+            )
         )
         mock_insertion_engine.return_value = mock_insertion_instance
 
@@ -724,7 +773,9 @@ class TestBatchProcessingTDDIteration5:
         mock_args.dry_run = False
 
         # Mock user selecting batch mode, then confirming batch processing
-        with patch('builtins.input', side_effect=['b', 'y']):  # User selects batch, then confirms
+        with patch(
+            "builtins.input", side_effect=["b", "y"]
+        ):  # User selects batch, then confirms
             handle_suggest_links_command(mock_args)
 
         # Verify batch processing was used
@@ -732,15 +783,23 @@ class TestBatchProcessingTDDIteration5:
             "test-note.md",
             suggestions,  # All suggestions should be processed in batch
             check_duplicates=True,
-            auto_detect_location=True
+            auto_detect_location=True,
         )
 
-    @patch('cli.connections_demo.LinkInsertionEngine')
-    @patch('cli.connections_demo.AIConnections')
-    @patch('cli.connections_demo.LinkSuggestionEngine')
-    @patch('cli.connections_demo.load_single_note')
-    @patch('cli.connections_demo.load_note_corpus')
-    def test_preview_mode_functionality_fails(self, mock_corpus, mock_note, mock_engine, mock_ai_connections, mock_insertion_engine, temp_vault):
+    @patch("cli.connections_demo.LinkInsertionEngine")
+    @patch("cli.connections_demo.AIConnections")
+    @patch("cli.connections_demo.LinkSuggestionEngine")
+    @patch("cli.connections_demo.load_single_note")
+    @patch("cli.connections_demo.load_note_corpus")
+    def test_preview_mode_functionality_fails(
+        self,
+        mock_corpus,
+        mock_note,
+        mock_engine,
+        mock_ai_connections,
+        mock_insertion_engine,
+        temp_vault,
+    ):
         """TEST: Interactive workflow supports [P]review option for file changes - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
         from ai.link_suggestion_engine import LinkSuggestion
@@ -754,12 +813,14 @@ class TestBatchProcessingTDDIteration5:
             confidence="high",
             explanation="High semantic similarity",
             insertion_context="## Related Concepts",
-            suggested_location="related_concepts"
+            suggested_location="related_concepts",
         )
 
         # Mock dependencies
         mock_ai_instance = MagicMock()
-        mock_ai_instance.find_similar_notes.return_value = [('machine-learning-basics.md', 0.85)]
+        mock_ai_instance.find_similar_notes.return_value = [
+            ("machine-learning-basics.md", 0.85)
+        ]
         mock_ai_connections.return_value = mock_ai_instance
 
         mock_engine_instance = MagicMock()
@@ -769,9 +830,9 @@ class TestBatchProcessingTDDIteration5:
         # Mock preview functionality
         mock_insertion_instance = MagicMock()
         mock_insertion_instance.preview_changes.return_value = {
-            'original_content': 'Original note content\n## Related Concepts\nSome existing content',
-            'modified_content': 'Original note content\n## Related Concepts\n[[Machine Learning Basics]]\nSome existing content',
-            'diff': '+[[Machine Learning Basics]]'
+            "original_content": "Original note content\n## Related Concepts\nSome existing content",
+            "modified_content": "Original note content\n## Related Concepts\n[[Machine Learning Basics]]\nSome existing content",
+            "diff": "+[[Machine Learning Basics]]",
         }
         mock_insertion_engine.return_value = mock_insertion_instance
 
@@ -787,17 +848,20 @@ class TestBatchProcessingTDDIteration5:
         mock_args.dry_run = False
 
         # Mock user selecting preview mode, then accepting suggestion
-        with patch('builtins.input', side_effect=['p', 'a', 'y']):  # Preview, accept, confirm
+        with patch(
+            "builtins.input", side_effect=["p", "a", "y"]
+        ):  # Preview, accept, confirm
             handle_suggest_links_command(mock_args)
 
         # Verify preview functionality was called
         mock_insertion_instance.preview_changes.assert_called_once_with(
-            "test-note.md",
-            [test_suggestion]
+            "test-note.md", [test_suggestion]
         )
 
-    @patch('cli.connections_demo.SmartLinkCLIOrchestrator')
-    def test_enhanced_interactive_options_display_fails(self, mock_orchestrator, temp_vault):
+    @patch("cli.connections_demo.SmartLinkCLIOrchestrator")
+    def test_enhanced_interactive_options_display_fails(
+        self, mock_orchestrator, temp_vault
+    ):
         """TEST: Interactive suggestions display includes enhanced options [B]atch, [P]review, [C]onfigure - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
 
@@ -807,10 +871,10 @@ class TestBatchProcessingTDDIteration5:
 
         # Mock the execute_interactive_workflow to examine what options are presented
         mock_orchestrator_instance.execute_interactive_workflow.return_value = {
-            'accepted': 0,
-            'rejected': 0,
-            'skipped': 1,
-            'actions': []
+            "accepted": 0,
+            "rejected": 0,
+            "skipped": 1,
+            "actions": [],
         }
 
         mock_args = MagicMock()
@@ -821,20 +885,27 @@ class TestBatchProcessingTDDIteration5:
         mock_args.interactive = True
         mock_args.dry_run = False
 
-        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=[]),\
-             patch('cli.connections_demo.LinkInsertionEngine'),\
-             patch('cli.connections_demo.AIConnections'),\
-             patch('cli.connections_demo.LinkSuggestionEngine'),\
-             patch('cli.connections_demo.load_single_note'),\
-             patch('cli.connections_demo.load_note_corpus'):
+        with patch(
+            "cli.connections_demo.filter_suggestions_by_quality", return_value=[]
+        ), patch("cli.connections_demo.LinkInsertionEngine"), patch(
+            "cli.connections_demo.AIConnections"
+        ), patch(
+            "cli.connections_demo.LinkSuggestionEngine"
+        ), patch(
+            "cli.connections_demo.load_single_note"
+        ), patch(
+            "cli.connections_demo.load_note_corpus"
+        ):
             handle_suggest_links_command(mock_args)
 
         # Verify enhanced interactive workflow was initiated with enhanced options
         mock_orchestrator_instance.execute_enhanced_interactive_workflow.assert_called_once()
 
-    @patch('cli.smart_link_cli_enhanced.BatchProcessor')
-    @patch('cli.connections_demo.LinkInsertionEngine')
-    def test_batch_processing_progress_tracking_fails(self, mock_insertion_engine, mock_batch_processor, temp_vault):
+    @patch("cli.smart_link_cli_enhanced.BatchProcessor")
+    @patch("cli.connections_demo.LinkInsertionEngine")
+    def test_batch_processing_progress_tracking_fails(
+        self, mock_insertion_engine, mock_batch_processor, temp_vault
+    ):
         """TEST: Batch processing shows progress tracking and can be cancelled - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
         from ai.link_suggestion_engine import LinkSuggestion
@@ -842,10 +913,10 @@ class TestBatchProcessingTDDIteration5:
         # Mock batch processor functionality
         mock_batch_instance = MagicMock()
         mock_batch_instance.process_batch.return_value = {
-            'total_processed': 3,
-            'successful_insertions': 3,
-            'failed_insertions': 0,
-            'cancelled': False
+            "total_processed": 3,
+            "successful_insertions": 3,
+            "failed_insertions": 0,
+            "cancelled": False,
         }
         mock_batch_processor.return_value = mock_batch_instance
 
@@ -859,7 +930,7 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="Test",
                 insertion_context="## Test",
-                suggested_location="test"
+                suggested_location="test",
             ),
             LinkSuggestion(
                 source_note="test-note.md",
@@ -870,7 +941,7 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="Test",
                 insertion_context="## Test",
-                suggested_location="test"
+                suggested_location="test",
             ),
             LinkSuggestion(
                 source_note="test-note.md",
@@ -881,8 +952,8 @@ class TestBatchProcessingTDDIteration5:
                 confidence="high",
                 explanation="Test",
                 insertion_context="## Test",
-                suggested_location="test"
-            )
+                suggested_location="test",
+            ),
         ]
 
         mock_args = MagicMock()
@@ -893,12 +964,18 @@ class TestBatchProcessingTDDIteration5:
         mock_args.interactive = True
         mock_args.dry_run = False
 
-        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=suggestions),\
-             patch('cli.connections_demo.AIConnections'),\
-             patch('cli.connections_demo.LinkSuggestionEngine'),\
-             patch('cli.connections_demo.load_single_note'),\
-             patch('cli.connections_demo.load_note_corpus'),\
-             patch('builtins.input', side_effect=['b', 'y']):  # Batch mode, confirm
+        with patch(
+            "cli.connections_demo.filter_suggestions_by_quality",
+            return_value=suggestions,
+        ), patch("cli.connections_demo.AIConnections"), patch(
+            "cli.connections_demo.LinkSuggestionEngine"
+        ), patch(
+            "cli.connections_demo.load_single_note"
+        ), patch(
+            "cli.connections_demo.load_note_corpus"
+        ), patch(
+            "builtins.input", side_effect=["b", "y"]
+        ):  # Batch mode, confirm
             handle_suggest_links_command(mock_args)
 
         # Verify batch processor was used with progress tracking
@@ -906,10 +983,10 @@ class TestBatchProcessingTDDIteration5:
             suggestions,
             target_file="test-note.md",
             show_progress=True,
-            allow_cancellation=True
+            allow_cancellation=True,
         )
 
-    @patch('cli.smart_link_cli_enhanced.UserConfiguration')
+    @patch("cli.smart_link_cli_enhanced.UserConfiguration")
     def test_configuration_system_fails(self, mock_config, temp_vault):
         """TEST: Interactive workflow supports [C]onfigure option for user preferences - WILL FAIL"""
         from cli.connections_demo import handle_suggest_links_command
@@ -925,7 +1002,7 @@ class TestBatchProcessingTDDIteration5:
             confidence="medium",
             explanation="Test configuration",
             insertion_context="## Test",
-            suggested_location="test"
+            suggested_location="test",
         )
 
         # Mock configuration system
@@ -943,13 +1020,20 @@ class TestBatchProcessingTDDIteration5:
         mock_args.interactive = True
         mock_args.dry_run = False
 
-        with patch('cli.connections_demo.filter_suggestions_by_quality', return_value=[test_suggestion]),\
-             patch('cli.connections_demo.LinkInsertionEngine'),\
-             patch('cli.connections_demo.AIConnections'),\
-             patch('cli.connections_demo.LinkSuggestionEngine'),\
-             patch('cli.connections_demo.load_single_note'),\
-             patch('cli.connections_demo.load_note_corpus'),\
-             patch('builtins.input', side_effect=['c', 'q']):  # Configure mode, then quit
+        with patch(
+            "cli.connections_demo.filter_suggestions_by_quality",
+            return_value=[test_suggestion],
+        ), patch("cli.connections_demo.LinkInsertionEngine"), patch(
+            "cli.connections_demo.AIConnections"
+        ), patch(
+            "cli.connections_demo.LinkSuggestionEngine"
+        ), patch(
+            "cli.connections_demo.load_single_note"
+        ), patch(
+            "cli.connections_demo.load_note_corpus"
+        ), patch(
+            "builtins.input", side_effect=["c", "q"]
+        ):  # Configure mode, then quit
             handle_suggest_links_command(mock_args)
 
         # Verify configuration system was accessed

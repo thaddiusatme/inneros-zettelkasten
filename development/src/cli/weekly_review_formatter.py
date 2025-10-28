@@ -16,31 +16,31 @@ class WeeklyReviewFormatter:
             "promote_to_permanent": {
                 "section": "🎯 Ready to Promote",
                 "action_text": "Promote to Permanent",
-                "priority": 1
+                "priority": 1,
             },
             "move_to_fleeting": {
                 "section": "🔄 Further Development",
                 "action_text": "Further Develop",
-                "priority": 2
+                "priority": 2,
             },
             "improve_or_archive": {
                 "section": "⚠️ Needs Significant Work",
                 "action_text": "Needs Improvement",
-                "priority": 3
+                "priority": 3,
             },
             "manual_review": {
                 "section": "🚨 Manual Review Required",
                 "action_text": "Manual Review",
-                "priority": 4
-            }
+                "priority": 4,
+            },
         }
 
     def format_checklist(self, recommendations: Dict) -> str:
         """Format recommendations into a markdown checklist.
-        
+
         Args:
             recommendations: Dictionary with summary and recommendations
-            
+
         Returns:
             Formatted markdown checklist string
         """
@@ -64,15 +64,12 @@ class WeeklyReviewFormatter:
 
         # Parse date for header
         try:
-            date_obj = datetime.fromisoformat(generated_at.replace('Z', '+00:00'))
+            date_obj = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
             date_str = date_obj.strftime("%Y-%m-%d")
-        except:
+        except (ValueError, AttributeError):
             date_str = "Unknown Date"
 
-        lines = [
-            f"# Weekly Review - {date_str}",
-            ""
-        ]
+        lines = [f"# Weekly Review - {date_str}", ""]
 
         # Summary statistics
         total = summary["total_notes"]
@@ -82,12 +79,14 @@ class WeeklyReviewFormatter:
         errors = summary["processing_errors"]
 
         if total == 0:
-            lines.extend([
-                "**Summary**: 0 notes to process",
-                "",
-                "✅ No notes requiring review - your inbox is clear!",
-                ""
-            ])
+            lines.extend(
+                [
+                    "**Summary**: 0 notes to process",
+                    "",
+                    "✅ No notes requiring review - your inbox is clear!",
+                    "",
+                ]
+            )
         else:
             summary_parts = []
             if promote > 0:
@@ -100,10 +99,9 @@ class WeeklyReviewFormatter:
                 summary_parts.append(f"{errors} errors")
 
             summary_text = ", ".join(summary_parts) if summary_parts else "0 actions"
-            lines.extend([
-                f"**Summary**: {total} notes to process ({summary_text})",
-                ""
-            ])
+            lines.extend(
+                [f"**Summary**: {total} notes to process ({summary_text})", ""]
+            )
 
         return lines
 
@@ -118,18 +116,16 @@ class WeeklyReviewFormatter:
         grouped = self._group_by_action(recommendations["recommendations"])
 
         # Sort sections by priority
-        sorted_actions = sorted(grouped.keys(),
-                              key=lambda x: self.action_config[x]["priority"])
+        sorted_actions = sorted(
+            grouped.keys(), key=lambda x: self.action_config[x]["priority"]
+        )
 
         for action in sorted_actions:
             if not grouped[action]:
                 continue
 
             config = self.action_config[action]
-            lines.extend([
-                f"## {config['section']} ({len(grouped[action])})",
-                ""
-            ])
+            lines.extend([f"## {config['section']} ({len(grouped[action])})", ""])
 
             # Format individual items
             for rec in grouped[action]:
@@ -145,7 +141,7 @@ class WeeklyReviewFormatter:
             "promote_to_permanent": [],
             "move_to_fleeting": [],
             "improve_or_archive": [],
-            "manual_review": []
+            "manual_review": [],
         }
 
         for rec in recommendations:
@@ -203,16 +199,16 @@ class WeeklyReviewFormatter:
             "",
             f"*Generated: {generated_at}*",
             "*AI-powered recommendations based on content quality and metadata analysis*",
-            ""
+            "",
         ]
 
     def export_checklist(self, recommendations: Dict, export_path: Path) -> Path:
         """Export checklist to a markdown file.
-        
+
         Args:
             recommendations: Dictionary with summary and recommendations
             export_path: Path to export file or directory
-            
+
         Returns:
             Path to the created file
         """
@@ -227,16 +223,16 @@ class WeeklyReviewFormatter:
 
         # Format and write checklist
         checklist_content = self.format_checklist(recommendations)
-        export_path.write_text(checklist_content, encoding='utf-8')
+        export_path.write_text(checklist_content, encoding="utf-8")
 
         return export_path
 
     def format_for_interactive(self, recommendations: Dict) -> List[Dict]:
         """Format recommendations for interactive step-by-step mode.
-        
+
         Args:
             recommendations: Dictionary with summary and recommendations
-            
+
         Returns:
             List of interactive items sorted by priority
         """
@@ -251,17 +247,19 @@ class WeeklyReviewFormatter:
             if rec.get("quality_score"):
                 display_text += f" (Quality: {rec['quality_score']:.2f})"
 
-            interactive_items.append({
-                "file_name": rec["file_name"],
-                "action": action,
-                "reason": rec["reason"],
-                "quality_score": rec.get("quality_score"),
-                "confidence": rec.get("confidence"),
-                "priority": config["priority"],
-                "formatted_display": display_text,
-                "source": rec.get("source", "unknown"),
-                "ai_tags": rec.get("ai_tags", [])
-            })
+            interactive_items.append(
+                {
+                    "file_name": rec["file_name"],
+                    "action": action,
+                    "reason": rec["reason"],
+                    "quality_score": rec.get("quality_score"),
+                    "confidence": rec.get("confidence"),
+                    "priority": config["priority"],
+                    "formatted_display": display_text,
+                    "source": rec.get("source", "unknown"),
+                    "ai_tags": rec.get("ai_tags", []),
+                }
+            )
 
         # Sort by priority (promote first, then develop, then improve)
         interactive_items.sort(key=lambda x: x["priority"])
@@ -271,89 +269,107 @@ class WeeklyReviewFormatter:
     def format_enhanced_metrics(self, metrics: Dict) -> str:
         """
         Format enhanced metrics into a readable markdown report.
-        
+
         Args:
             metrics: Dictionary from generate_enhanced_metrics()
-            
+
         Returns:
             Formatted markdown metrics report
         """
         lines = []
 
         # Header
-        lines.extend([
-            "# 📊 Enhanced Weekly Review Metrics",
-            "",
-            f"**Generated**: {metrics.get('generated_at', 'Unknown')}",
-            ""
-        ])
+        lines.extend(
+            [
+                "# 📊 Enhanced Weekly Review Metrics",
+                "",
+                f"**Generated**: {metrics.get('generated_at', 'Unknown')}",
+                "",
+            ]
+        )
 
         # Summary overview
         summary = metrics.get("summary", {})
-        lines.extend([
-            "## 📈 Summary Overview",
-            "",
-            f"- **Total Notes**: {summary.get('total_notes', 0)}",
-            f"- **Orphaned Notes**: {summary.get('total_orphaned', 0)}",
-            f"- **Stale Notes (>90 days)**: {summary.get('total_stale', 0)}",
-            f"- **Average Links per Note**: {summary.get('avg_links_per_note', 0):.2f}",
-            ""
-        ])
+        lines.extend(
+            [
+                "## 📈 Summary Overview",
+                "",
+                f"- **Total Notes**: {summary.get('total_notes', 0)}",
+                f"- **Orphaned Notes**: {summary.get('total_orphaned', 0)}",
+                f"- **Stale Notes (>90 days)**: {summary.get('total_stale', 0)}",
+                f"- **Average Links per Note**: {summary.get('avg_links_per_note', 0):.2f}",
+                "",
+            ]
+        )
 
         # Orphaned notes section
         orphaned_notes = metrics.get("orphaned_notes", [])
         if orphaned_notes:
-            lines.extend([
-                "## 🏝️ Orphaned Notes (Need Connections)",
-                "",
-                "These notes have no links to or from other notes:",
-                ""
-            ])
+            lines.extend(
+                [
+                    "## 🏝️ Orphaned Notes (Need Connections)",
+                    "",
+                    "These notes have no links to or from other notes:",
+                    "",
+                ]
+            )
             for note in orphaned_notes:
-                lines.append(f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - Last modified: {note.get('last_modified', 'Unknown')[:10]}")
+                lines.append(
+                    f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - Last modified: {note.get('last_modified', 'Unknown')[:10]}"
+                )
             lines.append("")
 
         # Stale notes section
         stale_notes = metrics.get("stale_notes", [])
         if stale_notes:
-            lines.extend([
-                "## ⏰ Stale Notes (Haven't Been Updated)",
-                "",
-                "These notes haven't been modified in over 90 days:",
-                ""
-            ])
+            lines.extend(
+                [
+                    "## ⏰ Stale Notes (Haven't Been Updated)",
+                    "",
+                    "These notes haven't been modified in over 90 days:",
+                    "",
+                ]
+            )
             # Show top 10 most stale
             for note in stale_notes[:10]:
-                lines.append(f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - {note.get('days_since_modified', '?')} days old")
+                lines.append(
+                    f"- **{note.get('title', 'Untitled')}** ({note.get('directory', 'Unknown')}) - {note.get('days_since_modified', '?')} days old"
+                )
             if len(stale_notes) > 10:
                 lines.append(f"- ... and {len(stale_notes) - 10} more")
             lines.append("")
 
         # Note age distribution
         age_dist = metrics.get("note_age_distribution", {})
-        lines.extend([
-            "## 📅 Note Age Distribution",
-            "",
-            f"- **New** (< 7 days): {age_dist.get('new', 0)} notes",
-            f"- **Recent** (7-30 days): {age_dist.get('recent', 0)} notes",
-            f"- **Mature** (30-90 days): {age_dist.get('mature', 0)} notes",
-            f"- **Old** (> 90 days): {age_dist.get('old', 0)} notes",
-            ""
-        ])
+        lines.extend(
+            [
+                "## 📅 Note Age Distribution",
+                "",
+                f"- **New** (< 7 days): {age_dist.get('new', 0)} notes",
+                f"- **Recent** (7-30 days): {age_dist.get('recent', 0)} notes",
+                f"- **Mature** (30-90 days): {age_dist.get('mature', 0)} notes",
+                f"- **Old** (> 90 days): {age_dist.get('old', 0)} notes",
+                "",
+            ]
+        )
 
         # Productivity metrics
         productivity = metrics.get("productivity_metrics", {})
-        lines.extend([
-            "## 💪 Productivity Insights",
-            "",
-            f"- **Average Notes Created per Week**: {productivity.get('avg_notes_created_per_week', 0):.1f}",
-            f"- **Average Notes Modified per Week**: {productivity.get('avg_notes_modified_per_week', 0):.1f}",
-            f"- **Total Weeks Active**: {productivity.get('total_weeks_active', 0)}"
-        ])
+        lines.extend(
+            [
+                "## 💪 Productivity Insights",
+                "",
+                f"- **Average Notes Created per Week**: {productivity.get('avg_notes_created_per_week', 0):.1f}",
+                f"- **Average Notes Modified per Week**: {productivity.get('avg_notes_modified_per_week', 0):.1f}",
+                f"- **Total Weeks Active**: {productivity.get('total_weeks_active', 0)}",
+            ]
+        )
 
-        most_productive = productivity.get('most_productive_week_creation')
+        most_productive = productivity.get("most_productive_week_creation")
         if most_productive:
-            lines.append(f"- **Most Productive Week**: {most_productive[0]} ({most_productive[1]} notes created)")
+            lines.append(
+                f"- **Most Productive Week**: {most_productive[0]} ({most_productive[1]} notes created)"
+            )
 
         lines.append("")
 
@@ -366,16 +382,16 @@ class WeeklyReviewFormatter:
         else:
             insight = "🔗 Excellent link density - your notes form a well-connected knowledge graph"
 
-        lines.extend([
-            "## 💡 Insights & Recommendations",
-            "",
-            insight
-        ])
+        lines.extend(["## 💡 Insights & Recommendations", "", insight])
 
         if orphaned_notes:
-            lines.append("🏝️ Focus on connecting orphaned notes to improve knowledge discoverability")
+            lines.append(
+                "🏝️ Focus on connecting orphaned notes to improve knowledge discoverability"
+            )
 
         if stale_notes:
-            lines.append("⏰ Consider reviewing or archiving stale notes to keep your collection fresh")
+            lines.append(
+                "⏰ Consider reviewing or archiving stale notes to keep your collection fresh"
+            )
 
         return "\n".join(lines)

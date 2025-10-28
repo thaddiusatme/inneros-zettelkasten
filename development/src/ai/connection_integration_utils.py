@@ -7,13 +7,17 @@ Utilities for integrating AIConnections with LinkSuggestionEngine and CLI workfl
 import os
 import time
 import glob
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, TYPE_CHECKING
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from .link_suggestion_utils import QualityScore
 
 
 @dataclass
 class ConnectionObject:
     """Mock connection object format expected by LinkSuggestionEngine"""
+
     target_file: str
     similarity_score: float
     source_file: str = ""
@@ -24,16 +28,17 @@ class SimilarityResultConverter:
     """Converts AIConnections similarity results to LinkSuggestionEngine connection objects"""
 
     @staticmethod
-    def convert_to_connections(similarity_results: List[Tuple[str, float]],
-                             target_note: str, vault_path: str) -> List[ConnectionObject]:
+    def convert_to_connections(
+        similarity_results: List[Tuple[str, float]], target_note: str, vault_path: str
+    ) -> List[ConnectionObject]:
         """
         Convert AIConnections similarity results to connection objects
-        
+
         Args:
             similarity_results: List of (filename, similarity_score) tuples from AIConnections
             target_note: The source note being analyzed
             vault_path: Path to vault directory
-            
+
         Returns:
             List of ConnectionObject instances compatible with LinkSuggestionEngine
         """
@@ -44,15 +49,16 @@ class SimilarityResultConverter:
                 target_file=filename,
                 similarity_score=similarity,
                 source_file=target_note,
-                content_overlap=""  # Could be enhanced with actual content analysis
+                content_overlap="",  # Could be enhanced with actual content analysis
             )
             connections.append(connection)
 
         return connections
 
     @staticmethod
-    def convert_batch(similarity_results: List[Tuple[str, float]],
-                     target_note: str, vault_path: str) -> List[ConnectionObject]:
+    def convert_batch(
+        similarity_results: List[Tuple[str, float]], target_note: str, vault_path: str
+    ) -> List[ConnectionObject]:
         """Batch conversion with same interface as convert_to_connections"""
         return SimilarityResultConverter.convert_to_connections(
             similarity_results, target_note, vault_path
@@ -65,7 +71,7 @@ class RealNoteLoader:
     def __init__(self, vault_path: str):
         """
         Initialize note loader
-        
+
         Args:
             vault_path: Path to the vault/knowledge directory
         """
@@ -74,16 +80,16 @@ class RealNoteLoader:
     def load_note_content(self, filename: str) -> str:
         """
         Load content of a specific note
-        
+
         Args:
             filename: Name of the note file to load
-            
+
         Returns:
             Note content as string
         """
         file_path = os.path.join(self.vault_path, filename)
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 return f.read()
         except FileNotFoundError:
             return ""
@@ -93,10 +99,10 @@ class RealNoteLoader:
     def load_corpus_excluding(self, exclude_filename: str) -> Dict[str, str]:
         """
         Load all notes in corpus except the specified file
-        
+
         Args:
             exclude_filename: Filename to exclude from corpus
-            
+
         Returns:
             Dictionary mapping filenames to content
         """
@@ -114,7 +120,7 @@ class RealNoteLoader:
                 continue
 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     corpus[filename] = f.read()
             except Exception:
                 # Skip files that can't be read
@@ -125,7 +131,7 @@ class RealNoteLoader:
     def load_full_corpus(self) -> Dict[str, str]:
         """
         Load all notes in the vault
-        
+
         Returns:
             Dictionary mapping filenames to content
         """
@@ -138,7 +144,7 @@ class PerformanceMonitor:
     def __init__(self, target_time: float = 2.0):
         """
         Initialize performance monitor
-        
+
         Args:
             target_time: Target time in seconds for operations
         """
@@ -150,7 +156,7 @@ class PerformanceMonitor:
     def measure(self, operation_name: str):
         """
         Context manager for measuring operation time
-        
+
         Args:
             operation_name: Name of the operation being measured
         """
@@ -159,7 +165,7 @@ class PerformanceMonitor:
     def get_metrics(self) -> Dict[str, float]:
         """
         Get all recorded metrics
-        
+
         Returns:
             Dictionary mapping operation names to execution times
         """
@@ -168,14 +174,14 @@ class PerformanceMonitor:
     def is_within_target(self, operation_name: str) -> bool:
         """
         Check if operation was within target time
-        
+
         Args:
             operation_name: Name of operation to check
-            
+
         Returns:
             True if operation was within target time
         """
-        return self.metrics.get(operation_name, float('inf')) <= self.target_time
+        return self.metrics.get(operation_name, float("inf")) <= self.target_time
 
     def _record_metric(self, operation_name: str, execution_time: float):
         """Record execution time for an operation"""
@@ -184,7 +190,7 @@ class PerformanceMonitor:
     class _PerformanceMeasurement:
         """Context manager for performance measurement"""
 
-        def __init__(self, monitor: 'PerformanceMonitor', operation_name: str):
+        def __init__(self, monitor: "PerformanceMonitor", operation_name: str):
             self.monitor = monitor
             self.operation_name = operation_name
             self.start_time = None
@@ -203,14 +209,14 @@ class ConnectionQualityAnalyzer:
     """Analyzes quality of connections for realistic scoring"""
 
     @staticmethod
-    def analyze_connection_quality(content1: str, content2: str) -> 'QualityScore':
+    def analyze_connection_quality(content1: str, content2: str) -> "QualityScore":
         """
         Analyze connection quality between two pieces of content
-        
+
         Args:
             content1: First content string
             content2: Second content string
-            
+
         Returns:
             QualityScore object with score, confidence, and explanation
         """
@@ -253,7 +259,7 @@ class RealConnectionProcessor:
     def __init__(self, vault_path: str, similarity_threshold: float = 0.6):
         """
         Initialize real connection processor
-        
+
         Args:
             vault_path: Path to vault directory
             similarity_threshold: Minimum similarity threshold for connections
@@ -263,13 +269,15 @@ class RealConnectionProcessor:
         self.note_loader = RealNoteLoader(vault_path)
         self.performance_monitor = PerformanceMonitor()
 
-    def process_note_for_connections(self, target_filename: str) -> List[ConnectionObject]:
+    def process_note_for_connections(
+        self, target_filename: str
+    ) -> List[ConnectionObject]:
         """
         Process a note to find real connections
-        
+
         Args:
             target_filename: Name of target note file
-            
+
         Returns:
             List of ConnectionObject instances for similar notes
         """
@@ -285,8 +293,7 @@ class RealConnectionProcessor:
 
         with self.performance_monitor.measure("similarity_analysis"):
             connections = AIConnections(
-                similarity_threshold=self.similarity_threshold,
-                max_suggestions=10
+                similarity_threshold=self.similarity_threshold, max_suggestions=10
             )
 
             similarity_results = connections.find_similar_notes(target_content, corpus)

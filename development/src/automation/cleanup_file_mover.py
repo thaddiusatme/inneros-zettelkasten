@@ -37,7 +37,11 @@ def execute_cleanup_moves(
 
     # Parse approved decisions
     approved_data = yaml.safe_load(approved_decisions_path.read_text())
-    items = [item for item in approved_data.get("items", []) if item.get("status") == "approved"]
+    items = [
+        item
+        for item in approved_data.get("items", [])
+        if item.get("status") == "approved"
+    ]
 
     start_time = datetime.now()
 
@@ -61,23 +65,27 @@ def execute_cleanup_moves(
             # Move file
             shutil.move(str(source), str(destination))
 
-            execution_items.append({
-                "source": item["source"],
-                "destination": item["destination"],
-                "rationale": item.get("rationale", ""),
-                "status": "completed",
-                **{k: v for k, v in item.items() if k in ["trigger", "monitoring"]},
-            })
+            execution_items.append(
+                {
+                    "source": item["source"],
+                    "destination": item["destination"],
+                    "rationale": item.get("rationale", ""),
+                    "status": "completed",
+                    **{k: v for k, v in item.items() if k in ["trigger", "monitoring"]},
+                }
+            )
             moves_executed += 1
 
         except Exception as e:
-            execution_items.append({
-                "source": item["source"],
-                "destination": item["destination"],
-                "rationale": item.get("rationale", ""),
-                "status": "failed",
-                "error": str(e),
-            })
+            execution_items.append(
+                {
+                    "source": item["source"],
+                    "destination": item["destination"],
+                    "rationale": item.get("rationale", ""),
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
 
     end_time = datetime.now()
     execution_time = (end_time - start_time).total_seconds()
@@ -108,8 +116,15 @@ def _create_backup(vault_root: Path) -> Path:
 
     # Copy vault to backup (exclude large directories)
     exclude_patterns = {
-        'backups', '.git', 'web_ui_env', '.venv', '__pycache__',
-        'node_modules', '.pytest_cache', '.embedding_cache', 'development'
+        "backups",
+        ".git",
+        "web_ui_env",
+        ".venv",
+        "__pycache__",
+        "node_modules",
+        ".pytest_cache",
+        ".embedding_cache",
+        "development",
     }
 
     def should_exclude(path: Path) -> bool:
@@ -118,10 +133,7 @@ def _create_backup(vault_root: Path) -> Path:
     shutil.copytree(
         vault_root,
         backup_path,
-        ignore=lambda dir, files: [
-            f for f in files
-            if should_exclude(Path(dir) / f)
-        ],
+        ignore=lambda dir, files: [f for f in files if should_exclude(Path(dir) / f)],
         symlinks=True,
     )
 

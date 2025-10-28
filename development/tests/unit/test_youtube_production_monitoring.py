@@ -73,11 +73,11 @@ class TestMonitoringCounters:
         with open(metrics_file) as f:
             data = json.load(f)
 
-        assert data['total_processed'] == 3
-        assert data['successful'] == 2
-        assert data['failed'] == 1
-        assert data['skipped'] == 0
-        assert 'timestamp' in data
+        assert data["total_processed"] == 3
+        assert data["successful"] == 2
+        assert data["failed"] == 1
+        assert data["skipped"] == 0
+        assert "timestamp" in data
 
     def test_metrics_json_has_timestamp(self, tmp_path):
         """Test that metrics JSON includes ISO timestamp"""
@@ -91,7 +91,7 @@ class TestMonitoringCounters:
             data = json.load(f)
 
         # Verify timestamp is valid ISO format
-        timestamp = datetime.fromisoformat(data['timestamp'])
+        timestamp = datetime.fromisoformat(data["timestamp"])
         assert isinstance(timestamp, datetime)
 
 
@@ -112,8 +112,8 @@ class TestStatusBackup:
         assert backup_path.exists()
         assert backup_path.parent == backup_dir
         # Verify timestamped format: status_YYYYMMDDHHMMSS.json
-        assert backup_path.stem.startswith('status_')
-        assert len(backup_path.stem) == len('status_YYYYMMDDHHMMSS')
+        assert backup_path.stem.startswith("status_")
+        assert len(backup_path.stem) == len("status_YYYYMMDDHHMMSS")
 
     def test_backup_preserves_content(self, tmp_path):
         """Test that backup contains exact copy of status store"""
@@ -167,19 +167,19 @@ class TestHealthEndpoint:
 
         metrics_file = tmp_path / "metrics.json"
         metrics_data = {
-            'total_processed': 5,
-            'successful': 4,
-            'failed': 1,
-            'timestamp': datetime.now().isoformat()
+            "total_processed": 5,
+            "successful": 4,
+            "failed": 1,
+            "timestamp": datetime.now().isoformat(),
         }
         metrics_file.write_text(json.dumps(metrics_data))
 
         health = get_health_status(metrics_file)
 
-        assert health['status'] == 'ok'
-        assert health['last_run']['total_processed'] == 5
-        assert health['last_run']['successful'] == 4
-        assert health['last_run']['failed'] == 1
+        assert health["status"] == "ok"
+        assert health["last_run"]["total_processed"] == 5
+        assert health["last_run"]["successful"] == 4
+        assert health["last_run"]["failed"] == 1
 
     def test_health_check_handles_missing_metrics(self, tmp_path):
         """Test health check when metrics file doesn't exist"""
@@ -189,8 +189,8 @@ class TestHealthEndpoint:
 
         health = get_health_status(metrics_file)
 
-        assert health['status'] == 'unknown'
-        assert 'last_run' not in health or health['last_run'] is None
+        assert health["status"] == "unknown"
+        assert "last_run" not in health or health["last_run"] is None
 
 
 class TestIntegrationWithCLI:

@@ -32,7 +32,9 @@ class TestYouTubeProcessorURLValidation:
         processor = YouTubeProcessor()
 
         # Standard format
-        video_id = processor.extract_video_id("https://www.youtube.com/watch?v=FLpS7OfD5-s")
+        video_id = processor.extract_video_id(
+            "https://www.youtube.com/watch?v=FLpS7OfD5-s"
+        )
         assert video_id == "FLpS7OfD5-s"
 
         # Without www
@@ -40,7 +42,9 @@ class TestYouTubeProcessorURLValidation:
         assert video_id == "FLpS7OfD5-s"
 
         # With additional parameters
-        video_id = processor.extract_video_id("https://www.youtube.com/watch?v=FLpS7OfD5-s&t=120s")
+        video_id = processor.extract_video_id(
+            "https://www.youtube.com/watch?v=FLpS7OfD5-s&t=120s"
+        )
         assert video_id == "FLpS7OfD5-s"
 
     def test_extract_video_id_from_short_url(self):
@@ -60,7 +64,10 @@ class TestYouTubeProcessorURLValidation:
         processor = YouTubeProcessor()
 
         # Valid URLs
-        assert processor.validate_url("https://www.youtube.com/watch?v=FLpS7OfD5-s") is True
+        assert (
+            processor.validate_url("https://www.youtube.com/watch?v=FLpS7OfD5-s")
+            is True
+        )
         assert processor.validate_url("https://youtu.be/FLpS7OfD5-s") is True
 
         # Invalid URLs
@@ -79,45 +86,46 @@ class TestYouTubeProcessorURLValidation:
 class TestYouTubeProcessorEndToEnd:
     """Test complete end-to-end processing pipeline."""
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
-    @patch('src.cli.youtube_processor.ContextAwareQuoteExtractor')
-    @patch('src.cli.youtube_processor.YouTubeTemplateFormatter')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
+    @patch("src.cli.youtube_processor.ContextAwareQuoteExtractor")
+    @patch("src.cli.youtube_processor.YouTubeTemplateFormatter")
     def test_process_youtube_url_complete_pipeline(
-        self,
-        mock_formatter_class,
-        mock_extractor_class,
-        mock_fetcher_class
+        self, mock_formatter_class, mock_extractor_class, mock_fetcher_class
     ):
         """Should process YouTube URL through complete pipeline"""
         # Setup mocks
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = {
             "video_id": "FLpS7OfD5-s",
-            "transcript": [{"text": "AI is transforming", "start": 15.0, "duration": 2.5}],
-            "metadata": {"title": "AI Video"}
+            "transcript": [
+                {"text": "AI is transforming", "start": 15.0, "duration": 2.5}
+            ],
+            "metadata": {"title": "AI Video"},
         }
         mock_fetcher.format_for_llm.return_value = "[00:15] AI is transforming"
         mock_fetcher_class.return_value = mock_fetcher
 
         mock_extractor = Mock()
         mock_extractor.extract_quotes.return_value = {
-            "quotes": [{
-                "text": "AI is transforming",
-                "timestamp": "00:15",
-                "relevance_score": 0.85,
-                "context": "Key insight",
-                "category": "key-insight"
-            }],
+            "quotes": [
+                {
+                    "text": "AI is transforming",
+                    "timestamp": "00:15",
+                    "relevance_score": 0.85,
+                    "context": "Key insight",
+                    "category": "key-insight",
+                }
+            ],
             "summary": "Video about AI",
             "key_themes": ["ai", "transformation"],
-            "processing_time": 5.2
+            "processing_time": 5.2,
         }
         mock_extractor_class.return_value = mock_extractor
 
         mock_formatter = Mock()
         mock_formatter.format_template.return_value = {
             "markdown": "# Formatted Note\n\nContent here",
-            "metadata": {"quote_count": 1}
+            "metadata": {"quote_count": 1},
         }
         mock_formatter_class.return_value = mock_formatter
 
@@ -136,33 +144,35 @@ class TestYouTubeProcessorEndToEnd:
         mock_extractor.extract_quotes.assert_called_once()
         mock_formatter.format_template.assert_called_once()
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
     def test_process_with_user_context(self, mock_fetcher_class):
         """Should pass user context to quote extractor"""
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = {
             "video_id": "test123",
             "transcript": [{"text": "Content", "start": 0, "duration": 1}],
-            "metadata": {"title": "Test"}
+            "metadata": {"title": "Test"},
         }
         mock_fetcher.format_for_llm.return_value = "[00:00] Content"
         mock_fetcher_class.return_value = mock_fetcher
 
-        with patch('src.cli.youtube_processor.ContextAwareQuoteExtractor') as mock_extractor_class:
+        with patch(
+            "src.cli.youtube_processor.ContextAwareQuoteExtractor"
+        ) as mock_extractor_class:
             mock_extractor = Mock()
             mock_extractor.extract_quotes.return_value = {
                 "quotes": [],
                 "summary": "Summary",
                 "key_themes": [],
-                "processing_time": 1.0
+                "processing_time": 1.0,
             }
             mock_extractor_class.return_value = mock_extractor
 
-            with patch('src.cli.youtube_processor.YouTubeTemplateFormatter'):
+            with patch("src.cli.youtube_processor.YouTubeTemplateFormatter"):
                 processor = YouTubeProcessor()
                 processor.process_video(
                     "https://youtube.com/watch?v=test123",
-                    user_context="I'm interested in AI automation"
+                    user_context="I'm interested in AI automation",
                 )
 
                 # Verify context passed to extractor
@@ -173,18 +183,17 @@ class TestYouTubeProcessorEndToEnd:
 class TestYouTubeProcessorFileCreation:
     """Test file creation and metadata population."""
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
-    @patch('src.cli.youtube_processor.ContextAwareQuoteExtractor')
-    @patch('src.cli.youtube_processor.YouTubeTemplateFormatter')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
+    @patch("src.cli.youtube_processor.ContextAwareQuoteExtractor")
+    @patch("src.cli.youtube_processor.YouTubeTemplateFormatter")
     def test_create_note_file_in_inbox(
-        self,
-        mock_formatter_class,
-        mock_extractor_class,
-        mock_fetcher_class
+        self, mock_formatter_class, mock_extractor_class, mock_fetcher_class
     ):
         """Should create note file in knowledge/Inbox/ with correct naming"""
         # Setup minimal mocks
-        self._setup_mocks(mock_fetcher_class, mock_extractor_class, mock_formatter_class)
+        self._setup_mocks(
+            mock_fetcher_class, mock_extractor_class, mock_formatter_class
+        )
 
         processor = YouTubeProcessor(knowledge_dir=Path("/tmp/test_knowledge"))
         result = processor.process_video("https://youtube.com/watch?v=FLpS7OfD5-s")
@@ -196,17 +205,16 @@ class TestYouTubeProcessorFileCreation:
         assert "FLpS7OfD5-s" in file_path.name
         assert file_path.suffix == ".md"
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
-    @patch('src.cli.youtube_processor.ContextAwareQuoteExtractor')
-    @patch('src.cli.youtube_processor.YouTubeTemplateFormatter')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
+    @patch("src.cli.youtube_processor.ContextAwareQuoteExtractor")
+    @patch("src.cli.youtube_processor.YouTubeTemplateFormatter")
     def test_populate_frontmatter_metadata(
-        self,
-        mock_formatter_class,
-        mock_extractor_class,
-        mock_fetcher_class
+        self, mock_formatter_class, mock_extractor_class, mock_fetcher_class
     ):
         """Should populate YAML frontmatter with video metadata"""
-        self._setup_mocks(mock_fetcher_class, mock_extractor_class, mock_formatter_class)
+        self._setup_mocks(
+            mock_fetcher_class, mock_extractor_class, mock_formatter_class
+        )
 
         processor = YouTubeProcessor(knowledge_dir=Path("/tmp/test_knowledge"))
         result = processor.process_video("https://youtube.com/watch?v=FLpS7OfD5-s")
@@ -217,13 +225,15 @@ class TestYouTubeProcessorFileCreation:
         assert result["metadata"]["status"] == "inbox"
         assert "created" in result["metadata"]
 
-    def _setup_mocks(self, mock_fetcher_class, mock_extractor_class, mock_formatter_class):
+    def _setup_mocks(
+        self, mock_fetcher_class, mock_extractor_class, mock_formatter_class
+    ):
         """Helper to setup standard mocks"""
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = {
             "video_id": "FLpS7OfD5-s",
             "transcript": [{"text": "Content", "start": 0, "duration": 1}],
-            "metadata": {"title": "Test Video"}
+            "metadata": {"title": "Test Video"},
         }
         mock_fetcher.format_for_llm.return_value = "[00:00] Content"
         mock_fetcher_class.return_value = mock_fetcher
@@ -233,14 +243,14 @@ class TestYouTubeProcessorFileCreation:
             "quotes": [],
             "summary": "Summary",
             "key_themes": ["test", "demo"],
-            "processing_time": 1.0
+            "processing_time": 1.0,
         }
         mock_extractor_class.return_value = mock_extractor
 
         mock_formatter = Mock()
         mock_formatter.format_template.return_value = {
             "markdown": "# Test\n\nFormatted content",
-            "metadata": {"quote_count": 0}
+            "metadata": {"quote_count": 0},
         }
         mock_formatter_class.return_value = mock_formatter
 
@@ -248,11 +258,13 @@ class TestYouTubeProcessorFileCreation:
 class TestYouTubeProcessorErrorHandling:
     """Test error handling for common failure scenarios."""
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
     def test_handle_transcript_unavailable(self, mock_fetcher_class):
         """Should handle videos with no transcript gracefully"""
         mock_fetcher = Mock()
-        mock_fetcher.fetch_transcript.side_effect = Exception("Transcript not available")
+        mock_fetcher.fetch_transcript.side_effect = Exception(
+            "Transcript not available"
+        )
         mock_fetcher_class.return_value = mock_fetcher
 
         processor = YouTubeProcessor()
@@ -262,16 +274,18 @@ class TestYouTubeProcessorErrorHandling:
         assert "error" in result
         assert "transcript" in result["error"].lower()
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
-    @patch('src.cli.youtube_processor.ContextAwareQuoteExtractor')
-    def test_handle_llm_service_unavailable(self, mock_extractor_class, mock_fetcher_class):
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
+    @patch("src.cli.youtube_processor.ContextAwareQuoteExtractor")
+    def test_handle_llm_service_unavailable(
+        self, mock_extractor_class, mock_fetcher_class
+    ):
         """Should handle LLM service unavailable error"""
         # Fetcher succeeds
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = {
             "video_id": "test123",
             "transcript": [{"text": "Content", "start": 0, "duration": 1}],
-            "metadata": {"title": "Test"}
+            "metadata": {"title": "Test"},
         }
         mock_fetcher.format_for_llm.return_value = "[00:00] Content"
         mock_fetcher_class.return_value = mock_fetcher
@@ -292,14 +306,11 @@ class TestYouTubeProcessorErrorHandling:
 class TestYouTubeProcessorPerformance:
     """Test performance characteristics of the pipeline."""
 
-    @patch('src.cli.youtube_processor.YouTubeTranscriptFetcher')
-    @patch('src.cli.youtube_processor.ContextAwareQuoteExtractor')
-    @patch('src.cli.youtube_processor.YouTubeTemplateFormatter')
+    @patch("src.cli.youtube_processor.YouTubeTranscriptFetcher")
+    @patch("src.cli.youtube_processor.ContextAwareQuoteExtractor")
+    @patch("src.cli.youtube_processor.YouTubeTemplateFormatter")
     def test_processing_time_tracking(
-        self,
-        mock_formatter_class,
-        mock_extractor_class,
-        mock_fetcher_class
+        self, mock_formatter_class, mock_extractor_class, mock_fetcher_class
     ):
         """Should track processing time for each component"""
         # Setup mocks with timing
@@ -308,7 +319,7 @@ class TestYouTubeProcessorPerformance:
             "video_id": "test123",
             "transcript": [{"text": "Content", "start": 0, "duration": 1}],
             "metadata": {"title": "Test"},
-            "fetch_time": 2.4
+            "fetch_time": 2.4,
         }
         mock_fetcher.format_for_llm.return_value = "[00:00] Content"
         mock_fetcher_class.return_value = mock_fetcher
@@ -318,7 +329,7 @@ class TestYouTubeProcessorPerformance:
             "quotes": [],
             "summary": "Summary",
             "key_themes": [],
-            "processing_time": 8.2
+            "processing_time": 8.2,
         }
         mock_extractor_class.return_value = mock_extractor
 

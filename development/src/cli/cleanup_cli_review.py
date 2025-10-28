@@ -86,7 +86,9 @@ class UserConfirmationCollector:
             choice = input("Approve? (approve/skip/reject): ").strip().lower()
             if choice in UserConfirmationCollector.VALID_CHOICES:
                 return UserConfirmationCollector.CHOICE_TO_STATUS[choice]
-            print(f"Invalid choice. Please enter one of: {', '.join(UserConfirmationCollector.VALID_CHOICES)}")
+            print(
+                f"Invalid choice. Please enter one of: {', '.join(UserConfirmationCollector.VALID_CHOICES)}"
+            )
 
 
 class ApprovedDecisionsPersister:

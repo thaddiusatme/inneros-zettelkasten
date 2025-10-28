@@ -7,6 +7,7 @@ problematic tags during AI processing following TDD Iteration 1 success patterns
 Real data validation findings: 84 problematic tags (69 parsing errors = 82%)
 Critical path: Prevent AI-generated parsing error tags at source
 """
+
 import pytest
 from pathlib import Path
 from unittest.mock import Mock
@@ -24,7 +25,7 @@ try:
         AITagValidator,
         SemanticConceptExtractor,
         TagQualityGatekeeper,
-        AITagPreventionEngine
+        AITagPreventionEngine,
     )
     from src.ai.workflow_manager import WorkflowManager
 except ImportError:
@@ -46,7 +47,7 @@ class TestAITagValidator:
         paragraph_tags = [
             "this is a very long tag that represents an entire paragraph of content and should never be a tag because it violates semantic principles",
             "AI systems often generate these kinds of descriptive paragraph responses when asked for tags instead of concise semantic identifiers",
-            "another example of AI-generated paragraph content that got interpreted as a single tag due to parsing issues in the workflow"
+            "another example of AI-generated paragraph content that got interpreted as a single tag due to parsing issues in the workflow",
         ]
 
         short_tags = ["ai", "quantum-computing", "productivity"]
@@ -69,7 +70,7 @@ class TestAITagValidator:
             "the main idea here is about",
             "key insights from this content include",
             "important considerations for understanding",
-            "approaches to solving the problem of"
+            "approaches to solving the problem of",
         ]
 
         valid_tags = ["machine-learning", "productivity", "zettelkasten"]
@@ -77,7 +78,10 @@ class TestAITagValidator:
         result = validator.detect_sentence_fragments(sentence_fragments + valid_tags)
 
         assert len(result) == 5
-        assert all(any(word in tag for word in ["this", "the", "is", "for", "of"]) for tag in result)
+        assert all(
+            any(word in tag for word in ["this", "the", "is", "for", "of"])
+            for tag in result
+        )
         assert "machine-learning" not in result
 
     def test_detect_technical_artifact_tags(self):
@@ -91,7 +95,7 @@ class TestAITagValidator:
             "[AI-SUGGESTED]",
             "AUTO_TAG_GENERATED_BY_SYSTEM",
             "claude-3-processing-artifact",
-            "##EXTRACTED_CONCEPT##"
+            "##EXTRACTED_CONCEPT##",
         ]
 
         clean_tags = ["quantum-physics", "note-taking", "research"]
@@ -99,7 +103,10 @@ class TestAITagValidator:
         result = validator.detect_technical_artifacts(artifact_tags + clean_tags)
 
         assert len(result) == 6
-        assert "AI_PROCESSING_TAG_1" in [tag.upper() for tag in result] or "ai_processing_tag_1" in result
+        assert (
+            "AI_PROCESSING_TAG_1" in [tag.upper() for tag in result]
+            or "ai_processing_tag_1" in result
+        )
         assert "[AI-SUGGESTED]" in result
         assert "quantum-physics" not in result
 
@@ -115,7 +122,7 @@ class TestAITagValidator:
             ("a" * 100, False),  # Too long
             ("a" * 200, False),  # Way too long
             ("", False),  # Empty
-            ("   ", False)  # Whitespace only
+            ("   ", False),  # Whitespace only
         ]
 
         for tag, expected_valid in test_cases:
@@ -154,7 +161,7 @@ class TestAITagValidator:
             "AI_PROCESSING_ARTIFACT_TAG",  # Technical artifact
             "a" * 150,  # Too long
             "",  # Empty
-            "quantum-computing"  # Valid tag (should pass)
+            "quantum-computing",  # Valid tag (should pass)
         ]
 
         result = validator.validate_tag_list(problematic_tags)
@@ -260,7 +267,7 @@ class TestTagQualityGatekeeper:
             "machine-learning",  # Valid
             "AI_ARTIFACT_TAG_123",  # Invalid
             "productivity",  # Valid
-            ""  # Invalid
+            "",  # Invalid
         ]
 
         validated_tags = []
@@ -287,9 +294,9 @@ class TestTagQualityGatekeeper:
                 "quantum-computing",
                 "this note discusses advanced concepts in physics and mathematics",
                 "machine-learning",
-                "AUTO_GENERATED_TAG_PROCESSING"
+                "AUTO_GENERATED_TAG_PROCESSING",
             ],
-            "quality_score": 0.85
+            "quality_score": 0.85,
         }
 
         result = gatekeeper.filter_ai_workflow_tags(mock_ai_response)
@@ -307,12 +314,15 @@ class TestTagQualityGatekeeper:
 
         # Simulate high-volume tag processing
         large_tag_batch = [f"tag-{i}" for i in range(1000)]
-        large_tag_batch.extend([
-            "this is a problematic paragraph tag that should be filtered out",
-            "AI_PROCESSING_ARTIFACT_SHOULD_REJECT"
-        ])
+        large_tag_batch.extend(
+            [
+                "this is a problematic paragraph tag that should be filtered out",
+                "AI_PROCESSING_ARTIFACT_SHOULD_REJECT",
+            ]
+        )
 
         import time
+
         start_time = time.time()
         result = gatekeeper.validate_batch(large_tag_batch)
         end_time = time.time()
@@ -332,8 +342,8 @@ class TestTagQualityGatekeeper:
             "accepted_by_user": ["machine-learning", "quantum-computing"],
             "user_corrections": {
                 "ai": "artificial-intelligence",
-                "ml": "machine-learning"
-            }
+                "ml": "machine-learning",
+            },
         }
 
         gatekeeper.update_from_feedback(user_feedback)
@@ -364,7 +374,9 @@ status: inbox
 This note discusses quantum computing and machine learning applications."""
 
         # Should enhance existing workflow without breaking it
-        result = prevention_engine.process_note_with_prevention(mock_note_path, mock_note_content)
+        result = prevention_engine.process_note_with_prevention(
+            mock_note_path, mock_note_content
+        )
 
         assert "original_ai_tags" in result
         assert "filtered_tags" in result
@@ -381,6 +393,7 @@ This note discusses quantum computing and machine learning applications."""
         mock_notes = [f"note-{i}.md" for i in range(10)]
 
         import time
+
         start_time = time.time()
 
         results = []
@@ -403,7 +416,7 @@ This note discusses quantum computing and machine learning applications."""
         workflow_manager.process_inbox_note.return_value = {
             "ai_tags": ["quantum-computing", "machine-learning"],
             "quality_score": 0.85,
-            "connections": ["related-note-1.md"]
+            "connections": ["related-note-1.md"],
         }
 
         prevention_engine = AITagPreventionEngine(workflow_manager)
@@ -437,10 +450,10 @@ class TestAITagPreventionEngine:
         workflow_manager = Mock(spec=WorkflowManager)
         engine = AITagPreventionEngine(workflow_manager)
 
-        assert hasattr(engine, 'tag_validator')
-        assert hasattr(engine, 'concept_extractor')
-        assert hasattr(engine, 'quality_gatekeeper')
-        assert hasattr(engine, 'workflow_manager')
+        assert hasattr(engine, "tag_validator")
+        assert hasattr(engine, "concept_extractor")
+        assert hasattr(engine, "quality_gatekeeper")
+        assert hasattr(engine, "workflow_manager")
 
     def test_comprehensive_prevention_pipeline(self):
         """RED: Should run complete prevention pipeline"""
@@ -453,9 +466,9 @@ class TestAITagPreventionEngine:
                 "quantum-computing",  # Valid
                 "this is a very long AI-generated paragraph that should be a tag but is really just descriptive text",  # Invalid
                 "machine-learning",  # Valid
-                "AI_PROCESSING_ARTIFACT_123"  # Invalid
+                "AI_PROCESSING_ARTIFACT_123",  # Invalid
             ],
-            "quality_score": 0.75
+            "quality_score": 0.75,
         }
 
         result = engine.apply_comprehensive_prevention(problematic_ai_output)
@@ -474,7 +487,9 @@ class TestAITagPreventionEngine:
         # Simulate the 69 parsing error tags found in real data (82% of problems)
         real_problem_simulation = ["parsing-error-tag"] * 69 + ["valid-tag"] * 31
 
-        prevention_results = engine.validate_against_real_problems(real_problem_simulation)
+        prevention_results = engine.validate_against_real_problems(
+            real_problem_simulation
+        )
 
         # Should prevent >90% of parsing errors (target from requirements)
         assert prevention_results["parsing_errors_prevented"] >= 62  # >90% of 69
@@ -511,7 +526,9 @@ class TestPreventionPerformance:
         except ImportError:
             existing_compatibility = False
 
-        assert existing_compatibility == True, "Must maintain existing test compatibility"
+        assert (
+            existing_compatibility == True
+        ), "Must maintain existing test compatibility"
 
     def test_performance_within_targets(self):
         """RED: Should maintain <10s processing performance targets"""
@@ -522,11 +539,11 @@ class TestPreventionPerformance:
         large_content = "content " * 1000  # Large content block
 
         import time
+
         start_time = time.time()
-        result = engine.apply_comprehensive_prevention({
-            "ai_tags": [f"tag-{i}" for i in range(100)],
-            "content": large_content
-        })
+        result = engine.apply_comprehensive_prevention(
+            {"ai_tags": [f"tag-{i}" for i in range(100)], "content": large_content}
+        )
         end_time = time.time()
 
         # Should stay well under performance target

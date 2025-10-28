@@ -80,7 +80,10 @@ def test_execute_approved_moves_with_metadata_flow(tmp_path, monkeypatch):
     assert items[0]["status"] == "completed"
 
     assert items[1]["source"] == "development/docs/YOUTUBE-INTEGRATION-MAINTENANCE.md"
-    assert items[1]["destination"] == "Projects/REFERENCE/youtube-integration-maintenance.md"
+    assert (
+        items[1]["destination"]
+        == "Projects/REFERENCE/youtube-integration-maintenance.md"
+    )
     assert items[1]["status"] == "completed"
 
     # Verify automation asset metadata preserved

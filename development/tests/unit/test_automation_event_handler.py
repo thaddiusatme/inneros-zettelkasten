@@ -35,19 +35,20 @@ from unittest.mock import patch
 # P0.1: Event Handler Initialization (2 tests)
 # ============================================================================
 
+
 class TestEventHandlerInitialization:
     """Test AutomationEventHandler initialization with CoreWorkflowManager."""
 
     def test_event_handler_initializes_with_vault_path(self, tmp_path):
         """
         P0.1.1: Event handler initializes with vault path for CoreWorkflowManager.
-        
+
         Expected behavior:
         - Creates CoreWorkflowManager instance internally
         - Initializes event queue (empty list/deque)
         - Sets up debouncing timer registry
         - No events processed until process_file_event() called
-        
+
         Will fail: ImportError - AutomationEventHandler not yet defined
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -59,19 +60,21 @@ class TestEventHandlerInitialization:
         handler = AutomationEventHandler(vault_path=str(vault_path))
 
         assert handler.vault_path == Path(vault_path), "Should store vault path"
-        assert handler.core_workflow is not None, "Should initialize CoreWorkflowManager"
+        assert (
+            handler.core_workflow is not None
+        ), "Should initialize CoreWorkflowManager"
         assert len(handler.event_queue) == 0, "Event queue should start empty"
         assert len(handler._debounce_timers) == 0, "No debounce timers initially"
 
     def test_event_handler_uses_default_debounce_seconds(self, tmp_path):
         """
         P0.1.2: Event handler accepts configurable debounce_seconds parameter.
-        
+
         Expected behavior:
         - Default debounce_seconds = 2.0 (matches FileWatcher default)
         - Custom debounce_seconds configurable via constructor
         - Debounce setting used for event processing delay
-        
+
         Will fail: ImportError - AutomationEventHandler not yet defined
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -85,8 +88,7 @@ class TestEventHandlerInitialization:
 
         # Test custom
         handler_custom = AutomationEventHandler(
-            vault_path=str(vault_path),
-            debounce_seconds=1.0
+            vault_path=str(vault_path), debounce_seconds=1.0
         )
         assert handler_custom.debounce_seconds == 1.0, "Should accept custom debounce"
 
@@ -94,6 +96,7 @@ class TestEventHandlerInitialization:
 # ============================================================================
 # P0.2: Event Processing (3 tests)
 # ============================================================================
+
 
 class TestEventProcessing:
     """Test process_file_event() integration with CoreWorkflowManager."""
@@ -109,13 +112,13 @@ class TestEventProcessing:
     def test_process_file_event_calls_core_workflow_manager(self, test_vault):
         """
         P0.2.1: process_file_event() invokes CoreWorkflowManager.process_inbox_note().
-        
+
         Expected behavior:
         - Accepts file_path (Path) and event_type (str: 'created'|'modified')
         - Converts Path to string for CoreWorkflowManager
         - Calls core_workflow.process_inbox_note(note_path)
         - Returns processing result or queues for async processing
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -128,10 +131,10 @@ class TestEventProcessing:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
 
         # Mock CoreWorkflowManager to verify it's called
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
             mock_process.return_value = {
-                'success': True,
-                'analytics': {'quality_score': 0.75}
+                "success": True,
+                "analytics": {"quality_score": 0.75},
             }
 
             # Process created event
@@ -148,13 +151,13 @@ class TestEventProcessing:
     def test_process_file_event_ignores_non_markdown_files(self, test_vault):
         """
         P0.2.2: Only .md files are processed - other extensions ignored.
-        
+
         Expected behavior:
         - Check file extension before processing
         - Process: .md files only
         - Ignore: .txt, .tmp, .swp, images, etc.
         - Return early with {'skipped': True, 'reason': 'not_markdown'}
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -168,24 +171,26 @@ class TestEventProcessing:
         handler = AutomationEventHandler(vault_path=str(vault))
 
         # Mock CoreWorkflowManager to verify it's NOT called
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
             result = handler.process_file_event(txt_file, "created")
 
             # Should skip processing
-            assert result.get('skipped') is True, "Should skip non-markdown files"
-            assert 'not_markdown' in result.get('reason', ''), "Should explain why skipped"
+            assert result.get("skipped") is True, "Should skip non-markdown files"
+            assert "not_markdown" in result.get(
+                "reason", ""
+            ), "Should explain why skipped"
             mock_process.assert_not_called()
 
     def test_process_file_event_handles_modified_events(self, test_vault):
         """
         P0.2.3: Handles both 'created' and 'modified' event types.
-        
+
         Expected behavior:
         - 'created' events: Process immediately (new capture)
         - 'modified' events: Process after debounce (avoid processing while editing)
         - 'deleted' events: Ignored (no processing needed)
         - Event type logged for metrics tracking
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -197,8 +202,8 @@ class TestEventProcessing:
         handler = AutomationEventHandler(vault_path=str(vault))
 
         # Mock CoreWorkflowManager
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
-            mock_process.return_value = {'success': True}
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
+            mock_process.return_value = {"success": True}
 
             # Process modified event
             result = handler.process_file_event(test_note, "modified")
@@ -211,6 +216,7 @@ class TestEventProcessing:
 # ============================================================================
 # P0.3: Debouncing & Queue Management (3 tests)
 # ============================================================================
+
 
 class TestDebouncingAndQueue:
     """Test event queue management and debouncing to prevent duplicate processing."""
@@ -226,13 +232,13 @@ class TestDebouncingAndQueue:
     def test_debouncing_prevents_duplicate_processing(self, test_vault):
         """
         P0.3.1: Rapid events on same file debounced - only processed once.
-        
+
         Expected behavior:
         - Multiple events within debounce_seconds treated as single event
         - Timer resets on each new event (last event wins)
         - Only final event processed after debounce period
         - Prevents processing while user actively editing
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -245,8 +251,8 @@ class TestDebouncingAndQueue:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.2)
 
         # Mock CoreWorkflowManager to count invocations
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
-            mock_process.return_value = {'success': True}
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
+            mock_process.return_value = {"success": True}
 
             # Simulate rapid-fire modifications
             handler.process_file_event(test_note, "modified")
@@ -259,18 +265,20 @@ class TestDebouncingAndQueue:
             time.sleep(0.3)
 
             # Should only process once (after final event)
-            assert mock_process.call_count == 1, "Should debounce rapid events to single processing"
+            assert (
+                mock_process.call_count == 1
+            ), "Should debounce rapid events to single processing"
 
     def test_event_queue_tracks_pending_events(self, test_vault):
         """
         P0.3.2: Event queue tracks events waiting for processing.
-        
+
         Expected behavior:
         - Events added to queue when debounce active
         - Queue depth accessible for monitoring
         - Queue cleared as events processed
         - FIFO ordering for events on different files
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'event_queue'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -291,18 +299,18 @@ class TestDebouncingAndQueue:
 
         # Queue should track pending events
         # (Exact queue structure depends on implementation - list, deque, dict)
-        assert hasattr(handler, 'event_queue'), "Should have event_queue attribute"
+        assert hasattr(handler, "event_queue"), "Should have event_queue attribute"
 
     def test_deleted_events_ignored(self, test_vault):
         """
         P0.3.3: 'deleted' events do not trigger AI processing.
-        
+
         Expected behavior:
         - 'deleted' event type detected and skipped
         - No CoreWorkflowManager invocation
         - Event logged for metrics but not queued
         - Return {'skipped': True, 'reason': 'deleted_event'}
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -312,19 +320,20 @@ class TestDebouncingAndQueue:
         handler = AutomationEventHandler(vault_path=str(vault))
 
         # Mock CoreWorkflowManager to verify it's NOT called
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
             # Simulate deleted event (file doesn't exist)
             deleted_path = inbox / "deleted-note.md"
             result = handler.process_file_event(deleted_path, "deleted")
 
             # Should skip processing
-            assert result.get('skipped') is True, "Should skip deleted events"
+            assert result.get("skipped") is True, "Should skip deleted events"
             mock_process.assert_not_called()
 
 
 # ============================================================================
 # P0.4: Error Handling (2 tests)
 # ============================================================================
+
 
 class TestErrorHandling:
     """Test graceful error handling when CoreWorkflowManager unavailable or fails."""
@@ -340,13 +349,13 @@ class TestErrorHandling:
     def test_handles_core_workflow_manager_exception(self, test_vault):
         """
         P0.4.1: Graceful handling when CoreWorkflowManager.process_inbox_note() fails.
-        
+
         Expected behavior:
         - Catch exceptions from CoreWorkflowManager
         - Log error with file path and exception details
         - Return error result: {'success': False, 'error': str(e)}
         - Daemon continues running (error doesn't crash event handler)
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'process_file_event'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -359,7 +368,7 @@ class TestErrorHandling:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
 
         # Mock CoreWorkflowManager to raise exception
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
             mock_process.side_effect = Exception("AI service unavailable")
 
             # Should handle exception gracefully - queues event
@@ -370,19 +379,19 @@ class TestErrorHandling:
 
             # Verify handler tracked the failure in metrics (daemon stability maintained)
             metrics = handler.get_metrics()
-            assert metrics['total_events_processed'] == 1, "Should have processed event"
-            assert metrics['failed_events'] == 1, "Should track failure"
-            assert metrics['successful_events'] == 0, "Should have no successes"
+            assert metrics["total_events_processed"] == 1, "Should have processed event"
+            assert metrics["failed_events"] == 1, "Should track failure"
+            assert metrics["successful_events"] == 0, "Should have no successes"
 
     def test_handles_missing_vault_path(self, tmp_path):
         """
         P0.4.2: Clear error when vault_path doesn't exist or is invalid.
-        
+
         Expected behavior:
         - Validate vault_path exists during initialization
         - Raise ValueError with descriptive message if invalid
         - Error message includes provided path for debugging
-        
+
         Will fail: ImportError - AutomationEventHandler not yet defined
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -396,6 +405,7 @@ class TestErrorHandling:
 # ============================================================================
 # P0.5: Health Monitoring (2 tests)
 # ============================================================================
+
 
 class TestHealthMonitoring:
     """Test event handler health check integration."""
@@ -411,13 +421,13 @@ class TestHealthMonitoring:
     def test_get_health_status_returns_handler_health(self, test_vault):
         """
         P0.5.1: get_health_status() returns event handler operational status.
-        
+
         Expected behavior:
         - Returns dict with 'is_healthy', 'queue_depth', 'processing_count'
         - is_healthy=True when handler operational
         - queue_depth shows pending events count
         - processing_count tracks total events processed
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'get_health_status'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -427,21 +437,21 @@ class TestHealthMonitoring:
 
         health = handler.get_health_status()
 
-        assert 'is_healthy' in health, "Should include is_healthy status"
-        assert 'queue_depth' in health, "Should report queue depth"
-        assert health['is_healthy'] is True, "Should be healthy when initialized"
-        assert health['queue_depth'] == 0, "Queue should be empty initially"
+        assert "is_healthy" in health, "Should include is_healthy status"
+        assert "queue_depth" in health, "Should report queue depth"
+        assert health["is_healthy"] is True, "Should be healthy when initialized"
+        assert health["queue_depth"] == 0, "Queue should be empty initially"
 
     def test_get_metrics_tracks_event_processing_stats(self, test_vault):
         """
         P0.5.2: get_metrics() provides event processing statistics.
-        
+
         Expected behavior:
         - Returns dict with processing metrics
         - Tracks: total_events_processed, successful_events, failed_events
         - Tracks: avg_processing_time, queue_depth_max
         - Metrics updated after each event processed
-        
+
         Will fail: AttributeError - AutomationEventHandler has no attribute 'get_metrics'
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -451,15 +461,16 @@ class TestHealthMonitoring:
 
         metrics = handler.get_metrics()
 
-        assert 'total_events_processed' in metrics, "Should track total events"
-        assert 'successful_events' in metrics, "Should track successes"
-        assert 'failed_events' in metrics, "Should track failures"
-        assert metrics['total_events_processed'] == 0, "Should start at 0"
+        assert "total_events_processed" in metrics, "Should track total events"
+        assert "successful_events" in metrics, "Should track successes"
+        assert "failed_events" in metrics, "Should track failures"
+        assert metrics["total_events_processed"] == 0, "Should start at 0"
 
 
 # ============================================================================
 # P0.6: Logging Infrastructure (5 tests) - TDD Iteration 2 P1.3
 # ============================================================================
+
 
 class TestLoggingInfrastructure:
     """Test Python logging infrastructure for production debugging."""
@@ -475,13 +486,13 @@ class TestLoggingInfrastructure:
     def test_logger_initialized_on_creation(self, test_vault, caplog):
         """
         P0.6.1: Logger is initialized with INFO level during __init__.
-        
+
         Expected behavior:
         - Logger created in __init__ method
         - Log level set to INFO
         - Initialization message logged
         - Logger name follows Python convention
-        
+
         Will fail: No logger initialization in __init__
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -492,23 +503,25 @@ class TestLoggingInfrastructure:
             handler = AutomationEventHandler(vault_path=str(vault))
 
             # Verify logger exists
-            assert hasattr(handler, 'logger'), "Should have logger attribute"
+            assert hasattr(handler, "logger"), "Should have logger attribute"
             assert handler.logger is not None, "Logger should be initialized"
 
             # Verify initialization logged
             assert len(caplog.records) > 0, "Should log initialization"
-            assert "Initialized" in caplog.text or "AutomationEventHandler" in caplog.text
+            assert (
+                "Initialized" in caplog.text or "AutomationEventHandler" in caplog.text
+            )
 
     def test_successful_processing_logged_at_info_level(self, test_vault, caplog):
         """
         P0.6.2: Successful operations are logged at INFO level.
-        
+
         Expected behavior:
         - Success operations logged with INFO level
         - Log includes file path processed
         - Log includes processing duration
         - Log format matches standard
-        
+
         Will fail: No success logging in _execute_processing
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -520,8 +533,8 @@ class TestLoggingInfrastructure:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
 
         # Mock successful processing
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
-            mock_process.return_value = {'success': True, 'quality_score': 0.75}
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
+            mock_process.return_value = {"success": True, "quality_score": 0.75}
 
             with caplog.at_level(logging.INFO):
                 handler.process_file_event(test_note, "created")
@@ -538,13 +551,13 @@ class TestLoggingInfrastructure:
     def test_errors_logged_with_stack_trace(self, test_vault, caplog):
         """
         P0.6.3: Errors are logged at ERROR level with full stack traces.
-        
+
         Expected behavior:
         - Errors logged with ERROR level
         - Exception type and message included
         - Full stack trace included (exc_info=True)
         - File path included in error log
-        
+
         Will fail: No error logging with exc_info=True
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -556,7 +569,7 @@ class TestLoggingInfrastructure:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
 
         # Mock exception
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
             mock_process.side_effect = ValueError("Test error for logging")
 
             with caplog.at_level(logging.ERROR):
@@ -569,7 +582,10 @@ class TestLoggingInfrastructure:
 
                 # Verify error details
                 error_log = error_records[0]
-                assert "ValueError" in error_log.message or "Test error" in error_log.message
+                assert (
+                    "ValueError" in error_log.message
+                    or "Test error" in error_log.message
+                )
 
                 # Verify stack trace (exc_info=True creates stack trace)
                 assert error_log.exc_info is not None, "Should include stack trace"
@@ -577,13 +593,13 @@ class TestLoggingInfrastructure:
     def test_log_file_created_in_automation_logs(self, test_vault, tmp_path):
         """
         P0.6.4: Log files are created in .automation/logs/ directory.
-        
+
         Expected behavior:
         - Log directory created if doesn't exist
         - Daily log file: event_handler_YYYY-MM-DD.log
         - Log file contains initialization message
         - Log format matches standard
-        
+
         Will fail: No file handler configured in logger
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -595,25 +611,27 @@ class TestLoggingInfrastructure:
 
         # Check for log directory (relative to vault or absolute)
         # The component should create logs in .automation/logs/
-        log_dir = vault.parent / '.automation' / 'logs'
+        log_dir = vault.parent / ".automation" / "logs"
 
         # Log file may not exist yet if using MemoryHandler, but logger should be configured
-        assert hasattr(handler, 'logger'), "Should have logger attribute"
+        assert hasattr(handler, "logger"), "Should have logger attribute"
 
         # Verify logger has file handler (implementation detail)
         # At minimum, verify logger is configured for file output
-        assert len(handler.logger.handlers) > 0, "Logger should have handlers configured"
+        assert (
+            len(handler.logger.handlers) > 0
+        ), "Logger should have handlers configured"
 
     def test_log_format_matches_standard(self, test_vault, caplog):
         """
         P0.6.5: Log format follows standard: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
-        
+
         Expected behavior:
         - Timestamp in YYYY-MM-DD HH:MM:SS format
         - Level in brackets: [INFO], [ERROR]
         - Module name included
         - Clear message
-        
+
         Will fail: Formatter not configured with correct format
         """
         from src.automation.event_handler import AutomationEventHandler
@@ -625,8 +643,8 @@ class TestLoggingInfrastructure:
         handler = AutomationEventHandler(vault_path=str(vault), debounce_seconds=0.1)
 
         # Mock successful processing
-        with patch.object(handler.core_workflow, 'process_inbox_note') as mock_process:
-            mock_process.return_value = {'success': True}
+        with patch.object(handler.core_workflow, "process_inbox_note") as mock_process:
+            mock_process.return_value = {"success": True}
 
             with caplog.at_level(logging.INFO):
                 handler.process_file_event(test_note, "created")
@@ -637,7 +655,11 @@ class TestLoggingInfrastructure:
 
                 # Verify record structure (caplog gives us structured data)
                 record = caplog.records[-1]
-                assert record.levelname in ['INFO', 'ERROR', 'WARNING'], "Should have valid level"
+                assert record.levelname in [
+                    "INFO",
+                    "ERROR",
+                    "WARNING",
+                ], "Should have valid level"
                 assert record.name, "Should have logger name"
                 assert record.message, "Should have message"
 

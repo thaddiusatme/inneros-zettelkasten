@@ -26,7 +26,7 @@ class TestDaemonStarter:
 
         result = starter.start()
 
-        assert result['success'] is True
+        assert result["success"] is True
         assert pid_file.exists()
         assert pid_file.read_text().strip().isdigit()
 
@@ -37,13 +37,14 @@ class TestDaemonStarter:
         pid_file = tmp_path / "daemon.pid"
         # Create existing PID file with running process (our own PID)
         import os
+
         pid_file.write_text(str(os.getpid()))
 
         starter = DaemonStarter(pid_file_path=pid_file)
         result = starter.start()
 
-        assert result['success'] is False
-        assert 'already running' in result['message'].lower()
+        assert result["success"] is False
+        assert "already running" in result["message"].lower()
 
     def test_start_daemon_subprocess_launch(self, tmp_path):
         """Test that daemon launches as subprocess."""
@@ -54,15 +55,14 @@ class TestDaemonStarter:
 
         pid_file = tmp_path / "daemon.pid"
         starter = DaemonStarter(
-            pid_file_path=pid_file,
-            daemon_script=str(daemon_script)
+            pid_file_path=pid_file, daemon_script=str(daemon_script)
         )
 
         result = starter.start()
 
-        assert result['success'] is True
-        assert 'pid' in result
-        assert isinstance(result['pid'], int)
+        assert result["success"] is True
+        assert "pid" in result
+        assert isinstance(result["pid"], int)
 
 
 class TestDaemonStopper:
@@ -91,8 +91,8 @@ class TestDaemonStopper:
 
         result = stopper.stop()
 
-        assert result['success'] is False
-        assert 'not running' in result['message'].lower()
+        assert result["success"] is False
+        assert "not running" in result["message"].lower()
 
     def test_stop_daemon_graceful_shutdown(self, tmp_path):
         """Test graceful shutdown with SIGTERM."""
@@ -101,11 +101,12 @@ class TestDaemonStopper:
         pid_file = tmp_path / "daemon.pid"
         # Use our own PID for testing
         import os
+
         pid_file.write_text(str(os.getpid()))
 
         stopper = DaemonStopper(pid_file_path=pid_file)
 
-        with patch('os.kill') as mock_kill:
+        with patch("os.kill") as mock_kill:
             result = stopper.stop()
 
             # Should send SIGTERM (15) for graceful shutdown
@@ -121,14 +122,15 @@ class TestEnhancedDaemonStatus:
 
         pid_file = tmp_path / "daemon.pid"
         import os
+
         pid_file.write_text(str(os.getpid()))
 
         status_checker = EnhancedDaemonStatus(pid_file_path=pid_file)
         result = status_checker.get_status()
 
-        assert 'running' in result
-        assert 'pid' in result
-        assert 'uptime' in result or 'start_time' in result
+        assert "running" in result
+        assert "pid" in result
+        assert "uptime" in result or "start_time" in result
 
 
 class TestLogReader:
@@ -150,9 +152,9 @@ class TestLogReader:
         reader = LogReader(logs_dir=logs_dir)
         result = reader.read_recent(lines=10)
 
-        assert result['success'] is True
-        assert len(result['entries']) > 0
-        assert 'Starting daemon' in str(result['entries'])
+        assert result["success"] is True
+        assert len(result["entries"]) > 0
+        assert "Starting daemon" in str(result["entries"])
 
     def test_logs_handles_missing_log_file(self, tmp_path):
         """Test graceful handling of missing log files."""
@@ -164,8 +166,11 @@ class TestLogReader:
         reader = LogReader(logs_dir=logs_dir)
         result = reader.read_recent(lines=10)
 
-        assert result['success'] is False
-        assert 'no logs' in result['message'].lower() or 'not found' in result['message'].lower()
+        assert result["success"] is False
+        assert (
+            "no logs" in result["message"].lower()
+            or "not found" in result["message"].lower()
+        )
 
 
 class TestErrorHandling:
@@ -184,8 +189,11 @@ class TestErrorHandling:
         result = starter.start()
 
         # Should handle permission error gracefully
-        assert result['success'] is False
-        assert 'permission' in result['message'].lower() or 'error' in result['message'].lower()
+        assert result["success"] is False
+        assert (
+            "permission" in result["message"].lower()
+            or "error" in result["message"].lower()
+        )
 
     def test_error_handling_invalid_pid(self, tmp_path):
         """Test handling of invalid PID in file."""
@@ -198,7 +206,7 @@ class TestErrorHandling:
         result = stopper.stop()
 
         # Should handle gracefully
-        assert 'pid' in str(result).lower() or 'invalid' in str(result).lower()
+        assert "pid" in str(result).lower() or "invalid" in str(result).lower()
 
 
 class TestDaemonOrchestrator:
@@ -212,17 +220,14 @@ class TestDaemonOrchestrator:
         logs_dir = tmp_path / "logs"
         logs_dir.mkdir()
 
-        orchestrator = DaemonOrchestrator(
-            pid_file_path=pid_file,
-            logs_dir=logs_dir
-        )
+        orchestrator = DaemonOrchestrator(pid_file_path=pid_file, logs_dir=logs_dir)
 
         # Test command routing
-        assert hasattr(orchestrator, 'start')
-        assert hasattr(orchestrator, 'stop')
-        assert hasattr(orchestrator, 'status')
-        assert hasattr(orchestrator, 'logs')
+        assert hasattr(orchestrator, "start")
+        assert hasattr(orchestrator, "stop")
+        assert hasattr(orchestrator, "status")
+        assert hasattr(orchestrator, "logs")
 
         # Test status when not running
         status_result = orchestrator.status()
-        assert 'running' in status_result or 'status' in status_result
+        assert "running" in status_result or "status" in status_result

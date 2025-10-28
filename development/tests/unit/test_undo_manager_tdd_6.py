@@ -1,4 +1,3 @@
-
 # RED PHASE: Define expected interface for UndoManager to drive implementation
 # Location to implement: ai/link_insertion_engine.py (or new ai/undo_manager.py and re-export)
 # Expected methods: __init__(max_history:int=50), record_insertion(dict), undo_last(restore: bool=True)->dict,
@@ -6,7 +5,9 @@
 
 
 def test_undo_manager_records_operations(tmp_path):
-    from src.ai.link_insertion_engine import UndoManager  # implemented minimal in Iteration 6
+    from src.ai.link_insertion_engine import (
+        UndoManager,
+    )  # implemented minimal in Iteration 6
 
     um = UndoManager(max_history=10)
 
@@ -15,19 +16,15 @@ def test_undo_manager_records_operations(tmp_path):
 
     op1 = {
         "target_file": "note1.md",
-        "insertions": [
-            {"text": "[[Link 1]]", "section": "test", "offset": 123}
-        ],
+        "insertions": [{"text": "[[Link 1]]", "section": "test", "offset": 123}],
         "backup_path": str(backup1),
-        "timestamp": "2025-09-25 13:20"
+        "timestamp": "2025-09-25 13:20",
     }
     op2 = {
         "target_file": "note2.md",
-        "insertions": [
-            {"text": "[[Link 2]]", "section": "test", "offset": 456}
-        ],
+        "insertions": [{"text": "[[Link 2]]", "section": "test", "offset": 456}],
         "backup_path": str(backup2),
-        "timestamp": "2025-09-25 13:21"
+        "timestamp": "2025-09-25 13:21",
     }
 
     um.record_insertion(op1)
@@ -39,7 +36,9 @@ def test_undo_manager_records_operations(tmp_path):
 
 
 def test_undo_last_returns_latest_operation(tmp_path):
-    from src.ai.link_insertion_engine import UndoManager  # implemented minimal in Iteration 6
+    from src.ai.link_insertion_engine import (
+        UndoManager,
+    )  # implemented minimal in Iteration 6
 
     um = UndoManager(max_history=10)
 
@@ -47,13 +46,13 @@ def test_undo_last_returns_latest_operation(tmp_path):
         "target_file": "a.md",
         "insertions": [{"text": "[[A]]", "section": "alpha", "offset": 10}],
         "backup_path": str(tmp_path / "a.md.bak"),
-        "timestamp": "2025-09-25 13:20"
+        "timestamp": "2025-09-25 13:20",
     }
     opB = {
         "target_file": "b.md",
         "insertions": [{"text": "[[B]]", "section": "beta", "offset": 20}],
         "backup_path": str(tmp_path / "b.md.bak"),
-        "timestamp": "2025-09-25 13:21"
+        "timestamp": "2025-09-25 13:21",
     }
 
     um.record_insertion(opA)
@@ -69,7 +68,9 @@ def test_undo_last_returns_latest_operation(tmp_path):
 
 
 def test_undo_when_empty_is_graceful():
-    from src.ai.link_insertion_engine import UndoManager  # implemented minimal in Iteration 6
+    from src.ai.link_insertion_engine import (
+        UndoManager,
+    )  # implemented minimal in Iteration 6
 
     um = UndoManager()
     result = um.undo_last(restore=False)

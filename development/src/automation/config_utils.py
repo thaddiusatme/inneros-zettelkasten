@@ -11,13 +11,13 @@ from typing import List, Any, Dict
 class ConfigValidator:
     """
     Utilities for configuration validation and parsing.
-    
+
     Provides reusable helper methods for:
     - Schema validation
     - Type checking (log levels, intervals)
     - Default value injection
     - Job configuration validation
-    
+
     Size: ~80 LOC (ADR-001 compliant)
     """
 
@@ -27,10 +27,10 @@ class ConfigValidator:
     def validate_daemon_section(daemon_config: Dict[str, Any]) -> List[str]:
         """
         Validate daemon configuration section.
-        
+
         Args:
             daemon_config: Daemon configuration dictionary
-            
+
         Returns:
             List of validation error messages
         """
@@ -56,10 +56,10 @@ class ConfigValidator:
     def validate_jobs_section(jobs: Any) -> List[str]:
         """
         Validate jobs configuration section.
-        
+
         Args:
             jobs: Jobs configuration (expected to be a list)
-            
+
         Returns:
             List of validation error messages
         """
@@ -86,10 +86,10 @@ class ConfigValidator:
     def validate_raw_config(config: dict) -> List[str]:
         """
         Validate complete raw configuration dictionary.
-        
+
         Args:
             config: Raw configuration dictionary
-            
+
         Returns:
             List of validation error messages (empty if valid)
         """
@@ -109,10 +109,10 @@ class ConfigValidator:
     def inject_defaults(raw_config: dict) -> Dict[str, Any]:
         """
         Inject default values into configuration.
-        
+
         Args:
             raw_config: Raw configuration dictionary
-            
+
         Returns:
             Configuration with defaults injected
         """
@@ -138,10 +138,10 @@ class ConfigValidator:
     def validate_log_level(level: str) -> bool:
         """
         Check if log level is valid.
-        
+
         Args:
             level: Log level string
-            
+
         Returns:
             True if valid, False otherwise
         """
@@ -151,10 +151,10 @@ class ConfigValidator:
     def validate_check_interval(interval: Any) -> bool:
         """
         Check if check interval is valid.
-        
+
         Args:
             interval: Check interval value
-            
+
         Returns:
             True if valid (positive integer), False otherwise
         """
@@ -164,39 +164,48 @@ class ConfigValidator:
     def validate_handler_config(config: Dict[str, Any]) -> List[str]:
         """
         Validate all feature handler configurations in config dict.
-        
+
         Args:
             config: Full configuration dictionary with handler sections
-            
+
         Returns:
             List of validation error messages (empty if valid)
         """
         from pathlib import Path
+
         errors = []
 
         # Validate screenshot_handler section
-        if 'screenshot_handler' in config:
-            sh_config = config['screenshot_handler']
+        if "screenshot_handler" in config:
+            sh_config = config["screenshot_handler"]
 
             # Check if handler is enabled
-            if sh_config.get('enabled', False):
+            if sh_config.get("enabled", False):
                 # Validate required onedrive_path
-                if 'onedrive_path' not in sh_config or not sh_config['onedrive_path']:
-                    errors.append("screenshot_handler: onedrive_path is required when handler is enabled")
+                if "onedrive_path" not in sh_config or not sh_config["onedrive_path"]:
+                    errors.append(
+                        "screenshot_handler: onedrive_path is required when handler is enabled"
+                    )
                 # Validate path exists if provided
-                elif sh_config['onedrive_path']:
-                    path = Path(sh_config['onedrive_path']).expanduser()
+                elif sh_config["onedrive_path"]:
+                    path = Path(sh_config["onedrive_path"]).expanduser()
                     if not path.exists():
-                        errors.append(f"screenshot_handler.onedrive_path does not exist: {sh_config['onedrive_path']}")
+                        errors.append(
+                            f"screenshot_handler.onedrive_path does not exist: {sh_config['onedrive_path']}"
+                        )
 
         # Validate smart_link_handler section
-        if 'smart_link_handler' in config:
-            sl_config = config['smart_link_handler']
+        if "smart_link_handler" in config:
+            sl_config = config["smart_link_handler"]
 
             # Validate similarity_threshold range if provided
-            if 'similarity_threshold' in sl_config:
-                threshold = sl_config['similarity_threshold']
-                if not isinstance(threshold, (int, float)) or not (0.0 <= threshold <= 1.0):
-                    errors.append(f"smart_link_handler: similarity_threshold must be between 0.0 and 1.0, got {threshold}")
+            if "similarity_threshold" in sl_config:
+                threshold = sl_config["similarity_threshold"]
+                if not isinstance(threshold, (int, float)) or not (
+                    0.0 <= threshold <= 1.0
+                ):
+                    errors.append(
+                        f"smart_link_handler: similarity_threshold must be between 0.0 and 1.0, got {threshold}"
+                    )
 
         return errors

@@ -5,7 +5,7 @@ RED Phase: Comprehensive failing tests for extracted CLI utility classes
 Following proven TDD patterns from Iteration 3 modular architecture success.
 
 Test Coverage:
-- CLISafeWorkflowProcessor: Core command execution and workflow processing  
+- CLISafeWorkflowProcessor: Core command execution and workflow processing
 - CLIPerformanceReporter: Metrics generation and reporting
 - CLIIntegrityMonitor: Image integrity reporting functionality
 - CLISessionManager: Concurrent processing session management
@@ -14,7 +14,7 @@ Test Coverage:
 
 Performance Targets:
 - CLI initialization: <5s
-- Command recognition: <1s  
+- Command recognition: <1s
 - Note processing: <10s per note
 - Batch processing: <5 minutes for 100+ notes
 """
@@ -33,7 +33,7 @@ try:
         CLIPerformanceReporter,
         CLIIntegrityMonitor,
         CLISessionManager,
-        CLIBatchProcessor
+        CLIBatchProcessor,
     )
 except ImportError:
     # RED phase: These classes don't exist yet
@@ -62,7 +62,8 @@ class TestCLISafeWorkflowProcessor:
         # Create test notes with images
         test_notes = ["test-note-1.md", "test-note-2.md", "test-note-3.md"]
         for note in test_notes:
-            (vault_dir / "Inbox" / note).write_text("""---
+            (vault_dir / "Inbox" / note).write_text(
+                """---
 type: fleeting
 created: 2025-09-25 07:50
 status: inbox
@@ -70,7 +71,8 @@ status: inbox
 
 # Test Note Content
 This is a test note with ![image](../Media/test-image.png) reference.
-""")
+"""
+            )
 
         # Create test images
         for i in range(3):
@@ -84,10 +86,7 @@ This is a test note with ![image](../Media/test-image.png) reference.
         processor = CLISafeWorkflowProcessor(str(temp_vault))
 
         # Should process inbox notes with image preservation
-        result = processor.process_inbox_safe(
-            preserve_images=True,
-            show_progress=True
-        )
+        result = processor.process_inbox_safe(preserve_images=True, show_progress=True)
 
         # Should return comprehensive processing results
         assert result["total_notes"] >= 0  # GREEN phase: may be 0 if no inbox notes
@@ -103,15 +102,15 @@ This is a test note with ![image](../Media/test-image.png) reference.
 
             # Should handle batch processing with safety guarantees
             result = processor.batch_process_safe(
-                batch_size=10,
-                max_concurrent=2,
-                progress_callback=lambda x: None
+                batch_size=10, max_concurrent=2, progress_callback=lambda x: None
             )
 
             # Should provide detailed batch processing stats
             assert result["total_files"] >= 3
             assert result["images_preserved_total"] >= 0
-            assert result["image_integrity_report"]["successful_image_preservation"] >= 0
+            assert (
+                result["image_integrity_report"]["successful_image_preservation"] >= 0
+            )
             assert result["batch_processing_stats"]["average_time_per_note"] > 0
 
     def test_process_note_in_session_fails(self, temp_vault):
@@ -128,7 +127,10 @@ This is a test note with ![image](../Media/test-image.png) reference.
             # Should provide session processing results
             assert result["success"] is True
             assert result["session_id"] == session_id
-            assert result["processing_result"]["image_preservation"]["images_preserved"] >= 0
+            assert (
+                result["processing_result"]["image_preservation"]["images_preserved"]
+                >= 0
+            )
 
 
 class TestCLIPerformanceReporter:
@@ -144,7 +146,7 @@ class TestCLIPerformanceReporter:
                 "total_operations": 50,
                 "success_rate": 0.96,
                 "average_processing_time": 8.5,
-                "total_images_preserved": 25
+                "total_images_preserved": 25,
             }
         )
 
@@ -161,9 +163,7 @@ class TestCLIPerformanceReporter:
 
             # Should benchmark CLI processing performance
             benchmark_result = reporter.benchmark_processing_performance(
-                note_count=10,
-                image_count=5,
-                target_time_per_note=10.0
+                note_count=10, image_count=5, target_time_per_note=10.0
             )
 
             # Should provide performance benchmarks
@@ -182,8 +182,7 @@ class TestCLIIntegrityMonitor:
 
             # Should generate comprehensive integrity report
             report = monitor.generate_integrity_report(
-                vault_path="/tmp/test-vault",
-                include_scan_details=True
+                vault_path="/tmp/test-vault", include_scan_details=True
             )
 
             # Should provide detailed integrity analysis
@@ -202,7 +201,7 @@ class TestCLIIntegrityMonitor:
             export_result = monitor.export_integrity_report(
                 report_data={"test": "data"},
                 export_path="/tmp/integrity-report.json",
-                format="json"
+                format="json",
             )
 
             # Should confirm successful export
@@ -235,7 +234,7 @@ class TestCLISessionManager:
             result = manager.process_in_session(
                 note_path="/tmp/test-note.md",
                 session_id=session_id,
-                preserve_images=True
+                preserve_images=True,
             )
 
             # Should provide session processing results
@@ -256,7 +255,7 @@ class TestCLIBatchProcessor:
             result = processor.batch_process_with_progress(
                 note_paths=["/tmp/note1.md", "/tmp/note2.md", "/tmp/note3.md"],
                 progress_callback=lambda progress: None,
-                benchmark_mode=True
+                benchmark_mode=True,
             )
 
             # Should provide batch processing results
@@ -274,7 +273,7 @@ class TestCLIBatchProcessor:
             optimal_size = processor.optimize_batch_size(
                 note_count=100,
                 average_note_size_kb=50,
-                target_processing_time=300  # 5 minutes
+                target_processing_time=300,  # 5 minutes
             )
 
             # Should return optimized batch size
@@ -289,9 +288,7 @@ class TestSafeWorkflowCLI:
         """GREEN: SafeWorkflowCLI orchestrator exists and initializes"""
         # Should initialize with all CLI utility components
         cli = SafeWorkflowCLI(
-            vault_path="/tmp/test-vault",
-            max_concurrent=2,
-            performance_mode=True
+            vault_path="/tmp/test-vault", max_concurrent=2, performance_mode=True
         )
 
         # Should have all utility components
@@ -312,8 +309,8 @@ class TestSafeWorkflowCLI:
                 options={
                     "progress": True,
                     "performance_metrics": True,
-                    "batch_size": 10
-                }
+                    "batch_size": 10,
+                },
             )
 
             # Should provide command execution results
@@ -330,7 +327,7 @@ class TestSafeWorkflowCLI:
             # Should optimize CLI performance automatically
             optimization_result = cli.optimize_performance(
                 target_initialization_time=5.0,  # 5 seconds
-                target_processing_time=10.0      # 10 seconds per note
+                target_processing_time=10.0,  # 10 seconds per note
             )
 
             # Should provide optimization results
@@ -342,6 +339,7 @@ class TestSafeWorkflowCLI:
 # ============================================================================
 # Performance and Integration Tests (RED Phase)
 # ============================================================================
+
 
 class TestCLIUtilsPerformance:
     """RED: Performance tests for CLI utility classes"""
@@ -370,7 +368,7 @@ class TestCLIUtilsPerformance:
                 "batch-process-safe",
                 "performance-report",
                 "integrity-report",
-                "start-safe-session"
+                "start-safe-session",
             ]
 
             # Should recognize commands quickly
@@ -395,7 +393,7 @@ class TestCLIUtilsIntegration:
             result = cli.execute_full_safe_workflow(
                 commands=["process-inbox-safe", "performance-report"],
                 batch_size=5,
-                show_progress=True
+                show_progress=True,
             )
 
             # Should provide comprehensive workflow results

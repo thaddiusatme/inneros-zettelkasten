@@ -19,7 +19,7 @@ from ai.youtube_transcript_fetcher import (
     YouTubeTranscriptFetcher,
     TranscriptNotAvailableError,
     InvalidVideoIdError,
-    RateLimitError
+    RateLimitError,
 )
 
 
@@ -29,7 +29,7 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
     def test_fetch_valid_video_transcript(self):
         """
         RED Phase Test 1: Fetch transcript for valid YouTube video
-        
+
         Success case: Should return formatted transcript with timestamps
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -59,7 +59,7 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
     def test_fetch_video_without_transcript(self):
         """
         RED Phase Test 2: Handle videos without transcripts gracefully
-        
+
         Error case: Should raise TranscriptNotAvailableError with clear message
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -68,7 +68,8 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
         video_id = "NO_TRANSCRIPT"
 
         from youtube_transcript_api._errors import TranscriptsDisabled
-        with patch.object(fetcher.api, 'list') as mock_list:
+
+        with patch.object(fetcher.api, "list") as mock_list:
             mock_list.side_effect = TranscriptsDisabled(video_id)
 
             with pytest.raises(TranscriptNotAvailableError) as exc_info:
@@ -81,7 +82,7 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
     def test_fetch_manual_vs_auto_transcript_preference(self):
         """
         RED Phase Test 3: Prefer manual transcripts over auto-generated
-        
+
         When both available, should return manual transcript (higher quality)
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -90,7 +91,7 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
         video_id = "BOTH_TYPES"
 
         # Mock the transcript API to return both types
-        with patch.object(fetcher.api, 'list') as mock_list:
+        with patch.object(fetcher.api, "list") as mock_list:
             # Setup mock to have both manual and auto-generated
             mock_transcript_list = Mock()
             mock_manual = Mock()
@@ -112,7 +113,9 @@ class TestYouTubeTranscriptFetcherBasicFunctionality:
             mock_auto_entry.duration = 2.0
             mock_auto.fetch.return_value = [mock_auto_entry]
 
-            mock_transcript_list.__iter__ = Mock(return_value=iter([mock_manual, mock_auto]))
+            mock_transcript_list.__iter__ = Mock(
+                return_value=iter([mock_manual, mock_auto])
+            )
             mock_list.return_value = mock_transcript_list
 
             result = fetcher.fetch_transcript(video_id, prefer_manual=True)
@@ -128,7 +131,7 @@ class TestYouTubeTranscriptFetcherFormatting:
     def test_format_timestamps_for_markdown(self):
         """
         RED Phase Test 4: Format timestamps in MM:SS format for markdown
-        
+
         Should convert float timestamps to human-readable format
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -143,12 +146,14 @@ class TestYouTubeTranscriptFetcherFormatting:
 
         for seconds, expected in test_cases:
             formatted = fetcher.format_timestamp(seconds)
-            assert formatted == expected, f"Expected {expected}, got {formatted} for {seconds}s"
+            assert (
+                formatted == expected
+            ), f"Expected {expected}, got {formatted} for {seconds}s"
 
     def test_format_transcript_for_llm_processing(self):
         """
         RED Phase Test 5: Format transcript for LLM consumption
-        
+
         Should create clean text format suitable for AI processing
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -156,7 +161,7 @@ class TestYouTubeTranscriptFetcherFormatting:
         sample_transcript = [
             {"text": "Hello world", "start": 0.0, "duration": 2.0},
             {"text": "This is a test", "start": 2.0, "duration": 3.0},
-            {"text": "End of transcript", "start": 5.0, "duration": 2.0}
+            {"text": "End of transcript", "start": 5.0, "duration": 2.0},
         ]
 
         formatted = fetcher.format_for_llm(sample_transcript)
@@ -179,7 +184,7 @@ class TestYouTubeTranscriptFetcherErrorHandling:
     def test_handle_invalid_video_id(self):
         """
         RED Phase Test 6: Handle invalid video IDs gracefully
-        
+
         Should raise InvalidVideoIdError for malformed IDs
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -200,7 +205,7 @@ class TestYouTubeTranscriptFetcherErrorHandling:
     def test_handle_rate_limit_errors(self):
         """
         RED Phase Test 7: Handle API rate limiting gracefully
-        
+
         Should raise RateLimitError with retry guidance
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -209,7 +214,8 @@ class TestYouTubeTranscriptFetcherErrorHandling:
 
         # Mock rate limit scenario
         from youtube_transcript_api._errors import RequestBlocked
-        with patch.object(fetcher.api, 'list') as mock_list:
+
+        with patch.object(fetcher.api, "list") as mock_list:
             mock_list.side_effect = RequestBlocked("Too many requests")
 
             with pytest.raises(RateLimitError) as exc_info:
@@ -222,7 +228,7 @@ class TestYouTubeTranscriptFetcherErrorHandling:
     def test_handle_network_errors(self):
         """
         RED Phase Test 8: Handle network connectivity issues
-        
+
         Should raise appropriate error with recovery suggestions
         """
         fetcher = YouTubeTranscriptFetcher()
@@ -230,14 +236,17 @@ class TestYouTubeTranscriptFetcherErrorHandling:
         video_id = "NETWORK_ERROR_TEST"
 
         # Mock network error
-        with patch.object(fetcher.api, 'list') as mock_list:
+        with patch.object(fetcher.api, "list") as mock_list:
             mock_list.side_effect = ConnectionError("Network unreachable")
 
             with pytest.raises(Exception) as exc_info:
                 fetcher.fetch_transcript(video_id)
 
             # Should indicate network issue
-            assert "network" in str(exc_info.value).lower() or "connection" in str(exc_info.value).lower()
+            assert (
+                "network" in str(exc_info.value).lower()
+                or "connection" in str(exc_info.value).lower()
+            )
 
 
 class TestYouTubeTranscriptFetcherPerformance:
@@ -246,7 +255,7 @@ class TestYouTubeTranscriptFetcherPerformance:
     def test_fetch_completes_within_30_seconds(self):
         """
         RED Phase Test 9: Ensure transcript fetch completes in <30s
-        
+
         Performance target: <30 seconds per video
         """
         import time
@@ -273,14 +282,12 @@ class TestYouTubeTranscriptFetcherIntegration:
     def test_transcript_output_compatible_with_ollama_llm(self):
         """
         RED Phase Test 10: Ensure output format works with Ollama LLM
-        
+
         Output should be compatible with existing LLM infrastructure
         """
         fetcher = YouTubeTranscriptFetcher()
 
-        sample_transcript = [
-            {"text": "Test content", "start": 0.0, "duration": 2.0}
-        ]
+        sample_transcript = [{"text": "Test content", "start": 0.0, "duration": 2.0}]
 
         formatted = fetcher.format_for_llm(sample_transcript)
 

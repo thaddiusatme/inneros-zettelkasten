@@ -13,8 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.cli.dashboard_cli import (
     DashboardLauncher,
     TerminalDashboardLauncher,
-    DashboardOrchestrator
+    DashboardOrchestrator,
 )
+
 
 def test_red_phase():
     """Verify all stub implementations raise NotImplementedError."""
@@ -23,35 +24,47 @@ def test_red_phase():
 
     # Test DashboardLauncher
     try:
-        launcher = DashboardLauncher(vault_path='.')
+        launcher = DashboardLauncher(vault_path=".")
         launcher.launch()
         failures.append("DashboardLauncher.launch() should raise NotImplementedError")
     except NotImplementedError:
-        print("✅ DashboardLauncher.launch() raises NotImplementedError (RED phase correct)")
+        print(
+            "✅ DashboardLauncher.launch() raises NotImplementedError (RED phase correct)"
+        )
 
     # Test TerminalDashboardLauncher
     try:
-        launcher = TerminalDashboardLauncher(daemon_url='http://localhost:8080')
+        launcher = TerminalDashboardLauncher(daemon_url="http://localhost:8080")
         launcher.launch()
-        failures.append("TerminalDashboardLauncher.launch() should raise NotImplementedError")
+        failures.append(
+            "TerminalDashboardLauncher.launch() should raise NotImplementedError"
+        )
     except NotImplementedError:
-        print("✅ TerminalDashboardLauncher.launch() raises NotImplementedError (RED phase correct)")
+        print(
+            "✅ TerminalDashboardLauncher.launch() raises NotImplementedError (RED phase correct)"
+        )
 
     # Test DashboardOrchestrator.run
     try:
-        orchestrator = DashboardOrchestrator(vault_path='.')
+        orchestrator = DashboardOrchestrator(vault_path=".")
         orchestrator.run(live_mode=False)
         failures.append("DashboardOrchestrator.run() should raise NotImplementedError")
     except NotImplementedError:
-        print("✅ DashboardOrchestrator.run() raises NotImplementedError (RED phase correct)")
+        print(
+            "✅ DashboardOrchestrator.run() raises NotImplementedError (RED phase correct)"
+        )
 
     # Test DashboardOrchestrator.check_daemon_status
     try:
-        orchestrator = DashboardOrchestrator(vault_path='.')
+        orchestrator = DashboardOrchestrator(vault_path=".")
         orchestrator.check_daemon_status()
-        failures.append("DashboardOrchestrator.check_daemon_status() should raise NotImplementedError")
+        failures.append(
+            "DashboardOrchestrator.check_daemon_status() should raise NotImplementedError"
+        )
     except NotImplementedError:
-        print("✅ DashboardOrchestrator.check_daemon_status() raises NotImplementedError (RED phase correct)")
+        print(
+            "✅ DashboardOrchestrator.check_daemon_status() raises NotImplementedError (RED phase correct)"
+        )
 
     # Summary
     print("\n" + "=" * 60)
@@ -66,6 +79,7 @@ def test_red_phase():
         print("Ready for GREEN phase implementation")
         return True
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     success = test_red_phase()
     sys.exit(0 if success else 1)

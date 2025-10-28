@@ -24,7 +24,9 @@ class ConcurrentProcessingManager:
         self.max_workers = max_workers
         self.active_sessions = {}
 
-    def process_concurrent_sessions(self, note_sets: List[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    def process_concurrent_sessions(
+        self, note_sets: List[List[Dict[str, Any]]]
+    ) -> List[Dict[str, Any]]:
         """
         GREEN Phase: Process multiple note sets concurrently
         Minimal implementation for concurrent processing tests
@@ -35,7 +37,9 @@ class ConcurrentProcessingManager:
             # Submit all sessions for processing
             future_to_session = {}
             for i, note_set in enumerate(note_sets):
-                future = executor.submit(self._process_session, f"session_{i}", note_set)
+                future = executor.submit(
+                    self._process_session, f"session_{i}", note_set
+                )
                 future_to_session[future] = i
 
             # Collect results as they complete
@@ -45,16 +49,20 @@ class ConcurrentProcessingManager:
                     result = future.result()
                     results.append(result)
                 except Exception as e:
-                    results.append({
-                        "success": False,
-                        "session_id": f"session_{session_id}",
-                        "error": str(e),
-                        "conflicts": 0
-                    })
+                    results.append(
+                        {
+                            "success": False,
+                            "session_id": f"session_{session_id}",
+                            "error": str(e),
+                            "conflicts": 0,
+                        }
+                    )
 
         return results
 
-    def _process_session(self, session_id: str, note_set: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _process_session(
+        self, session_id: str, note_set: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         GREEN Phase: Process individual session
         Minimal implementation with basic conflict detection
@@ -79,7 +87,7 @@ class ConcurrentProcessingManager:
                 "processed_count": result.get("processed_count", 0),
                 "processing_time": processing_time,
                 "conflicts": 0,  # GREEN phase: minimal conflict detection
-                "errors": result.get("errors", [])
+                "errors": result.get("errors", []),
             }
 
         except Exception as e:
@@ -88,7 +96,7 @@ class ConcurrentProcessingManager:
                 "session_id": session_id,
                 "error": str(e),
                 "conflicts": 0,
-                "processing_time": time.time() - start_time
+                "processing_time": time.time() - start_time,
             }
 
     def get_active_sessions(self) -> Dict[str, Any]:

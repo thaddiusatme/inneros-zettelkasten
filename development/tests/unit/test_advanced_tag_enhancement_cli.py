@@ -6,7 +6,7 @@ Building on TDD Iteration 3's Advanced Tag Enhancement System success patterns.
 
 Test Coverage:
 - CLI command parsing and execution
-- Real data processing with performance validation  
+- Real data processing with performance validation
 - Integration with AdvancedTagEnhancementEngine
 - User interaction and feedback collection
 - Batch processing with progress indicators
@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src.cli.advanced_tag_enhancement_cli import (
     AdvancedTagEnhancementCLI,
     EnhancementCommand,
-    CLIProgressReporter
+    CLIProgressReporter,
 )
 
 
@@ -60,21 +60,43 @@ class TestAdvancedTagEnhancementCLI(unittest.TestCase):
 
         # Create notes with realistic problematic tags from user's vault
         problematic_tags = [
-            "ai", "AI", "artificial-intelligence", "artificial_intelligence",  # inconsistent formatting
-            "productivity", "Productivity", "productivity-tips", "productivity_hacks",  # case variations
-            "123", "2024", "20240823", "456789",  # numeric-only tags
-            "!", "@#$", "...", "???",  # punctuation-only tags
-            "", " ", "  ",  # empty/whitespace tags
-            "ai-automation-ai-workflows", "ai-ai-enhancement-ai",  # redundant duplications
-            "work/life/balance", "note-taking-system-workflow",  # overly complex hierarchy
-            "GPT-4-OpenAI-ChatGPT-LLM", "project-management-productivity-tools-automation"  # metadata redundancy
+            "ai",
+            "AI",
+            "artificial-intelligence",
+            "artificial_intelligence",  # inconsistent formatting
+            "productivity",
+            "Productivity",
+            "productivity-tips",
+            "productivity_hacks",  # case variations
+            "123",
+            "2024",
+            "20240823",
+            "456789",  # numeric-only tags
+            "!",
+            "@#$",
+            "...",
+            "???",  # punctuation-only tags
+            "",
+            " ",
+            "  ",  # empty/whitespace tags
+            "ai-automation-ai-workflows",
+            "ai-ai-enhancement-ai",  # redundant duplications
+            "work/life/balance",
+            "note-taking-system-workflow",  # overly complex hierarchy
+            "GPT-4-OpenAI-ChatGPT-LLM",
+            "project-management-productivity-tools-automation",  # metadata redundancy
         ]
 
         # Create sample notes with these problematic tags
-        for i, tag_group in enumerate([problematic_tags[i:i+10] for i in range(0, len(problematic_tags), 10)]):
-            note_path = self.vault_path / "knowledge" / "Fleeting Notes" / f"sample-note-{i}.md"
-            with open(note_path, 'w') as f:
-                f.write(f"""---
+        for i, tag_group in enumerate(
+            [problematic_tags[i : i + 10] for i in range(0, len(problematic_tags), 10)]
+        ):
+            note_path = (
+                self.vault_path / "knowledge" / "Fleeting Notes" / f"sample-note-{i}.md"
+            )
+            with open(note_path, "w") as f:
+                f.write(
+                    f"""---
 type: fleeting  
 created: 2024-09-23 20:00
 status: inbox
@@ -84,7 +106,8 @@ tags: {tag_group}
 # Sample Note {i}
 
 This is a sample note with problematic tags for testing CLI integration.
-""")
+"""
+                )
 
     def test_cli_initialization_and_setup(self):
         """Test CLI initializes correctly with vault path and engine integration"""
@@ -112,7 +135,9 @@ This is a sample note with problematic tags for testing CLI integration.
 
         with self.assertRaises(AttributeError):
             start_time = time.time()
-            result = self.cli.execute_command("analyze-tags", vault_path=str(self.vault_path))
+            result = self.cli.execute_command(
+                "analyze-tags", vault_path=str(self.vault_path)
+            )
             execution_time = time.time() - start_time
 
             # Performance requirement: <30s for 698+ tags
@@ -126,18 +151,24 @@ This is a sample note with problematic tags for testing CLI integration.
             result = self.cli.execute_command("suggest-improvements", min_quality=0.7)
 
             # Expected: 90% of low-quality tags should receive suggestions
-            low_quality_tags = [tag for tag in result["analyzed_tags"] if tag["quality_score"] < 0.7]
+            low_quality_tags = [
+                tag for tag in result["analyzed_tags"] if tag["quality_score"] < 0.7
+            ]
             suggested_tags = [tag for tag in low_quality_tags if tag["suggestions"]]
 
-            suggestion_rate = len(suggested_tags) / len(low_quality_tags) if low_quality_tags else 0
+            suggestion_rate = (
+                len(suggested_tags) / len(low_quality_tags) if low_quality_tags else 0
+            )
             self.assertGreaterEqual(suggestion_rate, 0.9)  # 90% suggestion rate
 
     def test_batch_enhance_command_with_user_confirmation(self):
         """Test --batch-enhance processes multiple tags with user interaction"""
         # This test will FAIL until batch processing CLI is implemented
-        with patch('builtins.input', return_value='y'):  # Mock user confirmation
+        with patch("builtins.input", return_value="y"):  # Mock user confirmation
             with self.assertRaises(AttributeError):
-                result = self.cli.execute_command("batch-enhance", tags=["ai", "AI", "artificial-intelligence"])
+                result = self.cli.execute_command(
+                    "batch-enhance", tags=["ai", "AI", "artificial-intelligence"]
+                )
 
                 self.assertIn("enhanced_tags", result)
                 self.assertIn("backup_created", result)
@@ -146,8 +177,8 @@ This is a sample note with problematic tags for testing CLI integration.
     def test_interactive_enhancement_mode_user_workflow(self):
         """Test interactive mode provides user-guided enhancement workflow"""
         # This test will FAIL until interactive mode is implemented
-        mock_inputs = ['1', 'accept', '2', 'reject', '3', 'accept', 'exit']
-        with patch('builtins.input', side_effect=mock_inputs):
+        mock_inputs = ["1", "accept", "2", "reject", "3", "accept", "exit"]
+        with patch("builtins.input", side_effect=mock_inputs):
             with self.assertRaises(AttributeError):
                 result = self.cli.execute_interactive_mode()
 
@@ -160,7 +191,7 @@ This is a sample note with problematic tags for testing CLI integration.
         # This test will FAIL until progress reporting is implemented
         progress_output = StringIO()
 
-        with patch('sys.stdout', progress_output):
+        with patch("sys.stdout", progress_output):
             with self.assertRaises(AttributeError):
                 self.cli.execute_command("analyze-tags", show_progress=True)
 
@@ -184,7 +215,9 @@ This is a sample note with problematic tags for testing CLI integration.
         """Test CLI exports enhancement data in CSV format for external tools"""
         # This test will FAIL until CSV export is implemented
         with self.assertRaises(AttributeError):
-            result = self.cli.execute_command("suggest-improvements", export_format="csv")
+            result = self.cli.execute_command(
+                "suggest-improvements", export_format="csv"
+            )
 
             csv_data = StringIO(result["export_data"])
             reader = csv.DictReader(csv_data)
@@ -204,14 +237,18 @@ This is a sample note with problematic tags for testing CLI integration.
             self.assertIn("backup_path", result)
 
             # Test rollback functionality
-            rollback_result = self.cli.execute_command("rollback", backup_path=result["backup_path"])
+            rollback_result = self.cli.execute_command(
+                "rollback", backup_path=result["backup_path"]
+            )
             self.assertTrue(rollback_result["success"])
 
     def test_integration_with_weekly_review_workflow(self):
         """Test CLI integrates with existing weekly review workflows"""
         # This test will FAIL until workflow integration is implemented
         with self.assertRaises(AttributeError):
-            result = self.cli.execute_command("analyze-tags", integrate_weekly_review=True)
+            result = self.cli.execute_command(
+                "analyze-tags", integrate_weekly_review=True
+            )
 
             self.assertIn("weekly_review_candidates", result)
             self.assertIn("enhancement_recommendations", result)
@@ -223,7 +260,7 @@ This is a sample note with problematic tags for testing CLI integration.
             "tag": "artificial-intelligence",
             "suggested": "ai",
             "user_action": "accepted",
-            "confidence": 0.95
+            "confidence": 0.95,
         }
 
         with self.assertRaises(AttributeError):
@@ -244,8 +281,8 @@ This is a sample note with problematic tags for testing CLI integration.
                 "formatting_issues": 156,
                 "semantic_duplicates": 89,
                 "metadata_redundancy": 127,
-                "numeric_only": 59
-            }
+                "numeric_only": 59,
+            },
         }
 
         with self.assertRaises(AttributeError):
@@ -253,7 +290,9 @@ This is a sample note with problematic tags for testing CLI integration.
 
             # Performance validation
             self.assertLess(result["processing_time"], 30.0)  # <30s requirement
-            self.assertGreaterEqual(result["improvement_suggestions"], 388)  # 90% of 431 problematic
+            self.assertGreaterEqual(
+                result["improvement_suggestions"], 388
+            )  # 90% of 431 problematic
 
     def test_zero_regression_on_existing_workflows(self):
         """Test CLI integration doesn't break existing WorkflowManager functionality"""
@@ -274,7 +313,9 @@ This is a sample note with problematic tags for testing CLI integration.
         # This test will FAIL until error handling is implemented
         with self.assertRaises(AttributeError):
             # Test invalid vault path
-            result = self.cli.execute_command("analyze-tags", vault_path="/nonexistent/path")
+            result = self.cli.execute_command(
+                "analyze-tags", vault_path="/nonexistent/path"
+            )
             self.assertIn("error", result)
             self.assertIn("vault not found", result["error"].lower())
 
@@ -343,13 +384,12 @@ class TestEnhancementCommand(unittest.TestCase):
         # This test will FAIL until validation is implemented
         with self.assertRaises(AttributeError):
             command = EnhancementCommand(
-                action="batch-enhance",
-                parameters={"tags": ["test"], "dry_run": True}
+                action="batch-enhance", parameters={"tags": ["test"], "dry_run": True}
             )
 
             self.assertTrue(command.is_valid())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run all tests - these will FAIL during RED phase as expected
     unittest.main(verbosity=2)

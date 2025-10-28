@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch, mock_open
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
@@ -28,7 +29,7 @@ class TestWeeklyReviewFormatter:
                 "promote_to_permanent": 1,
                 "move_to_fleeting": 1,
                 "needs_improvement": 1,
-                "processing_errors": 0
+                "processing_errors": 0,
             },
             "recommendations": [
                 {
@@ -38,7 +39,7 @@ class TestWeeklyReviewFormatter:
                     "reason": "High quality content with comprehensive analysis",
                     "quality_score": 0.85,
                     "confidence": 0.9,
-                    "ai_tags": ["machine-learning", "deep-learning"]
+                    "ai_tags": ["machine-learning", "deep-learning"],
                 },
                 {
                     "file_name": "medium_quality.md",
@@ -47,7 +48,7 @@ class TestWeeklyReviewFormatter:
                     "reason": "Good start but needs more development",
                     "quality_score": 0.55,
                     "confidence": 0.7,
-                    "ai_tags": ["productivity"]
+                    "ai_tags": ["productivity"],
                 },
                 {
                     "file_name": "low_quality.md",
@@ -56,10 +57,10 @@ class TestWeeklyReviewFormatter:
                     "reason": "Content is too brief and lacks detail",
                     "quality_score": 0.25,
                     "confidence": 0.8,
-                    "ai_tags": []
-                }
+                    "ai_tags": [],
+                },
             ],
-            "generated_at": "2025-07-30T22:57:00"
+            "generated_at": "2025-07-30T22:57:00",
         }
 
     def test_format_checklist_summary(self):
@@ -119,10 +120,10 @@ class TestWeeklyReviewFormatter:
                 "promote_to_permanent": 0,
                 "move_to_fleeting": 0,
                 "needs_improvement": 0,
-                "processing_errors": 0
+                "processing_errors": 0,
             },
             "recommendations": [],
-            "generated_at": "2025-07-30T22:57:00"
+            "generated_at": "2025-07-30T22:57:00",
         }
 
         checklist = self.formatter.format_checklist(empty_recs)
@@ -140,7 +141,7 @@ class TestWeeklyReviewFormatter:
                 "promote_to_permanent": 0,
                 "move_to_fleeting": 0,
                 "needs_improvement": 0,
-                "processing_errors": 1
+                "processing_errors": 1,
             },
             "recommendations": [
                 {
@@ -150,10 +151,10 @@ class TestWeeklyReviewFormatter:
                     "reason": "Processing failed - manual review required",
                     "quality_score": None,
                     "confidence": None,
-                    "error": "Failed to process note"
+                    "error": "Failed to process note",
                 }
             ],
-            "generated_at": "2025-07-30T22:57:00"
+            "generated_at": "2025-07-30T22:57:00",
         }
 
         checklist = self.formatter.format_checklist(error_recs)
@@ -170,8 +171,7 @@ class TestWeeklyReviewFormatter:
             export_path = Path(temp_dir) / "weekly-review.md"
 
             result_path = self.formatter.export_checklist(
-                self.sample_recommendations,
-                export_path
+                self.sample_recommendations, export_path
             )
 
             # Should create the file
@@ -190,8 +190,7 @@ class TestWeeklyReviewFormatter:
             export_dir = Path(temp_dir)
 
             result_path = self.formatter.export_checklist(
-                self.sample_recommendations,
-                export_dir
+                self.sample_recommendations, export_dir
             )
 
             # Should generate timestamped filename
@@ -201,6 +200,7 @@ class TestWeeklyReviewFormatter:
             assert result_path.name.endswith(".md")
             # Check that today's date is in the filename
             from datetime import datetime
+
             today = datetime.now().strftime("%Y-%m-%d")
             assert today in result_path.name
 
@@ -235,40 +235,35 @@ class TestWeeklyReviewFormatter:
                 "total_notes": 25,
                 "total_orphaned": 3,
                 "total_stale": 2,
-                "avg_links_per_note": 1.8
+                "avg_links_per_note": 1.8,
             },
             "orphaned_notes": [
                 {
                     "title": "Orphaned Note 1",
                     "directory": "Permanent Notes",
-                    "last_modified": "2025-07-25T10:30:00.000000"
+                    "last_modified": "2025-07-25T10:30:00.000000",
                 },
                 {
                     "title": "Orphaned Note 2",
                     "directory": "Fleeting Notes",
-                    "last_modified": "2025-07-20T15:45:00.000000"
-                }
+                    "last_modified": "2025-07-20T15:45:00.000000",
+                },
             ],
             "stale_notes": [
                 {
                     "title": "Very Old Note",
                     "directory": "Permanent Notes",
-                    "days_since_modified": 120
+                    "days_since_modified": 120,
                 }
             ],
-            "note_age_distribution": {
-                "new": 5,
-                "recent": 8,
-                "mature": 7,
-                "old": 5
-            },
+            "note_age_distribution": {"new": 5, "recent": 8, "mature": 7, "old": 5},
             "productivity_metrics": {
                 "avg_notes_created_per_week": 3.2,
                 "avg_notes_modified_per_week": 4.1,
                 "total_weeks_active": 8,
-                "most_productive_week_creation": ("2025-W30", 7)
+                "most_productive_week_creation": ("2025-W30", 7),
             },
-            "link_density": 1.8
+            "link_density": 1.8,
         }
 
         # Format the metrics
@@ -336,14 +331,16 @@ class TestWeeklyReviewCLI:
         note_path = self.base_dir / directory / filename
         note_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(note_path, 'w', encoding='utf-8') as f:
+        with open(note_path, "w", encoding="utf-8") as f:
             f.write(content)
 
         return note_path
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
-    def test_enhanced_metrics_command_basic(self, mock_workflow_manager, mock_formatter):
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
+    def test_enhanced_metrics_command_basic(
+        self, mock_workflow_manager, mock_formatter
+    ):
         """Test basic enhanced metrics command execution."""
         # Setup mocks
         mock_workflow_instance = mock_workflow_manager.return_value
@@ -356,54 +353,70 @@ class TestWeeklyReviewCLI:
                 "total_notes": 10,
                 "total_orphaned": 2,
                 "total_stale": 1,
-                "avg_links_per_note": 1.5
+                "avg_links_per_note": 1.5,
             },
             "orphaned_notes": [],
             "stale_notes": [],
             "note_age_distribution": {},
             "productivity_metrics": {},
-            "link_density": 1.5
+            "link_density": 1.5,
         }
         mock_workflow_instance.generate_enhanced_metrics.return_value = mock_metrics
-        mock_formatter_instance.format_enhanced_metrics.return_value = "# Enhanced Metrics Report\n\nTest metrics"
+        mock_formatter_instance.format_enhanced_metrics.return_value = (
+            "# Enhanced Metrics Report\n\nTest metrics"
+        )
 
         # Capture output
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             # Test basic enhanced metrics command
-            with patch('sys.argv', ['workflow_demo.py', self.temp_dir, '--enhanced-metrics']):
+            with patch(
+                "sys.argv", ["workflow_demo.py", self.temp_dir, "--enhanced-metrics"]
+            ):
                 from src.cli.workflow_demo import main
+
                 main()
 
         # Verify workflow manager was called
         mock_workflow_manager.assert_called_once_with(self.temp_dir)
         mock_workflow_instance.generate_enhanced_metrics.assert_called_once()
-        mock_formatter_instance.format_enhanced_metrics.assert_called_once_with(mock_metrics)
+        mock_formatter_instance.format_enhanced_metrics.assert_called_once_with(
+            mock_metrics
+        )
 
         # Verify output contains expected messages
         print_calls = [call[0][0] for call in mock_print.call_args_list]
         assert any("Generating enhanced metrics report" in call for call in print_calls)
-        assert any("Summary: 10 total notes, 2 orphaned, 1 stale" in call for call in print_calls)
+        assert any(
+            "Summary: 10 total notes, 2 orphaned, 1 stale" in call
+            for call in print_calls
+        )
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
     def test_enhanced_metrics_json_format(self, mock_workflow_manager, mock_formatter):
         """Test enhanced metrics command with JSON format."""
         # Setup mocks
         mock_workflow_instance = mock_workflow_manager.return_value
         mock_metrics = {
-            "summary": {
-                "total_notes": 5,
-                "total_orphaned": 1,
-                "total_stale": 0
-            }
+            "summary": {"total_notes": 5, "total_orphaned": 1, "total_stale": 0}
         }
         mock_workflow_instance.generate_enhanced_metrics.return_value = mock_metrics
 
         # Capture output
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             # Test JSON format
-            with patch('sys.argv', ['workflow_demo.py', self.temp_dir, '--enhanced-metrics', '--format', 'json']):
+            with patch(
+                "sys.argv",
+                [
+                    "workflow_demo.py",
+                    self.temp_dir,
+                    "--enhanced-metrics",
+                    "--format",
+                    "json",
+                ],
+            ):
                 from src.cli.workflow_demo import main
+
                 main()
 
         # Verify JSON output was printed
@@ -411,37 +424,53 @@ class TestWeeklyReviewCLI:
         json_output_found = any('"total_notes": 5' in call for call in print_calls)
         assert json_output_found, "JSON output should contain metrics data"
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
-    @patch('builtins.open', new_callable=mock_open)
-    def test_enhanced_metrics_export(self, mock_file_open, mock_workflow_manager, mock_formatter):
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
+    @patch("builtins.open", new_callable=mock_open)
+    def test_enhanced_metrics_export(
+        self, mock_file_open, mock_workflow_manager, mock_formatter
+    ):
         """Test enhanced metrics command with export functionality."""
         # Setup mocks
         mock_workflow_instance = mock_workflow_manager.return_value
         mock_formatter_instance = mock_formatter.return_value
 
-        mock_metrics = {"summary": {"total_notes": 3, "total_orphaned": 0, "total_stale": 0}}
+        mock_metrics = {
+            "summary": {"total_notes": 3, "total_orphaned": 0, "total_stale": 0}
+        }
         mock_workflow_instance.generate_enhanced_metrics.return_value = mock_metrics
-        mock_formatter_instance.format_enhanced_metrics.return_value = "# Enhanced Metrics\n\nTest report"
+        mock_formatter_instance.format_enhanced_metrics.return_value = (
+            "# Enhanced Metrics\n\nTest report"
+        )
 
         export_path = str(Path(self.temp_dir) / "metrics.md")
 
         # Capture output
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             # Test export functionality
-            with patch('sys.argv', ['workflow_demo.py', self.temp_dir, '--enhanced-metrics', '--export', export_path]):
+            with patch(
+                "sys.argv",
+                [
+                    "workflow_demo.py",
+                    self.temp_dir,
+                    "--enhanced-metrics",
+                    "--export",
+                    export_path,
+                ],
+            ):
                 from src.cli.workflow_demo import main
+
                 main()
 
         # Verify file was opened for writing
-        mock_file_open.assert_called_once_with(Path(export_path), 'w', encoding='utf-8')
+        mock_file_open.assert_called_once_with(Path(export_path), "w", encoding="utf-8")
 
         # Verify export confirmation was printed
         print_calls = [call[0][0] for call in mock_print.call_args_list]
         assert any("Enhanced metrics exported to" in call for call in print_calls)
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
     def test_weekly_review_command_basic(self, mock_workflow_manager, mock_formatter):
         """Test basic weekly review command execution."""
         # Setup mocks
@@ -459,34 +488,44 @@ class TestWeeklyReviewCLI:
                     "file_name": "test.md",
                     "action": "promote_to_permanent",
                     "reason": "High quality",
-                    "confidence": "high"
+                    "confidence": "high",
                 }
-            ]
+            ],
         }
 
         mock_workflow_instance.scan_review_candidates.return_value = mock_candidates
-        mock_workflow_instance.generate_weekly_recommendations.return_value = mock_recommendations
+        mock_workflow_instance.generate_weekly_recommendations.return_value = (
+            mock_recommendations
+        )
         mock_formatter_instance.format_checklist.return_value = "# Test Checklist"
 
         # Simulate CLI command
         import sys
         from unittest.mock import patch as mock_patch
-        with mock_patch.object(sys, 'argv', ['workflow_demo.py', str(self.base_dir), '--weekly-review']):
+
+        with mock_patch.object(
+            sys, "argv", ["workflow_demo.py", str(self.base_dir), "--weekly-review"]
+        ):
             from src.cli.workflow_demo import main
-            with mock_patch('builtins.print') as mock_print:
+
+            with mock_patch("builtins.print") as mock_print:
                 main()
 
         # Verify workflow methods were called
         mock_workflow_manager.assert_called_once_with(str(self.base_dir))
         mock_workflow_instance.scan_review_candidates.assert_called_once()
-        mock_workflow_instance.generate_weekly_recommendations.assert_called_once_with(mock_candidates)
+        mock_workflow_instance.generate_weekly_recommendations.assert_called_once_with(
+            mock_candidates
+        )
 
         # Verify formatter was used
         mock_formatter.assert_called_once()
-        mock_formatter_instance.format_checklist.assert_called_once_with(mock_recommendations)
+        mock_formatter_instance.format_checklist.assert_called_once_with(
+            mock_recommendations
+        )
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
     def test_weekly_review_with_export(self, mock_workflow_manager, mock_formatter):
         """Test weekly review with checklist export."""
         # Setup mocks
@@ -496,11 +535,13 @@ class TestWeeklyReviewCLI:
         mock_candidates = [{"file_name": "test.md", "source": "inbox"}]
         mock_recommendations = {
             "summary": {"total_notes": 1, "promote_to_permanent": 1},
-            "recommendations": []
+            "recommendations": [],
         }
 
         mock_workflow_instance.scan_review_candidates.return_value = mock_candidates
-        mock_workflow_instance.generate_weekly_recommendations.return_value = mock_recommendations
+        mock_workflow_instance.generate_weekly_recommendations.return_value = (
+            mock_recommendations
+        )
         mock_formatter_instance.format_checklist.return_value = "# Test Checklist"
         mock_formatter_instance.export_checklist.return_value = Path("/test/export.md")
 
@@ -509,17 +550,33 @@ class TestWeeklyReviewCLI:
 
         import sys
         from unittest.mock import patch as mock_patch
-        with mock_patch.object(sys, 'argv', ['workflow_demo.py', str(self.base_dir), '--weekly-review', '--export-checklist', str(export_path)]):
+
+        with mock_patch.object(
+            sys,
+            "argv",
+            [
+                "workflow_demo.py",
+                str(self.base_dir),
+                "--weekly-review",
+                "--export-checklist",
+                str(export_path),
+            ],
+        ):
             from src.cli.workflow_demo import main
-            with mock_patch('builtins.print') as mock_print:
+
+            with mock_patch("builtins.print") as mock_print:
                 main()
 
         # Verify export was called
-        mock_formatter_instance.export_checklist.assert_called_once_with(mock_recommendations, export_path)
+        mock_formatter_instance.export_checklist.assert_called_once_with(
+            mock_recommendations, export_path
+        )
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
-    def test_weekly_review_interactive_mode(self, mock_workflow_manager, mock_formatter):
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
+    def test_weekly_review_interactive_mode(
+        self, mock_workflow_manager, mock_formatter
+    ):
         """Test interactive weekly review mode."""
         # Setup mocks
         mock_workflow_instance = mock_workflow_manager.return_value
@@ -533,22 +590,26 @@ class TestWeeklyReviewCLI:
                     "file_name": "test.md",
                     "action": "promote_to_permanent",
                     "reason": "High quality",
-                    "confidence": "high"
+                    "confidence": "high",
                 }
-            ]
+            ],
         }
 
         mock_workflow_instance.scan_review_candidates.return_value = mock_candidates
-        mock_workflow_instance.generate_weekly_recommendations.return_value = mock_recommendations
-        mock_formatter_instance.format_for_interactive.return_value = ["Interactive item 1"]
+        mock_workflow_instance.generate_weekly_recommendations.return_value = (
+            mock_recommendations
+        )
+        mock_formatter_instance.format_for_interactive.return_value = [
+            "Interactive item 1"
+        ]
 
         # Note: Interactive mode would require additional UI implementation
         # For now, we verify that the components are set up correctly
         assert mock_workflow_manager is not None
         assert mock_formatter is not None
 
-    @patch('src.cli.workflow_demo.WeeklyReviewFormatter')
-    @patch('src.cli.workflow_demo.WorkflowManager')
+    @patch("src.cli.workflow_demo.WeeklyReviewFormatter")
+    @patch("src.cli.workflow_demo.WorkflowManager")
     def test_weekly_review_dry_run(self, mock_workflow_manager, mock_formatter):
         """Test dry run mode for weekly review."""
         # Setup mocks
@@ -558,30 +619,42 @@ class TestWeeklyReviewCLI:
         mock_candidates = [{"file_name": "test.md", "source": "inbox"}]
         mock_recommendations = {
             "summary": {"total_notes": 1, "promote_to_permanent": 1},
-            "recommendations": []
+            "recommendations": [],
         }
 
         mock_workflow_instance.scan_review_candidates.return_value = mock_candidates
-        mock_workflow_instance.generate_weekly_recommendations.return_value = mock_recommendations
+        mock_workflow_instance.generate_weekly_recommendations.return_value = (
+            mock_recommendations
+        )
         mock_formatter_instance.format_checklist.return_value = "# Dry Run Checklist"
 
         import sys
         from unittest.mock import patch as mock_patch
-        with mock_patch.object(sys, 'argv', ['workflow_demo.py', str(self.base_dir), '--weekly-review', '--dry-run']):
+
+        with mock_patch.object(
+            sys,
+            "argv",
+            ["workflow_demo.py", str(self.base_dir), "--weekly-review", "--dry-run"],
+        ):
             from src.cli.workflow_demo import main
-            with mock_patch('builtins.print') as mock_print:
+
+            with mock_patch("builtins.print") as mock_print:
                 main()
 
         # Verify workflow methods were called (dry run still scans and generates recommendations)
         mock_workflow_instance.scan_review_candidates.assert_called_once()
-        mock_workflow_instance.generate_weekly_recommendations.assert_called_once_with(mock_candidates)
-        mock_formatter_instance.format_checklist.assert_called_once_with(mock_recommendations)
+        mock_workflow_instance.generate_weekly_recommendations.assert_called_once_with(
+            mock_candidates
+        )
+        mock_formatter_instance.format_checklist.assert_called_once_with(
+            mock_recommendations
+        )
 
 
 class TestDedicatedWeeklyReviewCLI:
     """
     Test cases for the NEW dedicated weekly_review_cli.py module.
-    
+
     RED PHASE: These tests will fail until we create weekly_review_cli.py
     """
 
@@ -604,6 +677,7 @@ class TestDedicatedWeeklyReviewCLI:
         """TEST 1: Verify weekly_review_cli module can be imported."""
         try:
             from src.cli import weekly_review_cli
+
             assert weekly_review_cli is not None
         except ImportError as e:
             pytest.fail(f"weekly_review_cli module should exist and be importable: {e}")
@@ -615,7 +689,7 @@ class TestDedicatedWeeklyReviewCLI:
         cli = WeeklyReviewCLI(vault_path=str(self.base_dir))
 
         # Execute weekly review command
-        exit_code = cli.weekly_review(preview=True, output_format='normal')
+        exit_code = cli.weekly_review(preview=True, output_format="normal")
 
         # Should execute without errors
         assert exit_code == 0
@@ -627,7 +701,7 @@ class TestDedicatedWeeklyReviewCLI:
         cli = WeeklyReviewCLI(vault_path=str(self.base_dir))
 
         # Execute enhanced metrics command
-        exit_code = cli.enhanced_metrics(output_format='normal')
+        exit_code = cli.enhanced_metrics(output_format="normal")
 
         # Should execute without errors
         assert exit_code == 0

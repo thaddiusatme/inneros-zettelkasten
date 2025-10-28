@@ -15,7 +15,9 @@ import pytest
         ),
     ],
 )
-def test_cleanup_inventory_flags_mismatched_locations(tmp_path, source_path, expected_destination):
+def test_cleanup_inventory_flags_mismatched_locations(
+    tmp_path, source_path, expected_destination
+):
     cleanup_log = tmp_path / "cleanup-inventory.yaml"
 
     active_file = tmp_path / source_path

@@ -12,9 +12,11 @@ import sys
 class BatchProcessingCoordinator:
     """Coordinates batch processing of inbox notes with progress tracking."""
 
-    def __init__(self, inbox_dir: Path, process_callback: Optional[Callable[[str], Dict]] = None):
+    def __init__(
+        self, inbox_dir: Path, process_callback: Optional[Callable[[str], Dict]] = None
+    ):
         """Initialize the batch processing coordinator.
-        
+
         Args:
             inbox_dir: Path to inbox directory
             process_callback: Optional callback for processing notes (can be set later)
@@ -45,8 +47,8 @@ class BatchProcessingCoordinator:
             "summary": {
                 "promote_to_permanent": 0,
                 "move_to_fleeting": 0,
-                "needs_improvement": 0
-            }
+                "needs_improvement": 0,
+            },
         }
 
         for idx, note_file in enumerate(inbox_files, 1):
@@ -79,10 +81,9 @@ class BatchProcessingCoordinator:
 
             except Exception as e:
                 results["failed"] += 1
-                results["results"].append({
-                    "original_file": str(note_file),
-                    "error": str(e)
-                })
+                results["results"].append(
+                    {"original_file": str(note_file), "error": str(e)}
+                )
 
         if show_progress and total > 0:
             sys.stderr.write("\r" + " " * 80 + "\r")

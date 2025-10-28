@@ -5,6 +5,7 @@ Provides a centralized sanitizer to normalize tags consistently across the
 codebase. This mirrors and slightly generalizes the repair script's logic
 so that runtime workflows and offline repair share behavior.
 """
+
 from __future__ import annotations
 
 from typing import Iterable, List, Any
@@ -22,7 +23,7 @@ def clean_tag(tag: str) -> str:
     if not isinstance(tag, str):
         return ""
     # remove leading '#', trim and collapse whitespace
-    cleaned = tag.strip().lstrip('#').strip()
+    cleaned = tag.strip().lstrip("#").strip()
     # normalize spaces (tags should be single tokens already after splitting)
     cleaned = " ".join(cleaned.split())
     # strip stray brackets/quotes/backticks and trailing punctuation commonly leaked from bad inputs
@@ -60,7 +61,7 @@ def sanitize_tags(tags_input: Any) -> List[str]:
 
     if isinstance(tags_input, str):
         # Handle common separators
-        normalized = tags_input.replace(',', ' ').replace(';', ' ')
+        normalized = tags_input.replace(",", " ").replace(";", " ")
         tokens = [t for t in normalized.split() if t]
     elif isinstance(tags_input, Iterable):
         # Already a collection; filter to strings only

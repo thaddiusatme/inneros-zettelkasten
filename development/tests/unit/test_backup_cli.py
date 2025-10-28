@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 class TestBackupCLI:
     """
     RED PHASE: Tests for backup_cli.py (currently failing - module doesn't exist)
-    
+
     Commands to test:
     - prune-backups: Remove old backup directories (keeping N most recent)
     """
@@ -39,6 +39,7 @@ class TestBackupCLI:
 
         # Create 5 mock backups with timestamps
         import time
+
         for i in range(5):
             backup_name = f"backup-202510{10+i:02d}-{12+i:02d}0000"
             backup_dir = backup_root / backup_name
@@ -51,13 +52,14 @@ class TestBackupCLI:
     def teardown_method(self):
         """Clean up test environment."""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
-        if hasattr(self, 'backup_root') and self.backup_root.exists():
+        if hasattr(self, "backup_root") and self.backup_root.exists():
             shutil.rmtree(self.backup_root, ignore_errors=True)
 
     def test_backup_cli_import(self):
         """TEST 1: Verify backup_cli module can be imported (RED PHASE)."""
         try:
             from src.cli import backup_cli
+
             assert backup_cli is not None
         except ImportError as e:
             pytest.fail(f"backup_cli module should exist and be importable: {e}")
@@ -69,11 +71,7 @@ class TestBackupCLI:
         cli = BackupCLI(vault_path=str(self.base_dir))
 
         # Execute prune-backups command (keep 3 most recent)
-        exit_code = cli.prune_backups(
-            keep=3,
-            dry_run=False,
-            output_format='normal'
-        )
+        exit_code = cli.prune_backups(keep=3, dry_run=False, output_format="normal")
 
         # Should execute without errors
         assert exit_code == 0
@@ -88,11 +86,7 @@ class TestBackupCLI:
         initial_backups = len(list(self.backup_root.glob("backup-*")))
 
         # Execute prune-backups in dry-run mode
-        exit_code = cli.prune_backups(
-            keep=2,
-            dry_run=True,
-            output_format='normal'
-        )
+        exit_code = cli.prune_backups(keep=2, dry_run=True, output_format="normal")
 
         # Should execute without errors
         assert exit_code == 0
@@ -115,11 +109,7 @@ class TestBackupCLI:
 
         try:
             # Execute command with JSON format
-            exit_code = cli.prune_backups(
-                keep=3,
-                dry_run=True,
-                output_format='json'
-            )
+            exit_code = cli.prune_backups(keep=3, dry_run=True, output_format="json")
 
             # Get output
             output = captured_output.getvalue()
@@ -143,8 +133,8 @@ class TestBackupCLI:
         assert parser.prog is not None
 
         # Test parsing prune-backups command
-        args = parser.parse_args(['prune-backups', '--keep', '5'])
-        assert args.command == 'prune-backups'
+        args = parser.parse_args(["prune-backups", "--keep", "5"])
+        assert args.command == "prune-backups"
         assert args.keep == 5
 
     def test_directory_organizer_integration(self):
@@ -155,7 +145,9 @@ class TestBackupCLI:
         cli = BackupCLI(vault_path=str(self.base_dir))
 
         # Verify it's using DirectoryOrganizer
-        assert hasattr(cli, 'organizer'), \
-            "BackupCLI should have DirectoryOrganizer instance"
-        assert isinstance(cli.organizer, DirectoryOrganizer), \
-            "BackupCLI should use DirectoryOrganizer for backup management"
+        assert hasattr(
+            cli, "organizer"
+        ), "BackupCLI should have DirectoryOrganizer instance"
+        assert isinstance(
+            cli.organizer, DirectoryOrganizer
+        ), "BackupCLI should use DirectoryOrganizer for backup management"

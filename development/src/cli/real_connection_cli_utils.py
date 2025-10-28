@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 
 from ai.real_connection_integration_engine import (
     CLIIntegrationOrchestrator,
-    ProductionOptimizedProcessor
+    ProductionOptimizedProcessor,
 )
 from ai.link_suggestion_engine import LinkSuggestion
 
@@ -28,11 +28,11 @@ class EnhancedConnectionCLIProcessor:
     def validate_inputs(self, target_path: str, corpus_dir: str) -> Dict[str, Any]:
         """
         Validate CLI inputs with detailed error reporting
-        
+
         Args:
             target_path: Path to target note
             corpus_dir: Path to corpus directory
-            
+
         Returns:
             Validation result dictionary
         """
@@ -40,14 +40,14 @@ class EnhancedConnectionCLIProcessor:
             "valid": True,
             "errors": [],
             "warnings": [],
-            "target_filename": None
+            "target_filename": None,
         }
 
         # Validate target file
         if not os.path.exists(target_path):
             validation["valid"] = False
             validation["errors"].append(f"Target file not found: {target_path}")
-        elif not target_path.endswith('.md'):
+        elif not target_path.endswith(".md"):
             validation["warnings"].append("Target file doesn't have .md extension")
         else:
             validation["target_filename"] = os.path.basename(target_path)
@@ -62,19 +62,24 @@ class EnhancedConnectionCLIProcessor:
 
         return validation
 
-    def process_suggest_links_command(self, target_path: str, corpus_dir: str,
-                                    min_quality: float, max_results: int,
-                                    use_optimization: bool = True) -> Optional[List[LinkSuggestion]]:
+    def process_suggest_links_command(
+        self,
+        target_path: str,
+        corpus_dir: str,
+        min_quality: float,
+        max_results: int,
+        use_optimization: bool = True,
+    ) -> Optional[List[LinkSuggestion]]:
         """
         Process suggest-links command with enhanced error handling
-        
+
         Args:
             target_path: Path to target note
             corpus_dir: Corpus directory path
             min_quality: Minimum quality threshold
             max_results: Maximum results to return
             use_optimization: Whether to use performance optimization
-            
+
         Returns:
             List of suggestions or None if processing failed
         """
@@ -113,15 +118,16 @@ class ConnectionResultsFormatter:
     """
 
     @staticmethod
-    def format_suggestions_summary(suggestions: List[LinkSuggestion],
-                                 target_filename: str) -> str:
+    def format_suggestions_summary(
+        suggestions: List[LinkSuggestion], target_filename: str
+    ) -> str:
         """
         Format suggestions summary with enhanced metrics
-        
+
         Args:
             suggestions: List of link suggestions
             target_filename: Name of target file
-            
+
         Returns:
             Formatted summary string
         """
@@ -143,7 +149,7 @@ class ConnectionResultsFormatter:
             "",
             f"📈 Average Similarity: {avg_similarity:.1%}",
             f"🎯 Average Quality Score: {avg_quality:.2f}",
-            "-" * 60
+            "-" * 60,
         ]
 
         return "\n".join(summary_lines)
@@ -152,10 +158,10 @@ class ConnectionResultsFormatter:
     def format_performance_report(performance_summary: Dict[str, Any]) -> str:
         """
         Format performance report with detailed metrics
-        
+
         Args:
             performance_summary: Performance summary dictionary
-            
+
         Returns:
             Formatted performance report
         """
@@ -167,11 +173,9 @@ class ConnectionResultsFormatter:
         grade = performance_summary.get("performance_grade", "unknown")
 
         # Format grade with emoji
-        grade_emoji = {
-            "excellent": "🚀",
-            "good": "✅",
-            "needs_optimization": "⚠️"
-        }.get(grade, "📊")
+        grade_emoji = {"excellent": "🚀", "good": "✅", "needs_optimization": "⚠️"}.get(
+            grade, "📊"
+        )
 
         report_lines = [
             f"⚡ Performance Report: {grade_emoji} {grade.title()}",
@@ -179,7 +183,7 @@ class ConnectionResultsFormatter:
             f"   Note Loading: {metrics.get('note_loading', 0):.3f}s",
             f"   Connection Discovery: {metrics.get('connection_discovery', 0):.3f}s",
             f"   Suggestion Generation: {metrics.get('suggestion_generation', 0):.3f}s",
-            ""
+            "",
         ]
 
         # Add target status
@@ -197,11 +201,11 @@ class ConnectionResultsFormatter:
     def format_error_message(error_type: str, details: str = "") -> str:
         """
         Format user-friendly error messages
-        
+
         Args:
             error_type: Type of error
             details: Additional error details
-            
+
         Returns:
             Formatted error message
         """
@@ -210,7 +214,7 @@ class ConnectionResultsFormatter:
             "directory_not_found": "❌ Corpus directory not found",
             "no_connections": "ℹ️  No similar notes found in corpus",
             "processing_error": "⚠️  Error processing connections",
-            "invalid_format": "❌ Invalid file format"
+            "invalid_format": "❌ Invalid file format",
         }
 
         base_message = error_messages.get(error_type, f"❌ Error: {error_type}")
@@ -229,23 +233,27 @@ class RealConnectionCLIHelper:
     def create_enhanced_processor(vault_path: str) -> EnhancedConnectionCLIProcessor:
         """
         Create enhanced processor with validation
-        
+
         Args:
             vault_path: Path to vault directory
-            
+
         Returns:
             EnhancedConnectionCLIProcessor instance
         """
         return EnhancedConnectionCLIProcessor(vault_path)
 
     @staticmethod
-    def process_and_format_results(processor: EnhancedConnectionCLIProcessor,
-                                 target_path: str, corpus_dir: str,
-                                 min_quality: float, max_results: int,
-                                 show_performance: bool = True) -> Dict[str, Any]:
+    def process_and_format_results(
+        processor: EnhancedConnectionCLIProcessor,
+        target_path: str,
+        corpus_dir: str,
+        min_quality: float,
+        max_results: int,
+        show_performance: bool = True,
+    ) -> Dict[str, Any]:
         """
         Process command and format results in one operation
-        
+
         Args:
             processor: Enhanced processor instance
             target_path: Target file path
@@ -253,7 +261,7 @@ class RealConnectionCLIHelper:
             min_quality: Minimum quality threshold
             max_results: Maximum results
             show_performance: Whether to include performance report
-            
+
         Returns:
             Dictionary with suggestions and formatted output
         """
@@ -272,7 +280,7 @@ class RealConnectionCLIHelper:
                     "processing_error", "Failed to process connection discovery"
                 ),
                 "performance_report": "",
-                "success": False
+                "success": False,
             }
 
         summary = ConnectionResultsFormatter.format_suggestions_summary(
@@ -290,5 +298,5 @@ class RealConnectionCLIHelper:
             "suggestions": suggestions,
             "summary": summary,
             "performance_report": performance_report,
-            "success": True
+            "success": True,
         }

@@ -42,6 +42,7 @@ WantedBy={wants_target}
 @dataclass
 class SystemdPaths:
     """Resolved installation paths for systemd service."""
+
     daemon_path: str
     config_path: str
     service_path: str
@@ -51,7 +52,7 @@ class SystemdPaths:
 class ServiceFileTemplate:
     """
     Service file template management with variable substitution.
-    
+
     Centralizes template logic for easy maintenance and testing.
     """
 
@@ -64,11 +65,11 @@ class ServiceFileTemplate:
         user_directive: str,
         group_directive: str,
         working_dir: str,
-        wants_target: str
+        wants_target: str,
     ) -> str:
         """
         Render service file from template.
-        
+
         Args:
             daemon_path: Path to daemon executable
             config_path: Path to configuration file
@@ -78,7 +79,7 @@ class ServiceFileTemplate:
             group_directive: Group= directive (empty for user mode)
             working_dir: Working directory for daemon
             wants_target: WantedBy target (multi-user.target or default.target)
-        
+
         Returns:
             Rendered service file content
         """
@@ -90,7 +91,7 @@ class ServiceFileTemplate:
             user_directive=user_directive,
             group_directive=group_directive,
             working_dir=working_dir,
-            wants_target=wants_target
+            wants_target=wants_target,
         )
 
 
@@ -101,11 +102,11 @@ class InstallationPathResolver:
         self,
         mode: str = "system",
         custom_daemon_path: Optional[str] = None,
-        custom_config_path: Optional[str] = None
+        custom_config_path: Optional[str] = None,
     ):
         """
         Initialize path resolver.
-        
+
         Args:
             mode: 'system' or 'user' installation mode
             custom_daemon_path: Override default daemon path
@@ -118,7 +119,7 @@ class InstallationPathResolver:
     def resolve(self) -> Dict[str, str]:
         """
         Resolve all installation paths based on mode.
-        
+
         Returns:
             Dictionary with daemon_path, config_path, service_path, log_path
         """
@@ -133,17 +134,19 @@ class InstallationPathResolver:
             "daemon_path": self.custom_daemon_path or "/usr/local/bin/inneros-daemon",
             "config_path": self.custom_config_path or "/etc/inneros/config.yaml",
             "service_path": "/etc/systemd/system/inneros-daemon.service",
-            "log_path": "/var/log/inneros"
+            "log_path": "/var/log/inneros",
         }
 
     def _resolve_user_paths(self) -> Dict[str, str]:
         """Resolve paths for user mode installation."""
         home = Path.home()
         return {
-            "daemon_path": self.custom_daemon_path or str(home / ".local/bin/inneros-daemon"),
-            "config_path": self.custom_config_path or str(home / ".config/inneros/config.yaml"),
+            "daemon_path": self.custom_daemon_path
+            or str(home / ".local/bin/inneros-daemon"),
+            "config_path": self.custom_config_path
+            or str(home / ".config/inneros/config.yaml"),
             "service_path": str(home / ".config/systemd/user/inneros-daemon.service"),
-            "log_path": str(home / ".local/share/inneros/logs")
+            "log_path": str(home / ".local/share/inneros/logs"),
         }
 
 
@@ -153,7 +156,7 @@ class SystemctlCommandRunner:
     def __init__(self, mode: str = "system"):
         """
         Initialize systemctl command runner.
-        
+
         Args:
             mode: 'system' or 'user' mode for systemctl commands
         """

@@ -30,21 +30,21 @@ from src.ai.workflow_manager_adapter import LegacyWorkflowManagerAdapter
 class AutomationEventHandler:
     """
     Processes file system events through CoreWorkflowManager AI pipeline.
-    
+
     Provides debounced event processing to prevent duplicate work during
     active file editing. Tracks metrics for health monitoring and daemon integration.
-    
+
     Size: ~120 LOC (ADR-001 compliant)
     """
 
     def __init__(self, vault_path: str, debounce_seconds: float = 2.0):
         """
         Initialize event handler with CoreWorkflowManager.
-        
+
         Args:
             vault_path: Path to Zettelkasten vault root
             debounce_seconds: Delay before processing events (default 2.0s)
-            
+
         Raises:
             ValueError: If vault_path doesn't exist
         """
@@ -58,7 +58,9 @@ class AutomationEventHandler:
         self._setup_logging()
 
         # Initialize CoreWorkflowManager via adapter
-        self.core_workflow = LegacyWorkflowManagerAdapter(base_directory=str(vault_path))
+        self.core_workflow = LegacyWorkflowManagerAdapter(
+            base_directory=str(vault_path)
+        )
 
         # Event queue and debouncing
         self.event_queue: deque = deque()
@@ -66,10 +68,10 @@ class AutomationEventHandler:
 
         # Metrics tracking
         self._processing_stats = {
-            'total_events_processed': 0,
-            'successful_events': 0,
-            'failed_events': 0,
-            'processing_times': []
+            "total_events_processed": 0,
+            "successful_events": 0,
+            "failed_events": 0,
+            "processing_times": [],
         }
 
         # Log initialization
@@ -78,14 +80,14 @@ class AutomationEventHandler:
     def process_file_event(self, file_path: Path, event_type: str) -> Dict[str, Any]:
         """
         Process file event with filtering and debouncing.
-        
+
         Implements two-stage filtering (deleted events, non-markdown files) followed by
         debounced processing to prevent duplicate work during active file editing.
-        
+
         Args:
             file_path: Path to the file that triggered event
             event_type: Event type ('created', 'modified', 'deleted')
-            
+
         Returns:
             Processing result or skip reason:
             {
@@ -96,12 +98,12 @@ class AutomationEventHandler:
             }
         """
         # Filter 1: Ignore deleted events (no processing needed)
-        if event_type == 'deleted':
-            return {'skipped': True, 'reason': 'deleted_event'}
+        if event_type == "deleted":
+            return {"skipped": True, "reason": "deleted_event"}
 
         # Filter 2: Only process markdown files (AI pipeline expects .md)
-        if not str(file_path).endswith('.md'):
-            return {'skipped': True, 'reason': 'not_markdown'}
+        if not str(file_path).endswith(".md"):
+            return {"skipped": True, "reason": "not_markdown"}
 
         # Debouncing: Cancel existing timer for this file (last event wins strategy)
         # This prevents processing during rapid editing sessions (e.g., typing, auto-save)
@@ -112,26 +114,24 @@ class AutomationEventHandler:
         # Create new debounce timer for delayed execution
         # After debounce_seconds of quiet time, _execute_processing will run
         timer = threading.Timer(
-            self.debounce_seconds,
-            self._execute_processing,
-            args=(file_path,)
+            self.debounce_seconds, self._execute_processing, args=(file_path,)
         )
         self._debounce_timers[file_key] = timer
         timer.start()
 
-        return {'queued': True, 'file_path': str(file_path), 'event_type': event_type}
+        return {"queued": True, "file_path": str(file_path), "event_type": event_type}
 
     def _execute_processing(self, file_path: Path) -> Dict[str, Any]:
         """
         Execute CoreWorkflowManager processing after debounce period.
-        
+
         Called by threading.Timer after debounce_seconds of quiet time. Integrates
         with AI processing pipeline via CoreWorkflowManager.process_inbox_note().
         Tracks success/failure metrics for health monitoring.
-        
+
         Args:
             file_path: Path to note file to process
-            
+
         Returns:
             Processing result with metrics:
             {
@@ -150,9 +150,9 @@ class AutomationEventHandler:
 
             # Track metrics
             duration = time.time() - start_time
-            self._processing_stats['total_events_processed'] += 1
-            self._processing_stats['successful_events'] += 1
-            self._processing_stats['processing_times'].append(duration)
+            self._processing_stats["total_events_processed"] += 1
+            self._processing_stats["successful_events"] += 1
+            self._processing_stats["processing_times"].append(duration)
 
             # Log success
             self.logger.info(f"Processed {file_path.name} in {duration:.2f}s")
@@ -161,38 +161,30 @@ class AutomationEventHandler:
             if file_key in self._debounce_timers:
                 del self._debounce_timers[file_key]
 
-            return {
-                'success': True,
-                'result': result,
-                'processing_time': duration
-            }
+            return {"success": True, "result": result, "processing_time": duration}
 
         except Exception as e:
             # Graceful error handling for daemon stability
             duration = time.time() - start_time
-            self._processing_stats['total_events_processed'] += 1
-            self._processing_stats['failed_events'] += 1
+            self._processing_stats["total_events_processed"] += 1
+            self._processing_stats["failed_events"] += 1
 
             # Log error with stack trace
             self.logger.error(
                 f"Failed to process {file_path.name}: {type(e).__name__}: {str(e)}",
-                exc_info=True
+                exc_info=True,
             )
 
             # Clean up timer
             if file_key in self._debounce_timers:
                 del self._debounce_timers[file_key]
 
-            return {
-                'success': False,
-                'error': str(e),
-                'processing_time': duration
-            }
+            return {"success": False, "error": str(e), "processing_time": duration}
 
     def get_health_status(self) -> Dict[str, Any]:
         """
         Return event handler health status.
-        
+
         Returns:
             Health status dict:
             {
@@ -202,15 +194,15 @@ class AutomationEventHandler:
             }
         """
         return {
-            'is_healthy': True,
-            'queue_depth': len(self.event_queue),
-            'processing_count': self._processing_stats['total_events_processed']
+            "is_healthy": True,
+            "queue_depth": len(self.event_queue),
+            "processing_count": self._processing_stats["total_events_processed"],
         }
 
     def get_metrics(self) -> Dict[str, Any]:
         """
         Return event processing metrics.
-        
+
         Returns:
             Metrics dict:
             {
@@ -220,25 +212,27 @@ class AutomationEventHandler:
                 'avg_processing_time': float
             }
         """
-        processing_times = self._processing_stats['processing_times']
-        avg_time = sum(processing_times) / len(processing_times) if processing_times else 0.0
+        processing_times = self._processing_stats["processing_times"]
+        avg_time = (
+            sum(processing_times) / len(processing_times) if processing_times else 0.0
+        )
 
         return {
-            'total_events_processed': self._processing_stats['total_events_processed'],
-            'successful_events': self._processing_stats['successful_events'],
-            'failed_events': self._processing_stats['failed_events'],
-            'avg_processing_time': avg_time
+            "total_events_processed": self._processing_stats["total_events_processed"],
+            "successful_events": self._processing_stats["successful_events"],
+            "failed_events": self._processing_stats["failed_events"],
+            "avg_processing_time": avg_time,
         }
 
     def _setup_logging(self) -> None:
         """
         Setup logging infrastructure with daily log files.
-        
+
         Creates .automation/logs/ directory and configures file handler
         with standard format: YYYY-MM-DD HH:MM:SS [LEVEL] module: message
         """
         # Determine log directory relative to vault
-        log_dir = self.vault_path.parent / '.automation' / 'logs'
+        log_dir = self.vault_path.parent / ".automation" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
         # Create daily log file
@@ -250,8 +244,10 @@ class AutomationEventHandler:
 
         # Configure file handler
         handler = logging.FileHandler(log_file)
-        handler.setFormatter(logging.Formatter(
-            '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        ))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
         self.logger.addHandler(handler)

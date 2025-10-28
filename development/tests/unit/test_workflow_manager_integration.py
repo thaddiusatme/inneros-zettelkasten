@@ -121,7 +121,7 @@ It should still be processed safely but with minimal image operations.
             "test-image-1.png",
             "test-image-2.jpg",
             "research-diagram.png",
-            "data-visualization.svg"
+            "data-visualization.svg",
         ]
 
         for image_name in test_images:
@@ -136,65 +136,60 @@ It should still be processed safely but with minimal image operations.
     def test_safe_workflow_manager_initialization_works(self):
         """GREEN: SafeWorkflowManager class works"""
         from src.ai.workflow_manager import SafeWorkflowManager
+
         manager = SafeWorkflowManager(str(self.vault_path))
         assert manager is not None
-        assert hasattr(manager, 'safe_image_processor')
-        assert hasattr(manager, 'image_integrity_monitor')
+        assert hasattr(manager, "safe_image_processor")
+        assert hasattr(manager, "image_integrity_monitor")
 
     def test_safe_process_inbox_note_works(self):
         """GREEN: Safe process_inbox_note method works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
         # This method integrates SafeImageProcessor
         result = workflow_manager.safe_process_inbox_note(
-            str(self.test_notes[0]),
-            preserve_images=True
+            str(self.test_notes[0]), preserve_images=True
         )
-        assert 'image_preservation' in result
-        assert result['image_preservation']['enabled'] is True
+        assert "image_preservation" in result
+        assert result["image_preservation"]["enabled"] is True
 
     def test_atomic_inbox_processing_works(self):
         """GREEN: Atomic inbox processing with rollback works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
         # Processes note with atomic image operations
-        result = workflow_manager.process_inbox_note_atomic(
-            str(self.test_notes[0])
-        )
-        assert 'processing_successful' in result
-        assert 'images_preserved' in result
-        assert 'backup_session_id' in result
+        result = workflow_manager.process_inbox_note_atomic(str(self.test_notes[0]))
+        assert "processing_successful" in result
+        assert "images_preserved" in result
+        assert "backup_session_id" in result
 
     def test_safe_batch_processing_works(self):
         """GREEN: Safe batch processing with image preservation works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
         # Processes all notes while preserving images atomically
         result = workflow_manager.safe_batch_process_inbox()
-        assert 'total_files' in result
-        assert 'images_preserved_total' in result
-        assert 'image_integrity_report' in result
+        assert "total_files" in result
+        assert "images_preserved_total" in result
+        assert "image_integrity_report" in result
 
     def test_workflow_with_image_monitoring_works(self):
         """GREEN: Integration with ImageIntegrityMonitor works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
         # Includes integrity monitoring in processing
         result = workflow_manager.process_inbox_note_enhanced(
-            str(self.test_notes[0]),
-            enable_monitoring=True
+            str(self.test_notes[0]), enable_monitoring=True
         )
-        assert 'integrity_report' in result
-        assert result['integrity_report']['monitoring_enabled'] is True
+        assert "integrity_report" in result
+        assert result["integrity_report"]["monitoring_enabled"] is True
 
     def test_ai_processing_with_backup_rollback_works(self):
         """GREEN: AI processing with automatic backup/rollback works"""
         workflow_manager = WorkflowManager(str(self.vault_path))
 
         # Simulate AI processing with potential failure handling
-        result = workflow_manager.process_inbox_note_safe(
-            str(self.test_notes[0])
-        )
+        result = workflow_manager.process_inbox_note_safe(str(self.test_notes[0]))
 
         # Should handle failures gracefully
-        assert 'processing_failed' in result
-        assert 'rollback_successful' in result
+        assert "processing_failed" in result
+        assert "rollback_successful" in result
 
     def test_performance_monitoring_integration_works(self):
         """GREEN: Performance monitoring for safe operations works"""
@@ -202,14 +197,13 @@ It should still be processed safely but with minimal image operations.
 
         # Should provide performance metrics for safe operations
         result = workflow_manager.process_inbox_note_enhanced(
-            str(self.test_notes[0]),
-            collect_performance_metrics=True
+            str(self.test_notes[0]), collect_performance_metrics=True
         )
 
-        assert 'performance_metrics' in result
-        assert 'backup_time' in result['performance_metrics']
-        assert 'processing_time' in result['performance_metrics']
-        assert 'image_operations_time' in result['performance_metrics']
+        assert "performance_metrics" in result
+        assert "backup_time" in result["performance_metrics"]
+        assert "processing_time" in result["performance_metrics"]
+        assert "image_operations_time" in result["performance_metrics"]
 
     def test_concurrent_safe_processing_works(self):
         """GREEN: Concurrent safe processing with session management works"""
@@ -221,8 +215,7 @@ It should still be processed safely but with minimal image operations.
         results = []
         for note in self.test_notes[:2]:  # Process subset for faster testing
             result = workflow_manager.process_note_in_session(
-                str(note),
-                session_id=session_id
+                str(note), session_id=session_id
             )
             results.append(result)
 
@@ -237,13 +230,15 @@ It should still be processed safely but with minimal image operations.
             workflow_manager = WorkflowManager(str(self.vault_path))
 
             # Should integrate with WorkflowSafetyManager for checkpoint management
-            checkpoint_id = workflow_manager.create_workflow_checkpoint("ai_enhancement")
+            checkpoint_id = workflow_manager.create_workflow_checkpoint(
+                "ai_enhancement"
+            )
 
             try:
                 # Process note with potential failure point
                 result = workflow_manager.process_inbox_note(str(self.test_notes[0]))
 
-                if result.get('success'):
+                if result.get("success"):
                     workflow_manager.commit_workflow_checkpoint(checkpoint_id)
                 else:
                     workflow_manager.restore_workflow_checkpoint(checkpoint_id)
@@ -263,14 +258,14 @@ It should still be processed safely but with minimal image operations.
                 enable_tagging=True,
                 enable_enhancement=True,
                 enable_summarization=True,
-                safety_mode=True
+                safety_mode=True,
             )
 
-            assert result['ai_processing_complete'] is True
-            assert result['images_preserved'] >= 2
-            assert 'ai_tags' in result
-            assert 'quality_score' in result
-            assert 'backup_session_id' in result
+            assert result["ai_processing_complete"] is True
+            assert result["images_preserved"] >= 2
+            assert "ai_tags" in result
+            assert "quality_score" in result
+            assert "backup_session_id" in result
 
     def test_workflow_integration_cli_safety_fails(self):
         """RED: CLI integration with safety flags doesn't exist"""
@@ -282,12 +277,12 @@ It should still be processed safely but with minimal image operations.
                 str(self.test_notes[0]),
                 cli_safe_mode=True,
                 cli_backup_enabled=True,
-                cli_monitoring_enabled=True
+                cli_monitoring_enabled=True,
             )
 
-            assert 'cli_safety_report' in result
-            assert result['cli_safety_report']['backup_created'] is True
-            assert result['cli_safety_report']['monitoring_active'] is True
+            assert "cli_safety_report" in result
+            assert result["cli_safety_report"]["backup_created"] is True
+            assert result["cli_safety_report"]["monitoring_active"] is True
 
     def test_comprehensive_error_recovery_fails(self):
         """RED: Comprehensive error recovery system doesn't exist"""
@@ -299,6 +294,6 @@ It should still be processed safely but with minimal image operations.
                 str(self.test_notes[0])
             )
 
-            assert 'error_recovery_plan' in result
-            assert 'recovery_options' in result['error_recovery_plan']
-            assert 'safety_guarantees' in result['error_recovery_plan']
+            assert "error_recovery_plan" in result
+            assert "recovery_options" in result["error_recovery_plan"]
+            assert "safety_guarantees" in result["error_recovery_plan"]

@@ -18,16 +18,16 @@ Architecture:
 Usage:
     # Generate fleeting notes health report
     python3 fleeting_cli.py fleeting-health
-    
+
     # Export health report
     python3 fleeting_cli.py fleeting-health --export health-report.md
-    
+
     # Generate AI-powered triage report
     python3 fleeting_cli.py fleeting-triage
-    
+
     # Triage with custom quality threshold
     python3 fleeting_cli.py fleeting-triage --quality-threshold 0.8
-    
+
     # JSON output for automation
     python3 fleeting_cli.py fleeting-health --format json
 """
@@ -46,31 +46,28 @@ from src.ai.workflow_manager import WorkflowManager
 from src.cli.fleeting_formatter import FleetingFormatter
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s - %(name)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class FleetingCLI:
     """
     Dedicated CLI for fleeting notes workflows
-    
+
     Responsibilities:
     - Health monitoring for fleeting notes
     - AI-powered triage with quality assessment
     - Handle output formatting (normal/JSON)
     - Manage export functionality
     - Provide user-friendly error messages
-    
+
     Bug #3 Fix: Uses WorkflowManager directly to avoid AttributeError in adapter
     """
 
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize Fleeting Notes CLI
-        
+
         Args:
             vault_path: Path to vault root (defaults to current directory)
         """
@@ -82,9 +79,9 @@ class FleetingCLI:
 
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print(title)
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     def _print_section(self, title: str) -> None:
         """Print a formatted subsection header."""
@@ -93,17 +90,18 @@ class FleetingCLI:
 
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
-        return output_format == 'json'
+        return output_format == "json"
 
-    def fleeting_health(self, output_format: str = 'normal',
-                       export_path: Optional[str] = None) -> int:
+    def fleeting_health(
+        self, output_format: str = "normal", export_path: Optional[str] = None
+    ) -> int:
         """
         Generate fleeting notes health report
-        
+
         Args:
             output_format: 'normal' or 'json'
             export_path: Optional path to export report
-            
+
         Returns:
             Exit code (0 for success, 1 for failure)
         """
@@ -127,7 +125,7 @@ class FleetingCLI:
             # Export if requested
             if export_path:
                 export_path_obj = Path(export_path)
-                with open(export_path_obj, 'w', encoding='utf-8') as f:
+                with open(export_path_obj, "w", encoding="utf-8") as f:
                     if quiet:
                         json.dump(health_report, f, indent=2, default=str)
                     else:
@@ -143,27 +141,35 @@ class FleetingCLI:
             logger.exception("Error in fleeting_health")
             return 1
 
-    def fleeting_triage(self, quality_threshold: Optional[float] = 0.7,
-                       fast: bool = True,
-                       output_format: str = 'normal',
-                       export_path: Optional[str] = None) -> int:
+    def fleeting_triage(
+        self,
+        quality_threshold: Optional[float] = 0.7,
+        fast: bool = True,
+        output_format: str = "normal",
+        export_path: Optional[str] = None,
+    ) -> int:
         """
         Generate AI-powered fleeting notes triage report
-        
+
         Args:
             quality_threshold: Minimum quality score (0.0-1.0)
             fast: Use fast mode for better performance
             output_format: 'normal' or 'json'
             export_path: Optional path to export report
-            
+
         Returns:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
 
         # Validate quality threshold
-        if quality_threshold is not None and (quality_threshold < 0.0 or quality_threshold > 1.0):
-            print("❌ Error: Quality threshold must be between 0.0 and 1.0", file=sys.stderr)
+        if quality_threshold is not None and (
+            quality_threshold < 0.0 or quality_threshold > 1.0
+        ):
+            print(
+                "❌ Error: Quality threshold must be between 0.0 and 1.0",
+                file=sys.stderr,
+            )
             return 1
 
         try:
@@ -173,8 +179,7 @@ class FleetingCLI:
 
             # Generate triage report
             triage_report = self.workflow.generate_fleeting_triage_report(
-                quality_threshold=quality_threshold,
-                fast=fast
+                quality_threshold=quality_threshold, fast=fast
             )
 
             # Format and display output
@@ -187,7 +192,7 @@ class FleetingCLI:
             # Export if requested
             if export_path:
                 export_path_obj = Path(export_path)
-                with open(export_path_obj, 'w', encoding='utf-8') as f:
+                with open(export_path_obj, "w", encoding="utf-8") as f:
                     if quiet:
                         json.dump(triage_report, f, indent=2, default=str)
                     else:
@@ -206,12 +211,12 @@ class FleetingCLI:
 def create_parser() -> argparse.ArgumentParser:
     """
     Create argument parser for Fleeting Notes CLI
-    
+
     Returns:
         Configured ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        description='Fleeting Notes Health and Triage CLI',
+        description="Fleeting Notes Health and Triage CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -229,71 +234,53 @@ Examples:
   
   # JSON output for automation
   %(prog)s fleeting-health --format json
-        """
+        """,
     )
 
     # Global options
     parser.add_argument(
-        '--vault',
+        "--vault",
         type=str,
-        default='.',
-        help='Path to vault root directory (default: current directory)'
+        default=".",
+        help="Path to vault root directory (default: current directory)",
     )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose logging'
-    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 
     # Subcommands
-    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # fleeting-health subcommand
     health_parser = subparsers.add_parser(
-        'fleeting-health',
-        help='Generate fleeting notes health report'
+        "fleeting-health", help="Generate fleeting notes health report"
     )
     health_parser.add_argument(
-        '--format',
-        choices=['normal', 'json'],
-        default='normal',
-        help='Output format'
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
     )
     health_parser.add_argument(
-        '--export',
-        type=str,
-        metavar='PATH',
-        help='Export report to file'
+        "--export", type=str, metavar="PATH", help="Export report to file"
     )
 
     # fleeting-triage subcommand
     triage_parser = subparsers.add_parser(
-        'fleeting-triage',
-        help='Generate AI-powered triage report for fleeting notes'
+        "fleeting-triage", help="Generate AI-powered triage report for fleeting notes"
     )
     triage_parser.add_argument(
-        '--quality-threshold',
+        "--quality-threshold",
         type=float,
         default=0.7,
-        help='Minimum quality score threshold (0.0-1.0, default: 0.7)'
+        help="Minimum quality score threshold (0.0-1.0, default: 0.7)",
     )
     triage_parser.add_argument(
-        '--fast',
-        action='store_true',
+        "--fast",
+        action="store_true",
         default=True,
-        help='Use fast mode for better performance (default: true)'
+        help="Use fast mode for better performance (default: true)",
     )
     triage_parser.add_argument(
-        '--format',
-        choices=['normal', 'json'],
-        default='normal',
-        help='Output format'
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
     )
     triage_parser.add_argument(
-        '--export',
-        type=str,
-        metavar='PATH',
-        help='Export report to file'
+        "--export", type=str, metavar="PATH", help="Export report to file"
     )
 
     return parser
@@ -322,17 +309,16 @@ def main():
 
     # Execute command
     try:
-        if args.command == 'fleeting-health':
+        if args.command == "fleeting-health":
             return cli.fleeting_health(
-                output_format=args.format,
-                export_path=args.export
+                output_format=args.format, export_path=args.export
             )
-        elif args.command == 'fleeting-triage':
+        elif args.command == "fleeting-triage":
             return cli.fleeting_triage(
                 quality_threshold=args.quality_threshold,
                 fast=args.fast,
                 output_format=args.format,
-                export_path=args.export
+                export_path=args.export,
             )
         else:
             parser.print_help()
@@ -346,5 +332,5 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

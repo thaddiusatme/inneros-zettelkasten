@@ -67,32 +67,53 @@ The continuous advancement in computational power and algorithmic improvements h
 
         # Step 3: Verify MVP requirements
         assert isinstance(generated_tags, list), "Tags should be returned as a list"
-        assert 3 <= len(generated_tags) <= 8, f"Should generate 3-8 tags, got {len(generated_tags)}"
-        assert all(isinstance(tag, str) for tag in generated_tags), "All tags should be strings"
+        assert (
+            3 <= len(generated_tags) <= 8
+        ), f"Should generate 3-8 tags, got {len(generated_tags)}"
+        assert all(
+            isinstance(tag, str) for tag in generated_tags
+        ), "All tags should be strings"
 
         # Step 4: Verify tag relevance
         content_lower = note_content.lower()
         relevant_keywords = [
-            "neural", "network", "ai", "machine-learning", "artificial-intelligence",
-            "deep-learning", "algorithm", "computation", "technology"
+            "neural",
+            "network",
+            "ai",
+            "machine-learning",
+            "artificial-intelligence",
+            "deep-learning",
+            "algorithm",
+            "computation",
+            "technology",
         ]
 
-        relevant_tags = [tag for tag in generated_tags
-                        if any(keyword in content_lower for keyword in tag.split('-'))
-                        or any(keyword in tag for keyword in relevant_keywords)]
+        relevant_tags = [
+            tag
+            for tag in generated_tags
+            if any(keyword in content_lower for keyword in tag.split("-"))
+            or any(keyword in tag for keyword in relevant_keywords)
+        ]
 
-        assert len(relevant_tags) >= 2, f"Should have at least 2 relevant tags from: {generated_tags}"
+        assert (
+            len(relevant_tags) >= 2
+        ), f"Should have at least 2 relevant tags from: {generated_tags}"
 
         # Step 5: Verify no duplicates
-        assert len(generated_tags) == len(set(generated_tags)), "Should not have duplicate tags"
+        assert len(generated_tags) == len(
+            set(generated_tags)
+        ), "Should not have duplicate tags"
 
         # Step 6: Performance check (should be fast for MVP)
         import time
+
         start_time = time.time()
         _ = tagger.generate_tags(note_content)
         processing_time = time.time() - start_time
 
-        assert processing_time < 2.0, f"Processing should be <2s, took {processing_time:.2f}s"
+        assert (
+            processing_time < 2.0
+        ), f"Processing should be <2s, took {processing_time:.2f}s"
 
     def test_empty_note_handling(self):
         """Test that empty notes are handled gracefully."""
@@ -172,13 +193,13 @@ Data science combines statistics, programming, and domain expertise to extract i
 - Business intelligence
 """
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write(note_content)
             temp_file = f.name
 
         try:
             # Read and process the file
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 content = f.read()
 
             tagger = AITagger()
@@ -190,9 +211,14 @@ Data science combines statistics, programming, and domain expertise to extract i
             assert all(isinstance(tag, str) for tag in tags)
 
             # Verify tags are relevant to data science content
-            relevant_tags = [tag for tag in tags
-                           if any(keyword in content.lower()
-                                for keyword in ["data", "science", "machine-learning"])]
+            relevant_tags = [
+                tag
+                for tag in tags
+                if any(
+                    keyword in content.lower()
+                    for keyword in ["data", "science", "machine-learning"]
+                )
+            ]
             assert len(relevant_tags) >= 1
 
         finally:

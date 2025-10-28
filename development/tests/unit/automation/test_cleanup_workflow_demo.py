@@ -6,12 +6,12 @@ import yaml
 
 def test_end_to_end_cleanup_workflow_demo(tmp_path, monkeypatch):
     """Execute complete workflow: inventory → decision log → CLI review → execution.
-    
+
     Demonstrates full cleanup workflow with 3 real automation assets:
     1. Project doc (Projects/ACTIVE/draft-todo.md → Projects/COMPLETED-2025-10/)
     2. Dev doc (development/docs/YOUTUBE-INTEGRATION-MAINTENANCE.md → Projects/REFERENCE/)
     3. Automation script (.automation/scripts/audit_design_flaws.md → development/src/automation/tools/)
-    
+
     Validates metadata flow-through (trigger, monitoring) and execution report persistence.
     """
 
@@ -63,7 +63,6 @@ created: 2025-10-01
 Automation script for design flaw auditing.
 """
     )
-
 
     # Mock the cleanup workflow components
     mock_inventory = {
@@ -187,7 +186,10 @@ Automation script for design flaw auditing.
     # Verify metadata flow-through for automation script (item 2)
     automation_item = execution_report["items"][2]
     assert automation_item["source"] == ".automation/scripts/audit_design_flaws.md"
-    assert automation_item["destination"] == "development/src/automation/tools/audit_design_flaws.md"
+    assert (
+        automation_item["destination"]
+        == "development/src/automation/tools/audit_design_flaws.md"
+    )
     assert automation_item["trigger"] == "schedule"
     assert automation_item["monitoring"] == "cron-log"
     assert automation_item["status"] == "completed"

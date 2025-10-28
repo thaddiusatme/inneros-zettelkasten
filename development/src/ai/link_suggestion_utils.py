@@ -12,6 +12,7 @@ import re
 @dataclass
 class QualityScore:
     """Data model for link quality assessment"""
+
     score: float  # 0.0 to 1.0
     confidence: str  # "high", "medium", "low"
     explanation: str
@@ -24,37 +25,41 @@ class LinkTextGenerator:
     def generate_from_file_path(file_path: str) -> str:
         """
         Generate link text from file path
-        
+
         Args:
             file_path: Path to target note file
-            
+
         Returns:
             Clean, readable link text
         """
         # Remove .md extension and path
-        if file_path.endswith('.md'):
-            name = file_path.replace('.md', '').split('/')[-1]
+        if file_path.endswith(".md"):
+            name = file_path.replace(".md", "").split("/")[-1]
         else:
-            name = file_path.split('/')[-1]
+            name = file_path.split("/")[-1]
 
         # Convert hyphens/underscores to spaces and title case
-        name = name.replace('-', ' ').replace('_', ' ')
+        name = name.replace("-", " ").replace("_", " ")
 
         # Remove timestamps and common prefixes
-        name = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', name)  # Remove date prefixes
-        name = re.sub(r'^(fleeting|permanent|lit|zettel)-', '', name)  # Remove type prefixes
+        name = re.sub(r"^\d{4}-\d{2}-\d{2}-", "", name)  # Remove date prefixes
+        name = re.sub(
+            r"^(fleeting|permanent|lit|zettel)-", "", name
+        )  # Remove type prefixes
 
         return name.title().strip()
 
     @staticmethod
-    def generate_from_semantic_overlap(overlap_terms: str, min_term_length: int = 3) -> str:
+    def generate_from_semantic_overlap(
+        overlap_terms: str, min_term_length: int = 3
+    ) -> str:
         """
         Generate semantically meaningful link text from content overlap
-        
+
         Args:
             overlap_terms: Space-separated terms showing content overlap
             min_term_length: Minimum length for meaningful terms
-            
+
         Returns:
             Semantic link text based on shared concepts
         """
@@ -67,21 +72,23 @@ class LinkTextGenerator:
 
         if len(meaningful_terms) >= 2:
             # Use first 2-3 most meaningful terms
-            return ' '.join(meaningful_terms[:3]).title()
+            return " ".join(meaningful_terms[:3]).title()
         elif meaningful_terms:
             return meaningful_terms[0].title()
         else:
             return ""
 
     @classmethod
-    def generate_intelligent_link_text(cls, file_path: str, content_overlap: str = "") -> str:
+    def generate_intelligent_link_text(
+        cls, file_path: str, content_overlap: str = ""
+    ) -> str:
         """
         Generate intelligent link text using multiple strategies
-        
+
         Args:
             file_path: Target note file path
             content_overlap: Semantic overlap between notes
-            
+
         Returns:
             Best available link text with [[brackets]]
         """
@@ -104,17 +111,20 @@ class LinkQualityAssessor:
     MEDIUM_QUALITY_THRESHOLD = 0.6
 
     @classmethod
-    def assess_connection_quality(cls, similarity_score: float,
-                                content_overlap: str = "",
-                                note_types: tuple = None) -> QualityScore:
+    def assess_connection_quality(
+        cls,
+        similarity_score: float,
+        content_overlap: str = "",
+        note_types: tuple = None,
+    ) -> QualityScore:
         """
         Assess quality of a connection with multiple factors
-        
+
         Args:
             similarity_score: Semantic similarity score (0.0-1.0)
             content_overlap: Shared content between notes
             note_types: Tuple of (source_type, target_type) for type compatibility
-            
+
         Returns:
             QualityScore with score, confidence level, and explanation
         """
@@ -131,18 +141,20 @@ class LinkQualityAssessor:
         # Determine confidence and explanation
         if base_score >= cls.HIGH_QUALITY_THRESHOLD:
             confidence = "high"
-            explanation = cls._generate_high_quality_explanation(similarity_score, content_overlap)
+            explanation = cls._generate_high_quality_explanation(
+                similarity_score, content_overlap
+            )
         elif base_score >= cls.MEDIUM_QUALITY_THRESHOLD:
             confidence = "medium"
-            explanation = cls._generate_medium_quality_explanation(similarity_score, content_overlap)
+            explanation = cls._generate_medium_quality_explanation(
+                similarity_score, content_overlap
+            )
         else:
             confidence = "low"
             explanation = cls._generate_low_quality_explanation(similarity_score)
 
         return QualityScore(
-            score=base_score,
-            confidence=confidence,
-            explanation=explanation
+            score=base_score, confidence=confidence, explanation=explanation
         )
 
     @staticmethod
@@ -150,11 +162,11 @@ class LinkQualityAssessor:
         """Check if note types are compatible for linking"""
         # Compatible type combinations for Zettelkasten
         compatible_pairs = {
-            ('permanent', 'permanent'),
-            ('permanent', 'literature'),
-            ('literature', 'permanent'),
-            ('fleeting', 'permanent'),
-            ('permanent', 'fleeting'),
+            ("permanent", "permanent"),
+            ("permanent", "literature"),
+            ("literature", "permanent"),
+            ("fleeting", "permanent"),
+            ("permanent", "fleeting"),
         }
 
         return (source_type, target_type) in compatible_pairs
@@ -165,7 +177,9 @@ class LinkQualityAssessor:
         if overlap and len(overlap.split()) >= 3:
             return f"Strong semantic similarity ({similarity:.1%}) with rich content overlap"
         else:
-            return f"Strong semantic similarity ({similarity:.1%}) between note contents"
+            return (
+                f"Strong semantic similarity ({similarity:.1%}) between note contents"
+            )
 
     @staticmethod
     def _generate_medium_quality_explanation(similarity: float, overlap: str) -> str:
@@ -186,37 +200,39 @@ class InsertionContextDetector:
 
     # Common section patterns in Zettelkasten notes
     SECTION_PATTERNS = {
-        'related_concepts': [
-            r'## Related Concepts?',
-            r'## Related',
-            r'## See Also',
-            r'## Connections?'
+        "related_concepts": [
+            r"## Related Concepts?",
+            r"## Related",
+            r"## See Also",
+            r"## Connections?",
         ],
-        'see_also': [
-            r'## See Also',
-            r'## References?',
-            r'## Links?',
-            r'## Further Reading'
+        "see_also": [
+            r"## See Also",
+            r"## References?",
+            r"## Links?",
+            r"## Further Reading",
         ],
-        'main_content': [
-            r'## [^#\n]+',  # Any second-level heading
-            r'# [^#\n]+',   # Main title
-        ]
+        "main_content": [
+            r"## [^#\n]+",  # Any second-level heading
+            r"# [^#\n]+",  # Main title
+        ],
     }
 
     @classmethod
-    def detect_insertion_point(cls, note_content: str, link_type: str = "related") -> tuple:
+    def detect_insertion_point(
+        cls, note_content: str, link_type: str = "related"
+    ) -> tuple:
         """
         Detect best insertion point for a link in note content
-        
+
         Args:
             note_content: Full content of the target note
             link_type: Type of link relationship ("related", "reference", "concept")
-            
+
         Returns:
             Tuple of (suggested_location, insertion_context)
         """
-        lines = note_content.split('\n')
+        lines = note_content.split("\n")
 
         # Look for existing related sections first
         for section_type, patterns in cls.SECTION_PATTERNS.items():
@@ -234,7 +250,7 @@ class InsertionContextDetector:
     @staticmethod
     def _has_structured_content(lines: List[str]) -> bool:
         """Check if note has structured content with headings"""
-        heading_count = sum(1 for line in lines if line.strip().startswith('#'))
+        heading_count = sum(1 for line in lines if line.strip().startswith("#"))
         return heading_count >= 2
 
 
@@ -257,17 +273,17 @@ class SuggestionBatchProcessor:
         return suggestions[:max_results]
 
     @classmethod
-    def process_batch(cls, suggestions: List[Any],
-                     min_quality: float = 0.0,
-                     max_results: int = 10) -> List[Any]:
+    def process_batch(
+        cls, suggestions: List[Any], min_quality: float = 0.0, max_results: int = 10
+    ) -> List[Any]:
         """
         Complete batch processing pipeline
-        
+
         Args:
             suggestions: Raw list of suggestions
             min_quality: Minimum quality threshold
             max_results: Maximum results to return
-            
+
         Returns:
             Processed, filtered, and sorted suggestions
         """

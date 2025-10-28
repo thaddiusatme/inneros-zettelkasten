@@ -53,7 +53,9 @@ def test_cli_review_decisions_displays_pending_moves(tmp_path, monkeypatch):
     assert "Projects/ACTIVE/draft-todo.md" in output_text
     assert "development/docs/YOUTUBE-INTEGRATION-MAINTENANCE.md" in output_text
     assert ".automation/scripts/audit_design_flaws.sh" in output_text
-    assert ".automation/review_queue/fleeting_triage_2025-09-28_08-03-58.md" in output_text
+    assert (
+        ".automation/review_queue/fleeting_triage_2025-09-28_08-03-58.md" in output_text
+    )
 
     # Verify metadata displayed for automation assets
     assert "Trigger: schedule" in output_text
@@ -71,7 +73,7 @@ def test_cli_review_decisions_displays_pending_moves(tmp_path, monkeypatch):
 
     assert items[0]["status"] == "approved"  # First move approved
     assert items[1]["status"] == "approved"  # Second move approved
-    assert items[2]["status"] == "skipped"   # Third move skipped
+    assert items[2]["status"] == "skipped"  # Third move skipped
     assert items[3]["status"] == "approved"  # Fourth move approved
 
     # Verify approved decisions persisted to timestamped file

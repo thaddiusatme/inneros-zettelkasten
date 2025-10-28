@@ -65,16 +65,32 @@ This is important in the fight against AI slop
         """Sample AI-extracted quotes"""
         return QuotesData(
             key_insights=[
-                {"timestamp": "00:15", "quote": "AI is transforming content creation", "context": "Introduction"}
+                {
+                    "timestamp": "00:15",
+                    "quote": "AI is transforming content creation",
+                    "context": "Introduction",
+                }
             ],
             actionable=[
-                {"timestamp": "05:30", "quote": "Focus on quality over quantity", "context": "Strategy"}
+                {
+                    "timestamp": "05:30",
+                    "quote": "Focus on quality over quantity",
+                    "context": "Strategy",
+                }
             ],
             notable=[
-                {"timestamp": "10:00", "quote": "Community feedback is crucial", "context": "Engagement"}
+                {
+                    "timestamp": "10:00",
+                    "quote": "Community feedback is crucial",
+                    "context": "Engagement",
+                }
             ],
             definitions=[
-                {"timestamp": "02:45", "quote": "AI slop: low-quality AI-generated content", "context": "Terminology"}
+                {
+                    "timestamp": "02:45",
+                    "quote": "AI slop: low-quality AI-generated content",
+                    "context": "Terminology",
+                }
             ],
         )
 
@@ -87,7 +103,10 @@ This is important in the fight against AI slop
         assert result.has_why_section is True
         assert result.title == "AI Channels Are Taking Over Warhammer 40k Lore"
         assert "youtube" in result.frontmatter_data.get("tags", [])
-        assert result.why_section_content == "This is important in the fight against AI slop"
+        assert (
+            result.why_section_content
+            == "This is important in the fight against AI slop"
+        )
 
     def test_parse_note_structure_missing_sections(self):
         """RED: Handle note missing 'Why I'm Saving This' section"""
@@ -132,8 +151,12 @@ tags: [unclosed bracket
         # Should be after "Why I'm Saving This" section content
         # but before "Key Takeaways" section
         lines = sample_templater_note.split("\n")
-        why_index = next(i for i, line in enumerate(lines) if "## Why I'm Saving This" in line)
-        takeaways_index = next(i for i, line in enumerate(lines) if "## Key Takeaways" in line)
+        why_index = next(
+            i for i, line in enumerate(lines) if "## Why I'm Saving This" in line
+        )
+        takeaways_index = next(
+            i for i, line in enumerate(lines) if "## Key Takeaways" in line
+        )
 
         assert why_index < insertion_line < takeaways_index
 
@@ -167,12 +190,15 @@ Important content
 ## Key Takeaways
 """
         enhancer = YouTubeNoteEnhancer()
-        result = enhancer.insert_quotes_section(original, sample_quotes_markdown, insertion_line=2)
+        result = enhancer.insert_quotes_section(
+            original, sample_quotes_markdown, insertion_line=2
+        )
 
         assert "## Extracted Quotes" in result
         # Count level-2 headings only (## followed by space, not ###)
         import re
-        level_2_headings = len(re.findall(r'^## [^#]', result, re.MULTILINE))
+
+        level_2_headings = len(re.findall(r"^## [^#]", result, re.MULTILINE))
         assert level_2_headings == 3  # Original 2 + new quotes section
 
     def test_insert_quotes_section_preserve_content(self):
@@ -215,7 +241,9 @@ Quote 4
 """
         original = "## Why\nContent\n\n## Next"
         enhancer = YouTubeNoteEnhancer()
-        result = enhancer.insert_quotes_section(original, quotes_with_categories, insertion_line=2)
+        result = enhancer.insert_quotes_section(
+            original, quotes_with_categories, insertion_line=2
+        )
 
         assert "🎯 Key Insights" in result
         assert "💡 Actionable Insights" in result
@@ -322,7 +350,9 @@ This is a test reason for saving
     def test_enhance_note_end_to_end(self, sample_note_path):
         """RED: Complete enhancement workflow"""
         quotes_data = QuotesData(
-            key_insights=[{"timestamp": "00:15", "quote": "Test insight", "context": "Test"}],
+            key_insights=[
+                {"timestamp": "00:15", "quote": "Test insight", "context": "Test"}
+            ],
             actionable=[],
             notable=[],
             definitions=[],
@@ -345,7 +375,9 @@ This is a test reason for saving
         """RED: Create backup before modification"""
         original_content = sample_note_path.read_text()
 
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(sample_note_path, quotes_data)
 
@@ -386,7 +418,9 @@ Already has quotes
         note_path = temp_note_dir / "processed.md"
         note_path.write_text(processed_note)
 
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(note_path, quotes_data, force=False)
 
@@ -398,7 +432,9 @@ Already has quotes
     def test_enhance_note_file_not_found(self):
         """RED: Error handling for missing file"""
         nonexistent_path = Path("/nonexistent/path/note.md")
-        quotes_data = QuotesData(key_insights=[], actionable=[], notable=[], definitions=[])
+        quotes_data = QuotesData(
+            key_insights=[], actionable=[], notable=[], definitions=[]
+        )
 
         enhancer = YouTubeNoteEnhancer()
         result = enhancer.enhance_note(nonexistent_path, quotes_data)
@@ -473,7 +509,11 @@ This is important in the fight against AI slop and finding the line of what is a
 
         quotes_data = QuotesData(
             key_insights=[
-                {"timestamp": "01:23", "quote": "Real quote from video", "context": "Main topic"}
+                {
+                    "timestamp": "01:23",
+                    "quote": "Real quote from video",
+                    "context": "Main topic",
+                }
             ],
             actionable=[],
             notable=[],

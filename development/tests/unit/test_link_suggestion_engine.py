@@ -12,17 +12,20 @@ import sys
 import os
 
 # Add development directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
 from ai.link_suggestion_engine import LinkSuggestionEngine, LinkSuggestion, QualityScore
+
 
 @dataclass
 class MockConnection:
     """Mock connection for testing"""
+
     source_file: str
     target_file: str
     similarity_score: float
     content_overlap: str = ""
+
 
 class TestLinkSuggestionEngine:
     """Test suite for LinkSuggestionEngine core functionality"""
@@ -39,7 +42,8 @@ class TestLinkSuggestionEngine:
 
             # Create test notes
             ai_note = vault_path / "Permanent Notes" / "ai-concepts.md"
-            ai_note.write_text("""---
+            ai_note.write_text(
+                """---
 type: permanent
 tags: [ai, machine-learning, concepts]
 ---
@@ -51,10 +55,12 @@ machine learning algorithms and neural networks.
 ## Core Concepts
 - Deep learning fundamentals
 - Neural network architectures
-""")
+"""
+            )
 
             ml_note = vault_path / "Permanent Notes" / "machine-learning-basics.md"
-            ml_note.write_text("""---
+            ml_note.write_text(
+                """---
 type: permanent
 tags: [machine-learning, algorithms]
 ---
@@ -66,7 +72,8 @@ Introduction to machine learning algorithms and their applications.
 - Supervised learning
 - Unsupervised learning
 - Deep neural networks
-""")
+"""
+            )
 
             yield vault_path
 
@@ -79,8 +86,8 @@ Introduction to machine learning algorithms and their applications.
         """Test LinkSuggestionEngine initializes correctly"""
         engine = LinkSuggestionEngine(vault_path=str(temp_vault))
         assert engine.vault_path == str(temp_vault)
-        assert hasattr(engine, 'quality_threshold')
-        assert hasattr(engine, 'max_suggestions')
+        assert hasattr(engine, "quality_threshold")
+        assert hasattr(engine, "max_suggestions")
 
     def test_generate_link_suggestions_basic(self, suggestion_engine, temp_vault):
         """Test basic link suggestion generation from connections"""
@@ -90,14 +97,13 @@ Introduction to machine learning algorithms and their applications.
                 source_file="Permanent Notes/ai-concepts.md",
                 target_file="Permanent Notes/machine-learning-basics.md",
                 similarity_score=0.85,
-                content_overlap="machine learning, neural networks"
+                content_overlap="machine learning, neural networks",
             )
         ]
 
         # Act - Generate suggestions
         suggestions = suggestion_engine.generate_link_suggestions(
-            target_note="Permanent Notes/ai-concepts.md",
-            connections=connections
+            target_note="Permanent Notes/ai-concepts.md", connections=connections
         )
 
         # Assert - Should generate actionable suggestions
@@ -117,21 +123,21 @@ Introduction to machine learning algorithms and their applications.
                 "source": "AI Concepts",
                 "target": "Machine Learning Basics",
                 "context": "machine learning, algorithms",
-                "expected_pattern": "machine learning"
+                "expected_pattern": "machine learning",
             },
             {
                 "source": "Zettelkasten Method",
                 "target": "Note Taking Systems",
                 "context": "note taking, knowledge management",
-                "expected_pattern": "note taking"
-            }
+                "expected_pattern": "note taking",
+            },
         ]
 
         for case in test_cases:
             link_text = suggestion_engine.generate_link_text(
                 source_content=case["source"],
                 target_content=case["target"],
-                content_overlap=case["context"]
+                content_overlap=case["context"],
             )
 
             assert link_text != ""
@@ -147,22 +153,22 @@ Introduction to machine learning algorithms and their applications.
                 source_file="ai-concepts.md",
                 target_file="machine-learning.md",
                 similarity_score=0.95,
-                content_overlap="machine learning algorithms neural networks"
+                content_overlap="machine learning algorithms neural networks",
             ),
             # Medium quality - moderate overlap
             MockConnection(
                 source_file="note-taking.md",
                 target_file="knowledge-management.md",
                 similarity_score=0.70,
-                content_overlap="knowledge systems"
+                content_overlap="knowledge systems",
             ),
             # Low quality - weak connection
             MockConnection(
                 source_file="random-topic.md",
                 target_file="unrelated-note.md",
                 similarity_score=0.45,
-                content_overlap="common words"
-            )
+                content_overlap="common words",
+            ),
         ]
 
         for connection in test_connections:
@@ -193,7 +199,7 @@ Introduction to machine learning algorithms and their applications.
         high_threshold_suggestions = suggestion_engine.generate_link_suggestions(
             target_note="test-note.md",
             connections=mixed_quality_connections,
-            min_quality=0.8
+            min_quality=0.8,
         )
 
         # Should only return high-quality suggestions
@@ -204,7 +210,7 @@ Introduction to machine learning algorithms and their applications.
         low_threshold_suggestions = suggestion_engine.generate_link_suggestions(
             target_note="test-note.md",
             connections=mixed_quality_connections,
-            min_quality=0.3
+            min_quality=0.3,
         )
 
         # Should return all suggestions above threshold
@@ -216,24 +222,32 @@ Introduction to machine learning algorithms and their applications.
             source_file="ai-concepts.md",
             target_file="machine-learning.md",
             similarity_score=0.87,
-            content_overlap="neural networks, algorithms, deep learning"
+            content_overlap="neural networks, algorithms, deep learning",
         )
 
         suggestions = suggestion_engine.generate_link_suggestions(
-            target_note="ai-concepts.md",
-            connections=[connection]
+            target_note="ai-concepts.md", connections=[connection]
         )
 
         suggestion = suggestions[0]
         assert suggestion.explanation != ""
-        assert "similar" in suggestion.explanation.lower() or "related" in suggestion.explanation.lower()
-        assert any(term in suggestion.explanation.lower() for term in ["concept", "topic", "content"])
+        assert (
+            "similar" in suggestion.explanation.lower()
+            or "related" in suggestion.explanation.lower()
+        )
+        assert any(
+            term in suggestion.explanation.lower()
+            for term in ["concept", "topic", "content"]
+        )
 
-    def test_suggestion_insertion_context_detection(self, suggestion_engine, temp_vault):
+    def test_suggestion_insertion_context_detection(
+        self, suggestion_engine, temp_vault
+    ):
         """Test detection of appropriate insertion points for links"""
         # Create note with specific structure
         structured_note = temp_vault / "structured-note.md"
-        structured_note.write_text("""---
+        structured_note.write_text(
+            """---
 type: permanent
 ---
 # Structured Note
@@ -246,22 +260,26 @@ Some existing related concepts.
 
 ## See Also
 Existing see also references.
-""")
+"""
+        )
 
         connection = MockConnection(
             source_file="structured-note.md",
             target_file="related-note.md",
-            similarity_score=0.80
+            similarity_score=0.80,
         )
 
         suggestions = suggestion_engine.generate_link_suggestions(
-            target_note="structured-note.md",
-            connections=[connection]
+            target_note="structured-note.md", connections=[connection]
         )
 
         suggestion = suggestions[0]
-        assert hasattr(suggestion, 'suggested_location')
-        assert suggestion.suggested_location in ["related_concepts", "see_also", "main_content"]
+        assert hasattr(suggestion, "suggested_location")
+        assert suggestion.suggested_location in [
+            "related_concepts",
+            "see_also",
+            "main_content",
+        ]
         assert suggestion.insertion_context != ""
 
     def test_batch_suggestion_generation(self, suggestion_engine):
@@ -274,7 +292,7 @@ Existing see also references.
         suggestions = suggestion_engine.generate_link_suggestions(
             target_note="batch-test.md",
             connections=large_connection_set,
-            max_results=10
+            max_results=10,
         )
 
         # Should efficiently process and return top suggestions
@@ -296,7 +314,7 @@ Existing see also references.
             confidence="high",
             explanation="Strong semantic relationship",
             insertion_context="## Related Concepts",
-            suggested_location="related_concepts"
+            suggested_location="related_concepts",
         )
 
         # Test all required fields are present
@@ -317,23 +335,24 @@ Existing see also references.
             "source": "Permanent Notes/ai-concepts.md",
             "target": "Permanent Notes/machine-learning.md",
             "similarity": 0.87,
-            "context": "shared semantic concepts"
+            "context": "shared semantic concepts",
         }
 
         # Should be able to process connection discovery format
         mock_connection = MockConnection(
             source_file=connection_discovery_output["source"],
             target_file=connection_discovery_output["target"],
-            similarity_score=connection_discovery_output["similarity"]
+            similarity_score=connection_discovery_output["similarity"],
         )
 
         suggestions = suggestion_engine.generate_link_suggestions(
             target_note=connection_discovery_output["source"],
-            connections=[mock_connection]
+            connections=[mock_connection],
         )
 
         assert len(suggestions) > 0
         assert suggestions[0].similarity_score == 0.87
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

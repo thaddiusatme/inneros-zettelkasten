@@ -13,10 +13,16 @@ from .embedding_cache import EmbeddingCache
 class AIConnections:
     """Discovers semantic connections between notes using AI analysis."""
 
-    def __init__(self, similarity_threshold: float = 0.7, max_suggestions: int = 5, config: Optional[Dict[str, Any]] = None, use_cache: bool = True):
+    def __init__(
+        self,
+        similarity_threshold: float = 0.7,
+        max_suggestions: int = 5,
+        config: Optional[Dict[str, Any]] = None,
+        use_cache: bool = True,
+    ):
         """
         Initialize AI connections with configuration.
-        
+
         Args:
             similarity_threshold: Minimum similarity score for suggestions
             max_suggestions: Maximum number of suggestions to return
@@ -34,14 +40,16 @@ class AIConnections:
         else:
             self.embedding_cache = None
 
-    def find_similar_notes(self, target_note: str, note_corpus: Dict[str, str]) -> List[Tuple[str, float]]:
+    def find_similar_notes(
+        self, target_note: str, note_corpus: Dict[str, str]
+    ) -> List[Tuple[str, float]]:
         """
         Find notes similar to the target note.
-        
+
         Args:
             target_note: Content of the note to find similarities for
             note_corpus: Dictionary mapping filenames to note content
-            
+
         Returns:
             List of tuples (filename, similarity_score) sorted by similarity
         """
@@ -60,7 +68,9 @@ class AIConnections:
                 continue
 
             try:
-                similarity = self._calculate_semantic_similarity(target_content, note_content)
+                similarity = self._calculate_semantic_similarity(
+                    target_content, note_content
+                )
                 if similarity >= self.similarity_threshold:
                     similarities.append((filename, similarity))
             except Exception:
@@ -71,16 +81,18 @@ class AIConnections:
 
         # Sort by similarity score (descending) and limit results
         similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:self.max_suggestions]
+        return similarities[: self.max_suggestions]
 
-    def suggest_links(self, target_note: str, note_corpus: Dict[str, str]) -> List[Dict[str, Any]]:
+    def suggest_links(
+        self, target_note: str, note_corpus: Dict[str, str]
+    ) -> List[Dict[str, Any]]:
         """
         Suggest links to related notes with explanations.
-        
+
         Args:
             target_note: Content of the note to suggest links for
             note_corpus: Dictionary mapping filenames to note content
-            
+
         Returns:
             List of link suggestions with metadata
         """
@@ -91,19 +103,21 @@ class AIConnections:
             suggestion = {
                 "filename": filename,
                 "similarity": similarity,
-                "reason": f"High semantic similarity ({similarity:.0%})"
+                "reason": f"High semantic similarity ({similarity:.0%})",
             }
             suggestions.append(suggestion)
 
         return suggestions
 
-    def build_connection_map(self, note_corpus: Dict[str, str]) -> Dict[str, List[Tuple[str, float]]]:
+    def build_connection_map(
+        self, note_corpus: Dict[str, str]
+    ) -> Dict[str, List[Tuple[str, float]]]:
         """
         Build a complete connection map for all notes in the corpus.
-        
+
         Args:
             note_corpus: Dictionary mapping filenames to note content
-            
+
         Returns:
             Dictionary mapping each filename to its similar notes
         """
@@ -120,25 +134,25 @@ class AIConnections:
     def _extract_content(self, note_content: str) -> str:
         """
         Extract main content from note, removing YAML frontmatter.
-        
+
         Args:
             note_content: Raw note content
-            
+
         Returns:
             Cleaned content without metadata
         """
         # Remove YAML frontmatter
-        yaml_pattern = r'^---\s*\n.*?\n---\s*\n'
-        content = re.sub(yaml_pattern, '', note_content, flags=re.DOTALL)
+        yaml_pattern = r"^---\s*\n.*?\n---\s*\n"
+        content = re.sub(yaml_pattern, "", note_content, flags=re.DOTALL)
         return content.strip()
 
     def _normalize_text(self, text: str) -> str:
         """
         Normalize text for comparison.
-        
+
         Args:
             text: Text to normalize
-            
+
         Returns:
             Normalized text
         """
@@ -147,21 +161,21 @@ class AIConnections:
 
         # Convert to lowercase and remove punctuation
         text = text.lower()
-        text = re.sub(r'[^\w\s]', '', text)
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"[^\w\s]", "", text)
+        text = re.sub(r"\s+", " ", text)
         return text.strip()
 
     def _calculate_semantic_similarity(self, text1: str, text2: str) -> float:
         """
         Calculate semantic similarity using AI embeddings.
-        
+
         Args:
             text1: First text to compare
             text2: Second text to compare
-            
+
         Returns:
             Similarity score between 0 and 1
-            
+
         Raises:
             Exception: If embedding generation fails
         """
@@ -181,13 +195,13 @@ class AIConnections:
     def _generate_ollama_embedding(self, text: str) -> List[float]:
         """
         Generate embedding vector using Ollama API with optional caching.
-        
+
         Args:
             text: Text to generate embedding for
-            
+
         Returns:
             Embedding vector
-            
+
         Raises:
             Exception: If Ollama service is unavailable or API call fails
         """
@@ -211,11 +225,11 @@ class AIConnections:
     def _simple_text_similarity(self, text1: str, text2: str) -> float:
         """
         Calculate simple text similarity using word overlap.
-        
+
         Args:
             text1: First text to compare
             text2: Second text to compare
-            
+
         Returns:
             Similarity score between 0 and 1
         """
@@ -242,11 +256,11 @@ class AIConnections:
     def _cosine_similarity(self, vector1: List[float], vector2: List[float]) -> float:
         """
         Calculate cosine similarity between two vectors.
-        
+
         Args:
             vector1: First vector
             vector2: Second vector
-            
+
         Returns:
             Cosine similarity score
         """

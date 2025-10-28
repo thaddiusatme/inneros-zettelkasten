@@ -3,15 +3,26 @@ from datetime import datetime, date
 from typing import List, Dict, Any, Optional
 
 import logging
-from .screenshot_utils import OneDriveScreenshotDetector, ScreenshotOCRProcessor, DailyNoteGenerator, SmartLinkIntegrator, SafeScreenshotManager
+from .screenshot_utils import (
+    OneDriveScreenshotDetector,
+    ScreenshotOCRProcessor,
+    DailyNoteGenerator,
+    SmartLinkIntegrator,
+    SafeScreenshotManager,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class EveningScreenshotProcessor:
     def __init__(self, onedrive_path: Optional[str], knowledge_path: str):
         self.knowledge_path = Path(knowledge_path)
         self.onedrive_path = Path(onedrive_path) if onedrive_path else None
-        self.screenshot_detector = OneDriveScreenshotDetector(str(self.onedrive_path)) if self.onedrive_path else None
+        self.screenshot_detector = (
+            OneDriveScreenshotDetector(str(self.onedrive_path))
+            if self.onedrive_path
+            else None
+        )
         self.ocr_processor = ScreenshotOCRProcessor()
         self.note_generator = DailyNoteGenerator(knowledge_path)
         self.link_integrator = SmartLinkIntegrator(knowledge_path)

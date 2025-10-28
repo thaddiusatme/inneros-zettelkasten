@@ -5,7 +5,7 @@ from typing import Dict, List, Any
 
 class MetricsCollector:
     """Collects system metrics: counters, gauges, and histograms.
-    
+
     Tracks three metric types:
     - Counters: Cumulative values (e.g., notes_processed)
     - Gauges: Current state values (e.g., active_watchers)
@@ -20,7 +20,7 @@ class MetricsCollector:
 
     def increment_counter(self, name: str, value: int = 1) -> None:
         """Increment a counter metric.
-        
+
         Args:
             name: Counter name
             value: Amount to increment (default: 1)
@@ -31,10 +31,10 @@ class MetricsCollector:
 
     def get_counter(self, name: str) -> int:
         """Get current counter value.
-        
+
         Args:
             name: Counter name
-            
+
         Returns:
             Current counter value
         """
@@ -42,7 +42,7 @@ class MetricsCollector:
 
     def set_gauge(self, name: str, value: float) -> None:
         """Set a gauge metric to specific value.
-        
+
         Args:
             name: Gauge name
             value: New value
@@ -51,10 +51,10 @@ class MetricsCollector:
 
     def get_gauge(self, name: str) -> float:
         """Get current gauge value.
-        
+
         Args:
             name: Gauge name
-            
+
         Returns:
             Current gauge value
         """
@@ -62,7 +62,7 @@ class MetricsCollector:
 
     def record_histogram(self, name: str, value: float) -> None:
         """Record a value in histogram distribution.
-        
+
         Args:
             name: Histogram name
             value: Value to record
@@ -73,10 +73,10 @@ class MetricsCollector:
 
     def get_histogram(self, name: str) -> List[float]:
         """Get histogram values.
-        
+
         Args:
             name: Histogram name
-            
+
         Returns:
             List of recorded values
         """
@@ -84,12 +84,12 @@ class MetricsCollector:
 
     def get_all_metrics(self) -> Dict[str, Any]:
         """Get complete snapshot of all metrics.
-        
+
         Returns:
             Dictionary with counters, gauges, and histograms
         """
         return {
             "counters": dict(self._counters),
             "gauges": dict(self._gauges),
-            "histograms": {k: list(v) for k, v in self._histograms.items()}
+            "histograms": {k: list(v) for k, v in self._histograms.items()},
         }

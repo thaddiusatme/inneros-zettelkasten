@@ -15,7 +15,7 @@ class EmbeddingCache:
     def __init__(self, cache_dir: str = ".embedding_cache", max_cache_size: int = 1000):
         """
         Initialize embedding cache.
-        
+
         Args:
             cache_dir: Directory to store cache files
             max_cache_size: Maximum number of cached embeddings
@@ -33,7 +33,7 @@ class EmbeddingCache:
         """Load cache index from disk."""
         if self.index_file.exists():
             try:
-                with open(self.index_file, 'r') as f:
+                with open(self.index_file, "r") as f:
                     return json.load(f)
             except Exception:
                 pass
@@ -42,14 +42,14 @@ class EmbeddingCache:
     def _save_cache_index(self):
         """Save cache index to disk."""
         try:
-            with open(self.index_file, 'w') as f:
+            with open(self.index_file, "w") as f:
                 json.dump(self.cache_index, f, indent=2)
         except Exception:
             pass
 
     def _get_text_hash(self, text: str) -> str:
         """Generate hash for text content."""
-        return hashlib.sha256(text.encode('utf-8')).hexdigest()[:16]
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
     def _get_cache_file(self, text_hash: str) -> Path:
         """Get cache file path for text hash."""
@@ -71,10 +71,10 @@ class EmbeddingCache:
     def get_embedding(self, text: str) -> Optional[List[float]]:
         """
         Get embedding for text, using cache if available.
-        
+
         Args:
             text: Text to get embedding for
-            
+
         Returns:
             Embedding vector or None if not cached
         """
@@ -85,7 +85,7 @@ class EmbeddingCache:
             cache_file = self._get_cache_file(text_hash)
             if cache_file.exists():
                 try:
-                    with open(cache_file, 'r') as f:
+                    with open(cache_file, "r") as f:
                         data = json.load(f)
 
                     # Update access order
@@ -104,7 +104,7 @@ class EmbeddingCache:
     def store_embedding(self, text: str, embedding: List[float]):
         """
         Store embedding in cache.
-        
+
         Args:
             text: Original text
             embedding: Embedding vector
@@ -117,16 +117,16 @@ class EmbeddingCache:
             cache_data = {
                 "text_hash": text_hash,
                 "text_length": len(text),
-                "embedding": embedding
+                "embedding": embedding,
             }
 
-            with open(cache_file, 'w') as f:
+            with open(cache_file, "w") as f:
                 json.dump(cache_data, f)
 
             # Update index
             self.cache_index["entries"][text_hash] = {
                 "file": cache_file.name,
-                "text_length": len(text)
+                "text_length": len(text),
             }
 
             # Update access order
@@ -158,13 +158,13 @@ class EmbeddingCache:
     def get_or_generate_embedding(self, text: str) -> List[float]:
         """
         Get embedding from cache or generate new one.
-        
+
         Args:
             text: Text to get embedding for
-            
+
         Returns:
             Embedding vector
-            
+
         Raises:
             Exception: If embedding generation fails
         """
@@ -201,5 +201,6 @@ class EmbeddingCache:
             "cache_dir": str(self.cache_dir),
             "disk_usage_mb": sum(
                 f.stat().st_size for f in self.cache_dir.glob("*.json")
-            ) / (1024 * 1024)
+            )
+            / (1024 * 1024),
         }

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Add development src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from inneros_batch_processor import BatchProcessor
 
@@ -33,9 +33,15 @@ class TestBatchProcessor(unittest.TestCase):
 
         # Create test markdown files (make them old enough to not be filtered)
         old_time = datetime.now() - timedelta(hours=3)
-        self.create_test_file(self.inbox_dir / "test-note-1.md", "Test content 1", old_time)
-        self.create_test_file(self.inbox_dir / "test-note-2.md", "Test content 2", old_time)
-        self.create_test_file(self.fleeting_dir / "fleeting-note-1.md", "Fleeting content", old_time)
+        self.create_test_file(
+            self.inbox_dir / "test-note-1.md", "Test content 1", old_time
+        )
+        self.create_test_file(
+            self.inbox_dir / "test-note-2.md", "Test content 2", old_time
+        )
+        self.create_test_file(
+            self.fleeting_dir / "fleeting-note-1.md", "Fleeting content", old_time
+        )
 
         # Create recently modified file (should be filtered out)
         recent_file = self.inbox_dir / "recent-note.md"
@@ -46,7 +52,9 @@ class TestBatchProcessor(unittest.TestCase):
 
         self.processor = BatchProcessor(base_dir=self.test_dir)
 
-    def create_test_file(self, path: Path, content: str, file_time: Optional[datetime] = None):
+    def create_test_file(
+        self, path: Path, content: str, file_time: Optional[datetime] = None
+    ):
         """Helper to create test files with frontmatter and optional timestamp"""
         if file_time is None:
             file_time = datetime.now()
@@ -69,6 +77,7 @@ status: inbox
     def tearDown(self):
         """Clean up test environment"""
         import shutil
+
         shutil.rmtree(self.test_dir)
 
     def test_scan_notes_returns_correct_count(self):
@@ -77,47 +86,49 @@ status: inbox
         result = self.processor.scan_notes()
 
         # Should find 3 markdown files (2 inbox + 1 fleeting, excluding recent)
-        self.assertEqual(result['total_count'], 3)
-        self.assertEqual(len(result['files']), 3)
+        self.assertEqual(result["total_count"], 3)
+        self.assertEqual(len(result["files"]), 3)
 
     def test_scan_notes_filters_recent_files(self):
         """Test that recently modified files are filtered out"""
         result = self.processor.scan_notes()
 
         # Should not include recent-note.md
-        file_names = [f['name'] for f in result['files']]
-        self.assertNotIn('recent-note.md', file_names)
+        file_names = [f["name"] for f in result["files"]]
+        self.assertNotIn("recent-note.md", file_names)
 
     def test_scan_notes_only_includes_markdown(self):
         """Test that only .md files are included"""
         result = self.processor.scan_notes()
 
         # Should not include .txt files
-        file_names = [f['name'] for f in result['files']]
-        self.assertNotIn('not-markdown.txt', file_names)
+        file_names = [f["name"] for f in result["files"]]
+        self.assertNotIn("not-markdown.txt", file_names)
 
     def test_scan_notes_includes_both_directories(self):
         """Test that both Inbox and Fleeting Notes directories are scanned"""
         result = self.processor.scan_notes()
 
         # Should include files from both directories
-        file_paths = [f['path'] for f in result['files']]
-        inbox_files = [p for p in file_paths if 'Inbox' in p]
-        fleeting_files = [p for p in file_paths if 'Fleeting Notes' in p]
+        file_paths = [f["path"] for f in result["files"]]
+        inbox_files = [p for p in file_paths if "Inbox" in p]
+        fleeting_files = [p for p in file_paths if "Fleeting Notes" in p]
 
         self.assertGreater(len(inbox_files), 0, "Should find files in Inbox")
-        self.assertGreater(len(fleeting_files), 0, "Should find files in Fleeting Notes")
+        self.assertGreater(
+            len(fleeting_files), 0, "Should find files in Fleeting Notes"
+        )
 
     def test_scan_notes_returns_file_details(self):
         """Test that scan_notes returns proper file details"""
         result = self.processor.scan_notes()
 
         # Each file should have required fields
-        for file_info in result['files']:
-            self.assertIn('name', file_info)
-            self.assertIn('path', file_info)
-            self.assertIn('size', file_info)
-            self.assertIn('modified', file_info)
+        for file_info in result["files"]:
+            self.assertIn("name", file_info)
+            self.assertIn("path", file_info)
+            self.assertIn("size", file_info)
+            self.assertIn("modified", file_info)
 
     # === P0-2: DRY-RUN MODE TESTS ===
 
@@ -127,15 +138,15 @@ status: inbox
         result = self.processor.dry_run()
 
         # Should find files and analyze their YAML
-        self.assertGreater(result['total_analyzed'], 0)
-        self.assertIn('files', result)
+        self.assertGreater(result["total_analyzed"], 0)
+        self.assertIn("files", result)
 
         # Each analyzed file should have frontmatter analysis
-        for file_analysis in result['files']:
-            self.assertIn('name', file_analysis)
-            self.assertIn('current_tags', file_analysis)
-            self.assertIn('missing_metadata', file_analysis)
-            self.assertIn('ai_opportunities', file_analysis)
+        for file_analysis in result["files"]:
+            self.assertIn("name", file_analysis)
+            self.assertIn("current_tags", file_analysis)
+            self.assertIn("missing_metadata", file_analysis)
+            self.assertIn("ai_opportunities", file_analysis)
 
     def test_dry_run_detects_missing_tags(self):
         """Test that dry_run identifies files with no or few tags"""
@@ -147,18 +158,21 @@ status: inbox
         result = self.processor.dry_run()
 
         # Should identify opportunity for more tags
-        minimal_file = next((f for f in result['files'] if f['name'] == 'minimal-tags.md'), None)
+        minimal_file = next(
+            (f for f in result["files"] if f["name"] == "minimal-tags.md"), None
+        )
         self.assertIsNotNone(minimal_file)
         if minimal_file:  # Type guard for None check
-            self.assertIn('needs_more_tags', minimal_file['ai_opportunities'])
+            self.assertIn("needs_more_tags", minimal_file["ai_opportunities"])
 
     def test_dry_run_detects_missing_quality_score(self):
         """Test that dry_run identifies files without quality scores"""
         result = self.processor.dry_run()
 
         # Should identify files missing quality_score metadata
-        files_needing_quality = [f for f in result['files']
-                               if 'needs_quality_score' in f['ai_opportunities']]
+        files_needing_quality = [
+            f for f in result["files"] if "needs_quality_score" in f["ai_opportunities"]
+        ]
         self.assertGreater(len(files_needing_quality), 0)
 
     def test_dry_run_provides_processing_preview(self):
@@ -166,10 +180,10 @@ status: inbox
         result = self.processor.dry_run()
 
         # Should provide summary statistics
-        self.assertIn('summary', result)
-        self.assertIn('total_files_needing_tags', result['summary'])
-        self.assertIn('total_files_needing_quality', result['summary'])
-        self.assertIn('estimated_processing_time', result['summary'])
+        self.assertIn("summary", result)
+        self.assertIn("total_files_needing_tags", result["summary"])
+        self.assertIn("total_files_needing_quality", result["summary"])
+        self.assertIn("estimated_processing_time", result["summary"])
 
     def test_dry_run_respects_same_filters_as_scan(self):
         """Test that dry_run applies same safety filters as scan_notes"""
@@ -177,11 +191,11 @@ status: inbox
         dry_run_result = self.processor.dry_run()
 
         # Should find same number of files
-        self.assertEqual(len(scan_result['files']), len(dry_run_result['files']))
+        self.assertEqual(len(scan_result["files"]), len(dry_run_result["files"]))
 
         # Should have same file names
-        scan_names = {f['name'] for f in scan_result['files']}
-        dry_run_names = {f['name'] for f in dry_run_result['files']}
+        scan_names = {f["name"] for f in scan_result["files"]}
+        dry_run_names = {f["name"] for f in dry_run_result["files"]}
         self.assertEqual(scan_names, dry_run_names)
 
     def test_dry_run_safe_yaml_parsing(self):
@@ -205,10 +219,12 @@ status: inbox
         self.assertIsInstance(result, dict)
 
         # Should identify the file as having YAML issues
-        bad_file = next((f for f in result['files'] if f['name'] == 'bad-yaml.md'), None)
+        bad_file = next(
+            (f for f in result["files"] if f["name"] == "bad-yaml.md"), None
+        )
         self.assertIsNotNone(bad_file)
         if bad_file:  # Type guard for None check
-            self.assertIn('yaml_parsing_error', bad_file)
+            self.assertIn("yaml_parsing_error", bad_file)
 
     # === P1-2: BACKUP SYSTEM INTEGRATION TESTS ===
 
@@ -219,7 +235,7 @@ status: inbox
 
         # Should return backup path
         self.assertIsInstance(result, str)
-        self.assertIn('knowledge-', result)  # Contains timestamp format
+        self.assertIn("knowledge-", result)  # Contains timestamp format
 
         # Backup directory should exist
         backup_path = Path(result)
@@ -237,9 +253,9 @@ status: inbox
         result = self.processor.process_notes(create_backup=True, limit=1)
 
         # Should include backup information
-        self.assertIn('backup_created', result)
-        self.assertIn('backup_path', result)
-        self.assertTrue(Path(result['backup_path']).exists())
+        self.assertIn("backup_created", result)
+        self.assertIn("backup_path", result)
+        self.assertTrue(Path(result["backup_path"]).exists())
 
     def test_rollback_capability(self):
         """Test that processor can rollback to previous backup"""
@@ -266,8 +282,8 @@ status: inbox
         """Test that processing fails safely if backup creation fails"""
         # Mock backup failure scenario would go here
         # For now, test that we have the safety mechanisms
-        self.assertTrue(hasattr(self.processor, 'create_backup'))
-        self.assertTrue(hasattr(self.processor, 'rollback'))
+        self.assertTrue(hasattr(self.processor, "create_backup"))
+        self.assertTrue(hasattr(self.processor, "rollback"))
 
     # === P1-3: AI PROCESSING INTEGRATION TESTS (RED PHASE) ===
 
@@ -296,13 +312,13 @@ It should be enhanced with AI processing.
         result = self.processor.process_notes(create_backup=True, limit=1)
 
         # Should have processed files with AI enhancement
-        self.assertIn('processed_count', result)
-        self.assertGreater(result['processed_count'], 0)
-        self.assertIn('ai_enhanced_files', result)
+        self.assertIn("processed_count", result)
+        self.assertGreater(result["processed_count"], 0)
+        self.assertIn("ai_enhanced_files", result)
 
         # File should now have AI enhancements
         updated_content = test_file.read_text()
-        self.assertIn('ai_processed:', updated_content)
+        self.assertIn("ai_processed:", updated_content)
 
     def test_ai_processing_adds_tags_and_quality_scores(self):
         """Test that AI processing adds missing tags and quality scores"""
@@ -330,17 +346,17 @@ It has substantial content that should receive good scores.
 
         # Verify AI enhancements were applied
         updated_content = test_file.read_text()
-        self.assertIn('tags:', updated_content)
-        self.assertIn('quality_score:', updated_content)
+        self.assertIn("tags:", updated_content)
+        self.assertIn("quality_score:", updated_content)
 
         # Should report what was enhanced
-        self.assertIn('ai_enhanced_files', result)
-        enhanced_files = result['ai_enhanced_files']
+        self.assertIn("ai_enhanced_files", result)
+        enhanced_files = result["ai_enhanced_files"]
         self.assertGreater(len(enhanced_files), 0)
 
         enhanced_file = enhanced_files[0]
-        self.assertIn('tags_added', enhanced_file)
-        self.assertIn('quality_score', enhanced_file)
+        self.assertIn("tags_added", enhanced_file)
+        self.assertIn("quality_score", enhanced_file)
 
     def test_ai_processing_respects_file_limits(self):
         """Test that AI processing respects the limit parameter"""
@@ -356,10 +372,10 @@ It has substantial content that should receive good scores.
         result = self.processor.process_notes(create_backup=True, limit=2)
 
         # Should only process 2 files
-        self.assertEqual(result['processed_count'], 2)
+        self.assertEqual(result["processed_count"], 2)
 
-        if 'ai_enhanced_files' in result:
-            self.assertLessEqual(len(result['ai_enhanced_files']), 2)
+        if "ai_enhanced_files" in result:
+            self.assertLessEqual(len(result["ai_enhanced_files"]), 2)
 
     def test_ai_processing_includes_progress_reporting(self):
         """Test that AI processing includes detailed progress information"""
@@ -374,14 +390,14 @@ It has substantial content that should receive good scores.
         result = self.processor.process_notes(create_backup=True, limit=1)
 
         # Should include detailed progress information
-        self.assertIn('processing_time', result)
-        self.assertIn('backup_created', result)
-        self.assertIn('errors', result)
-        self.assertIn('ai_enhanced_files', result)
+        self.assertIn("processing_time", result)
+        self.assertIn("backup_created", result)
+        self.assertIn("errors", result)
+        self.assertIn("ai_enhanced_files", result)
 
         # Progress should be non-negative
-        self.assertGreaterEqual(result['processing_time'], 0)
-        self.assertIsInstance(result['errors'], list)
+        self.assertGreaterEqual(result["processing_time"], 0)
+        self.assertIsInstance(result["errors"], list)
 
     def test_ai_processing_error_handling(self):
         """Test that AI processing handles errors gracefully"""
@@ -409,14 +425,14 @@ This note might cause processing issues.
 
         # Should complete without crashing
         self.assertIsInstance(result, dict)
-        self.assertIn('errors', result)
+        self.assertIn("errors", result)
 
         # Errors should be reported but not crash processing
-        if result['errors']:
-            for error in result['errors']:
-                self.assertIn('file', error)
-                self.assertIn('error', error)
+        if result["errors"]:
+            for error in result["errors"]:
+                self.assertIn("file", error)
+                self.assertIn("error", error)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

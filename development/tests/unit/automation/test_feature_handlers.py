@@ -15,10 +15,14 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
-from src.automation.feature_handlers import ScreenshotEventHandler, SmartLinkEventHandler
+from src.automation.feature_handlers import (
+    ScreenshotEventHandler,
+    SmartLinkEventHandler,
+)
 
 
 # ==================== ScreenshotEventHandler Tests ====================
+
 
 class TestScreenshotEventHandlerInitialization:
     """Test suite for ScreenshotEventHandler initialization."""
@@ -38,7 +42,7 @@ class TestScreenshotEventHandlerInitialization:
 
         handler = ScreenshotEventHandler(str(tmp_path / "onedrive"))
 
-        log_dir = Path('.automation/logs')
+        log_dir = Path(".automation/logs")
         assert log_dir.exists()
         assert log_dir.is_dir()
 
@@ -106,12 +110,15 @@ class TestScreenshotEventHandlerEventProcessing:
         screenshot_path.touch()
 
         # Mock logger to capture log calls
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(screenshot_path, 'created')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(screenshot_path, "created")
 
             # Should log processing messages
             assert mock_info.call_count >= 2
-            assert any('Processing screenshot' in str(call) for call in mock_info.call_args_list)
+            assert any(
+                "Processing screenshot" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_modified_events_ignored(self, tmp_path, monkeypatch):
         """Test 'modified' events are filtered out (only process creation)."""
@@ -120,11 +127,14 @@ class TestScreenshotEventHandlerEventProcessing:
 
         screenshot_path = tmp_path / "Screenshot_20251007-143022.jpg"
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(screenshot_path, 'modified')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(screenshot_path, "modified")
 
             # Should not log processing (early return)
-            assert not any('Processing screenshot' in str(call) for call in mock_info.call_args_list)
+            assert not any(
+                "Processing screenshot" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_deleted_events_ignored(self, tmp_path, monkeypatch):
         """Test 'deleted' events are filtered out."""
@@ -133,11 +143,14 @@ class TestScreenshotEventHandlerEventProcessing:
 
         screenshot_path = tmp_path / "Screenshot_20251007-143022.jpg"
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(screenshot_path, 'deleted')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(screenshot_path, "deleted")
 
             # Should not log processing
-            assert not any('Processing screenshot' in str(call) for call in mock_info.call_args_list)
+            assert not any(
+                "Processing screenshot" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_non_screenshot_files_ignored(self, tmp_path, monkeypatch):
         """Test non-screenshot files are filtered out early."""
@@ -146,11 +159,14 @@ class TestScreenshotEventHandlerEventProcessing:
 
         regular_file = tmp_path / "photo.jpg"
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(regular_file, 'created')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(regular_file, "created")
 
             # Should not log processing
-            assert not any('Processing screenshot' in str(call) for call in mock_info.call_args_list)
+            assert not any(
+                "Processing screenshot" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_callback_signature_matches_filewatcher(self, tmp_path, monkeypatch):
         """Test callback signature is compatible with FileWatcher: (Path, str) -> None."""
@@ -160,7 +176,7 @@ class TestScreenshotEventHandlerEventProcessing:
         screenshot_path = tmp_path / "Screenshot_20251007-143022.jpg"
 
         # Should not raise TypeError
-        result = handler.process(screenshot_path, 'created')
+        result = handler.process(screenshot_path, "created")
         assert result is None  # No return value expected
 
 
@@ -186,15 +202,16 @@ class TestScreenshotEventHandlerErrorHandling:
                 raise Exception("Processing failed")
             return original_info(msg)
 
-        with patch.object(handler.logger, 'info', side_effect=side_effect_info), \
-             patch.object(handler.logger, 'error') as mock_error:
+        with patch.object(
+            handler.logger, "info", side_effect=side_effect_info
+        ), patch.object(handler.logger, "error") as mock_error:
 
             # Should not raise exception
-            handler.process(screenshot_path, 'created')
+            handler.process(screenshot_path, "created")
 
             # Should log error
             assert mock_error.called
-            assert 'Processing failed' in str(mock_error.call_args)
+            assert "Processing failed" in str(mock_error.call_args)
 
 
 class TestScreenshotEventHandlerMetrics:
@@ -205,12 +222,12 @@ class TestScreenshotEventHandlerMetrics:
         handler = ScreenshotEventHandler(str(tmp_path))
 
         # Should have metrics method
-        assert hasattr(handler, 'get_metrics')
+        assert hasattr(handler, "get_metrics")
 
         metrics = handler.get_metrics()
         assert isinstance(metrics, dict)
-        assert 'events_processed' in metrics
-        assert 'events_failed' in metrics
+        assert "events_processed" in metrics
+        assert "events_failed" in metrics
 
     def test_metrics_track_processed_events(self, tmp_path, monkeypatch):
         """Test metrics track number of successfully processed events."""
@@ -221,11 +238,11 @@ class TestScreenshotEventHandlerMetrics:
         screenshot_path.touch()
 
         # Process multiple events
-        handler.process(screenshot_path, 'created')
-        handler.process(screenshot_path, 'created')
+        handler.process(screenshot_path, "created")
+        handler.process(screenshot_path, "created")
 
         metrics = handler.get_metrics()
-        assert metrics['events_processed'] >= 2
+        assert metrics["events_processed"] >= 2
 
     def test_metrics_track_failed_events(self, tmp_path, monkeypatch):
         """Test metrics track number of failed processing attempts."""
@@ -245,27 +262,29 @@ class TestScreenshotEventHandlerMetrics:
                 raise Exception("Fail")
             return original_info(msg)
 
-        with patch.object(handler.logger, 'info', side_effect=side_effect_info), \
-             patch.object(handler.logger, 'error'):
-            handler.process(screenshot_path, 'created')
+        with patch.object(
+            handler.logger, "info", side_effect=side_effect_info
+        ), patch.object(handler.logger, "error"):
+            handler.process(screenshot_path, "created")
 
         metrics = handler.get_metrics()
-        assert 'events_failed' in metrics
-        assert metrics['events_failed'] >= 1
+        assert "events_failed" in metrics
+        assert metrics["events_failed"] >= 1
 
     def test_handler_has_health_check(self, tmp_path):
         """Test handler provides get_health() method for daemon monitoring."""
         handler = ScreenshotEventHandler(str(tmp_path))
 
-        assert hasattr(handler, 'get_health')
+        assert hasattr(handler, "get_health")
 
         health = handler.get_health()
         assert isinstance(health, dict)
-        assert 'status' in health  # 'healthy', 'degraded', 'unhealthy'
-        assert 'last_processed' in health
+        assert "status" in health  # 'healthy', 'degraded', 'unhealthy'
+        assert "last_processed" in health
 
 
 # ==================== SmartLinkEventHandler Tests ====================
+
 
 class TestSmartLinkEventHandlerInitialization:
     """Test suite for SmartLinkEventHandler initialization."""
@@ -284,7 +303,7 @@ class TestSmartLinkEventHandlerInitialization:
 
         handler = SmartLinkEventHandler(str(tmp_path / "vault"))
 
-        log_dir = Path('.automation/logs')
+        log_dir = Path(".automation/logs")
         assert log_dir.exists()
         assert log_dir.is_dir()
 
@@ -298,11 +317,14 @@ class TestSmartLinkEventHandlerFiltering:
 
         note_path = tmp_path / "test-note.md"
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(note_path, 'created')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(note_path, "created")
 
             # Should process markdown files
-            assert any('Processing smart links' in str(call) for call in mock_info.call_args_list)
+            assert any(
+                "Processing smart links" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_non_markdown_files_rejected(self, tmp_path):
         """Test non-.md files are rejected."""
@@ -313,15 +335,18 @@ class TestSmartLinkEventHandlerFiltering:
             tmp_path / "document.txt",
             tmp_path / "image.png",
             tmp_path / "data.json",
-            tmp_path / "script.py"
+            tmp_path / "script.py",
         ]
 
         for file_path in files_to_reject:
-            with patch.object(handler.logger, 'info') as mock_info:
-                handler.process(file_path, 'created')
+            with patch.object(handler.logger, "info") as mock_info:
+                handler.process(file_path, "created")
 
                 # Should not process non-markdown
-                assert not any('Processing smart links' in str(call) for call in mock_info.call_args_list)
+                assert not any(
+                    "Processing smart links" in str(call)
+                    for call in mock_info.call_args_list
+                )
 
 
 class TestSmartLinkEventHandlerEventProcessing:
@@ -335,11 +360,14 @@ class TestSmartLinkEventHandlerEventProcessing:
         note_path = tmp_path / "new-note.md"
         note_path.touch()
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(note_path, 'created')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(note_path, "created")
 
             # Should log processing
-            assert any('Processing smart links' in str(call) for call in mock_info.call_args_list)
+            assert any(
+                "Processing smart links" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_modified_events_processed(self, tmp_path, monkeypatch):
         """Test 'modified' events trigger smart link analysis (note changes)."""
@@ -349,11 +377,14 @@ class TestSmartLinkEventHandlerEventProcessing:
         note_path = tmp_path / "existing-note.md"
         note_path.write_text("# Updated content")
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(note_path, 'modified')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(note_path, "modified")
 
             # Should process modifications
-            assert any('Processing smart links' in str(call) for call in mock_info.call_args_list)
+            assert any(
+                "Processing smart links" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_deleted_events_ignored(self, tmp_path, monkeypatch):
         """Test 'deleted' events are filtered out (no links to suggest)."""
@@ -362,11 +393,14 @@ class TestSmartLinkEventHandlerEventProcessing:
 
         note_path = tmp_path / "deleted-note.md"
 
-        with patch.object(handler.logger, 'info') as mock_info:
-            handler.process(note_path, 'deleted')
+        with patch.object(handler.logger, "info") as mock_info:
+            handler.process(note_path, "deleted")
 
             # Should not process deletions
-            assert not any('Processing smart links' in str(call) for call in mock_info.call_args_list)
+            assert not any(
+                "Processing smart links" in str(call)
+                for call in mock_info.call_args_list
+            )
 
     def test_callback_signature_matches_filewatcher(self, tmp_path, monkeypatch):
         """Test callback signature is compatible with FileWatcher: (Path, str) -> None."""
@@ -376,7 +410,7 @@ class TestSmartLinkEventHandlerEventProcessing:
         note_path = tmp_path / "test-note.md"
 
         # Should not raise TypeError
-        result = handler.process(note_path, 'created')
+        result = handler.process(note_path, "created")
         assert result is None  # No return value expected
 
 
@@ -387,13 +421,13 @@ class TestSmartLinkEventHandlerMetrics:
         """Test handler provides get_metrics() method for monitoring."""
         handler = SmartLinkEventHandler(str(tmp_path))
 
-        assert hasattr(handler, 'get_metrics')
+        assert hasattr(handler, "get_metrics")
 
         metrics = handler.get_metrics()
         assert isinstance(metrics, dict)
-        assert 'events_processed' in metrics
-        assert 'links_suggested' in metrics
-        assert 'links_inserted' in metrics
+        assert "events_processed" in metrics
+        assert "links_suggested" in metrics
+        assert "links_inserted" in metrics
 
     def test_metrics_track_link_operations(self, tmp_path, monkeypatch):
         """Test metrics track link suggestions and insertions."""
@@ -404,26 +438,27 @@ class TestSmartLinkEventHandlerMetrics:
         note_path.touch()
 
         # Process event
-        handler.process(note_path, 'created')
+        handler.process(note_path, "created")
 
         metrics = handler.get_metrics()
-        assert 'events_processed' in metrics
-        assert 'links_suggested' in metrics
-        assert 'links_inserted' in metrics
+        assert "events_processed" in metrics
+        assert "links_suggested" in metrics
+        assert "links_inserted" in metrics
 
     def test_handler_has_health_check(self, tmp_path):
         """Test handler provides get_health() method for daemon monitoring."""
         handler = SmartLinkEventHandler(str(tmp_path))
 
-        assert hasattr(handler, 'get_health')
+        assert hasattr(handler, "get_health")
 
         health = handler.get_health()
         assert isinstance(health, dict)
-        assert 'status' in health
-        assert 'last_processed' in health
+        assert "status" in health
+        assert "last_processed" in health
 
 
 # ==================== Integration Tests ====================
+
 
 class TestFeatureHandlerIntegration:
     """Test suite for handler integration scenarios."""
@@ -449,11 +484,11 @@ class TestFeatureHandlerIntegration:
         # Process events on each handler
         screenshot_path = tmp_path / "Screenshot_20251007-143022.jpg"
         screenshot_path.touch()
-        screenshot_handler.process(screenshot_path, 'created')
+        screenshot_handler.process(screenshot_path, "created")
 
         note_path = tmp_path / "note.md"
         note_path.touch()
-        link_handler.process(note_path, 'created')
+        link_handler.process(note_path, "created")
 
         # Metrics should be independent
         screenshot_metrics = screenshot_handler.get_metrics()

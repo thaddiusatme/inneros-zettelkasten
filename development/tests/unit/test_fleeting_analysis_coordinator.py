@@ -23,13 +23,19 @@ from tempfile import TemporaryDirectory
 
 # Import will fail initially - that's expected for RED phase
 try:
-    from src.ai.fleeting_analysis_coordinator import FleetingAnalysisCoordinator, FleetingAnalysis
+    from src.ai.fleeting_analysis_coordinator import (
+        FleetingAnalysisCoordinator,
+        FleetingAnalysis,
+    )
+
     COORDINATOR_EXISTS = True
 except ImportError:
     COORDINATOR_EXISTS = False
+
     # Create placeholder for test structure
     class FleetingAnalysisCoordinator:
         pass
+
     class FleetingAnalysis:
         pass
 
@@ -45,10 +51,10 @@ class TestFleetingAnalysisDataclass:
         analysis = FleetingAnalysis()
         assert analysis.total_count == 0
         assert analysis.age_distribution == {
-            'new': 0,
-            'recent': 0,
-            'stale': 0,
-            'old': 0
+            "new": 0,
+            "recent": 0,
+            "stale": 0,
+            "old": 0,
         }
         assert analysis.oldest_note is None
         assert analysis.newest_note is None
@@ -61,13 +67,13 @@ class TestFleetingAnalysisDataclass:
 
         analysis = FleetingAnalysis()
         analysis.total_count = 5
-        analysis.age_distribution = {'new': 2, 'recent': 1, 'stale': 1, 'old': 1}
-        analysis.oldest_note = {'name': 'old.md', 'days_old': 100}
-        analysis.newest_note = {'name': 'new.md', 'days_old': 1}
+        analysis.age_distribution = {"new": 2, "recent": 1, "stale": 1, "old": 1}
+        analysis.oldest_note = {"name": "old.md", "days_old": 100}
+        analysis.newest_note = {"name": "new.md", "days_old": 1}
 
         assert analysis.total_count == 5
-        assert analysis.age_distribution['new'] == 2
-        assert analysis.oldest_note['days_old'] == 100
+        assert analysis.age_distribution["new"] == 2
+        assert analysis.oldest_note["days_old"] == 100
 
 
 class TestFleetingAnalysisCoordinatorInitialization:
@@ -133,16 +139,18 @@ class TestFleetingNoteAgeAnalysis:
             note_path = fleeting_dir / "test-note.md"
 
             # Create note with frontmatter dated 5 days ago
-            created_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=5)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
 
             assert analysis.total_count == 1
-            assert analysis.age_distribution['new'] == 1
-            assert analysis.age_distribution['recent'] == 0
+            assert analysis.age_distribution["new"] == 1
+            assert analysis.age_distribution["recent"] == 0
 
     def test_categorize_note_as_recent(self):
         """RED: Should categorize note created 20 days ago as 'recent'."""
@@ -153,15 +161,17 @@ class TestFleetingNoteAgeAnalysis:
             fleeting_dir = Path(tmpdir)
             note_path = fleeting_dir / "test-note.md"
 
-            created_date = (datetime.now() - timedelta(days=20)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=20)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
 
             assert analysis.total_count == 1
-            assert analysis.age_distribution['recent'] == 1
+            assert analysis.age_distribution["recent"] == 1
 
     def test_categorize_note_as_stale(self):
         """RED: Should categorize note created 60 days ago as 'stale'."""
@@ -172,15 +182,17 @@ class TestFleetingNoteAgeAnalysis:
             fleeting_dir = Path(tmpdir)
             note_path = fleeting_dir / "test-note.md"
 
-            created_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=60)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
 
             assert analysis.total_count == 1
-            assert analysis.age_distribution['stale'] == 1
+            assert analysis.age_distribution["stale"] == 1
 
     def test_categorize_note_as_old(self):
         """RED: Should categorize note created 100 days ago as 'old'."""
@@ -191,15 +203,17 @@ class TestFleetingNoteAgeAnalysis:
             fleeting_dir = Path(tmpdir)
             note_path = fleeting_dir / "test-note.md"
 
-            created_date = (datetime.now() - timedelta(days=100)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=100)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
 
             assert analysis.total_count == 1
-            assert analysis.age_distribution['old'] == 1
+            assert analysis.age_distribution["old"] == 1
 
 
 class TestMetadataExtraction:
@@ -216,7 +230,7 @@ class TestMetadataExtraction:
 
             created_date = "2024-01-15 10:30"
             content = f"---\ncreated: {created_date}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
@@ -234,7 +248,7 @@ class TestMetadataExtraction:
             note_path = fleeting_dir / "test-note.md"
 
             content = "---\n---\n\nNo created date"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
@@ -251,7 +265,7 @@ class TestMetadataExtraction:
             note_path = fleeting_dir / "test-note.md"
 
             content = "---\ncreated: invalid-date\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
@@ -268,7 +282,7 @@ class TestMetadataExtraction:
             note_path = fleeting_dir / "test-note.md"
 
             content = "---\ncreated: {{date:YYYY-MM-DD HH:mm}}\n---\n\nTest content"
-            note_path.write_text(content, encoding='utf-8')
+            note_path.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             analysis = coordinator.analyze_fleeting_notes()
@@ -292,9 +306,9 @@ class TestHealthReportGeneration:
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             report = coordinator.generate_fleeting_health_report()
 
-            assert report['health_status'] == 'HEALTHY'
-            assert report['total_count'] == 0
-            assert 'well-managed' in report['summary'].lower()
+            assert report["health_status"] == "HEALTHY"
+            assert report["total_count"] == 0
+            assert "well-managed" in report["summary"].lower()
 
     def test_health_report_critical_status(self):
         """RED: Health report should show CRITICAL when 50%+ notes are old."""
@@ -307,21 +321,25 @@ class TestHealthReportGeneration:
             # Create 4 old notes and 1 new note
             for i in range(4):
                 note_path = fleeting_dir / f"old-note-{i}.md"
-                created_date = (datetime.now() - timedelta(days=100)).strftime("%Y-%m-%d %H:%M")
+                created_date = (datetime.now() - timedelta(days=100)).strftime(
+                    "%Y-%m-%d %H:%M"
+                )
                 content = f"---\ncreated: {created_date}\n---\n\nOld note"
-                note_path.write_text(content, encoding='utf-8')
+                note_path.write_text(content, encoding="utf-8")
 
             new_note = fleeting_dir / "new-note.md"
-            created_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=2)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nNew note"
-            new_note.write_text(content, encoding='utf-8')
+            new_note.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             report = coordinator.generate_fleeting_health_report()
 
-            assert report['health_status'] == 'CRITICAL'
-            assert report['total_count'] == 5
-            assert 'critical' in report['summary'].lower() or '80%' in report['summary']
+            assert report["health_status"] == "CRITICAL"
+            assert report["total_count"] == 5
+            assert "critical" in report["summary"].lower() or "80%" in report["summary"]
 
     def test_health_report_with_recommendations(self):
         """RED: Health report should include actionable recommendations."""
@@ -333,22 +351,26 @@ class TestHealthReportGeneration:
 
             # Create mix of notes
             old_note = fleeting_dir / "old-note.md"
-            created_date = (datetime.now() - timedelta(days=95)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=95)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nOld note"
-            old_note.write_text(content, encoding='utf-8')
+            old_note.write_text(content, encoding="utf-8")
 
             stale_note = fleeting_dir / "stale-note.md"
-            created_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d %H:%M")
+            created_date = (datetime.now() - timedelta(days=60)).strftime(
+                "%Y-%m-%d %H:%M"
+            )
             content = f"---\ncreated: {created_date}\n---\n\nStale note"
-            stale_note.write_text(content, encoding='utf-8')
+            stale_note.write_text(content, encoding="utf-8")
 
             coordinator = FleetingAnalysisCoordinator(fleeting_dir)
             report = coordinator.generate_fleeting_health_report()
 
-            assert 'recommendations' in report
-            assert len(report['recommendations']) > 0
+            assert "recommendations" in report
+            assert len(report["recommendations"]) > 0
             # Should recommend processing old notes
-            assert any('old' in rec.lower() for rec in report['recommendations'])
+            assert any("old" in rec.lower() for rec in report["recommendations"])
 
 
 class TestWorkflowManagerDelegation:
@@ -371,7 +393,7 @@ class TestWorkflowManagerDelegation:
             manager = WorkflowManager(str(base_dir))
 
             # Should have coordinator initialized
-            assert hasattr(manager, 'fleeting_analysis_coordinator')
+            assert hasattr(manager, "fleeting_analysis_coordinator")
             assert manager.fleeting_analysis_coordinator is not None
 
     def test_workflow_manager_delegates_health_report(self):
@@ -390,5 +412,5 @@ class TestWorkflowManagerDelegation:
             report = manager.generate_fleeting_health_report()
 
             # Should return health report structure
-            assert 'health_status' in report
-            assert 'recommendations' in report
+            assert "health_status" in report
+            assert "recommendations" in report

@@ -22,7 +22,7 @@ import pytest
 class TestVaultFactoryMigration:
     """
     RED Phase tests verifying vault factory migration requirements.
-    
+
     These tests should FAIL initially and drive the migration from
     KNOWLEDGE_DIR to tmp_path + vault factories.
     """
@@ -30,10 +30,10 @@ class TestVaultFactoryMigration:
     def test_integration_tests_complete_in_under_30_seconds(self):
         """
         RED: Integration test suite must complete in <30 seconds
-        
+
         Current: 5-10 minutes (scanning 300+ note production vault)
         Target: <30 seconds with vault factories
-        
+
         This test measures actual execution time and fails if >30s.
         """
         import subprocess
@@ -43,14 +43,18 @@ class TestVaultFactoryMigration:
         # Run the integration test suite
         subprocess.run(
             [
-                "python3", "-m", "pytest",
+                "python3",
+                "-m",
+                "pytest",
                 "development/tests/integration/test_dedicated_cli_parity.py",
-                "-v", "--tb=short", "-x"
+                "-v",
+                "--tb=short",
+                "-x",
             ],
             capture_output=True,
             text=True,
-            env={'PYTHONPATH': 'development'},
-            cwd=str(Path(__file__).parent.parent.parent.parent)
+            env={"PYTHONPATH": "development"},
+            cwd=str(Path(__file__).parent.parent.parent.parent),
         )
 
         elapsed = time.time() - start_time
@@ -64,7 +68,7 @@ class TestVaultFactoryMigration:
     def test_integration_tests_use_tmp_path_not_production_vault(self):
         """
         RED: Integration tests must use tmp_path, not KNOWLEDGE_DIR
-        
+
         Verify that test_dedicated_cli_parity.py has zero references
         to KNOWLEDGE_DIR constant (production vault path).
         """
@@ -83,7 +87,7 @@ class TestVaultFactoryMigration:
     def test_vault_path_fixture_uses_vault_factory(self):
         """
         RED: vault_path fixture must use create_minimal_vault()
-        
+
         Verify that the vault_path fixture in test_dedicated_cli_parity.py
         calls create_minimal_vault(tmp_path) instead of returning KNOWLEDGE_DIR.
         """
@@ -91,7 +95,9 @@ class TestVaultFactoryMigration:
         content = test_file.read_text()
 
         # Check for vault factory import
-        has_factory_import = "from tests.fixtures.vault_factory import create_minimal_vault" in content
+        has_factory_import = (
+            "from tests.fixtures.vault_factory import create_minimal_vault" in content
+        )
 
         # Check for factory usage in vault_path fixture
         has_factory_call = "create_minimal_vault(tmp_path)" in content
@@ -109,7 +115,7 @@ class TestVaultFactoryMigration:
     def test_vault_structure_exists_before_cli_execution(self):
         """
         RED: Test that vault fixtures create proper structure
-        
+
         Integration tests should verify vault structure exists
         before executing CLI commands.
         """
@@ -123,24 +129,29 @@ class TestVaultFactoryMigration:
             vault_path, metadata = create_minimal_vault(tmp_path)
 
             # Verify standard directories exist
-            expected_dirs = ["Inbox", "Permanent Notes", "Fleeting Notes", "Literature Notes"]
+            expected_dirs = [
+                "Inbox",
+                "Permanent Notes",
+                "Fleeting Notes",
+                "Literature Notes",
+            ]
             for dir_name in expected_dirs:
                 dir_path = vault_path / dir_name
                 assert dir_path.exists(), f"Vault missing {dir_name} directory"
                 assert dir_path.is_dir(), f"{dir_name} is not a directory"
 
             # Verify notes were created
-            assert metadata['note_count'] == 3, "Minimal vault should have 3 notes"
+            assert metadata["note_count"] == 3, "Minimal vault should have 3 notes"
 
             # Verify creation time meets performance target
-            assert metadata['creation_time_seconds'] < 1.0, (
-                f"Vault creation took {metadata['creation_time_seconds']:.3f}s (target: <1s)"
-            )
+            assert (
+                metadata["creation_time_seconds"] < 1.0
+            ), f"Vault creation took {metadata['creation_time_seconds']:.3f}s (target: <1s)"
 
     def test_integration_tests_use_small_vault_for_batch_operations(self):
         """
         RED: Batch processing tests should use create_small_vault()
-        
+
         Some integration tests may need more notes for realistic batch
         processing scenarios. Verify small vault factory is imported.
         """
@@ -157,7 +168,7 @@ class TestVaultFactoryMigration:
     def test_no_production_vault_dependencies(self):
         """
         RED: Integration tests must not depend on production vault existence
-        
+
         Tests should work in CI/CD environments where knowledge/ doesn't exist.
         """
         test_file = Path(__file__).parent / "test_dedicated_cli_parity.py"

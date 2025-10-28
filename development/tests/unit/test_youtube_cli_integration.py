@@ -29,7 +29,9 @@ class TestYouTubeCLIIntegration:
         """Set up test environment."""
         self.temp_dir = tempfile.mkdtemp()
         self.vault_path = Path(self.temp_dir)
-        self.cli_script = Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+        self.cli_script = (
+            Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+        )
 
         # Create vault structure
         (self.vault_path / "knowledge" / "Inbox").mkdir(parents=True)
@@ -50,7 +52,8 @@ class TestYouTubeCLIIntegration:
 
         # Valid YouTube note ready for processing (ai_processed: false)
         valid_note = inbox_dir / "lit-20251003-0954-test-youtube-video.md"
-        valid_note.write_text("""---
+        valid_note.write_text(
+            """---
 type: literature
 source: youtube
 created: 2025-10-03 09:54
@@ -72,11 +75,13 @@ Testing YouTube note processing with AI quote extraction.
 
 ## Initial Notes
 This video discusses interesting concepts that should be captured.
-""")
+"""
+        )
 
         # Already processed YouTube note (ai_processed: true)
         processed_note = inbox_dir / "lit-20251003-1030-already-processed.md"
-        processed_note.write_text("""---
+        processed_note.write_text(
+            """---
 type: literature
 source: youtube
 created: 2025-10-03 10:30
@@ -96,11 +101,13 @@ url: https://www.youtube.com/watch?v=processed456
 
 ## Initial Notes
 This was already processed.
-""")
+"""
+        )
 
         # YouTube note with malformed YAML (template placeholder not processed)
         malformed_note = inbox_dir / "lit-20251003-1100-malformed-yaml.md"
-        malformed_note.write_text("""---
+        malformed_note.write_text(
+            """---
 type: literature
 source: youtube
 created: {{date:YYYY-MM-DD HH:mm}}
@@ -114,11 +121,13 @@ url: https://www.youtube.com/watch?v=malformed789
 
 ## Initial Notes
 This has unprocessed template placeholders.
-""")
+"""
+        )
 
         # Non-YouTube note (should be filtered out)
         non_youtube_note = inbox_dir / "fleeting-20251003-1200-regular-note.md"
-        non_youtube_note.write_text("""---
+        non_youtube_note.write_text(
+            """---
 type: fleeting
 created: 2025-10-03 12:00
 status: inbox
@@ -126,7 +135,8 @@ status: inbox
 
 # Regular Fleeting Note
 This is not a YouTube note.
-""")
+"""
+        )
 
     # ============================================================================
     # P0.1: CLI Argument Parsing Tests
@@ -137,18 +147,21 @@ This is not a YouTube note.
         result = subprocess.run(
             [sys.executable, str(self.cli_script), str(self.vault_path), "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert "--process-youtube-note" in result.stdout
-        assert "Process single YouTube note" in result.stdout or "YouTube note" in result.stdout
+        assert (
+            "Process single YouTube note" in result.stdout
+            or "YouTube note" in result.stdout
+        )
 
     def test_process_youtube_notes_batch_argument_exists(self):
         """Test that --process-youtube-notes batch argument is recognized."""
         result = subprocess.run(
             [sys.executable, str(self.cli_script), str(self.vault_path), "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert "--process-youtube-notes" in result.stdout
@@ -159,7 +172,7 @@ This is not a YouTube note.
         result = subprocess.run(
             [sys.executable, str(self.cli_script), str(self.vault_path), "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should support quality filtering
@@ -170,7 +183,7 @@ This is not a YouTube note.
         result = subprocess.run(
             [sys.executable, str(self.cli_script), str(self.vault_path), "--help"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should support category selection
@@ -180,45 +193,62 @@ This is not a YouTube note.
     # P0.2: Single Note Processing Tests
     # ============================================================================
 
-    @pytest.mark.skip(reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries. Needs refactor to either: (1) call functions directly without subprocess, or (2) remove mocks and use real/fixture data")
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
-    @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
+    @pytest.mark.skip(
+        reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries. Needs refactor to either: (1) call functions directly without subprocess, or (2) remove mocks and use real/fixture data"
+    )
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
+    @patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
     def test_process_single_youtube_note_success(self, mock_enhancer, mock_processor):
         """Test successful processing of single YouTube note."""
         # Mock transcript and quote extraction
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [
-                {'timestamp': '00:05:30', 'quote': 'Key insight quote', 'context': 'Important context', 'relevance': 0.9}
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "Key insight quote",
+                    "context": "Important context",
+                    "relevance": 0.9,
+                }
             ],
-            'actionable': [],
-            'notable': [],
-            'definitions': []
+            "actionable": [],
+            "notable": [],
+            "definitions": [],
         }
 
         # Mock note enhancement
         from src.ai.youtube_note_enhancer import EnhanceResult
+
         mock_enhancer.return_value.enhance_note.return_value = EnhanceResult(
             success=True,
             message="Successfully enhanced note",
-            backup_path=Path(self.temp_dir) / "backup.md"
+            backup_path=Path(self.temp_dir) / "backup.md",
         )
 
-        note_path = self.vault_path / "knowledge" / "Inbox" / "lit-20251003-0954-test-youtube-video.md"
+        note_path = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "lit-20251003-0954-test-youtube-video.md"
+        )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(note_path)
+                "--process-youtube-note",
+                str(note_path),
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
         assert "✅" in result.stdout or "success" in result.stdout.lower()
-        assert "enhanced" in result.stdout.lower() or "processed" in result.stdout.lower()
+        assert (
+            "enhanced" in result.stdout.lower() or "processed" in result.stdout.lower()
+        )
 
     def test_process_single_note_file_not_found(self):
         """Test error handling when note file doesn't exist."""
@@ -226,53 +256,79 @@ This is not a YouTube note.
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(non_existent)
+                "--process-youtube-note",
+                str(non_existent),
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode != 0
         assert "❌" in result.stdout or "error" in result.stdout.lower()
-        assert "not found" in result.stdout.lower() or "does not exist" in result.stdout.lower()
+        assert (
+            "not found" in result.stdout.lower()
+            or "does not exist" in result.stdout.lower()
+        )
 
     def test_process_single_note_not_youtube_note(self):
         """Test error handling when note is not a YouTube note."""
-        non_youtube = self.vault_path / "knowledge" / "Inbox" / "fleeting-20251003-1200-regular-note.md"
+        non_youtube = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "fleeting-20251003-1200-regular-note.md"
+        )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(non_youtube)
+                "--process-youtube-note",
+                str(non_youtube),
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode != 0
         assert "❌" in result.stdout or "error" in result.stdout.lower()
-        assert "not a youtube note" in result.stdout.lower() or "youtube" in result.stdout.lower()
+        assert (
+            "not a youtube note" in result.stdout.lower()
+            or "youtube" in result.stdout.lower()
+        )
 
-    @pytest.mark.skip(reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries")
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
+    @pytest.mark.skip(
+        reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries"
+    )
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
     def test_process_single_note_transcript_unavailable(self, mock_processor):
         """Test error handling when YouTube transcript is unavailable."""
         # Mock transcript fetch failure
-        mock_processor.return_value.fetch_transcript.side_effect = Exception("Transcript unavailable")
+        mock_processor.return_value.fetch_transcript.side_effect = Exception(
+            "Transcript unavailable"
+        )
 
-        note_path = self.vault_path / "knowledge" / "Inbox" / "lit-20251003-0954-test-youtube-video.md"
+        note_path = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "lit-20251003-0954-test-youtube-video.md"
+        )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(note_path)
+                "--process-youtube-note",
+                str(note_path),
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode != 0
@@ -283,35 +339,44 @@ This is not a YouTube note.
     # P0.3: Batch Processing Tests
     # ============================================================================
 
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
-    @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
+    @patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
     def test_batch_process_youtube_notes(self, mock_enhancer, mock_processor):
         """Test batch processing of multiple YouTube notes."""
         # Mock transcript and quote extraction
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [{'timestamp': '00:05:30', 'quote': 'Test', 'context': 'Context', 'relevance': 0.9}],
-            'actionable': [],
-            'notable': [],
-            'definitions': []
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "Test",
+                    "context": "Context",
+                    "relevance": 0.9,
+                }
+            ],
+            "actionable": [],
+            "notable": [],
+            "definitions": [],
         }
 
         # Mock enhancement
         from src.ai.youtube_note_enhancer import EnhanceResult
+
         mock_enhancer.return_value.enhance_note.return_value = EnhanceResult(
             success=True,
             message="Enhanced",
-            backup_path=Path(self.temp_dir) / "backup.md"
+            backup_path=Path(self.temp_dir) / "backup.md",
         )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-notes"
+                "--process-youtube-notes",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -323,12 +388,13 @@ This is not a YouTube note.
         """Test that batch processing skips already-processed notes."""
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-notes"
+                "--process-youtube-notes",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should report skipped notes
@@ -338,12 +404,13 @@ This is not a YouTube note.
         """Test that batch processing shows progress indicators."""
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-notes"
+                "--process-youtube-notes",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should show progress indicators
@@ -353,70 +420,109 @@ This is not a YouTube note.
     # P1.1: Preview Mode Tests
     # ============================================================================
 
-    @pytest.mark.skip(reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries")
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
+    @pytest.mark.skip(
+        reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries"
+    )
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
     def test_preview_mode_no_modification(self, mock_processor):
         """Test that --preview mode doesn't modify notes."""
         # Mock quote extraction
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [{'timestamp': '00:05:30', 'quote': 'Preview test', 'context': 'Context', 'relevance': 0.9}],
-            'actionable': [],
-            'notable': [],
-            'definitions': []
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "Preview test",
+                    "context": "Context",
+                    "relevance": 0.9,
+                }
+            ],
+            "actionable": [],
+            "notable": [],
+            "definitions": [],
         }
 
-        note_path = self.vault_path / "knowledge" / "Inbox" / "lit-20251003-0954-test-youtube-video.md"
+        note_path = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "lit-20251003-0954-test-youtube-video.md"
+        )
         original_content = note_path.read_text()
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(note_path),
-                "--preview"
+                "--process-youtube-note",
+                str(note_path),
+                "--preview",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Note should not be modified
         assert note_path.read_text() == original_content
         # Should show preview in output
-        assert "preview" in result.stdout.lower() or "would insert" in result.stdout.lower()
+        assert (
+            "preview" in result.stdout.lower()
+            or "would insert" in result.stdout.lower()
+        )
 
     # ============================================================================
     # P1.2: Quality Filtering Tests
     # ============================================================================
 
-    @pytest.mark.skip(reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries")
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
+    @pytest.mark.skip(
+        reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries"
+    )
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
     def test_quality_filtering(self, mock_processor):
         """Test that --min-quality filters low-relevance quotes."""
         # Mock quotes with varying quality
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [
-                {'timestamp': '00:05:30', 'quote': 'High quality', 'context': 'Context', 'relevance': 0.9},
-                {'timestamp': '00:10:00', 'quote': 'Low quality', 'context': 'Context', 'relevance': 0.3}
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "High quality",
+                    "context": "Context",
+                    "relevance": 0.9,
+                },
+                {
+                    "timestamp": "00:10:00",
+                    "quote": "Low quality",
+                    "context": "Context",
+                    "relevance": 0.3,
+                },
             ],
-            'actionable': [],
-            'notable': [],
-            'definitions': []
+            "actionable": [],
+            "notable": [],
+            "definitions": [],
         }
 
-        note_path = self.vault_path / "knowledge" / "Inbox" / "lit-20251003-0954-test-youtube-video.md"
+        note_path = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "lit-20251003-0954-test-youtube-video.md"
+        )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(note_path),
-                "--min-quality", "0.7",
-                "--preview"
+                "--process-youtube-note",
+                str(note_path),
+                "--min-quality",
+                "0.7",
+                "--preview",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should only show high-quality quote
@@ -428,89 +534,137 @@ This is not a YouTube note.
     # P1.3: Category Selection Tests
     # ============================================================================
 
-    @pytest.mark.skip(reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries")
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
+    @pytest.mark.skip(
+        reason="Test design flaw: @patch doesn't work with subprocess.run() - mocks can't cross process boundaries"
+    )
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
     def test_category_selection(self, mock_processor):
         """Test that --categories filters quote categories."""
         # Mock quotes in different categories
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [{'timestamp': '00:05:30', 'quote': 'Key insight', 'context': 'Context', 'relevance': 0.9}],
-            'actionable': [{'timestamp': '00:10:00', 'quote': 'Action item', 'context': 'Context', 'relevance': 0.8}],
-            'notable': [{'timestamp': '00:15:00', 'quote': 'Notable quote', 'context': 'Context', 'relevance': 0.7}],
-            'definitions': []
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "Key insight",
+                    "context": "Context",
+                    "relevance": 0.9,
+                }
+            ],
+            "actionable": [
+                {
+                    "timestamp": "00:10:00",
+                    "quote": "Action item",
+                    "context": "Context",
+                    "relevance": 0.8,
+                }
+            ],
+            "notable": [
+                {
+                    "timestamp": "00:15:00",
+                    "quote": "Notable quote",
+                    "context": "Context",
+                    "relevance": 0.7,
+                }
+            ],
+            "definitions": [],
         }
 
-        note_path = self.vault_path / "knowledge" / "Inbox" / "lit-20251003-0954-test-youtube-video.md"
+        note_path = (
+            self.vault_path
+            / "knowledge"
+            / "Inbox"
+            / "lit-20251003-0954-test-youtube-video.md"
+        )
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
-                "--process-youtube-note", str(note_path),
-                "--categories", "key-insights,actionable",
-                "--preview"
+                "--process-youtube-note",
+                str(note_path),
+                "--categories",
+                "key-insights,actionable",
+                "--preview",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should show selected categories
-        assert "key insight" in result.stdout.lower() or "actionable" in result.stdout.lower()
+        assert (
+            "key insight" in result.stdout.lower()
+            or "actionable" in result.stdout.lower()
+        )
 
     # ============================================================================
     # P0.4: Export Functionality Tests
     # ============================================================================
 
-    @patch('src.cli.youtube_processor.YouTubeProcessor')
-    @patch('src.ai.youtube_note_enhancer.YouTubeNoteEnhancer')
+    @patch("src.cli.youtube_processor.YouTubeProcessor")
+    @patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
     def test_batch_export_to_file(self, mock_enhancer, mock_processor):
         """Test exporting batch processing results to file."""
         # Mock processing
         mock_processor.return_value.fetch_transcript.return_value = "Sample transcript"
         mock_processor.return_value.extract_quotes.return_value = {
-            'key_insights': [{'timestamp': '00:05:30', 'quote': 'Test', 'context': 'Context', 'relevance': 0.9}],
-            'actionable': [],
-            'notable': [],
-            'definitions': []
+            "key_insights": [
+                {
+                    "timestamp": "00:05:30",
+                    "quote": "Test",
+                    "context": "Context",
+                    "relevance": 0.9,
+                }
+            ],
+            "actionable": [],
+            "notable": [],
+            "definitions": [],
         }
 
         from src.ai.youtube_note_enhancer import EnhanceResult
+
         mock_enhancer.return_value.enhance_note.return_value = EnhanceResult(
             success=True,
             message="Enhanced",
-            backup_path=Path(self.temp_dir) / "backup.md"
+            backup_path=Path(self.temp_dir) / "backup.md",
         )
 
         export_path = self.vault_path / "youtube_processing_report.md"
 
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
                 "--process-youtube-notes",
-                "--export", str(export_path)
+                "--export",
+                str(export_path),
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert export_path.exists()
         content = export_path.read_text()
         assert "YouTube" in content or "processed" in content.lower()
 
-    @pytest.mark.skip(reason="Test needs --format json to suppress text output. Fixed in workflow_demo.py but test expectations need update for actual JSON structure")
+    @pytest.mark.skip(
+        reason="Test needs --format json to suppress text output. Fixed in workflow_demo.py but test expectations need update for actual JSON structure"
+    )
     def test_json_output_format(self):
         """Test that --format json produces valid JSON output."""
         result = subprocess.run(
             [
-                sys.executable, str(self.cli_script),
+                sys.executable,
+                str(self.cli_script),
                 str(self.vault_path),
                 "--process-youtube-notes",
-                "--format", "json"
+                "--format",
+                "json",
             ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should be valid JSON
@@ -525,10 +679,11 @@ This is not a YouTube note.
 # TDD ITERATION 3: Enhanced Features - Real Data Validation Tests
 # ============================================================================
 
+
 class TestEnhancedYouTubeFeaturesValidation:
     """
     TDD Iteration 3 RED Phase: Validate real YouTube notes are ready for processing.
-    
+
     These tests ensure the system is ready for P1 real data validation testing.
     """
 
@@ -544,13 +699,15 @@ class TestEnhancedYouTubeFeaturesValidation:
         for note_path in inbox_dir.glob("*.md"):
             try:
                 content = note_path.read_text()
-                if 'source: youtube' in content:
+                if "source: youtube" in content:
                     youtube_notes.append(note_path)
             except Exception:
                 pass
 
         # We expect at least one YouTube note for testing
-        assert len(youtube_notes) >= 1, f"Expected at least 1 YouTube note in Inbox, found {len(youtube_notes)}"
+        assert (
+            len(youtube_notes) >= 1
+        ), f"Expected at least 1 YouTube note in Inbox, found {len(youtube_notes)}"
 
     def test_youtube_note_has_required_structure(self):
         """P1.1: Validate YouTube notes have required metadata and sections."""
@@ -564,7 +721,7 @@ class TestEnhancedYouTubeFeaturesValidation:
         for note_path in inbox_dir.glob("*.md"):
             try:
                 content = note_path.read_text()
-                if 'source: youtube' in content:
+                if "source: youtube" in content:
                     youtube_note = note_path
                     break
             except Exception:
@@ -576,19 +733,19 @@ class TestEnhancedYouTubeFeaturesValidation:
         content = youtube_note.read_text()
 
         # Check required metadata fields
-        assert '---' in content, "Should have YAML frontmatter"
-        assert 'source: youtube' in content, "Should have source: youtube"
-        assert 'url' in content.lower(), "Should have YouTube URL field"
-        assert 'type: literature' in content, "Should be literature type"
+        assert "---" in content, "Should have YAML frontmatter"
+        assert "source: youtube" in content, "Should have source: youtube"
+        assert "url" in content.lower(), "Should have YouTube URL field"
+        assert "type: literature" in content, "Should be literature type"
 
         # Check template sections exist (actual structure from youtube template)
         # Real notes have: ## My Notes, ## Related Notes, ## Next Actions
         # OR processed notes have: ## Extracted Quotes
         has_template_sections = (
-            '## My Notes' in content or
-            '## Related Notes' in content or
-            '## Next Actions' in content or
-            '## Extracted Quotes' in content
+            "## My Notes" in content
+            or "## Related Notes" in content
+            or "## Next Actions" in content
+            or "## Extracted Quotes" in content
         )
         assert has_template_sections, "Should have YouTube template sections"
 
@@ -599,6 +756,7 @@ class TestEnhancedYouTubeFeaturesValidation:
 
         # Verify we can measure time
         import time
+
         start = time.time()
         time.sleep(0.001)  # Small sleep
         duration = time.time() - start

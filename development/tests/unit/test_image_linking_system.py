@@ -4,6 +4,7 @@ TDD Iteration 10: Image Linking System Tests (GREEN Phase)
 Critical system integrity tests for image preservation across all workflows.
 Tests map to user stories in Projects/ACTIVE/image-linking-user-stories.md
 """
+
 import tempfile
 from pathlib import Path
 
@@ -68,7 +69,10 @@ This is a test note with an embedded image.
     )
 
     # Then: Image link still contains correct path (stays same since both at same depth)
-    assert "![Chrome screenshot](../attachments/2025-10/samsung-20251002-083000.jpg)" in updated_content
+    assert (
+        "![Chrome screenshot](../attachments/2025-10/samsung-20251002-083000.jpg)"
+        in updated_content
+    )
     assert "# Test Note with Screenshot" in updated_content
 
 
@@ -207,9 +211,21 @@ Wiki with width:
 
     # Then: All three link styles detected correctly
     assert len(image_links) == 3
-    assert any(link["type"] == "markdown" and link["path"] == "../attachments/2025-10/screenshot-1.png" for link in image_links)
-    assert any(link["type"] == "wiki" and link["filename"] == "screenshot-2.png" for link in image_links)
-    assert any(link["type"] == "wiki" and link["filename"] == "screenshot-3.png" and link["width"] == "200" for link in image_links)
+    assert any(
+        link["type"] == "markdown"
+        and link["path"] == "../attachments/2025-10/screenshot-1.png"
+        for link in image_links
+    )
+    assert any(
+        link["type"] == "wiki" and link["filename"] == "screenshot-2.png"
+        for link in image_links
+    )
+    assert any(
+        link["type"] == "wiki"
+        and link["filename"] == "screenshot-3.png"
+        and link["width"] == "200"
+        for link in image_links
+    )
 
 
 def test_multiple_images_in_note():

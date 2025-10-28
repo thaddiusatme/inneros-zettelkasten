@@ -14,7 +14,7 @@ import re
 import pytest
 
 # Add development directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from capture_matcher import CaptureMatcherPOC
 
@@ -27,15 +27,19 @@ class TestOneDriveIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures with real OneDrive paths"""
         self.onedrive_screenshots = "/Users/thaddius/Library/CloudStorage/OneDrive-Personal/backlog/Pictures/Samsung Galaxy/DCIM/Screenshots"
-        self.onedrive_voice = "/Users/thaddius/Library/CloudStorage/OneDrive-Personal/Voice Recorder"
+        self.onedrive_voice = (
+            "/Users/thaddius/Library/CloudStorage/OneDrive-Personal/Voice Recorder"
+        )
 
         self.matcher = CaptureMatcherPOC(self.onedrive_screenshots, self.onedrive_voice)
 
     def test_scan_onedrive_captures_method_exists(self):
         """RED: scan_onedrive_captures() method should exist"""
         # This test will fail because the method doesn't exist yet
-        self.assertTrue(hasattr(self.matcher, 'scan_onedrive_captures'),
-                       "CaptureMatcherPOC should have scan_onedrive_captures method")
+        self.assertTrue(
+            hasattr(self.matcher, "scan_onedrive_captures"),
+            "CaptureMatcherPOC should have scan_onedrive_captures method",
+        )
 
     def test_scan_onedrive_captures_returns_structured_data(self):
         """RED: Method should return structured capture data"""
@@ -43,7 +47,7 @@ class TestOneDriveIntegration(unittest.TestCase):
         result = self.matcher.scan_onedrive_captures()
 
         # Expected structure from OneDrive scanning
-        expected_keys = ['screenshots', 'voice_notes', 'scan_stats', 'errors']
+        expected_keys = ["screenshots", "voice_notes", "scan_stats", "errors"]
         for key in expected_keys:
             self.assertIn(key, result, f"Result should contain {key}")
 
@@ -56,7 +60,9 @@ class TestOneDriveIntegration(unittest.TestCase):
         # Test custom date range
         start_date = datetime.now() - timedelta(days=3)
         end_date = datetime.now()
-        result = self.matcher.scan_onedrive_captures(start_date=start_date, end_date=end_date)
+        result = self.matcher.scan_onedrive_captures(
+            start_date=start_date, end_date=end_date
+        )
         self.assertIsInstance(result, dict)
 
     def test_handle_missing_onedrive_directories(self):
@@ -67,43 +73,46 @@ class TestOneDriveIntegration(unittest.TestCase):
         result = fake_matcher.scan_onedrive_captures()
 
         # Should return error information instead of crashing
-        self.assertIn('errors', result)
-        self.assertTrue(len(result['errors']) > 0)
+        self.assertIn("errors", result)
+        self.assertTrue(len(result["errors"]) > 0)
 
     def test_samsung_filename_pattern_validation_in_real_files(self):
         """RED: Should validate Samsung patterns in real OneDrive files"""
         result = self.matcher.scan_onedrive_captures()
 
         # Should find at least some Samsung files if OneDrive sync is working
-        total_files = len(result['screenshots']) + len(result['voice_notes'])
+        total_files = len(result["screenshots"]) + len(result["voice_notes"])
         self.assertGreater(total_files, 0, "Should find some Samsung capture files")
 
         # Validate filename patterns in found files
-        for screenshot in result['screenshots']:
+        for screenshot in result["screenshots"]:
             # Accept both .jpg and .png screenshots
-            self.assertRegex(screenshot['filename'],
-                           r'^Screenshot_\d{8}_\d{6}.*\.(jpg|png)$',
-                           "Screenshots should match Samsung pattern")
-
-        for voice in result['voice_notes']:
-            # Accept both Samsung and OneDrive voice patterns
-            samsung_pattern = r'^Recording_\d{8}_\d{6}\.m4a$'
-            onedrive_pattern = r'^Voice \d{6}_\d{6}\.m4a$'
-
-            matches_pattern = (
-                re.match(samsung_pattern, voice['filename']) or
-                re.match(onedrive_pattern, voice['filename'])
+            self.assertRegex(
+                screenshot["filename"],
+                r"^Screenshot_\d{8}_\d{6}.*\.(jpg|png)$",
+                "Screenshots should match Samsung pattern",
             )
-            self.assertTrue(matches_pattern,
-                           f"Voice recording {voice['filename']} should match Samsung or OneDrive pattern")
+
+        for voice in result["voice_notes"]:
+            # Accept both Samsung and OneDrive voice patterns
+            samsung_pattern = r"^Recording_\d{8}_\d{6}\.m4a$"
+            onedrive_pattern = r"^Voice \d{6}_\d{6}\.m4a$"
+
+            matches_pattern = re.match(samsung_pattern, voice["filename"]) or re.match(
+                onedrive_pattern, voice["filename"]
+            )
+            self.assertTrue(
+                matches_pattern,
+                f"Voice recording {voice['filename']} should match Samsung or OneDrive pattern",
+            )
 
     def test_file_metadata_extraction(self):
         """RED: Should extract file metadata (path, size, modified time)"""
         result = self.matcher.scan_onedrive_captures()
 
-        if result['screenshots']:
-            screenshot = result['screenshots'][0]
-            required_fields = ['filename', 'path', 'size', 'modified_time', 'type']
+        if result["screenshots"]:
+            screenshot = result["screenshots"][0]
+            required_fields = ["filename", "path", "size", "modified_time", "type"]
             for field in required_fields:
                 self.assertIn(field, screenshot, f"Screenshot should have {field}")
 
@@ -112,10 +121,10 @@ class TestOneDriveIntegration(unittest.TestCase):
         result = self.matcher.scan_onedrive_captures()
 
         # Should include sync timing information
-        self.assertIn('scan_stats', result)
-        stats = result['scan_stats']
+        self.assertIn("scan_stats", result)
+        stats = result["scan_stats"]
 
-        required_stats = ['scan_duration', 'files_processed', 'sync_latency_check']
+        required_stats = ["scan_duration", "files_processed", "sync_latency_check"]
         for stat in required_stats:
             self.assertIn(stat, stats, f"Scan stats should include {stat}")
 
@@ -124,12 +133,17 @@ class TestOneDriveIntegration(unittest.TestCase):
         import time
 
         start_time = time.time()
-        result = self.matcher.scan_onedrive_captures(days_back=1)  # Typical daily volume
+        result = self.matcher.scan_onedrive_captures(
+            days_back=1
+        )  # Typical daily volume
         end_time = time.time()
 
         processing_time = end_time - start_time
-        self.assertLess(processing_time, 30,
-                       f"Should process daily captures in <30s, took {processing_time:.2f}s")
+        self.assertLess(
+            processing_time,
+            30,
+            f"Should process daily captures in <30s, took {processing_time:.2f}s",
+        )
 
     def test_configure_onedrive_paths_method(self):
         """RED: Should support OneDrive path configuration"""
@@ -149,23 +163,26 @@ class TestOneDriveIntegration(unittest.TestCase):
 
         # Get all captures for matching
         all_captures = []
-        for screenshot in result['screenshots']:
-            all_captures.append({**screenshot, 'type': 'screenshot'})
-        for voice in result['voice_notes']:
-            all_captures.append({**voice, 'type': 'voice'})
+        for screenshot in result["screenshots"]:
+            all_captures.append({**screenshot, "type": "screenshot"})
+        for voice in result["voice_notes"]:
+            all_captures.append({**voice, "type": "voice"})
 
         # Test pairing accuracy
         matches = self.matcher.match_by_timestamp(all_captures)
 
-        total_screenshots = len(result['screenshots'])
-        paired_screenshots = len(matches['paired'])
+        total_screenshots = len(result["screenshots"])
+        paired_screenshots = len(matches["paired"])
 
         if total_screenshots > 0:
             pairing_accuracy = paired_screenshots / total_screenshots
-            self.assertGreater(pairing_accuracy, 0.90,
-                             f"Pairing accuracy {pairing_accuracy:.2%} should be >90%")
+            self.assertGreater(
+                pairing_accuracy,
+                0.90,
+                f"Pairing accuracy {pairing_accuracy:.2%} should be >90%",
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run the failing tests to establish RED phase
     unittest.main(verbosity=2)

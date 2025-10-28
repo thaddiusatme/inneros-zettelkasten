@@ -8,7 +8,6 @@ RED phase - All tests should fail until http_server.py is implemented.
 import pytest
 
 
-
 class MockDaemon:
     """Mock daemon for testing HTTP endpoints."""
 
@@ -20,15 +19,15 @@ class MockDaemon:
     def get_daemon_health(self) -> dict:
         """Mock health status."""
         return {
-            'daemon': {
-                'is_healthy': True,
-                'status_code': 200,
-                'checks': {'scheduler': True, 'file_watcher': True}
+            "daemon": {
+                "is_healthy": True,
+                "status_code": 200,
+                "checks": {"scheduler": True, "file_watcher": True},
             },
-            'handlers': {
-                'screenshot': {'is_healthy': 'N/A', 'events_processed': 0},
-                'smart_link': {'is_healthy': 'N/A', 'events_processed': 0}
-            }
+            "handlers": {
+                "screenshot": {"is_healthy": "N/A", "events_processed": 0},
+                "smart_link": {"is_healthy": "N/A", "events_processed": 0},
+            },
         }
 
     def export_prometheus_metrics(self) -> str:
@@ -54,6 +53,7 @@ inneros_handler_processing_seconds 0.123
 
 # RED Phase Tests
 
+
 def test_health_endpoint_returns_daemon_health():
     """
     Given: HTTP server with daemon
@@ -67,15 +67,15 @@ def test_health_endpoint_returns_daemon_health():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/health')
+    response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.content_type == 'application/json'
+    assert response.content_type == "application/json"
 
     data = response.get_json()
-    assert 'daemon' in data
-    assert 'handlers' in data
-    assert data['daemon']['is_healthy'] is True
+    assert "daemon" in data
+    assert "handlers" in data
+    assert data["daemon"]["is_healthy"] is True
 
 
 def test_metrics_endpoint_returns_prometheus_format():
@@ -90,15 +90,15 @@ def test_metrics_endpoint_returns_prometheus_format():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/metrics')
+    response = client.get("/metrics")
 
     assert response.status_code == 200
-    assert response.content_type == 'text/plain; charset=utf-8'
+    assert response.content_type == "text/plain; charset=utf-8"
 
     text = response.get_data(as_text=True)
-    assert '# HELP' in text
-    assert '# TYPE' in text
-    assert 'inneros_handler_events_total' in text
+    assert "# HELP" in text
+    assert "# TYPE" in text
+    assert "inneros_handler_events_total" in text
 
 
 def test_health_endpoint_handles_daemon_error():
@@ -117,11 +117,11 @@ def test_health_endpoint_handles_daemon_error():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/health')
+    response = client.get("/health")
 
     assert response.status_code == 503
     data = response.get_json()
-    assert 'error' in data
+    assert "error" in data
 
 
 def test_metrics_endpoint_handles_daemon_error():
@@ -140,10 +140,10 @@ def test_metrics_endpoint_handles_daemon_error():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/metrics')
+    response = client.get("/metrics")
 
     assert response.status_code == 503
-    assert 'error' in response.get_data(as_text=True).lower()
+    assert "error" in response.get_data(as_text=True).lower()
 
 
 def test_app_creation_requires_daemon():
@@ -170,7 +170,7 @@ def test_unknown_route_returns_404():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/unknown')
+    response = client.get("/unknown")
 
     assert response.status_code == 404
 
@@ -187,10 +187,10 @@ def test_health_endpoint_cors_headers():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/health')
+    response = client.get("/health")
 
     # CORS headers for monitoring dashboards
-    assert 'Access-Control-Allow-Origin' in response.headers
+    assert "Access-Control-Allow-Origin" in response.headers
 
 
 def test_root_endpoint_returns_info():
@@ -205,11 +205,11 @@ def test_root_endpoint_returns_info():
     app = create_app(daemon)
     client = app.test_client()
 
-    response = client.get('/')
+    response = client.get("/")
 
     assert response.status_code == 200
     data = response.get_json()
-    assert 'name' in data
-    assert 'endpoints' in data
-    assert '/health' in str(data['endpoints'])
-    assert '/metrics' in str(data['endpoints'])
+    assert "name" in data
+    assert "endpoints" in data
+    assert "/health" in str(data["endpoints"])
+    assert "/metrics" in str(data["endpoints"])

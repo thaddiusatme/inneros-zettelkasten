@@ -14,16 +14,16 @@ Architecture:
 Usage:
     # Process single note
     python3 youtube_cli.py process-note path/to/note.md
-    
+
     # Batch process all YouTube notes in Inbox
     python3 youtube_cli.py batch-process
-    
+
     # Preview mode (no modifications)
     python3 youtube_cli.py batch-process --preview
-    
+
     # JSON output for automation
     python3 youtube_cli.py batch-process --format json
-    
+
     # Export report
     python3 youtube_cli.py batch-process --export report.md
 """
@@ -40,21 +40,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.cli.youtube_cli_utils import (
     YouTubeCLIProcessor,
     CLIOutputFormatter,
-    CLIExportManager
+    CLIExportManager,
 )
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s - %(name)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class YouTubeCLI:
     """
     Dedicated CLI for YouTube note processing workflows
-    
+
     Responsibilities:
     - Parse command-line arguments
     - Coordinate YouTubeCLIProcessor and formatters
@@ -66,7 +63,7 @@ class YouTubeCLI:
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize YouTube CLI
-        
+
         Args:
             vault_path: Path to vault root (defaults to current directory)
         """
@@ -74,20 +71,24 @@ class YouTubeCLI:
         self.processor = YouTubeCLIProcessor(self.vault_path)
         logger.info(f"YouTube CLI initialized with vault: {self.vault_path}")
 
-    def process_single_note(self, note_path: str, preview: bool = False,
-                          min_quality: Optional[float] = None,
-                          categories: Optional[str] = None,
-                          output_format: str = 'normal') -> int:
+    def process_single_note(
+        self,
+        note_path: str,
+        preview: bool = False,
+        min_quality: Optional[float] = None,
+        categories: Optional[str] = None,
+        output_format: str = "normal",
+    ) -> int:
         """
         Process a single YouTube note
-        
+
         Args:
             note_path: Path to note file
             preview: Show quotes without modifying
             min_quality: Minimum relevance score (0.0-1.0)
             categories: Comma-separated list of categories
             output_format: 'normal' or 'json'
-            
+
         Returns:
             Exit code (0 for success, 1 for failure)
         """
@@ -96,10 +97,10 @@ class YouTubeCLI:
         # Parse categories if provided
         category_list = None
         if categories:
-            category_list = [c.strip() for c in categories.split(',')]
+            category_list = [c.strip() for c in categories.split(",")]
 
         # Determine quiet mode (for JSON output)
-        quiet_mode = (output_format == 'json')
+        quiet_mode = output_format == "json"
         formatter = CLIOutputFormatter(quiet_mode=quiet_mode)
 
         # Process note
@@ -112,49 +113,58 @@ class YouTubeCLI:
             note_path_obj,
             preview=preview,
             min_quality=min_quality,
-            categories=category_list
+            categories=category_list,
         )
 
         # Format output
-        if output_format == 'json':
+        if output_format == "json":
             import json
-            print(json.dumps({
-                'success': result.success,
-                'note_path': str(result.note_path),
-                'quotes_inserted': result.quotes_inserted,
-                'error_message': result.error_message,
-                'processing_time': result.processing_time
-            }, indent=2))
+
+            print(
+                json.dumps(
+                    {
+                        "success": result.success,
+                        "note_path": str(result.note_path),
+                        "quotes_inserted": result.quotes_inserted,
+                        "error_message": result.error_message,
+                        "processing_time": result.processing_time,
+                    },
+                    indent=2,
+                )
+            )
         else:
             formatter.print_output(formatter.format_single_result(result))
 
         return 0 if result.success else 1
 
-    def batch_process(self, preview: bool = False,
-                     min_quality: Optional[float] = None,
-                     categories: Optional[str] = None,
-                     output_format: str = 'normal',
-                     export_path: Optional[str] = None) -> int:
+    def batch_process(
+        self,
+        preview: bool = False,
+        min_quality: Optional[float] = None,
+        categories: Optional[str] = None,
+        output_format: str = "normal",
+        export_path: Optional[str] = None,
+    ) -> int:
         """
         Batch process all YouTube notes in Inbox
-        
+
         Args:
             preview: Show what would be processed without modifying
             min_quality: Minimum relevance score (0.0-1.0)
             categories: Comma-separated list of categories
             output_format: 'normal' or 'json'
             export_path: Optional path to export report
-            
+
         Returns:
             Exit code (0 for success, 1 for any failures)
         """
         # Parse categories if provided
         category_list = None
         if categories:
-            category_list = [c.strip() for c in categories.split(',')]
+            category_list = [c.strip() for c in categories.split(",")]
 
         # Determine quiet mode (for JSON output)
-        quiet_mode = (output_format == 'json')
+        quiet_mode = output_format == "json"
         formatter = CLIOutputFormatter(quiet_mode=quiet_mode)
 
         # Display header
@@ -169,6 +179,7 @@ class YouTubeCLI:
         # Create backup before apply operations (if not preview)
         if not preview:
             from src.automation.youtube_monitoring import backup_status_store
+
             status_file = Path(self.vault_path) / "youtube_status.json"
             backup_dir = Path(self.vault_path) / "backups"
             if status_file.exists():
@@ -181,11 +192,11 @@ class YouTubeCLI:
             preview=preview,
             min_quality=min_quality,
             categories=category_list,
-            quiet_mode=quiet_mode
+            quiet_mode=quiet_mode,
         )
 
         # Format output
-        if output_format == 'json':
+        if output_format == "json":
             print(formatter.format_json_output(stats))
         else:
             summary = formatter.format_batch_summary(stats)
@@ -197,7 +208,7 @@ class YouTubeCLI:
             success = CLIExportManager.export_markdown_report(
                 stats,
                 export_path_obj,
-                []  # We don't track individual results in batch mode yet
+                [],  # We don't track individual results in batch mode yet
             )
             if success and not quiet_mode:
                 print(f"\n✅ Report exported to: {export_path}")
@@ -211,12 +222,12 @@ class YouTubeCLI:
 def create_parser() -> argparse.ArgumentParser:
     """
     Create argument parser for YouTube CLI
-    
+
     Returns:
         Configured ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        description='YouTube Note Processing CLI',
+        description="YouTube Note Processing CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -237,88 +248,63 @@ Examples:
   
   # Category selection
   %(prog)s batch-process --categories "key_insights,actionable"
-        """
+        """,
     )
 
     # Global options
     parser.add_argument(
-        '--vault',
+        "--vault",
         type=str,
-        default='.',
-        help='Path to vault root directory (default: current directory)'
+        default=".",
+        help="Path to vault root directory (default: current directory)",
     )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose logging'
-    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 
     # Subcommands
-    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # process-note subcommand
     process_note_parser = subparsers.add_parser(
-        'process-note',
-        help='Process a single YouTube note'
+        "process-note", help="Process a single YouTube note"
     )
     process_note_parser.add_argument(
-        'note_path',
+        "note_path", type=str, help="Path to YouTube note file"
+    )
+    process_note_parser.add_argument(
+        "--preview", action="store_true", help="Show quotes without modifying note"
+    )
+    process_note_parser.add_argument(
+        "--min-quality", type=float, help="Minimum relevance score (0.0-1.0)"
+    )
+    process_note_parser.add_argument(
+        "--categories",
         type=str,
-        help='Path to YouTube note file'
+        help='Comma-separated list of categories (e.g., "key_insights,actionable")',
     )
     process_note_parser.add_argument(
-        '--preview',
-        action='store_true',
-        help='Show quotes without modifying note'
-    )
-    process_note_parser.add_argument(
-        '--min-quality',
-        type=float,
-        help='Minimum relevance score (0.0-1.0)'
-    )
-    process_note_parser.add_argument(
-        '--categories',
-        type=str,
-        help='Comma-separated list of categories (e.g., "key_insights,actionable")'
-    )
-    process_note_parser.add_argument(
-        '--format',
-        choices=['normal', 'json'],
-        default='normal',
-        help='Output format'
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
     )
 
     # batch-process subcommand
     batch_parser = subparsers.add_parser(
-        'batch-process',
-        help='Batch process all YouTube notes in Inbox'
+        "batch-process", help="Batch process all YouTube notes in Inbox"
     )
     batch_parser.add_argument(
-        '--preview',
-        action='store_true',
-        help='Show what would be processed without modifying'
+        "--preview",
+        action="store_true",
+        help="Show what would be processed without modifying",
     )
     batch_parser.add_argument(
-        '--min-quality',
-        type=float,
-        help='Minimum relevance score (0.0-1.0)'
+        "--min-quality", type=float, help="Minimum relevance score (0.0-1.0)"
     )
     batch_parser.add_argument(
-        '--categories',
-        type=str,
-        help='Comma-separated list of categories'
+        "--categories", type=str, help="Comma-separated list of categories"
     )
     batch_parser.add_argument(
-        '--format',
-        choices=['normal', 'json'],
-        default='normal',
-        help='Output format'
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
     )
     batch_parser.add_argument(
-        '--export',
-        type=str,
-        metavar='PATH',
-        help='Export report to markdown file'
+        "--export", type=str, metavar="PATH", help="Export report to markdown file"
     )
 
     return parser
@@ -347,21 +333,21 @@ def main():
 
     # Execute command
     try:
-        if args.command == 'process-note':
+        if args.command == "process-note":
             return cli.process_single_note(
                 note_path=args.note_path,
                 preview=args.preview,
                 min_quality=args.min_quality,
                 categories=args.categories,
-                output_format=args.format
+                output_format=args.format,
             )
-        elif args.command == 'batch-process':
+        elif args.command == "batch-process":
             return cli.batch_process(
                 preview=args.preview,
                 min_quality=args.min_quality,
                 categories=args.categories,
                 output_format=args.format,
-                export_path=args.export
+                export_path=args.export,
             )
         else:
             parser.print_help()
@@ -375,5 +361,5 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

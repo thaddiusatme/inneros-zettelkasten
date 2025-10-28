@@ -26,7 +26,7 @@ from src.cli.workflow_dashboard_utils import (
     StatusPanelRenderer,
     AsyncCLIExecutor,
     TestablePanel,
-    RICH_AVAILABLE
+    RICH_AVAILABLE,
 )
 
 try:
@@ -40,20 +40,20 @@ except ImportError:
 class WorkflowDashboard:
     """
     Interactive Terminal UI Dashboard for Workflow Operations.
-    
+
     Provides real-time status display and quick actions for:
     - Inbox processing
     - Fleeting note health
     - Weekly review
     - System status
-    
+
     TDD Iteration 1: P0.1 - Inbox Status Panel
     """
 
     def __init__(self, vault_path: str = "."):
         """
         Initialize workflow dashboard.
-        
+
         Args:
             vault_path: Path to vault root (defaults to current directory)
         """
@@ -64,12 +64,32 @@ class WorkflowDashboard:
 
         # Keyboard shortcut mapping (TDD Iteration 2)
         self.key_commands = {
-            'p': {'cli': 'core_workflow_cli.py', 'args': ['process-inbox'], 'desc': 'Process Inbox'},
-            'w': {'cli': 'weekly_review_cli.py', 'args': ['weekly-review'], 'desc': 'Weekly Review'},
-            'f': {'cli': 'fleeting_cli.py', 'args': ['fleeting-health'], 'desc': 'Fleeting Health'},
-            's': {'cli': 'core_workflow_cli.py', 'args': ['status', '--format', 'json'], 'desc': 'System Status'},
-            'b': {'cli': 'safe_workflow_cli.py', 'args': ['backup'], 'desc': 'Create Backup'},
-            'q': {'exit': True, 'desc': 'Quit Dashboard'}
+            "p": {
+                "cli": "core_workflow_cli.py",
+                "args": ["process-inbox"],
+                "desc": "Process Inbox",
+            },
+            "w": {
+                "cli": "weekly_review_cli.py",
+                "args": ["weekly-review"],
+                "desc": "Weekly Review",
+            },
+            "f": {
+                "cli": "fleeting_cli.py",
+                "args": ["fleeting-health"],
+                "desc": "Fleeting Health",
+            },
+            "s": {
+                "cli": "core_workflow_cli.py",
+                "args": ["status", "--format", "json"],
+                "desc": "System Status",
+            },
+            "b": {
+                "cli": "safe_workflow_cli.py",
+                "args": ["backup"],
+                "desc": "Create Backup",
+            },
+            "q": {"exit": True, "desc": "Quit Dashboard"},
         }
 
         if RICH_AVAILABLE:
@@ -78,63 +98,62 @@ class WorkflowDashboard:
     def fetch_inbox_status(self) -> Dict[str, Any]:
         """
         Fetch inbox status via core_workflow_cli.py.
-        
+
         Returns:
             Dictionary with workflow status data or error structure
         """
         result = self.cli_integrator.call_cli(
-            'core_workflow_cli.py',
-            ['status', '--format', 'json']
+            "core_workflow_cli.py", ["status", "--format", "json"]
         )
 
-        if result['returncode'] != 0:
+        if result["returncode"] != 0:
             return {
-                'error': True,
-                'message': result.get('error', 'Unknown error'),
-                'inbox_count': 0,
-                'fleeting_count': 0
+                "error": True,
+                "message": result.get("error", "Unknown error"),
+                "inbox_count": 0,
+                "fleeting_count": 0,
             }
 
         # Extract workflow status from data
-        data = result['data']
-        workflow_status = data.get('workflow_status', {})
+        data = result["data"]
+        workflow_status = data.get("workflow_status", {})
 
         # Normalize to expected format with inbox_count at top level
         normalized = {
-            'health': workflow_status.get('health', 'unknown'),
-            'total_notes': workflow_status.get('total_notes', 0),
-            'directory_counts': workflow_status.get('directory_counts', {})
+            "health": workflow_status.get("health", "unknown"),
+            "total_notes": workflow_status.get("total_notes", 0),
+            "directory_counts": workflow_status.get("directory_counts", {}),
         }
 
         # Extract inbox_count from directory_counts for convenience
-        dir_counts = workflow_status.get('directory_counts', {})
-        normalized['inbox_count'] = dir_counts.get('Inbox', 0)
-        normalized['fleeting_count'] = dir_counts.get('Fleeting Notes', 0)
+        dir_counts = workflow_status.get("directory_counts", {})
+        normalized["inbox_count"] = dir_counts.get("Inbox", 0)
+        normalized["fleeting_count"] = dir_counts.get("Fleeting Notes", 0)
 
         return normalized
 
     def get_inbox_count(self) -> int:
         """
         Get inbox note count.
-        
+
         Returns:
             Number of notes in inbox
         """
         status = self.fetch_inbox_status()
-        return status.get('inbox_count', 0)
+        return status.get("inbox_count", 0)
 
     def get_inbox_health_indicator(self, inbox_count: int) -> str:
         """
         Get health indicator based on inbox count.
-        
+
         Rules:
         - 🟢 Green: 0-20 notes (healthy)
         - 🟡 Yellow: 21-50 notes (attention needed)
         - 🔴 Red: 51+ notes (critical)
-        
+
         Args:
             inbox_count: Number of inbox notes
-            
+
         Returns:
             Health indicator emoji/color string
         """
@@ -148,12 +167,12 @@ class WorkflowDashboard:
     def render_inbox_panel(self) -> Any:
         """
         Render inbox status panel.
-        
+
         Returns:
             Rich Panel object or formatted string
         """
         status = self.fetch_inbox_status()
-        inbox_count = status.get('inbox_count', 0)
+        inbox_count = status.get("inbox_count", 0)
 
         # Calculate oldest note age (placeholder for iteration 1)
         oldest_age_days = 240  # Will be calculated in future iteration
@@ -165,7 +184,7 @@ class WorkflowDashboard:
         panel = self.panel_renderer.create_inbox_panel(
             inbox_count=inbox_count,
             oldest_age_days=oldest_age_days,
-            health_indicator=health_indicator
+            health_indicator=health_indicator,
         )
 
         return panel
@@ -173,13 +192,13 @@ class WorkflowDashboard:
     def handle_key_press(self, key: str) -> Dict[str, Any]:
         """
         Handle keyboard shortcut press.
-        
+
         TDD Iteration 2: P0.2 - Keyboard Navigation
         Enhanced in REFACTOR with improved error messages
-        
+
         Args:
             key: Key pressed (single character, lowercase)
-            
+
         Returns:
             Dictionary with 'success', 'exit', 'error', 'message' keys
         """
@@ -188,88 +207,87 @@ class WorkflowDashboard:
         # Check if key is valid
         if key not in self.key_commands:
             # Enhanced error message with actionable guidance (REFACTOR phase)
-            valid_keys = ', '.join(sorted(self.key_commands.keys()))
+            valid_keys = ", ".join(sorted(self.key_commands.keys()))
             return {
-                'error': True,
-                'message': (
+                "error": True,
+                "message": (
                     f"Invalid key '{key}'. "
                     f"Valid shortcuts: [{valid_keys.upper()}]. "
                     f"Press [?] for help (planned for P2.3)."
-                )
+                ),
             }
 
         command = self.key_commands[key]
 
         # Handle quit
-        if command.get('exit'):
-            return {'exit': True, 'success': True}
+        if command.get("exit"):
+            return {"exit": True, "success": True}
 
         # Execute CLI command
         result = self.async_executor.execute_with_progress(
-            cli_name=command['cli'],
-            args=command['args'],
-            vault_path=self.vault_path
+            cli_name=command["cli"], args=command["args"], vault_path=self.vault_path
         )
 
         return {
-            'success': result['returncode'] == 0,
-            'returncode': result['returncode'],
-            'stdout': result['stdout'],
-            'stderr': result['stderr']
+            "success": result["returncode"] == 0,
+            "returncode": result["returncode"],
+            "stdout": result["stdout"],
+            "stderr": result["stderr"],
         }
 
     def _display_operation_result(self, key: str, result: dict):
         """
         Display user-friendly operation result.
-        
+
         Parses CLI output and shows summary instead of raw output.
-        
+
         Args:
             key: The keyboard shortcut that was pressed
             result: Result dict from handle_key_press()
         """
         key_names = {
-            'p': 'Process Inbox',
-            'w': 'Weekly Review',
-            'f': 'Fleeting Health',
-            's': 'System Status',
-            'b': 'Create Backup'
+            "p": "Process Inbox",
+            "w": "Weekly Review",
+            "f": "Fleeting Health",
+            "s": "System Status",
+            "b": "Create Backup",
         }
 
-        operation_name = key_names.get(key, 'Operation')
+        operation_name = key_names.get(key, "Operation")
 
         # Parse stdout for summary info
-        stdout = result.get('stdout', '')
+        stdout = result.get("stdout", "")
 
         self.console.print(f"\n✅ [green]{operation_name} Complete![/green]")
 
         # Extract key metrics from output
-        if 'Processed:' in stdout:
+        if "Processed:" in stdout:
             # Process Inbox results
             import re
-            processed_match = re.search(r'Processed:\s*(\d+)', stdout)
-            failed_match = re.search(r'Failed:\s*(\d+)', stdout)
-            total_match = re.search(r'Total:\s*(\d+)', stdout)
+
+            processed_match = re.search(r"Processed:\s*(\d+)", stdout)
+            failed_match = re.search(r"Failed:\s*(\d+)", stdout)
+            total_match = re.search(r"Total:\s*(\d+)", stdout)
 
             if processed_match:
                 processed = processed_match.group(1)
-                failed = failed_match.group(1) if failed_match else '0'
+                failed = failed_match.group(1) if failed_match else "0"
                 total = total_match.group(1) if total_match else processed
 
                 self.console.print("   📊 Results:")
                 self.console.print(f"      • Total notes: {total}")
                 self.console.print(f"      • Successfully processed: {processed}")
-                if failed != '0':
+                if failed != "0":
                     self.console.print(f"      • [yellow]Failed: {failed}[/yellow]")
 
-        elif 'notes in inbox' in stdout.lower() or 'inbox count' in stdout.lower():
+        elif "notes in inbox" in stdout.lower() or "inbox count" in stdout.lower():
             # Status results - show brief summary
-            lines = stdout.strip().split('\n')[:10]  # First 10 lines
+            lines = stdout.strip().split("\n")[:10]  # First 10 lines
             self.console.print("   " + "\n   ".join(lines))
 
         else:
             # Generic success - show first few lines
-            lines = stdout.strip().split('\n')[:5]
+            lines = stdout.strip().split("\n")[:5]
             if lines:
                 self.console.print("   " + "\n   ".join(lines))
 
@@ -278,9 +296,9 @@ class WorkflowDashboard:
     def render_quick_actions_panel(self) -> Any:
         """
         Render quick actions panel with keyboard shortcuts.
-        
+
         TDD Iteration 2: P0.2 - Quick Actions Panel
-        
+
         Returns:
             Rich Panel object or formatted string
         """
@@ -294,28 +312,21 @@ class WorkflowDashboard:
         lines = ["⚡ Quick Actions:\n"]
         shortcuts = list(self.key_commands.items())
         for i in range(0, len(shortcuts), 3):
-            row_items = shortcuts[i:i+3]
-            row_text = "  ".join(
-                f"[{k.upper()}] {cmd['desc']}"
-                for k, cmd in row_items
-            )
+            row_items = shortcuts[i : i + 3]
+            row_text = "  ".join(f"[{k.upper()}] {cmd['desc']}" for k, cmd in row_items)
             lines.append(row_text)
 
         lines.append("\nPress any key to execute action...")
         content_str = "\n".join(lines)
 
         # Return TestablePanel (converts to string for tests, renders as Panel for Rich)
-        panel = Panel(
-            content_str,
-            title="⚡ Quick Actions",
-            border_style="cyan"
-        )
+        panel = Panel(content_str, title="⚡ Quick Actions", border_style="cyan")
         return TestablePanel(panel, content_str)
 
     def display(self):
         """
         Display dashboard with interactive keyboard handling.
-        
+
         TDD Iteration 2: P0.2 - Interactive keyboard navigation
         Shows inbox status + quick actions panel, waits for keyboard input
         """
@@ -345,19 +356,19 @@ class WorkflowDashboard:
                 result = self.handle_key_press(key)
 
                 # Check for exit
-                if result.get('exit'):
+                if result.get("exit"):
                     self.console.print("\n✅ [green]Exiting dashboard...[/green]")
                     break
 
                 # Check for errors
-                if result.get('error'):
+                if result.get("error"):
                     self.console.print(f"\n❌ [red]{result.get('message')}[/red]")
                     continue
 
                 # Show operation result with better feedback
-                if result.get('success'):
+                if result.get("success"):
                     self._display_operation_result(key, result)
-                elif result.get('message'):
+                elif result.get("message"):
                     self.console.print(f"\n✅ [green]{result.get('message')}[/green]")
 
             except KeyboardInterrupt:
@@ -376,10 +387,10 @@ def main():
         description="InnerOS Workflow Dashboard - Interactive Terminal UI"
     )
     parser.add_argument(
-        'vault_path',
-        nargs='?',
-        default='.',
-        help='Path to vault root (default: current directory)'
+        "vault_path",
+        nargs="?",
+        default=".",
+        help="Path to vault root (default: current directory)",
     )
 
     args = parser.parse_args()
@@ -388,5 +399,5 @@ def main():
     dashboard.display()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

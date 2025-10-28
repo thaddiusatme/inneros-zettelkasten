@@ -39,7 +39,7 @@ class TestWorkflowManager:
         note_path = self.base_dir / directory / filename
         note_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(note_path, 'w', encoding='utf-8') as f:
+        with open(note_path, "w", encoding="utf-8") as f:
             f.write(content)
 
         return note_path
@@ -61,7 +61,7 @@ class TestWorkflowManager:
 
     def test_load_config_default(self):
         """Test loading default configuration.
-        
+
         ADR-002 Phase 12a: Configuration now loaded via ConfigurationCoordinator.
         """
         config = self.workflow.config
@@ -77,12 +77,9 @@ class TestWorkflowManager:
     def test_load_config_custom(self):
         """Test loading custom configuration."""
         config_file = self.base_dir / ".ai_workflow_config.json"
-        custom_config = {
-            "auto_tag_inbox": False,
-            "max_tags_per_note": 5
-        }
+        custom_config = {"auto_tag_inbox": False, "max_tags_per_note": 5}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(custom_config, f)
 
         workflow = WorkflowManager(str(self.base_dir))
@@ -131,7 +128,7 @@ This is the body content."""
             "type": "permanent",
             "created": "2024-01-01 10:00",
             "tags": ["ai", "testing"],
-            "status": "published"
+            "status": "published",
         }
         body = "This is the body content."
 
@@ -144,16 +141,18 @@ This is the body content."""
         assert "status: published" in rebuilt
         assert rebuilt.endswith(body)
 
-    @patch('src.ai.connection_coordinator.ConnectionCoordinator.discover_connections')
-    @patch('src.ai.enhancer.AIEnhancer.enhance_note')
-    @patch('src.ai.tagger.AITagger.generate_tags')
-    def test_process_inbox_note_success(self, mock_generate_tags, mock_enhance, mock_discover_connections):
+    @patch("src.ai.connection_coordinator.ConnectionCoordinator.discover_connections")
+    @patch("src.ai.enhancer.AIEnhancer.enhance_note")
+    @patch("src.ai.tagger.AITagger.generate_tags")
+    def test_process_inbox_note_success(
+        self, mock_generate_tags, mock_enhance, mock_discover_connections
+    ):
         """Test successful inbox note processing."""
         # Setup mocks
         mock_generate_tags.return_value = ["ai", "machine-learning"]
         mock_enhance.return_value = {
             "quality_score": 0.8,
-            "suggestions": ["Add more examples", "Include references"]
+            "suggestions": ["Add more examples", "Include references"],
         }
         mock_discover_connections.return_value = [
             {"filename": "related-note.md", "similarity": 0.85}
@@ -217,7 +216,9 @@ Body """
         note_path = self.create_test_note("Inbox", "placeholder-created.md", content)
 
         # Fast path avoids AI calls; should still write because template_fixed=True
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -229,7 +230,9 @@ Body """
         assert fm["created"] != placeholder
         assert re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", fm["created"]) is not None
 
-    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_fast_path(self):
+    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_fast_path(
+        self,
+    ):
         """Dry-run must not persist changes even if template fixes are detected (fast path)."""
         placeholder = "{{date:YYYY-MM-DD HH:mm}}"
         content = f"""---
@@ -243,7 +246,9 @@ Body """
         note_path = self.create_test_note("Inbox", "dry-run-fast.md", content)
 
         # Dry-run with fast mode: should detect fix but not write to disk
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=True, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=True, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is False
@@ -252,7 +257,9 @@ Body """
         on_disk = Path(note_path).read_text(encoding="utf-8")
         assert placeholder in on_disk
 
-    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_ai_path(self):
+    def test_process_inbox_note_dry_run_does_not_write_when_template_fixed_ai_path(
+        self,
+    ):
         """Dry-run must not persist changes when running full AI path (fast=False)."""
         placeholder = "{{date}}"
         content = f"""---
@@ -266,10 +273,17 @@ Body """
         note_path = self.create_test_note("Inbox", "dry-run-ai.md", content)
 
         # Patch AI components to avoid external calls and ensure deterministic processing
-        with patch.object(self.workflow.tagger, 'generate_tags', return_value=["a", "b"]) as _mt, \
-             patch.object(self.workflow.enhancer, 'enhance_note', return_value={"quality_score": 0.6, "suggestions": ["s1", "s2"]}):
+        with patch.object(
+            self.workflow.tagger, "generate_tags", return_value=["a", "b"]
+        ) as _mt, patch.object(
+            self.workflow.enhancer,
+            "enhance_note",
+            return_value={"quality_score": 0.6, "suggestions": ["s1", "s2"]},
+        ):
             # Explicitly set fast=False to take the non-fast (AI) branch while dry_run=True
-            result = self.workflow.process_inbox_note(str(note_path), dry_run=True, fast=False)
+            result = self.workflow.process_inbox_note(
+                str(note_path), dry_run=True, fast=False
+            )
 
         assert "error" not in result
         assert result.get("file_updated") is False
@@ -283,7 +297,7 @@ Body """
 
     def test_preprocess_created_placeholder_preserves_other_frontmatter_fields(self):
         """Repairing 'created' should preserve other frontmatter keys/values."""
-        placeholder = "<% tp.date.now(\"YYYY-MM-DD HH:mm\") %>"
+        placeholder = '<% tp.date.now("YYYY-MM-DD HH:mm") %>'
         content = f"""---
 type: fleeting
 title: Example Title
@@ -297,7 +311,9 @@ Body with content"""
         note_path = self.create_test_note("Inbox", "preserve-fields.md", content)
 
         # Fast mode write path: should fix created and persist using centralized builder
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -325,7 +341,9 @@ Body """
         note_path = self.create_test_note("Inbox", "missing-created.md", content)
 
         # Ensure file has an mtime to source from; processing should write
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -346,9 +364,13 @@ status: inbox
 
 Body """
 
-        note_path = self.create_test_note("Inbox", "placeholder-created-curly.md", content)
+        note_path = self.create_test_note(
+            "Inbox", "placeholder-created-curly.md", content
+        )
 
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -361,7 +383,7 @@ Body """
 
     def test_process_inbox_note_fixes_created_ejs_tp_date_fast_path(self):
         """Replaces '<% tp.date.now(...) %>' placeholder with concrete timestamp (fast path)."""
-        placeholder = "<% tp.date.now(\"YYYY-MM-DD HH:mm\") %>"
+        placeholder = '<% tp.date.now("YYYY-MM-DD HH:mm") %>'
         content = f"""---
 type: fleeting
 created: {placeholder}
@@ -370,9 +392,13 @@ status: inbox
 
 Body """
 
-        note_path = self.create_test_note("Inbox", "placeholder-created-ejs-date.md", content)
+        note_path = self.create_test_note(
+            "Inbox", "placeholder-created-ejs-date.md", content
+        )
 
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -385,7 +411,7 @@ Body """
 
     def test_process_inbox_note_fixes_created_ejs_tp_file_creation_date_fast_path(self):
         """Replaces '<% tp.file.creation_date(...) %>' placeholder with concrete timestamp (fast path)."""
-        placeholder = "<% tp.file.creation_date(\"YYYY-MM-DD HH:mm\") %>"
+        placeholder = '<% tp.file.creation_date("YYYY-MM-DD HH:mm") %>'
         content = f"""---
 type: fleeting
 created: {placeholder}
@@ -394,9 +420,13 @@ status: inbox
 
 Body """
 
-        note_path = self.create_test_note("Inbox", "placeholder-created-ejs-file-date.md", content)
+        note_path = self.create_test_note(
+            "Inbox", "placeholder-created-ejs-file-date.md", content
+        )
 
-        result = self.workflow.process_inbox_note(str(note_path), dry_run=False, fast=True)
+        result = self.workflow.process_inbox_note(
+            str(note_path), dry_run=False, fast=True
+        )
 
         assert "error" not in result
         assert result.get("file_updated") is True
@@ -422,8 +452,11 @@ It has sufficient content and quality for permanent storage."""
         note_path = self.create_test_note("Inbox", "promote-test.md", content)
 
         # Mock summarizer to avoid API calls
-        with patch.object(self.workflow.summarizer, 'should_summarize', return_value=True), \
-             patch.object(self.workflow.summarizer, 'generate_summary', return_value="Test summary"):
+        with patch.object(
+            self.workflow.summarizer, "should_summarize", return_value=True
+        ), patch.object(
+            self.workflow.summarizer, "generate_summary", return_value="Test summary"
+        ):
 
             result = self.workflow.promote_note(str(note_path), "permanent")
 
@@ -438,7 +471,7 @@ It has sufficient content and quality for permanent storage."""
         assert target_path.exists()
 
         # Check updated content
-        with open(target_path, 'r') as f:
+        with open(target_path, "r") as f:
             updated_content = f.read()
 
         assert "type: permanent" in updated_content
@@ -469,11 +502,13 @@ This is a note for fleeting promotion."""
         assert target_path.exists()
 
         # Check updated content
-        with open(target_path, 'r') as f:
+        with open(target_path, "r") as f:
             updated_content = f.read()
 
         assert "type: fleeting" in updated_content
-        assert "status: promoted" in updated_content  # Fixed: promotion sets status to 'promoted', not 'draft'
+        assert (
+            "status: promoted" in updated_content
+        )  # Fixed: promotion sets status to 'promoted', not 'draft'
 
     def test_promote_note_invalid_type(self):
         """Test promoting note with invalid type."""
@@ -484,7 +519,7 @@ This is a note for fleeting promotion."""
         assert "error" in result
         assert "Invalid target type" in result["error"]
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
     def test_batch_process_inbox(self, mock_process):
         """Test batch processing of inbox notes."""
         # Create multiple test notes
@@ -495,16 +530,16 @@ This is a note for fleeting promotion."""
         mock_process.side_effect = [
             {
                 "original_file": "note0.md",
-                "recommendations": [{"action": "promote_to_permanent"}]
+                "recommendations": [{"action": "promote_to_permanent"}],
             },
             {
                 "original_file": "note1.md",
-                "recommendations": [{"action": "move_to_fleeting"}]
+                "recommendations": [{"action": "move_to_fleeting"}],
             },
             {
                 "original_file": "note2.md",
-                "recommendations": [{"action": "improve_or_archive"}]
-            }
+                "recommendations": [{"action": "improve_or_archive"}],
+            },
         ]
 
         # ADR-002 Phase 11: Update coordinator's callback to use mock
@@ -526,7 +561,9 @@ This is a note for fleeting promotion."""
         self.create_test_note("Permanent Notes", "note2.md", "Content 2")
 
         # ADR-002 Phase 2: Use ConnectionCoordinator
-        corpus = self.workflow.connection_coordinator.load_corpus(self.workflow.permanent_dir)
+        corpus = self.workflow.connection_coordinator.load_corpus(
+            self.workflow.permanent_dir
+        )
 
         assert len(corpus) == 2
         assert "note1.md" in corpus
@@ -537,7 +574,9 @@ This is a note for fleeting promotion."""
     def test_load_notes_corpus_empty_directory(self):
         """Test loading corpus from empty directory via ConnectionCoordinator."""
         # ADR-002 Phase 2: Use ConnectionCoordinator
-        corpus = self.workflow.connection_coordinator.load_corpus(self.workflow.permanent_dir)
+        corpus = self.workflow.connection_coordinator.load_corpus(
+            self.workflow.permanent_dir
+        )
 
         assert corpus == {}
 
@@ -549,7 +588,7 @@ This is a note for fleeting promotion."""
 
         assert corpus == {}
 
-    @patch('src.ai.analytics.NoteAnalytics.generate_report')
+    @patch("src.ai.analytics.NoteAnalytics.generate_report")
     def test_generate_workflow_report(self, mock_analytics_report):
         """Test workflow report generation."""
         # Create test notes in different directories
@@ -561,7 +600,7 @@ This is a note for fleeting promotion."""
         # Mock analytics report
         mock_analytics_report.return_value = {
             "overview": {"total_notes": 4},
-            "quality_metrics": {"high_quality_notes": 1}
+            "quality_metrics": {"high_quality_notes": 1},
         }
 
         report = self.workflow.generate_workflow_report()
@@ -585,20 +624,29 @@ This is a note for fleeting promotion."""
         """Test AI usage analysis."""
         # Create notes with various AI features
         notes_data = [
-            ("note1.md", """---
+            (
+                "note1.md",
+                """---
 ai_summary: AI generated summary
 ai_processed: 2024-01-01T10:00:00
 tags: ["machine-learning", "deep-learning", "artificial-intelligence"]
 ---
-Content 1"""),
-            ("note2.md", """---
+Content 1""",
+            ),
+            (
+                "note2.md",
+                """---
 tags: ["simple", "tag"]
 ---
-Content 2"""),
-            ("note3.md", """---
+Content 2""",
+            ),
+            (
+                "note3.md",
+                """---
 ai_processed: 2024-01-01T10:00:00
 ---
-Content 3""")
+Content 3""",
+            ),
         ]
 
         for filename, content in notes_data:
@@ -617,17 +665,19 @@ Content 3""")
             "Inbox": 25,  # High inbox count
             "Fleeting Notes": 11,  # Greater than permanent * 2 (5 * 2 = 10)
             "Permanent Notes": 5,
-            "Archive": 0
+            "Archive": 0,
         }
 
         ai_usage = {
             "total_analyzed": 40,
             "notes_with_ai_summaries": 5,
-            "notes_with_ai_processing": 15
+            "notes_with_ai_processing": 15,
         }
 
-        recommendations = self.workflow.reporting_coordinator._generate_workflow_recommendations(
-            directory_counts, ai_usage
+        recommendations = (
+            self.workflow.reporting_coordinator._generate_workflow_recommendations(
+                directory_counts, ai_usage
+            )
         )
 
         # Should recommend processing inbox
@@ -635,13 +685,17 @@ Content 3""")
         assert inbox_rec
 
         # Should recommend AI features
-        ai_rec = any("ai" in rec.lower() or "summarization" in rec.lower()
-                    for rec in recommendations)
+        ai_rec = any(
+            "ai" in rec.lower() or "summarization" in rec.lower()
+            for rec in recommendations
+        )
         assert ai_rec
 
         # Should recommend promoting fleeting notes
-        promote_rec = any("promoting" in rec.lower() or "fleeting" in rec.lower()
-                         for rec in recommendations)
+        promote_rec = any(
+            "promoting" in rec.lower() or "fleeting" in rec.lower()
+            for rec in recommendations
+        )
         assert promote_rec
 
     # ========================= WEEKLY REVIEW TESTS =========================
@@ -649,11 +703,19 @@ Content 3""")
     def test_scan_review_candidates_inbox_only(self):
         """Test scanning for review candidates in inbox directory only."""
         # Create notes in inbox
-        self.create_test_note("Inbox", "note1.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 1")
-        self.create_test_note("Inbox", "note2.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 2")
+        self.create_test_note(
+            "Inbox", "note1.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 1"
+        )
+        self.create_test_note(
+            "Inbox", "note2.md", "---\ntype: fleeting\nstatus: inbox\n---\nContent 2"
+        )
 
         # Create notes in other directories (should not be included)
-        self.create_test_note("Fleeting Notes", "note3.md", "---\ntype: fleeting\nstatus: promoted\n---\nContent 3")
+        self.create_test_note(
+            "Fleeting Notes",
+            "note3.md",
+            "---\ntype: fleeting\nstatus: promoted\n---\nContent 3",
+        )
 
         candidates = self.workflow.scan_review_candidates()
 
@@ -671,12 +733,21 @@ Content 3""")
     def test_scan_review_candidates_fleeting_inbox_status(self):
         """Test scanning for fleeting notes with inbox status."""
         # Create fleeting notes with different statuses
-        self.create_test_note("Fleeting Notes", "inbox_note.md",
-                             "---\ntype: fleeting\nstatus: inbox\n---\nNeeds review")
-        self.create_test_note("Fleeting Notes", "promoted_note.md",
-                             "---\ntype: fleeting\nstatus: promoted\n---\nAlready promoted")
-        self.create_test_note("Fleeting Notes", "draft_note.md",
-                             "---\ntype: fleeting\nstatus: draft\n---\nIn draft")
+        self.create_test_note(
+            "Fleeting Notes",
+            "inbox_note.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nNeeds review",
+        )
+        self.create_test_note(
+            "Fleeting Notes",
+            "promoted_note.md",
+            "---\ntype: fleeting\nstatus: promoted\n---\nAlready promoted",
+        )
+        self.create_test_note(
+            "Fleeting Notes",
+            "draft_note.md",
+            "---\ntype: fleeting\nstatus: draft\n---\nIn draft",
+        )
 
         candidates = self.workflow.scan_review_candidates()
 
@@ -689,16 +760,30 @@ Content 3""")
     def test_scan_review_candidates_combined(self):
         """Test scanning combines inbox and fleeting notes with inbox status."""
         # Create notes in inbox
-        self.create_test_note("Inbox", "inbox1.md", "---\ntype: fleeting\nstatus: inbox\n---\nInbox content")
-        self.create_test_note("Inbox", "inbox2.md", "---\ntype: fleeting\nstatus: inbox\n---\nMore inbox content")
+        self.create_test_note(
+            "Inbox",
+            "inbox1.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nInbox content",
+        )
+        self.create_test_note(
+            "Inbox",
+            "inbox2.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nMore inbox content",
+        )
 
         # Create fleeting notes with inbox status
-        self.create_test_note("Fleeting Notes", "fleeting1.md",
-                             "---\ntype: fleeting\nstatus: inbox\n---\nFleeting inbox content")
+        self.create_test_note(
+            "Fleeting Notes",
+            "fleeting1.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nFleeting inbox content",
+        )
 
         # Create fleeting notes with other statuses (should not be included)
-        self.create_test_note("Fleeting Notes", "fleeting2.md",
-                             "---\ntype: fleeting\nstatus: promoted\n---\nPromoted content")
+        self.create_test_note(
+            "Fleeting Notes",
+            "fleeting2.md",
+            "---\ntype: fleeting\nstatus: promoted\n---\nPromoted content",
+        )
 
         candidates = self.workflow.scan_review_candidates()
 
@@ -715,9 +800,19 @@ Content 3""")
     def test_scan_review_candidates_handles_missing_yaml(self):
         """Test scanner handles notes with missing or malformed YAML."""
         # Create notes with various YAML issues
-        self.create_test_note("Inbox", "no_yaml.md", "Just plain content without frontmatter")
-        self.create_test_note("Inbox", "malformed_yaml.md", "---\ntype: fleeting\nstatus: inbox\ninvalid yaml\n---\nContent")
-        self.create_test_note("Fleeting Notes", "missing_status.md", "---\ntype: fleeting\n---\nNo status field")
+        self.create_test_note(
+            "Inbox", "no_yaml.md", "Just plain content without frontmatter"
+        )
+        self.create_test_note(
+            "Inbox",
+            "malformed_yaml.md",
+            "---\ntype: fleeting\nstatus: inbox\ninvalid yaml\n---\nContent",
+        )
+        self.create_test_note(
+            "Fleeting Notes",
+            "missing_status.md",
+            "---\ntype: fleeting\n---\nNo status field",
+        )
 
         # This should not raise an exception
         candidates = self.workflow.scan_review_candidates()
@@ -745,7 +840,11 @@ Content 3""")
         (self.base_dir / "Inbox" / "image.png").write_text("Binary data")
 
         # Create one valid markdown file
-        self.create_test_note("Inbox", "valid.md", "---\ntype: fleeting\nstatus: inbox\n---\nValid content")
+        self.create_test_note(
+            "Inbox",
+            "valid.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nValid content",
+        )
 
         candidates = self.workflow.scan_review_candidates()
 
@@ -768,30 +867,35 @@ Content 3""")
         assert recommendations["summary"]["needs_improvement"] == 0
         assert len(recommendations["recommendations"]) == 0
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
     def test_generate_weekly_recommendations_high_quality_note(self, mock_process):
         """Test recommendations for high-quality note (should promote)."""
         # Mock high-quality processing result
         mock_process.return_value = {
             "quality_score": 0.85,
-            "recommendations": [{
-                "action": "promote_to_permanent",
-                "reason": "High quality content with comprehensive analysis",
-                "confidence": 0.9
-            }],
-            "processing": {
-                "ai_tags": ["machine-learning", "deep-learning"]
-            }
+            "recommendations": [
+                {
+                    "action": "promote_to_permanent",
+                    "reason": "High quality content with comprehensive analysis",
+                    "confidence": 0.9,
+                }
+            ],
+            "processing": {"ai_tags": ["machine-learning", "deep-learning"]},
         }
 
         # Create test candidate
-        note_path = self.create_test_note("Inbox", "high_quality.md",
-                                         "---\ntype: fleeting\nstatus: inbox\n---\nDetailed content")
-        candidates = [{
-            "path": note_path,
-            "source": "inbox",
-            "metadata": {"type": "fleeting", "status": "inbox"}
-        }]
+        note_path = self.create_test_note(
+            "Inbox",
+            "high_quality.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nDetailed content",
+        )
+        candidates = [
+            {
+                "path": note_path,
+                "source": "inbox",
+                "metadata": {"type": "fleeting", "status": "inbox"},
+            }
+        ]
 
         recommendations = self.workflow.generate_weekly_recommendations(candidates)
 
@@ -810,25 +914,32 @@ Content 3""")
         assert rec["confidence"] == 0.9
         assert rec["source"] == "inbox"
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
     def test_generate_weekly_recommendations_medium_quality_note(self, mock_process):
         """Test recommendations for medium-quality note (further develop)."""
         mock_process.return_value = {
             "quality_score": 0.55,
-            "recommendations": [{
-                "action": "move_to_fleeting",
-                "reason": "Good start but needs more development",
-                "confidence": 0.7
-            }]
+            "recommendations": [
+                {
+                    "action": "move_to_fleeting",
+                    "reason": "Good start but needs more development",
+                    "confidence": 0.7,
+                }
+            ],
         }
 
-        note_path = self.create_test_note("Fleeting Notes", "medium_quality.md",
-                                         "---\ntype: fleeting\nstatus: inbox\n---\nSome content")
-        candidates = [{
-            "path": note_path,
-            "source": "fleeting",
-            "metadata": {"type": "fleeting", "status": "inbox"}
-        }]
+        note_path = self.create_test_note(
+            "Fleeting Notes",
+            "medium_quality.md",
+            "---\ntype: fleeting\nstatus: inbox\n---\nSome content",
+        )
+        candidates = [
+            {
+                "path": note_path,
+                "source": "fleeting",
+                "metadata": {"type": "fleeting", "status": "inbox"},
+            }
+        ]
 
         recommendations = self.workflow.generate_weekly_recommendations(candidates)
 
@@ -842,25 +953,30 @@ Content 3""")
         assert rec["quality_score"] == 0.55
         assert "develop" in rec["reason"].lower()
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
     def test_generate_weekly_recommendations_low_quality_note(self, mock_process):
         """Test recommendations for low-quality note (needs improvement)."""
         mock_process.return_value = {
             "quality_score": 0.25,
-            "recommendations": [{
-                "action": "improve_or_archive",
-                "reason": "Content is too brief and lacks detail",
-                "confidence": 0.8
-            }]
+            "recommendations": [
+                {
+                    "action": "improve_or_archive",
+                    "reason": "Content is too brief and lacks detail",
+                    "confidence": 0.8,
+                }
+            ],
         }
 
-        note_path = self.create_test_note("Inbox", "low_quality.md",
-                                         "---\ntype: fleeting\nstatus: inbox\n---\nBrief")
-        candidates = [{
-            "path": note_path,
-            "source": "inbox",
-            "metadata": {"type": "fleeting", "status": "inbox"}
-        }]
+        note_path = self.create_test_note(
+            "Inbox", "low_quality.md", "---\ntype: fleeting\nstatus: inbox\n---\nBrief"
+        )
+        candidates = [
+            {
+                "path": note_path,
+                "source": "inbox",
+                "metadata": {"type": "fleeting", "status": "inbox"},
+            }
+        ]
 
         recommendations = self.workflow.generate_weekly_recommendations(candidates)
 
@@ -874,38 +990,63 @@ Content 3""")
         assert rec["quality_score"] == 0.25
         assert "brief" in rec["reason"].lower()
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
     def test_generate_weekly_recommendations_mixed_quality(self, mock_process):
         """Test recommendations with mixed quality notes."""
+
         # Mock different responses for different files
         def mock_process_side_effect(note_path):
             if "high" in str(note_path):
                 return {
                     "quality_score": 0.8,
-                    "recommendations": [{"action": "promote_to_permanent", "reason": "High quality", "confidence": 0.9}]
+                    "recommendations": [
+                        {
+                            "action": "promote_to_permanent",
+                            "reason": "High quality",
+                            "confidence": 0.9,
+                        }
+                    ],
                 }
             elif "medium" in str(note_path):
                 return {
                     "quality_score": 0.5,
-                    "recommendations": [{"action": "move_to_fleeting", "reason": "Needs development", "confidence": 0.7}]
+                    "recommendations": [
+                        {
+                            "action": "move_to_fleeting",
+                            "reason": "Needs development",
+                            "confidence": 0.7,
+                        }
+                    ],
                 }
             else:
                 return {
                     "quality_score": 0.2,
-                    "recommendations": [{"action": "improve_or_archive", "reason": "Too brief", "confidence": 0.8}]
+                    "recommendations": [
+                        {
+                            "action": "improve_or_archive",
+                            "reason": "Too brief",
+                            "confidence": 0.8,
+                        }
+                    ],
                 }
 
         mock_process.side_effect = mock_process_side_effect
 
         # Create mixed quality candidates
-        high_path = self.create_test_note("Inbox", "high_note.md", "---\ntype: fleeting\n---\nContent")
-        medium_path = self.create_test_note("Inbox", "medium_note.md", "---\ntype: fleeting\n---\nContent")
-        low_path = self.create_test_note("Inbox", "low_note.md", "---\ntype: fleeting\n---\nContent")
+        high_path = self.create_test_note(
+            "Inbox", "high_note.md", "---\ntype: fleeting\n---\nContent"
+        )
+        medium_path = self.create_test_note(
+            "Inbox", "medium_note.md", "---\ntype: fleeting\n---\nContent"
+        )
+        low_path = self.create_test_note(
+            "Inbox", "low_note.md", "---\ntype: fleeting\n---\nContent"
+        )
 
         candidates = [
             {"path": high_path, "source": "inbox", "metadata": {}},
             {"path": medium_path, "source": "inbox", "metadata": {}},
-            {"path": low_path, "source": "inbox", "metadata": {}}
+            {"path": low_path, "source": "inbox", "metadata": {}},
         ]
 
         recommendations = self.workflow.generate_weekly_recommendations(candidates)
@@ -917,13 +1058,17 @@ Content 3""")
         assert recommendations["summary"]["needs_improvement"] == 1
         assert len(recommendations["recommendations"]) == 3
 
-    @patch('src.ai.workflow_manager.WorkflowManager.process_inbox_note')
-    def test_generate_weekly_recommendations_handles_processing_errors(self, mock_process):
+    @patch("src.ai.workflow_manager.WorkflowManager.process_inbox_note")
+    def test_generate_weekly_recommendations_handles_processing_errors(
+        self, mock_process
+    ):
         """Test that recommendation generation handles processing errors gracefully."""
         # Mock an error response
         mock_process.return_value = {"error": "Failed to process note"}
 
-        note_path = self.create_test_note("Inbox", "error_note.md", "---\ntype: fleeting\n---\nContent")
+        note_path = self.create_test_note(
+            "Inbox", "error_note.md", "---\ntype: fleeting\n---\nContent"
+        )
         candidates = [{"path": note_path, "source": "inbox", "metadata": {}}]
 
         recommendations = self.workflow.generate_weekly_recommendations(candidates)
@@ -967,7 +1112,13 @@ Content 3""")
         assert "processing_errors" in summary
 
         # Verify all counts are zero
-        for key in ["total_notes", "promote_to_permanent", "move_to_fleeting", "needs_improvement", "processing_errors"]:
+        for key in [
+            "total_notes",
+            "promote_to_permanent",
+            "move_to_fleeting",
+            "needs_improvement",
+            "processing_errors",
+        ]:
             assert summary[key] == 0
 
         # Verify recommendations is empty list
@@ -1033,12 +1184,21 @@ Content 3""")
     def test_detect_orphaned_notes_with_linked_notes(self):
         """Test orphaned note detection with linked and unlinked notes."""
         # Create notes with proper linking
-        linked_note = self.create_test_note("Permanent Notes", "linked.md",
-            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[target]]")
-        orphan_note = self.create_test_note("Permanent Notes", "orphan.md",
-            "---\ntype: permanent\n---\n# Orphan Note\nThis has no links to other notes.")
-        target_note = self.create_test_note("Permanent Notes", "target.md",
-            "---\ntype: permanent\n---\n# Target Note\nThis is linked to by [[linked]].")
+        linked_note = self.create_test_note(
+            "Permanent Notes",
+            "linked.md",
+            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[target]]",
+        )
+        orphan_note = self.create_test_note(
+            "Permanent Notes",
+            "orphan.md",
+            "---\ntype: permanent\n---\n# Orphan Note\nThis has no links to other notes.",
+        )
+        target_note = self.create_test_note(
+            "Permanent Notes",
+            "target.md",
+            "---\ntype: permanent\n---\n# Target Note\nThis is linked to by [[linked]].",
+        )
 
         orphaned_notes = self.workflow.detect_orphaned_notes()
 
@@ -1052,19 +1212,26 @@ Content 3""")
         from datetime import timedelta
 
         # Create a note and artificially age it
-        old_note = self.create_test_note("Permanent Notes", "old.md",
-            "---\ntype: permanent\n---\n# Old Note\nThis is an old note.")
+        old_note = self.create_test_note(
+            "Permanent Notes",
+            "old.md",
+            "---\ntype: permanent\n---\n# Old Note\nThis is an old note.",
+        )
 
         # Artificially set the modification time to 100 days ago
         old_time = datetime.now() - timedelta(days=100)
         old_timestamp = old_time.timestamp()
 
         import os
+
         os.utime(str(old_note), (old_timestamp, old_timestamp))
 
         # Create a fresh note
-        fresh_note = self.create_test_note("Permanent Notes", "fresh.md",
-            "---\ntype: permanent\n---\n# Fresh Note\nThis is a fresh note.")
+        fresh_note = self.create_test_note(
+            "Permanent Notes",
+            "fresh.md",
+            "---\ntype: permanent\n---\n# Fresh Note\nThis is a fresh note.",
+        )
 
         stale_notes = self.workflow.detect_stale_notes(days_threshold=90)
 
@@ -1076,12 +1243,19 @@ Content 3""")
     def test_generate_enhanced_metrics_with_notes(self):
         """Test enhanced metrics generation with actual notes."""
         # Create various types of notes
-        linked_note = self.create_test_note("Permanent Notes", "linked.md",
-            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[other]]")
-        orphan_note = self.create_test_note("Permanent Notes", "orphan.md",
-            "---\ntype: permanent\n---\n# Orphan Note\nNo links here.")
-        inbox_note = self.create_test_note("Inbox", "inbox.md",
-            "---\ntype: fleeting\n---\n# Inbox Note\nIn the inbox.")
+        linked_note = self.create_test_note(
+            "Permanent Notes",
+            "linked.md",
+            "---\ntype: permanent\n---\n# Linked Note\nThis links to [[other]]",
+        )
+        orphan_note = self.create_test_note(
+            "Permanent Notes",
+            "orphan.md",
+            "---\ntype: permanent\n---\n# Orphan Note\nNo links here.",
+        )
+        inbox_note = self.create_test_note(
+            "Inbox", "inbox.md", "---\ntype: fleeting\n---\n# Inbox Note\nIn the inbox."
+        )
 
         metrics = self.workflow.generate_enhanced_metrics()
 
@@ -1108,9 +1282,11 @@ Content 3""")
 
     # ========================= TEMPLATE PLACEHOLDER FIX TESTS =========================
 
-    @patch('src.ai.tagger.AITagger.generate_tags')
-    @patch('src.ai.enhancer.AIEnhancer.enhance_note')
-    def test_fix_template_placeholders_in_created_field(self, mock_enhance, mock_generate_tags):
+    @patch("src.ai.tagger.AITagger.generate_tags")
+    @patch("src.ai.enhancer.AIEnhancer.enhance_note")
+    def test_fix_template_placeholders_in_created_field(
+        self, mock_enhance, mock_generate_tags
+    ):
         """Test fixing template placeholders in 'created' field during note processing."""
         # Mock AI components to focus purely on template placeholder functionality
         mock_generate_tags.return_value = ["template", "test"]
@@ -1135,7 +1311,7 @@ This note has an unprocessed template placeholder that should be fixed."""
         assert result["file_updated"] is True
 
         # Read the updated file and verify template placeholder was replaced
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         # Should not contain template placeholder anymore
@@ -1144,7 +1320,8 @@ This note has an unprocessed template placeholder that should be fixed."""
 
         # Should contain a valid timestamp in the correct format
         import re
-        timestamp_pattern = r'created: \d{4}-\d{2}-\d{2} \d{2}:\d{2}'
+
+        timestamp_pattern = r"created: \d{4}-\d{2}-\d{2} \d{2}:\d{2}"
         assert re.search(timestamp_pattern, updated_content)
 
         # Extract and validate the timestamp format
@@ -1153,7 +1330,7 @@ This note has an unprocessed template placeholder that should be fixed."""
         assert created_value is not None
         assert isinstance(created_value, str)
         # Should match YYYY-MM-DD HH:MM format
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     def test_fix_template_placeholders_missing_created_field(self):
         """Test adding missing 'created' field when not present in frontmatter."""
@@ -1174,7 +1351,7 @@ This note is missing the created field entirely."""
         assert result["file_updated"] is True
 
         # Read the updated file and verify created field was added
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1184,7 +1361,8 @@ This note is missing the created field entirely."""
 
         # Should be in correct format
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     def test_fix_template_placeholders_uses_file_timestamps(self):
         """Test that template fix uses file birth/modified time when available."""
@@ -1211,7 +1389,7 @@ Test content for timestamp detection."""
         assert result["file_updated"] is True
 
         # Read updated content and extract timestamp
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1222,7 +1400,9 @@ Test content for timestamp detection."""
 
         # Should be based on file time (within 1 minute tolerance)
         time_diff = abs((created_time - file_mtime).total_seconds())
-        assert time_diff < 60, f"Created time {created_time} should be close to file time {file_mtime}"
+        assert (
+            time_diff < 60
+        ), f"Created time {created_time} should be close to file time {file_mtime}"
 
     def test_fix_template_placeholders_dry_run_mode(self):
         """Test that dry-run mode does not fix template placeholders on disk."""
@@ -1244,15 +1424,17 @@ This should not be modified in dry-run mode."""
         assert result["file_updated"] is False
 
         # File content should remain unchanged
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             unchanged_content = f.read()
 
         assert "{{date:YYYY-MM-DD HH:mm}}" in unchanged_content
         assert unchanged_content == content
 
-    @patch('src.ai.tagger.AITagger.generate_tags')
-    @patch('src.ai.enhancer.AIEnhancer.enhance_note')
-    def test_fix_template_placeholders_preserves_other_frontmatter(self, mock_enhance, mock_generate_tags):
+    @patch("src.ai.tagger.AITagger.generate_tags")
+    @patch("src.ai.enhancer.AIEnhancer.enhance_note")
+    def test_fix_template_placeholders_preserves_other_frontmatter(
+        self, mock_enhance, mock_generate_tags
+    ):
         """Test that template fixing preserves all other frontmatter fields."""
         # Mock AI components to focus purely on template placeholder functionality
         mock_generate_tags.return_value = []  # No new tags added
@@ -1278,7 +1460,7 @@ Content should remain the same."""
         assert result["file_updated"] is True
 
         # Verify all other fields preserved
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, body = parse_frontmatter(updated_content)
@@ -1286,12 +1468,16 @@ Content should remain the same."""
         # Template placeholder should be fixed
         assert "{{date:" not in str(frontmatter.get("created"))
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', frontmatter["created"])
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", frontmatter["created"])
 
         # Other fields should be preserved exactly
         assert frontmatter["type"] == "fleeting"
         assert frontmatter["status"] == "inbox"
-        assert set(frontmatter["tags"]) == {"test", "important"}  # Order doesn't matter for tags
+        assert set(frontmatter["tags"]) == {
+            "test",
+            "important",
+        }  # Order doesn't matter for tags
         assert frontmatter["visibility"] == "private"
         assert frontmatter["custom_field"] == "preserved"
 
@@ -1317,7 +1503,7 @@ Test malformed template handling."""
         assert result["file_updated"] is True
 
         # Should replace with proper timestamp regardless of malformed format
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1325,7 +1511,8 @@ Test malformed template handling."""
 
         # Should still get a valid timestamp
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     # TDD RED PHASE: Templater Created Placeholder Bug Fix Tests
     def test_templater_created_placeholder_detection(self):
@@ -1348,7 +1535,7 @@ Test note with unprocessed templater placeholder."""
         assert result.get("template_fixed", False) is True
 
         # Verify the created field now has a real timestamp
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1360,7 +1547,8 @@ Test note with unprocessed templater placeholder."""
 
         # Should be a valid timestamp format
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     def test_templater_ejs_pattern_detection(self):
         """Test detection of Templater EJS patterns like <% tp.date.now() %> - SHOULD FAIL INITIALLY."""
@@ -1382,7 +1570,7 @@ Test note with EJS templater pattern."""
         assert result.get("template_fixed", False) is True
 
         # Verify the created field now has a real timestamp
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1394,7 +1582,8 @@ Test note with EJS templater pattern."""
 
         # Should be a valid timestamp format
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     def test_bulk_templater_placeholder_repair(self):
         """Test bulk repair of multiple files with templater placeholders - SHOULD FAIL INITIALLY."""
@@ -1429,7 +1618,7 @@ Test note {filename}."""
 
         # Verify all files now have valid timestamps
         for note_path in note_paths:
-            with open(note_path, 'r', encoding='utf-8') as f:
+            with open(note_path, "r", encoding="utf-8") as f:
                 updated_content = f.read()
 
             frontmatter, _ = parse_frontmatter(updated_content)
@@ -1437,7 +1626,8 @@ Test note {filename}."""
 
             # Should be valid timestamp format
             import re
-            assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+            assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
             # Should not contain any templater patterns
             assert "{{" not in created_value
@@ -1466,7 +1656,7 @@ This note should preserve all metadata except the created field."""
         assert result.get("template_fixed", False) is True
 
         # Verify all metadata is preserved
-        with open(note_path, 'r', encoding='utf-8') as f:
+        with open(note_path, "r", encoding="utf-8") as f:
             updated_content = f.read()
 
         frontmatter, _ = parse_frontmatter(updated_content)
@@ -1478,7 +1668,9 @@ This note should preserve all metadata except the created field."""
         # AI tagger may add tags, so verify original tags are preserved (subset check)
         original_tags = {"ai-automation", "template-fix", "preservation-test"}
         current_tags = set(frontmatter.get("tags", []))
-        assert original_tags.issubset(current_tags), f"Original tags {original_tags} not preserved in {current_tags}"
+        assert original_tags.issubset(
+            current_tags
+        ), f"Original tags {original_tags} not preserved in {current_tags}"
 
         assert frontmatter.get("modified") == "2025-08-20"
         assert frontmatter.get("custom_field") == "important_value"
@@ -1486,7 +1678,8 @@ This note should preserve all metadata except the created field."""
         # Only created field should be different (valid timestamp)
         created_value = frontmatter.get("created")
         import re
-        assert re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}$', created_value)
+
+        assert re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}$", created_value)
 
     # ============================================================================
     # ADR-002 Phase 13: Metadata Repair Engine Delegation Tests
@@ -1510,10 +1703,10 @@ Some content here.
         result = self.workflow.repair_inbox_metadata(execute=False)
 
         # Assert: Should detect notes needing repair
-        assert result['notes_scanned'] == 1
-        assert result['repairs_needed'] == 1
-        assert result['repairs_made'] == 0  # Preview mode, no changes
-        assert len(result['errors']) == 0
+        assert result["notes_scanned"] == 1
+        assert result["repairs_needed"] == 1
+        assert result["repairs_made"] == 0  # Preview mode, no changes
+        assert len(result["errors"]) == 0
 
     def test_repair_inbox_metadata_execute_mode(self):
         """Test that repair_inbox_metadata actually modifies files in execute mode."""
@@ -1527,20 +1720,22 @@ created: 2025-10-15 14:00
 
 Some content here.
 """
-        note_path = self.create_test_note("Inbox", "lit-20251015-1400-article.md", content)
+        note_path = self.create_test_note(
+            "Inbox", "lit-20251015-1400-article.md", content
+        )
 
         # Act: Call delegation method in execute mode
         result = self.workflow.repair_inbox_metadata(execute=True)
 
         # Assert: Should repair the note
-        assert result['notes_scanned'] == 1
-        assert result['repairs_needed'] == 1
-        assert result['repairs_made'] == 1
-        assert len(result['errors']) == 0
+        assert result["notes_scanned"] == 1
+        assert result["repairs_needed"] == 1
+        assert result["repairs_made"] == 1
+        assert len(result["errors"]) == 0
 
         # Verify file was actually modified
         updated_content = note_path.read_text()
-        assert 'type: literature' in updated_content
+        assert "type: literature" in updated_content
 
     def test_repair_inbox_metadata_handles_errors_gracefully(self):
         """Test that repair_inbox_metadata handles errors without crashing."""
@@ -1561,7 +1756,7 @@ This note has all required fields.
         result = self.workflow.repair_inbox_metadata(execute=False)
 
         # Assert: Should scan but not need repairs
-        assert result['notes_scanned'] == 1
-        assert result['repairs_needed'] == 0
-        assert result['repairs_made'] == 0
-        assert len(result['errors']) == 0
+        assert result["notes_scanned"] == 1
+        assert result["repairs_needed"] == 0
+        assert result["repairs_made"] == 0
+        assert len(result["errors"]) == 0

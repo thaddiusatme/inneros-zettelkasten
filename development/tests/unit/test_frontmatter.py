@@ -2,7 +2,7 @@ import sys
 import os
 
 # Add src to path for testing
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 
@@ -25,11 +25,11 @@ More content here."""
 
         metadata, body = parse_frontmatter(content)
 
-        assert metadata['type'] == 'permanent'
-        assert metadata['created'] == '2025-08-18 20:30'
-        assert metadata['status'] == 'published'
-        assert metadata['tags'] == ['test', 'frontmatter', 'yaml']
-        assert metadata['visibility'] == 'private'
+        assert metadata["type"] == "permanent"
+        assert metadata["created"] == "2025-08-18 20:30"
+        assert metadata["status"] == "published"
+        assert metadata["tags"] == ["test", "frontmatter", "yaml"]
+        assert metadata["visibility"] == "private"
         assert body.strip() == "This is the body content.\nMore content here."
 
     def test_parse_no_frontmatter(self):
@@ -102,11 +102,11 @@ Literature note body."""
 
         metadata, body = parse_frontmatter(content)
 
-        assert metadata['type'] == 'literature'
-        assert metadata['source']['url'] == 'https://example.com'
-        assert metadata['source']['title'] == 'Test Article'
-        assert len(metadata['claims']) == 2
-        assert metadata['claims'][0] == 'First claim here'
+        assert metadata["type"] == "literature"
+        assert metadata["source"]["url"] == "https://example.com"
+        assert metadata["source"]["title"] == "Test Article"
+        assert len(metadata["claims"]) == 2
+        assert metadata["claims"][0] == "First claim here"
         assert body.strip() == "Literature note body."
 
 
@@ -116,27 +116,27 @@ class TestBuildFrontmatter:
     def test_build_basic_frontmatter(self):
         """Test building basic frontmatter with proper field ordering."""
         metadata = {
-            'tags': ['test', 'frontmatter'],
-            'type': 'permanent',
-            'status': 'published',
-            'created': '2025-08-18 20:30',
-            'visibility': 'private'
+            "tags": ["test", "frontmatter"],
+            "type": "permanent",
+            "status": "published",
+            "created": "2025-08-18 20:30",
+            "visibility": "private",
         }
         body = "This is the body content."
 
         result = build_frontmatter(metadata, body)
 
         # Check that it contains YAML delimiters
-        assert result.startswith('---\n')
-        assert '\n---\n' in result
+        assert result.startswith("---\n")
+        assert "\n---\n" in result
         assert result.endswith(body)
 
         # Check field ordering - created should come first
-        lines = result.split('\n')
+        lines = result.split("\n")
         yaml_lines = []
         in_frontmatter = False
         for line in lines:
-            if line == '---':
+            if line == "---":
                 if not in_frontmatter:
                     in_frontmatter = True
                 else:
@@ -145,11 +145,11 @@ class TestBuildFrontmatter:
                 yaml_lines.append(line)
 
         # created should be first field
-        assert yaml_lines[0].startswith('created:')
+        assert yaml_lines[0].startswith("created:")
         # type should be second
-        assert yaml_lines[1].startswith('type:')
+        assert yaml_lines[1].startswith("type:")
         # status should be third
-        assert yaml_lines[2].startswith('status:')
+        assert yaml_lines[2].startswith("status:")
 
     def test_build_empty_frontmatter(self):
         """Test building with empty metadata."""
@@ -164,32 +164,29 @@ class TestBuildFrontmatter:
     def test_build_with_nested_structures(self):
         """Test building frontmatter with nested YAML structures."""
         metadata = {
-            'created': '2025-08-18 20:30',
-            'type': 'literature',
-            'source': {
-                'url': 'https://example.com',
-                'title': 'Test Article'
-            },
-            'claims': ['First claim', 'Second claim']
+            "created": "2025-08-18 20:30",
+            "type": "literature",
+            "source": {"url": "https://example.com", "title": "Test Article"},
+            "claims": ["First claim", "Second claim"],
         }
         body = "Literature note body."
 
         result = build_frontmatter(metadata, body)
 
-        assert 'source:' in result
-        assert 'url: https://example.com' in result
-        assert 'title: Test Article' in result
-        assert 'claims:' in result
-        assert '- First claim' in result
+        assert "source:" in result
+        assert "url: https://example.com" in result
+        assert "title: Test Article" in result
+        assert "claims:" in result
+        assert "- First claim" in result
 
     def test_build_preserves_yaml_formatting(self):
         """Test that building preserves consistent YAML formatting."""
         metadata = {
-            'created': '2025-08-18 20:30',
-            'type': 'permanent',
-            'tags': ['tag1', 'tag2', 'tag3'],
-            'boolean_field': True,
-            'numeric_field': 42
+            "created": "2025-08-18 20:30",
+            "type": "permanent",
+            "tags": ["tag1", "tag2", "tag3"],
+            "boolean_field": True,
+            "numeric_field": 42,
         }
         body = "Test body."
 
@@ -197,23 +194,23 @@ class TestBuildFrontmatter:
 
         # Check proper YAML formatting
         # Tags must be inline array style
-        assert 'tags: [tag1, tag2, tag3]' in result
-        assert 'boolean_field: true' in result
-        assert 'numeric_field: 42' in result
+        assert "tags: [tag1, tag2, tag3]" in result
+        assert "boolean_field: true" in result
+        assert "numeric_field: 42" in result
 
     def test_build_enforces_inline_tags(self):
         """Tags must be rendered as inline arrays, never hyphen lists."""
         metadata = {
-            'created': '2025-08-18 20:30',
-            'type': 'permanent',
-            'tags': ['alpha', 'beta'],
+            "created": "2025-08-18 20:30",
+            "type": "permanent",
+            "tags": ["alpha", "beta"],
         }
         body = "Body"
         out = build_frontmatter(metadata, body)
         # Enforce inline formatting
-        assert 'tags: [alpha, beta]' in out
+        assert "tags: [alpha, beta]" in out
         # Ensure hyphen list form is not used for tags
-        assert 'tags:\n- alpha' not in out
+        assert "tags:\n- alpha" not in out
 
 
 class TestFrontmatterRoundtrip:
@@ -247,11 +244,11 @@ This is test content for roundtrip testing."""
     def test_field_ordering_consistency(self):
         """Test that field ordering is preserved across roundtrips."""
         metadata = {
-            'visibility': 'private',
-            'tags': ['test'],
-            'type': 'permanent',
-            'status': 'published',
-            'created': '2025-08-18 20:30'
+            "visibility": "private",
+            "tags": ["test"],
+            "type": "permanent",
+            "status": "published",
+            "created": "2025-08-18 20:30",
         }
         body = "Test body."
 
@@ -265,17 +262,17 @@ This is test content for roundtrip testing."""
         # Field ordering should be consistent
         # Extract field order from both
         def extract_field_order(content):
-            lines = content.split('\n')
+            lines = content.split("\n")
             fields = []
             in_frontmatter = False
             for line in lines:
-                if line == '---':
+                if line == "---":
                     if not in_frontmatter:
                         in_frontmatter = True
                     else:
                         break
-                elif in_frontmatter and ':' in line:
-                    field_name = line.split(':')[0].strip()
+                elif in_frontmatter and ":" in line:
+                    field_name = line.split(":")[0].strip()
                     fields.append(field_name)
             return fields
 

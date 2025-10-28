@@ -32,7 +32,7 @@ class TestAIConnectionsIntegration:
         similarity_results = [
             ("ai-concepts.md", 0.85),
             ("machine-learning.md", 0.72),
-            ("knowledge-management.md", 0.68)
+            ("knowledge-management.md", 0.68),
         ]
 
         # Convert to connection objects using our utility
@@ -42,9 +42,7 @@ class TestAIConnectionsIntegration:
 
         # This should work now with proper format
         suggestions = engine.generate_link_suggestions(
-            target_note="test-note.md",
-            connections=connection_objects,
-            min_quality=0.6
+            target_note="test-note.md", connections=connection_objects, min_quality=0.6
         )
 
         assert len(suggestions) > 0
@@ -54,23 +52,18 @@ class TestAIConnectionsIntegration:
     def test_convert_similarity_results_to_connection_objects(self):
         """Test conversion of AIConnections similarity results to connection objects"""
         # FAILING TEST - Need connection object converter
-        similarity_results = [
-            ("ai-concepts.md", 0.85),
-            ("machine-learning.md", 0.72)
-        ]
+        similarity_results = [("ai-concepts.md", 0.85), ("machine-learning.md", 0.72)]
 
         # This converter doesn't exist yet
         from src.ai.connection_integration_utils import SimilarityResultConverter
 
         connections = SimilarityResultConverter.convert_to_connections(
-            similarity_results,
-            target_note="test-note.md",
-            vault_path="test_vault"
+            similarity_results, target_note="test-note.md", vault_path="test_vault"
         )
 
         assert len(connections) == 2
-        assert hasattr(connections[0], 'target_file')
-        assert hasattr(connections[0], 'similarity_score')
+        assert hasattr(connections[0], "target_file")
+        assert hasattr(connections[0], "similarity_score")
         assert connections[0].target_file == "ai-concepts.md"
         assert connections[0].similarity_score == 0.85
 
@@ -82,20 +75,21 @@ class TestAIConnectionsIntegration:
             test_notes = {
                 "ai-concepts.md": "# AI Concepts\nArtificial intelligence and machine learning concepts.",
                 "ml-basics.md": "# ML Basics\nMachine learning fundamentals and algorithms.",
-                "data-science.md": "# Data Science\nData analysis and statistical methods."
+                "data-science.md": "# Data Science\nData analysis and statistical methods.",
             }
 
             for filename, content in test_notes.items():
-                with open(os.path.join(temp_dir, filename), 'w') as f:
+                with open(os.path.join(temp_dir, filename), "w") as f:
                     f.write(content)
 
             # This integration doesn't exist yet
-            from src.ai.real_note_connection_processor import RealNoteConnectionProcessor
+            from src.ai.real_note_connection_processor import (
+                RealNoteConnectionProcessor,
+            )
 
             processor = RealNoteConnectionProcessor(temp_dir)
             suggestions = processor.generate_suggestions_for_note(
-                target_file="ai-concepts.md",
-                min_quality=0.5
+                target_file="ai-concepts.md", min_quality=0.5
             )
 
             assert len(suggestions) > 0
@@ -113,11 +107,15 @@ class TestCLIRealConnectionIntegration:
             test_note = os.path.join(temp_dir, "target-note.md")
             related_note = os.path.join(temp_dir, "related-note.md")
 
-            with open(test_note, 'w') as f:
-                f.write("# Target Note\nThis note discusses AI concepts and machine learning.")
+            with open(test_note, "w") as f:
+                f.write(
+                    "# Target Note\nThis note discusses AI concepts and machine learning."
+                )
 
-            with open(related_note, 'w') as f:
-                f.write("# Related Note\nMachine learning algorithms and artificial intelligence.")
+            with open(related_note, "w") as f:
+                f.write(
+                    "# Related Note\nMachine learning algorithms and artificial intelligence."
+                )
 
             # Mock CLI arguments
             args = Mock()
@@ -149,7 +147,7 @@ class TestCLIRealConnectionIntegration:
             }
 
             for filename, content in test_notes.items():
-                with open(os.path.join(temp_dir, filename), 'w') as f:
+                with open(os.path.join(temp_dir, filename), "w") as f:
                     f.write(content)
 
             args = Mock()
@@ -200,25 +198,22 @@ class TestEndToEndWorkflow:
                 "ai-fundamentals.md": """# AI Fundamentals
                 Artificial intelligence encompasses machine learning, natural language processing,
                 and computer vision. Key concepts include neural networks and deep learning.""",
-
                 "machine-learning-basics.md": """# Machine Learning Basics  
                 Machine learning is a subset of artificial intelligence that enables computers
                 to learn from data without explicit programming. Popular algorithms include
                 decision trees, neural networks, and support vector machines.""",
-
                 "neural-networks.md": """# Neural Networks
                 Neural networks are computational models inspired by biological neural networks.
                 They consist of interconnected nodes (neurons) that process information
                 through weighted connections. Deep learning uses multi-layered neural networks.""",
-
                 "data-science-workflow.md": """# Data Science Workflow
                 Data science involves collecting, cleaning, analyzing, and interpreting data
                 to extract insights. The workflow typically includes data exploration,
-                feature engineering, model training, and validation."""
+                feature engineering, model training, and validation.""",
             }
 
             for filename, content in vault_notes.items():
-                with open(os.path.join(temp_dir, filename), 'w') as f:
+                with open(os.path.join(temp_dir, filename), "w") as f:
                     f.write(content)
 
             # Test end-to-end workflow
@@ -226,9 +221,7 @@ class TestEndToEndWorkflow:
 
             processor = EndToEndLinkProcessor(temp_dir)
             suggestions = processor.process_note_for_link_suggestions(
-                target_note="ai-fundamentals.md",
-                min_quality=0.6,
-                max_results=3
+                target_note="ai-fundamentals.md", min_quality=0.6, max_results=3
             )
 
             # Validation
@@ -242,9 +235,21 @@ class TestEndToEndWorkflow:
         """Test connection quality scoring with actual content analysis"""
         # GREEN PHASE - Test with realistic expectations
         test_content_pairs = [
-            ("AI machine learning concepts algorithms", "Machine learning algorithms AI concepts", 0.6),  # High overlap
-            ("Neural networks deep learning artificial", "Artificial neural networks AI deep learning", 0.6),   # Medium-high
-            ("Data science methodology", "Weather forecasting models", 0.1),                  # Low similarity
+            (
+                "AI machine learning concepts algorithms",
+                "Machine learning algorithms AI concepts",
+                0.6,
+            ),  # High overlap
+            (
+                "Neural networks deep learning artificial",
+                "Artificial neural networks AI deep learning",
+                0.6,
+            ),  # Medium-high
+            (
+                "Data science methodology",
+                "Weather forecasting models",
+                0.1,
+            ),  # Low similarity
         ]
 
         from src.ai.real_content_quality_analyzer import RealContentQualityAnalyzer
@@ -276,13 +281,11 @@ class TestIntegrationUtilities:
         similarity_results = [
             ("related-note-1.md", 0.85),
             ("related-note-2.md", 0.72),
-            ("related-note-3.md", 0.68)
+            ("related-note-3.md", 0.68),
         ]
 
         connections = SimilarityResultConverter.convert_batch(
-            similarity_results,
-            target_note="source-note.md",
-            vault_path="/test/vault"
+            similarity_results, target_note="source-note.md", vault_path="/test/vault"
         )
 
         assert len(connections) == 3
@@ -296,7 +299,7 @@ class TestIntegrationUtilities:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             test_file = os.path.join(temp_dir, "test-note.md")
-            with open(test_file, 'w') as f:
+            with open(test_file, "w") as f:
                 f.write("# Test Note\nThis is test content.")
 
             loader = RealNoteLoader(temp_dir)
@@ -316,6 +319,7 @@ class TestIntegrationUtilities:
         with monitor.measure("connection_discovery"):
             # Simulate some processing
             import time
+
             time.sleep(0.1)
 
         metrics = monitor.get_metrics()

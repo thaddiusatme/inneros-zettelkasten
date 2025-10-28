@@ -39,7 +39,7 @@ class AIAssistant:
     def process_note(self, file_path: str, output_format: str = "json") -> Dict:
         """Process a single note with all AI features."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             return {"error": f"Failed to read file: {e}"}
@@ -48,7 +48,7 @@ class AIAssistant:
             "file": file_path,
             "api_available": self.api_available,
             "word_count": len(content.split()),
-            "processing_results": {}
+            "processing_results": {},
         }
 
         # Generate tags
@@ -58,13 +58,10 @@ class AIAssistant:
             results["processing_results"]["tags"] = {
                 "success": True,
                 "tags": tags,
-                "count": len(tags)
+                "count": len(tags),
             }
         except Exception as e:
-            results["processing_results"]["tags"] = {
-                "success": False,
-                "error": str(e)
-            }
+            results["processing_results"]["tags"] = {"success": False, "error": str(e)}
 
         # Generate summary if content is long enough
         if self.summarizer.should_summarize(content):
@@ -77,22 +74,22 @@ class AIAssistant:
                     "success": True,
                     "abstractive": {
                         "content": abstractive,
-                        "word_count": len(abstractive.split()) if abstractive else 0
+                        "word_count": len(abstractive.split()) if abstractive else 0,
                     },
                     "extractive": {
                         "content": extractive,
-                        "word_count": len(extractive.split()) if extractive else 0
-                    }
+                        "word_count": len(extractive.split()) if extractive else 0,
+                    },
                 }
             except Exception as e:
                 results["processing_results"]["summary"] = {
                     "success": False,
-                    "error": str(e)
+                    "error": str(e),
                 }
         else:
             results["processing_results"]["summary"] = {
                 "success": False,
-                "reason": "Content too short for summarization"
+                "reason": "Content too short for summarization",
             }
 
         # Enhance note quality
@@ -103,12 +100,12 @@ class AIAssistant:
                 "success": True,
                 "quality_score": enhancement.get("quality_score", 0),
                 "suggestions": enhancement.get("suggestions", []),
-                "missing_links": enhancement.get("missing_links", [])
+                "missing_links": enhancement.get("missing_links", []),
             }
         except Exception as e:
             results["processing_results"]["enhancement"] = {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         return results
@@ -116,7 +113,7 @@ class AIAssistant:
     def find_connections(self, file_path: str, corpus_dir: str) -> Dict:
         """Find connections for a note within a corpus."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 target_content = f.read()
         except Exception as e:
             return {"error": f"Failed to read target file: {e}"}
@@ -127,7 +124,7 @@ class AIAssistant:
         for md_file in corpus_path.rglob("*.md"):
             if md_file.name != Path(file_path).name:  # Exclude target file
                 try:
-                    with open(md_file, 'r', encoding='utf-8') as f:
+                    with open(md_file, "r", encoding="utf-8") as f:
                         rel_path = str(md_file.relative_to(corpus_path))
                         corpus[rel_path] = f.read()
                 except Exception:
@@ -147,7 +144,7 @@ class AIAssistant:
                     for filename, score in similar_notes
                 ],
                 "link_suggestions": suggestions,
-                "api_available": self.api_available
+                "api_available": self.api_available,
             }
         except Exception as e:
             return {"error": f"Failed to find connections: {e}"}
@@ -164,7 +161,7 @@ class AIAssistant:
             "total_files": len(files),
             "processed": 0,
             "failed": 0,
-            "results": []
+            "results": [],
         }
 
         for file_path in files:
@@ -182,17 +179,22 @@ class AIAssistant:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AI Assistant for InnerOS Zettelkasten")
+    parser = argparse.ArgumentParser(
+        description="AI Assistant for InnerOS Zettelkasten"
+    )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Process single note
     process_parser = subparsers.add_parser("process", help="Process a single note")
     process_parser.add_argument("file", help="Path to the note file")
-    process_parser.add_argument("--format", choices=["json", "text"], default="text",
-                               help="Output format")
+    process_parser.add_argument(
+        "--format", choices=["json", "text"], default="text", help="Output format"
+    )
 
     # Find connections
-    connect_parser = subparsers.add_parser("connect", help="Find connections for a note")
+    connect_parser = subparsers.add_parser(
+        "connect", help="Find connections for a note"
+    )
     connect_parser.add_argument("file", help="Path to the target note")
     connect_parser.add_argument("corpus", help="Directory containing note corpus")
 
@@ -222,13 +224,17 @@ def main():
             # Text format output
             print(f"📄 Processing: {result['file']}")
             print(f"📊 Word count: {result['word_count']}")
-            print(f"🔌 API Status: {'✅ Available' if result['api_available'] else '❌ Unavailable'}")
+            print(
+                f"🔌 API Status: {'✅ Available' if result['api_available'] else '❌ Unavailable'}"
+            )
             print()
 
             # Tags
             tags_result = result["processing_results"].get("tags", {})
             if tags_result.get("success"):
-                print(f"🏷️  Tags ({tags_result['count']}): {', '.join(tags_result['tags'])}")
+                print(
+                    f"🏷️  Tags ({tags_result['count']}): {', '.join(tags_result['tags'])}"
+                )
             else:
                 print(f"🏷️  Tags: ❌ {tags_result.get('error', 'Failed')}")
 
@@ -244,16 +250,24 @@ def main():
                 if ext_summary["content"]:
                     print(f"   {ext_summary['content'][:200]}...")
             else:
-                print(f"📝 Summary: ❌ {summary_result.get('error', summary_result.get('reason', 'Failed'))}")
+                print(
+                    f"📝 Summary: ❌ {summary_result.get('error', summary_result.get('reason', 'Failed'))}"
+                )
 
             # Enhancement
             enhancement_result = result["processing_results"].get("enhancement", {})
             if enhancement_result.get("success"):
-                print(f"✨ Quality Score: {enhancement_result['quality_score']:.1f}/1.0")
+                print(
+                    f"✨ Quality Score: {enhancement_result['quality_score']:.1f}/1.0"
+                )
                 if enhancement_result["suggestions"]:
-                    print(f"💡 Suggestions: {len(enhancement_result['suggestions'])} items")
+                    print(
+                        f"💡 Suggestions: {len(enhancement_result['suggestions'])} items"
+                    )
                 if enhancement_result["missing_links"]:
-                    print(f"🔗 Missing Links: {len(enhancement_result['missing_links'])} suggestions")
+                    print(
+                        f"🔗 Missing Links: {len(enhancement_result['missing_links'])} suggestions"
+                    )
             else:
                 print(f"✨ Enhancement: ❌ {enhancement_result.get('error', 'Failed')}")
 
@@ -266,7 +280,9 @@ def main():
 
         print(f"🎯 Target: {result['target_file']}")
         print(f"📚 Corpus: {result['corpus_size']} notes")
-        print(f"🔌 API: {'✅ Available' if result['api_available'] else '❌ Unavailable'}")
+        print(
+            f"🔌 API: {'✅ Available' if result['api_available'] else '❌ Unavailable'}"
+        )
         print()
 
         if result["similar_notes"]:
@@ -292,13 +308,15 @@ def main():
         print(f"   Failed: {result['failed']}")
 
         if args.output:
-            with open(args.output, 'w') as f:
+            with open(args.output, "w") as f:
                 json.dump(result, f, indent=2)
             print(f"💾 Results saved to: {args.output}")
 
     elif args.command == "status":
         print("🔍 AI Service Status Check")
-        print(f"🔌 Ollama API: {'✅ Available' if assistant.api_available else '❌ Unavailable'}")
+        print(
+            f"🔌 Ollama API: {'✅ Available' if assistant.api_available else '❌ Unavailable'}"
+        )
 
         if assistant.api_available:
             print(f"🤖 Model: {assistant.client.model}")
@@ -307,7 +325,9 @@ def main():
 
             # Test basic functionality
             try:
-                test_tags = assistant.tagger.generate_tags("This is a test note about machine learning.")
+                test_tags = assistant.tagger.generate_tags(
+                    "This is a test note about machine learning."
+                )
                 print(f"🏷️  Tagging: ✅ Working ({len(test_tags)} tags generated)")
             except Exception as e:
                 print(f"🏷️  Tagging: ❌ Error - {e}")

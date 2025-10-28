@@ -24,7 +24,7 @@ class TestNoteProcessingCoordinatorInitialization:
             tagger=Mock(),
             summarizer=Mock(),
             enhancer=Mock(),
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
         assert coordinator.tagger is not None
@@ -37,7 +37,7 @@ class TestNoteProcessingCoordinatorInitialization:
         config = {
             "auto_tag_inbox": False,
             "min_words_for_summary": 300,
-            "max_tags_per_note": 5
+            "max_tags_per_note": 5,
         }
 
         coordinator = NoteProcessingCoordinator(
@@ -45,7 +45,7 @@ class TestNoteProcessingCoordinatorInitialization:
             summarizer=Mock(),
             enhancer=Mock(),
             connection_coordinator=Mock(),
-            config=config
+            config=config,
         )
 
         assert coordinator.config["auto_tag_inbox"] == False
@@ -63,21 +63,23 @@ class TestNoteProcessingCore:
         tagger.generate_tags = Mock(return_value=["ai-generated", "test-tag"])
 
         enhancer = Mock()
-        enhancer.enhance_note = Mock(return_value={
-            "quality_score": 0.75,
-            "suggestions": ["Add more detail", "Include examples"]
-        })
+        enhancer.enhance_note = Mock(
+            return_value={
+                "quality_score": 0.75,
+                "suggestions": ["Add more detail", "Include examples"],
+            }
+        )
 
         connection_coordinator = Mock()
-        connection_coordinator.discover_connections = Mock(return_value=[
-            {"filename": "related-note.md", "similarity": 0.85}
-        ])
+        connection_coordinator.discover_connections = Mock(
+            return_value=[{"filename": "related-note.md", "similarity": 0.85}]
+        )
 
         return NoteProcessingCoordinator(
             tagger=tagger,
             summarizer=Mock(),
             enhancer=enhancer,
-            connection_coordinator=connection_coordinator
+            connection_coordinator=connection_coordinator,
         )
 
     @pytest.fixture
@@ -99,7 +101,9 @@ It has multiple paragraphs and should trigger AI processing.
         note_path.write_text(content)
         return note_path
 
-    def test_process_note_with_ai_full_pipeline(self, coordinator, sample_note_path, tmp_path):
+    def test_process_note_with_ai_full_pipeline(
+        self, coordinator, sample_note_path, tmp_path
+    ):
         """Test complete AI processing pipeline."""
         # Create a corpus directory for connection discovery
         corpus_dir = tmp_path / "corpus"
@@ -137,7 +141,9 @@ It has multiple paragraphs and should trigger AI processing.
         assert "score" in result["processing"]["quality"]
         assert result["processing"]["quality"]["score"] == 0.75
 
-    def test_process_note_generates_recommendations(self, coordinator, sample_note_path):
+    def test_process_note_generates_recommendations(
+        self, coordinator, sample_note_path
+    ):
         """Test workflow recommendations based on quality."""
         result = coordinator.process_note(str(sample_note_path))
 
@@ -149,7 +155,9 @@ It has multiple paragraphs and should trigger AI processing.
         assert rec["action"] == "promote_to_permanent"
         assert rec["confidence"] == "high"
 
-    def test_process_note_discovers_connections(self, coordinator, sample_note_path, tmp_path):
+    def test_process_note_discovers_connections(
+        self, coordinator, sample_note_path, tmp_path
+    ):
         """Test connection discovery integration."""
         # Create corpus directory for connection discovery
         corpus_dir = tmp_path / "corpus"
@@ -176,7 +184,7 @@ class TestFastModeProcessing:
             tagger=Mock(),
             summarizer=Mock(),
             enhancer=Mock(),
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
     @pytest.fixture
@@ -205,7 +213,9 @@ Short content for fast heuristic processing.
         coordinator.enhancer.enhance_note.assert_not_called()
         coordinator.connection_coordinator.discover_connections.assert_not_called()
 
-    def test_fast_mode_calculates_heuristic_quality(self, coordinator, sample_note_path):
+    def test_fast_mode_calculates_heuristic_quality(
+        self, coordinator, sample_note_path
+    ):
         """Test fast mode quality calculation based on word count."""
         result = coordinator.process_note(str(sample_note_path), fast=True)
 
@@ -223,7 +233,9 @@ Short content for fast heuristic processing.
         assert "recommendations" in result
         assert len(result["recommendations"]) > 0
         assert result["recommendations"][0]["action"] in [
-            "promote_to_permanent", "move_to_fleeting", "improve_or_archive"
+            "promote_to_permanent",
+            "move_to_fleeting",
+            "improve_or_archive",
         ]
 
 
@@ -237,7 +249,7 @@ class TestTemplatePlaceholderFixing:
             tagger=Mock(),
             summarizer=Mock(),
             enhancer=Mock(),
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
     def test_fix_template_placeholders_in_frontmatter(self, coordinator, tmp_path):
@@ -323,16 +335,15 @@ class TestDryRunMode:
         tagger.generate_tags = Mock(return_value=["new-tag"])
 
         enhancer = Mock()
-        enhancer.enhance_note = Mock(return_value={
-            "quality_score": 0.8,
-            "suggestions": ["Test suggestion"]
-        })
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.8, "suggestions": ["Test suggestion"]}
+        )
 
         return NoteProcessingCoordinator(
             tagger=tagger,
             summarizer=Mock(),
             enhancer=enhancer,
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
     def test_dry_run_does_not_modify_files(self, coordinator, tmp_path):
@@ -356,13 +367,15 @@ Content
     def test_dry_run_still_processes_with_ai(self, coordinator, tmp_path):
         """Test dry-run still performs AI processing for preview."""
         note_path = tmp_path / "dry-run-ai.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 title: Test
 tags: []
 ---
 
 Content
-""")
+"""
+        )
 
         # Note: dry_run defaults fast to True, so we need to explicitly set fast=False
         result = coordinator.process_note(str(note_path), dry_run=True, fast=False)
@@ -381,7 +394,7 @@ class TestErrorHandling:
             tagger=Mock(),
             summarizer=Mock(),
             enhancer=Mock(),
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
     def test_handles_missing_file(self, coordinator):
@@ -397,13 +410,15 @@ class TestErrorHandling:
         coordinator.tagger.generate_tags = Mock(side_effect=Exception("AI error"))
 
         note_path = tmp_path / "error-test.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 title: Error Test
 tags: []
 ---
 
 Content
-""")
+"""
+        )
 
         result = coordinator.process_note(str(note_path))
 
@@ -439,11 +454,11 @@ class TestIntegrationWithWorkflow:
             tagger=Mock(),
             summarizer=Mock(),
             enhancer=Mock(),
-            connection_coordinator=Mock()
+            connection_coordinator=Mock(),
         )
 
         # Should have main processing method
-        assert hasattr(coordinator, 'process_note')
+        assert hasattr(coordinator, "process_note")
         assert callable(coordinator.process_note)
 
     def test_coordinator_returns_expected_result_format(self, tmp_path):
@@ -451,18 +466,24 @@ class TestIntegrationWithWorkflow:
         coordinator = NoteProcessingCoordinator(
             tagger=Mock(generate_tags=Mock(return_value=[])),
             summarizer=Mock(),
-            enhancer=Mock(enhance_note=Mock(return_value={"quality_score": 0.5, "suggestions": []})),
-            connection_coordinator=Mock(discover_connections=Mock(return_value=[]))
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.5, "suggestions": []}
+                )
+            ),
+            connection_coordinator=Mock(discover_connections=Mock(return_value=[])),
         )
 
         note_path = tmp_path / "format-test.md"
-        note_path.write_text("""---
+        note_path.write_text(
+            """---
 title: Format Test
 tags: []
 ---
 
 Content
-""")
+"""
+        )
 
         result = coordinator.process_note(str(note_path))
 

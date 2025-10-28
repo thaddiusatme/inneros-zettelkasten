@@ -30,6 +30,7 @@ from src.utils.frontmatter import parse_frontmatter
 @dataclass
 class TagAnalysisResult:
     """Result of tag analysis operations"""
+
     tag: str
     quality_score: float
     suggestions: List[str]
@@ -52,7 +53,9 @@ class TagAnalysisProcessor:
         # Generate suggestions if quality is low
         suggestions = []
         if quality_score < 0.7:
-            suggestion_recommendations = self.enhancement_engine.suggestion_generator.suggest_semantic_alternatives(tag)
+            suggestion_recommendations = self.enhancement_engine.suggestion_generator.suggest_semantic_alternatives(
+                tag
+            )
             suggestions = [rec.suggested_tag for rec in suggestion_recommendations]
 
         # Identify specific issues
@@ -63,10 +66,12 @@ class TagAnalysisProcessor:
             quality_score=quality_score,
             suggestions=suggestions,
             issues=issues,
-            metadata=quality_result
+            metadata=quality_result,
         )
 
-    def analyze_tag_collection(self, tags: List[str], context_map: Optional[Dict[str, str]] = None) -> List[TagAnalysisResult]:
+    def analyze_tag_collection(
+        self, tags: List[str], context_map: Optional[Dict[str, str]] = None
+    ) -> List[TagAnalysisResult]:
         """Analyze a collection of tags efficiently"""
         results = []
         context_map = context_map or {}
@@ -78,7 +83,9 @@ class TagAnalysisProcessor:
 
         return results
 
-    def _identify_tag_issues(self, tag: str, quality_result: Dict[str, Any]) -> List[str]:
+    def _identify_tag_issues(
+        self, tag: str, quality_result: Dict[str, Any]
+    ) -> List[str]:
         """Identify specific issues with a tag"""
         issues = []
 
@@ -89,7 +96,7 @@ class TagAnalysisProcessor:
             issues.append("empty_tag")
         if len(tag) < 2:
             issues.append("too_short")
-        if len(tag.split('-')) > 5:
+        if len(tag.split("-")) > 5:
             issues.append("overly_complex")
         if tag != tag.lower():
             issues.append("inconsistent_case")
@@ -106,20 +113,22 @@ class CLIExportManager:
         export_data = {
             "analysis_results": data,
             "timestamp": time.time(),
-            "version": "1.0"
+            "version": "1.0",
         }
 
         if include_metadata:
             export_data["metadata"] = {
                 "export_type": "tag_analysis",
                 "total_items": len(data.get("analyzed_tags", [])),
-                "processing_time": data.get("processing_time", 0)
+                "processing_time": data.get("processing_time", 0),
             }
 
         return json.dumps(export_data, indent=2)
 
     @staticmethod
-    def export_to_csv(data: List[Dict[str, Any]], fieldnames: Optional[List[str]] = None) -> str:
+    def export_to_csv(
+        data: List[Dict[str, Any]], fieldnames: Optional[List[str]] = None
+    ) -> str:
         """Export data to CSV format"""
         if not data:
             return ""
@@ -152,7 +161,9 @@ class UserInteractionManager:
     def __init__(self, enhancement_engine):
         self.enhancement_engine = enhancement_engine
 
-    def run_interactive_session(self, problematic_tags: List[TagAnalysisResult]) -> Dict[str, Any]:
+    def run_interactive_session(
+        self, problematic_tags: List[TagAnalysisResult]
+    ) -> Dict[str, Any]:
         """Run interactive enhancement session"""
         decisions = []
         enhanced_count = 0
@@ -160,7 +171,7 @@ class UserInteractionManager:
         # In testing, we simulate user input
         # In production, this would use real input()
         for i, tag_result in enumerate(problematic_tags):
-            if hasattr(self, '_mock_inputs'):
+            if hasattr(self, "_mock_inputs"):
                 # Use mock inputs for testing
                 decision = self._get_mock_decision(i)
             else:
@@ -174,24 +185,40 @@ class UserInteractionManager:
         return {
             "user_decisions": decisions,
             "enhanced_count": enhanced_count,
-            "session_complete": True
+            "session_complete": True,
         }
 
     def collect_feedback(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
         """Collect and process user feedback"""
         # Record feedback with learning engine
         feedback_for_learning = {
-            "user_corrections": [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))],
-            "accepted_suggestions": [] if feedback_data.get("user_action") != "accepted" else [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))],
-            "rejected_suggestions": [] if feedback_data.get("user_action") != "rejected" else [(feedback_data.get("tag", ""), feedback_data.get("suggested", ""))]
+            "user_corrections": [
+                (feedback_data.get("tag", ""), feedback_data.get("suggested", ""))
+            ],
+            "accepted_suggestions": (
+                []
+                if feedback_data.get("user_action") != "accepted"
+                else [
+                    (feedback_data.get("tag", ""), feedback_data.get("suggested", ""))
+                ]
+            ),
+            "rejected_suggestions": (
+                []
+                if feedback_data.get("user_action") != "rejected"
+                else [
+                    (feedback_data.get("tag", ""), feedback_data.get("suggested", ""))
+                ]
+            ),
         }
 
-        self.enhancement_engine.feedback_learner.learn_from_user_corrections(feedback_for_learning)
+        self.enhancement_engine.feedback_learner.learn_from_user_corrections(
+            feedback_for_learning
+        )
 
         return {
             "feedback_recorded": True,
             "learning_update": "Feedback processed for future improvements",
-            "feedback_id": f"fb_{int(time.time())}"
+            "feedback_id": f"fb_{int(time.time())}",
         }
 
     def _prompt_user_decision(self, tag_result: TagAnalysisResult) -> str:
@@ -221,7 +248,9 @@ class PerformanceOptimizer:
     """Batch processing and progress reporting"""
 
     @staticmethod
-    def process_with_progress(items: List[Any], processor_func, show_progress: bool = True) -> Tuple[List[Any], float]:
+    def process_with_progress(
+        items: List[Any], processor_func, show_progress: bool = True
+    ) -> Tuple[List[Any], float]:
         """Process items with progress reporting"""
         start_time = time.time()
         results = []
@@ -232,7 +261,7 @@ class PerformanceOptimizer:
         for i, item in enumerate(items):
             if show_progress:
                 percentage = ((i + 1) / len(items)) * 100
-                print(f"Progress: {i + 1}/{len(items)} ({percentage:.1f}%)", end='\r')
+                print(f"Progress: {i + 1}/{len(items)} ({percentage:.1f}%)", end="\r")
 
             result = processor_func(item)
             results.append(result)
@@ -244,28 +273,34 @@ class PerformanceOptimizer:
         return results, processing_time
 
     @staticmethod
-    def batch_process_tags(tags: List[str], enhancement_engine, batch_size: int = 50) -> Dict[str, Any]:
+    def batch_process_tags(
+        tags: List[str], enhancement_engine, batch_size: int = 50
+    ) -> Dict[str, Any]:
         """Process tags in batches for optimal performance"""
         results = []
         total_processed = 0
 
         for i in range(0, len(tags), batch_size):
-            batch = tags[i:i + batch_size]
+            batch = tags[i : i + batch_size]
 
             # Process batch
             for tag in batch:
-                quality_result = enhancement_engine.smart_enhancer.assess_tag_quality(tag)
-                results.append({
-                    "tag": tag,
-                    "quality_score": quality_result.get("score", 0.0),
-                    "batch_index": i // batch_size
-                })
+                quality_result = enhancement_engine.smart_enhancer.assess_tag_quality(
+                    tag
+                )
+                results.append(
+                    {
+                        "tag": tag,
+                        "quality_score": quality_result.get("score", 0.0),
+                        "batch_index": i // batch_size,
+                    }
+                )
                 total_processed += 1
 
         return {
             "results": results,
             "total_processed": total_processed,
-            "batch_count": len(range(0, len(tags), batch_size))
+            "batch_count": len(range(0, len(tags), batch_size)),
         }
 
 
@@ -287,11 +322,15 @@ class BackupManager:
 
         # In a real implementation, this would copy files
         # For testing, we just create the directory structure
-        (backup_path / "metadata.json").write_text(json.dumps({
-            "backup_time": time.time(),
-            "vault_path": str(self.vault_path),
-            "backup_type": "tag_enhancement"
-        }))
+        (backup_path / "metadata.json").write_text(
+            json.dumps(
+                {
+                    "backup_time": time.time(),
+                    "vault_path": str(self.vault_path),
+                    "backup_type": "tag_enhancement",
+                }
+            )
+        )
 
         return str(backup_path)
 
@@ -320,12 +359,14 @@ class BackupManager:
                 if metadata_file.exists():
                     try:
                         metadata = json.loads(metadata_file.read_text())
-                        backups.append({
-                            "name": backup_dir.name,
-                            "path": str(backup_dir),
-                            "created": metadata.get("backup_time", 0),
-                            "vault_path": metadata.get("vault_path", "")
-                        })
+                        backups.append(
+                            {
+                                "name": backup_dir.name,
+                                "path": str(backup_dir),
+                                "created": metadata.get("backup_time", 0),
+                                "vault_path": metadata.get("vault_path", ""),
+                            }
+                        )
                     except json.JSONDecodeError:
                         continue
 
@@ -346,7 +387,7 @@ class VaultTagCollector:
         if knowledge_dir.exists():
             for md_file in knowledge_dir.rglob("*.md"):
                 try:
-                    with open(md_file, 'r', encoding='utf-8') as f:
+                    with open(md_file, "r", encoding="utf-8") as f:
                         content = f.read()
 
                     # Parse frontmatter
@@ -361,13 +402,17 @@ class VaultTagCollector:
                                     tags.add(tag.strip())
                                     if tag not in tag_sources:
                                         tag_sources[tag] = []
-                                    tag_sources[tag].append(str(md_file.relative_to(vault_path)))
+                                    tag_sources[tag].append(
+                                        str(md_file.relative_to(vault_path))
+                                    )
                         elif isinstance(file_tags, str) and file_tags.strip():
                             tag = file_tags.strip()
                             tags.add(tag)
                             if tag not in tag_sources:
                                 tag_sources[tag] = []
-                            tag_sources[tag].append(str(md_file.relative_to(vault_path)))
+                            tag_sources[tag].append(
+                                str(md_file.relative_to(vault_path))
+                            )
 
                 except Exception:
                     continue  # Skip problematic files
@@ -387,5 +432,5 @@ class VaultTagCollector:
             "longest": max(tags, key=len) if tags else "",
             "shortest": min(tags, key=len) if tags else "",
             "numeric_count": sum(1 for tag in tags if tag.isdigit()),
-            "empty_count": sum(1 for tag in tags if not tag.strip())
+            "empty_count": sum(1 for tag in tags if not tag.strip()),
         }

@@ -8,14 +8,14 @@ from .metrics_utils import TimeWindowManager, MetricsAggregator
 
 class MetricsStorage:
     """In-memory storage with time-windowed aggregation.
-    
+
     Stores metrics with timestamps in a ring buffer,
     retaining only data within the configured window.
     """
 
     def __init__(self, retention_hours: int = 24):
         """Initialize storage with retention window.
-        
+
         Args:
             retention_hours: Hours to retain metrics (default: 24)
         """
@@ -24,20 +24,20 @@ class MetricsStorage:
 
     def store(self, metrics: Dict[str, Any]) -> None:
         """Store metrics with current timestamp.
-        
+
         Args:
             metrics: Metrics dictionary to store
         """
         entry = {
             "timestamp": TimeWindowManager.get_current_timestamp(),
-            "metrics": metrics
+            "metrics": metrics,
         }
         self._storage.append(entry)
         self._prune_old_entries()
 
     def get_latest(self) -> Dict[str, Any]:
         """Get most recent metrics entry.
-        
+
         Returns:
             Latest metrics with timestamp, or None if empty
         """
@@ -47,7 +47,7 @@ class MetricsStorage:
 
     def get_last_24h(self) -> List[Dict[str, Any]]:
         """Get metrics from last 24 hours.
-        
+
         Returns:
             List of metrics entries within retention window
         """
@@ -56,7 +56,7 @@ class MetricsStorage:
 
     def aggregate_hourly(self) -> List[Dict[str, Any]]:
         """Aggregate metrics by hour.
-        
+
         Returns:
             List of hourly aggregated metrics
         """
@@ -70,17 +70,15 @@ class MetricsStorage:
         result = []
         for hour, entries in sorted(hourly_groups.items()):
             stats = MetricsAggregator.calculate_hourly_stats(entries)
-            result.append({
-                "hour": hour,
-                "metrics": stats["metrics"],
-                "count": stats["count"]
-            })
+            result.append(
+                {"hour": hour, "metrics": stats["metrics"], "count": stats["count"]}
+            )
 
         return result
 
     def export_json(self) -> str:
         """Export all metrics as JSON string.
-        
+
         Returns:
             JSON string of all stored metrics
         """
@@ -93,9 +91,9 @@ class MetricsStorage:
 
         # Use utility for time window checking
         self._storage = [
-            entry for entry in self._storage
+            entry
+            for entry in self._storage
             if TimeWindowManager.is_within_window(
-                entry["timestamp"],
-                self.retention_hours
+                entry["timestamp"], self.retention_hours
             )
         ]

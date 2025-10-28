@@ -18,11 +18,11 @@ class RealContentQualityAnalyzer:
     def analyze_connection_quality(self, content1: str, content2: str) -> QualityScore:
         """
         Analyze connection quality between two content strings
-        
+
         Args:
             content1: First content string
             content2: Second content string
-            
+
         Returns:
             QualityScore with score, confidence, and explanation
         """

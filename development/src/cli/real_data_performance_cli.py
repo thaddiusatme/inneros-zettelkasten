@@ -38,14 +38,18 @@ class RealDataPerformanceCLI:
         # Performance validation components
         self.validator = RealDataPerformanceValidator(vault_path)
         self.memory_monitor = MemoryUsageMonitor()
-        self.concurrent_manager = ConcurrentProcessingManager(vault_path, max_concurrent)
+        self.concurrent_manager = ConcurrentProcessingManager(
+            vault_path, max_concurrent
+        )
         self.metrics_collector = PerformanceMetricsCollector()
         self.stress_manager = StressTestManager(vault_path)
         self.progress_reporter = RealTimeProgressReporter()
 
         self.performance_history = []
 
-    def run_performance_benchmark(self, benchmark_type: str, options: Dict[str, Any] = None) -> Dict[str, Any]:
+    def run_performance_benchmark(
+        self, benchmark_type: str, options: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         REFACTOR Phase: Run comprehensive performance benchmarks
         Production-ready with full error handling and reporting
@@ -70,8 +74,14 @@ class RealDataPerformanceCLI:
                 return {
                     "success": False,
                     "error": f"Unknown benchmark type: {benchmark_type}",
-                    "available_types": ["small_batch", "medium_batch", "large_batch",
-                                      "memory_validation", "concurrent_processing", "stress_test"]
+                    "available_types": [
+                        "small_batch",
+                        "medium_batch",
+                        "large_batch",
+                        "memory_validation",
+                        "concurrent_processing",
+                        "stress_test",
+                    ],
                 }
 
         except Exception as e:
@@ -79,7 +89,7 @@ class RealDataPerformanceCLI:
                 "success": False,
                 "error": str(e),
                 "benchmark_type": benchmark_type,
-                "execution_time": time.time() - start_time
+                "execution_time": time.time() - start_time,
             }
 
     def _run_small_batch_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -97,7 +107,7 @@ class RealDataPerformanceCLI:
             "meets_target": result.get("processing_time", 0) < 30,
             "processed_count": result.get("processed_count", 0),
             "memory_usage_mb": self.memory_monitor.get_peak_memory_usage_mb(),
-            "performance_metrics": result.get("performance_metrics", {})
+            "performance_metrics": result.get("performance_metrics", {}),
         }
 
     def _run_medium_batch_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -115,7 +125,7 @@ class RealDataPerformanceCLI:
             "meets_target": result.get("processing_time", 0) < 120,
             "processed_count": result.get("processed_count", 0),
             "memory_usage_mb": self.memory_monitor.get_peak_memory_usage_mb(),
-            "performance_metrics": result.get("performance_metrics", {})
+            "performance_metrics": result.get("performance_metrics", {}),
         }
 
     def _run_large_batch_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -137,10 +147,12 @@ class RealDataPerformanceCLI:
             "processed_count": result.get("processed_count", 0),
             "memory_usage_mb": self.memory_monitor.get_peak_memory_usage_mb(),
             "progress_updates": len(self.progress_reporter.get_updates()),
-            "performance_metrics": result.get("performance_metrics", {})
+            "performance_metrics": result.get("performance_metrics", {}),
         }
 
-    def _run_memory_validation_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
+    def _run_memory_validation_benchmark(
+        self, options: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """REFACTOR: Memory validation with <512MB target"""
         test_notes = self._generate_test_notes(100, "memory_validation")
 
@@ -158,15 +170,17 @@ class RealDataPerformanceCLI:
             "actual_memory_mb": peak_memory,
             "meets_target": peak_memory < 512,
             "processed_count": result.get("processed_count", 0),
-            "comprehensive_metrics": self.metrics_collector.get_comprehensive_metrics()
+            "comprehensive_metrics": self.metrics_collector.get_comprehensive_metrics(),
         }
 
-    def _run_concurrent_processing_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
+    def _run_concurrent_processing_benchmark(
+        self, options: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """REFACTOR: Concurrent processing validation"""
         note_sets = [
             self._generate_test_notes(20, "concurrent_session_1"),
             self._generate_test_notes(15, "concurrent_session_2"),
-            self._generate_test_notes(25, "concurrent_session_3")
+            self._generate_test_notes(25, "concurrent_session_3"),
         ]
 
         start_time = time.time()
@@ -184,7 +198,7 @@ class RealDataPerformanceCLI:
             "total_processed": total_processed,
             "processing_time": processing_time,
             "session_results": results,
-            "isolation_maintained": all(r.get("conflicts", 0) == 0 for r in results)
+            "isolation_maintained": all(r.get("conflicts", 0) == 0 for r in results),
         }
 
     def _run_stress_test_benchmark(self, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -195,15 +209,19 @@ class RealDataPerformanceCLI:
         dataset_result = self.stress_manager.run_stress_test(large_dataset)
 
         large_content_notes = self._generate_large_content_notes(50)
-        memory_result = self.stress_manager.run_memory_pressure_test(large_content_notes)
+        memory_result = self.stress_manager.run_memory_pressure_test(
+            large_content_notes
+        )
 
         return {
             "success": dataset_result["completed"] and memory_result["completed"],
             "benchmark_type": "stress_test",
             "dataset_stress": dataset_result,
             "memory_pressure_stress": memory_result,
-            "overall_resilience": not (dataset_result.get("crashed", True) or
-                                     memory_result.get("memory_exceeded", True))
+            "overall_resilience": not (
+                dataset_result.get("crashed", True)
+                or memory_result.get("memory_exceeded", True)
+            ),
         }
 
     def _generate_test_notes(self, count: int, batch_type: str) -> List[Dict[str, Any]]:
@@ -238,8 +256,8 @@ under realistic load conditions with varied content types and structures.
                     "created": datetime.now().isoformat(),
                     "batch_type": batch_type,
                     "index": i,
-                    "tags": ["performance-test", batch_type, "tdd-iteration-5"]
-                }
+                    "tags": ["performance-test", batch_type, "tdd-iteration-5"],
+                },
             }
             notes.append(note)
         return notes
@@ -247,18 +265,22 @@ under realistic load conditions with varied content types and structures.
     def _generate_large_content_notes(self, count: int) -> List[Dict[str, Any]]:
         """Generate notes with large content for memory pressure testing"""
         notes = []
-        large_content = "Large content section for memory pressure testing. " * 500  # ~25KB per note
+        large_content = (
+            "Large content section for memory pressure testing. " * 500
+        )  # ~25KB per note
 
         for i in range(count):
             note = {
                 "path": Path(self.vault_path) / f"memory-pressure-{i:03d}.md",
                 "content": f"# Memory Pressure Test Note {i}\n\n{large_content}",
-                "metadata": {"type": "memory_pressure", "index": i, "size": "large"}
+                "metadata": {"type": "memory_pressure", "index": i, "size": "large"},
             }
             notes.append(note)
         return notes
 
-    def generate_performance_report(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate_performance_report(
+        self, results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """REFACTOR: Generate comprehensive performance report"""
         total_benchmarks = len(results)
         successful_benchmarks = sum(1 for r in results if r.get("success", False))
@@ -270,7 +292,7 @@ under realistic load conditions with varied content types and structures.
             "success_rate": successful_benchmarks / max(total_benchmarks, 1),
             "benchmark_results": results,
             "performance_targets_met": self._analyze_targets_met(results),
-            "recommendations": self._generate_recommendations(results)
+            "recommendations": self._generate_recommendations(results),
         }
 
         return performance_summary
@@ -294,13 +316,21 @@ under realistic load conditions with varied content types and structures.
             if not result.get("meets_target", True):
                 benchmark_type = result.get("benchmark_type", "unknown")
                 if benchmark_type == "large_batch":
-                    recommendations.append("Consider batch size optimization for large dataset processing")
+                    recommendations.append(
+                        "Consider batch size optimization for large dataset processing"
+                    )
                 elif benchmark_type == "memory_validation":
-                    recommendations.append("Memory usage optimization needed - consider streaming processing")
+                    recommendations.append(
+                        "Memory usage optimization needed - consider streaming processing"
+                    )
                 elif "concurrent" in benchmark_type:
-                    recommendations.append("Concurrent processing optimization - review session isolation")
+                    recommendations.append(
+                        "Concurrent processing optimization - review session isolation"
+                    )
 
         if not recommendations:
-            recommendations.append("All performance targets met - system operating at optimal levels")
+            recommendations.append(
+                "All performance targets met - system operating at optimal levels"
+            )
 
         return recommendations

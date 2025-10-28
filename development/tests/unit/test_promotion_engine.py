@@ -69,10 +69,7 @@ class TestPromotionEngineInitialization:
         base_dir = tmp_path / "knowledge"
         base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        config = {
-            "default_quality_threshold": 0.8,
-            "auto_summarize": True
-        }
+        config = {"default_quality_threshold": 0.8, "auto_summarize": True}
 
         # Act
         engine = PromotionEngine(base_dir, lifecycle_manager, config=config)
@@ -259,7 +256,9 @@ quality_score: 0.85
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
-        with patch('src.utils.directory_organizer.DirectoryOrganizer') as mock_organizer:
+        with patch(
+            "src.utils.directory_organizer.DirectoryOrganizer"
+        ) as mock_organizer:
             mock_instance = Mock()
             mock_instance.create_backup.return_value = Path("/backup/path")
             mock_organizer.return_value = mock_instance
@@ -381,11 +380,11 @@ quality_score: {quality}
     def test_auto_promote_scans_subdirectories(self, tmp_path):
         """
         RED PHASE TEST: Auto-promotion should scan subdirectories recursively.
-        
+
         This test validates that notes in Inbox/YouTube/ (or any subdirectory)
         are included in auto-promotion candidates. Current implementation uses
         glob("*.md") which only scans root Inbox/, missing 17 YouTube notes.
-        
+
         Expected to FAIL until glob() is replaced with rglob() in GREEN phase.
         """
         # Arrange
@@ -435,9 +434,9 @@ quality_score: {quality}
             f"got {result['total_candidates']}. "
             "Current implementation only scans root Inbox/, missing subdirectories."
         )
-        assert result["would_promote_count"] == 4, (
-            f"Expected 4 promotions, got {result['would_promote_count']}"
-        )
+        assert (
+            result["would_promote_count"] == 4
+        ), f"Expected 4 promotions, got {result['would_promote_count']}"
 
         # Verify preview includes subdirectory notes
         assert len(result["preview"]) == 4
@@ -460,10 +459,7 @@ class TestPromotionValidation:
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         note_path = tmp_path / "test.md"
-        frontmatter = {
-            "type": "permanent",
-            "quality_score": 0.5
-        }
+        frontmatter = {"type": "permanent", "quality_score": 0.5}
 
         # Act
         is_valid, note_type, error_msg = engine._validate_note_for_promotion(
@@ -505,10 +501,7 @@ class TestPromotionValidation:
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         note_path = tmp_path / "test.md"
-        frontmatter = {
-            "type": "permanent",
-            "quality_score": 0.85
-        }
+        frontmatter = {"type": "permanent", "quality_score": 0.85}
 
         # Act
         is_valid, note_type, error_msg = engine._validate_note_for_promotion(
@@ -578,7 +571,9 @@ quality_score: 0.85
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
-        with patch('src.utils.directory_organizer.DirectoryOrganizer') as mock_organizer:
+        with patch(
+            "src.utils.directory_organizer.DirectoryOrganizer"
+        ) as mock_organizer:
             mock_instance = Mock()
             mock_instance.create_backup.return_value = Path("/backup/path")
             mock_organizer.return_value = mock_instance

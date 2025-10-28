@@ -6,9 +6,12 @@ REFACTOR Phase: Production-ready utility classes for image preservation
 
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, TYPE_CHECKING
 from dataclasses import dataclass
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from .image_integrity_monitor import WorkflowIntegrityResult
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ImageTrackingInfo:
     """Structured information about tracked images"""
+
     path: Path
     context: str
     registered_at: str
@@ -26,6 +30,7 @@ class ImageTrackingInfo:
 @dataclass
 class WorkflowCheckpoint:
     """Structured information about workflow checkpoints"""
+
     name: str
     timestamp: str
     tracked_images_count: int
@@ -47,14 +52,16 @@ class ImageRegistrationManager:
             context=context,
             registered_at=datetime.now().isoformat(),
             exists_at_registration=image_path.exists(),
-            current_status=image_path.exists()
+            current_status=image_path.exists(),
         )
 
         self.tracked_images[image_key] = tracking_info
         logger.debug(f"Registered image {image_path} with context: {context}")
         return image_key
 
-    def register_multiple_images(self, images: List[Path], context_prefix: str) -> List[str]:
+    def register_multiple_images(
+        self, images: List[Path], context_prefix: str
+    ) -> List[str]:
         """Register multiple images with consistent context"""
         registered_keys = []
         for i, image in enumerate(images):
@@ -62,7 +69,9 @@ class ImageRegistrationManager:
             key = self.register_image(image, context)
             registered_keys.append(key)
 
-        logger.debug(f"Registered {len(images)} images with context prefix: {context_prefix}")
+        logger.debug(
+            f"Registered {len(images)} images with context prefix: {context_prefix}"
+        )
         return registered_keys
 
     def update_image_status(self, image_key: str) -> bool:
@@ -98,9 +107,9 @@ class WorkflowStepTracker:
         self.workflow_start_time = datetime.now()
 
         step_info = {
-            'step_type': 'workflow_start',
-            'workflow_name': workflow_name,
-            'timestamp': self.workflow_start_time.isoformat()
+            "step_type": "workflow_start",
+            "workflow_name": workflow_name,
+            "timestamp": self.workflow_start_time.isoformat(),
         }
         self.workflow_steps.append(step_info)
         logger.debug(f"Started tracking workflow: {workflow_name}")
@@ -108,34 +117,38 @@ class WorkflowStepTracker:
     def track_step(self, step_name: str, images: List[Path]) -> Dict:
         """Track a workflow step with associated images"""
         step_info = {
-            'step_type': 'processing_step',
-            'step_name': step_name,
-            'workflow': self.current_workflow or 'unknown',
-            'timestamp': datetime.now().isoformat(),
-            'images': [str(img) for img in images],
-            'image_states': {str(img): img.exists() for img in images}
+            "step_type": "processing_step",
+            "step_name": step_name,
+            "workflow": self.current_workflow or "unknown",
+            "timestamp": datetime.now().isoformat(),
+            "images": [str(img) for img in images],
+            "image_states": {str(img): img.exists() for img in images},
         }
 
         self.workflow_steps.append(step_info)
         logger.debug(f"Tracked workflow step: {step_name} with {len(images)} images")
         return step_info
 
-    def create_checkpoint(self, checkpoint_name: str, registration_manager: 'ImageRegistrationManager') -> WorkflowCheckpoint:
+    def create_checkpoint(
+        self, checkpoint_name: str, registration_manager: "ImageRegistrationManager"
+    ) -> WorkflowCheckpoint:
         """Create a workflow checkpoint with current image integrity"""
         checkpoint = WorkflowCheckpoint(
             name=checkpoint_name,
             timestamp=datetime.now().isoformat(),
             tracked_images_count=len(registration_manager.tracked_images),
-            image_integrity={key: info.path.exists()
-                           for key, info in registration_manager.tracked_images.items()}
+            image_integrity={
+                key: info.path.exists()
+                for key, info in registration_manager.tracked_images.items()
+            },
         )
 
         checkpoint_info = {
-            'step_type': 'checkpoint',
-            'name': checkpoint_name,
-            'timestamp': checkpoint.timestamp,
-            'tracked_images_count': checkpoint.tracked_images_count,
-            'image_integrity': checkpoint.image_integrity
+            "step_type": "checkpoint",
+            "name": checkpoint_name,
+            "timestamp": checkpoint.timestamp,
+            "tracked_images_count": checkpoint.tracked_images_count,
+            "image_integrity": checkpoint.image_integrity,
         }
 
         self.workflow_steps.append(checkpoint_info)
@@ -150,36 +163,44 @@ class AuditReportGenerator:
         self.vault_path = vault_path
         logger.debug(f"AuditReportGenerator initialized for vault: {vault_path}")
 
-    def generate_basic_report(self, registration_manager: 'ImageRegistrationManager',
-                            step_tracker: 'WorkflowStepTracker') -> Dict:
+    def generate_basic_report(
+        self,
+        registration_manager: "ImageRegistrationManager",
+        step_tracker: "WorkflowStepTracker",
+    ) -> Dict:
         """Generate basic audit report with current state"""
         report = {
-            'vault_path': str(self.vault_path),
-            'generated_at': datetime.now().isoformat(),
-            'summary': {
-                'total_tracked_images': len(registration_manager.tracked_images),
-                'workflow_steps': len(step_tracker.workflow_steps),
-                'current_workflow': step_tracker.current_workflow,
-                'missing_images': len(registration_manager.get_missing_images())
+            "vault_path": str(self.vault_path),
+            "generated_at": datetime.now().isoformat(),
+            "summary": {
+                "total_tracked_images": len(registration_manager.tracked_images),
+                "workflow_steps": len(step_tracker.workflow_steps),
+                "current_workflow": step_tracker.current_workflow,
+                "missing_images": len(registration_manager.get_missing_images()),
             },
-            'tracked_images': {
+            "tracked_images": {
                 key: {
-                    'path': str(info.path),
-                    'context': info.context,
-                    'registered_at': info.registered_at,
-                    'exists_at_registration': info.exists_at_registration,
-                    'current_status': info.current_status
+                    "path": str(info.path),
+                    "context": info.context,
+                    "registered_at": info.registered_at,
+                    "exists_at_registration": info.exists_at_registration,
+                    "current_status": info.current_status,
                 }
                 for key, info in registration_manager.tracked_images.items()
             },
-            'workflow_history': step_tracker.workflow_steps
+            "workflow_history": step_tracker.workflow_steps,
         }
 
-        logger.debug(f"Generated basic audit report with {len(registration_manager.tracked_images)} images")
+        logger.debug(
+            f"Generated basic audit report with {len(registration_manager.tracked_images)} images"
+        )
         return report
 
-    def generate_detailed_report(self, registration_manager: 'ImageRegistrationManager',
-                               step_tracker: 'WorkflowStepTracker') -> Dict:
+    def generate_detailed_report(
+        self,
+        registration_manager: "ImageRegistrationManager",
+        step_tracker: "WorkflowStepTracker",
+    ) -> Dict:
         """Generate detailed audit report with analysis"""
         basic_report = self.generate_basic_report(registration_manager, step_tracker)
 
@@ -189,13 +210,21 @@ class AuditReportGenerator:
 
         detailed_report = {
             **basic_report,
-            'analysis': {
-                'integrity_score': 1.0 - (len(missing_images) / max(1, len(registration_manager.tracked_images))),
-                'missing_images': [str(img) for img in missing_images],
-                'integrity_trends': integrity_analysis,
-                'risk_assessment': self._assess_risk_level(missing_images, registration_manager),
-                'recommendations': self._generate_recommendations(missing_images, integrity_analysis)
-            }
+            "analysis": {
+                "integrity_score": 1.0
+                - (
+                    len(missing_images)
+                    / max(1, len(registration_manager.tracked_images))
+                ),
+                "missing_images": [str(img) for img in missing_images],
+                "integrity_trends": integrity_analysis,
+                "risk_assessment": self._assess_risk_level(
+                    missing_images, registration_manager
+                ),
+                "recommendations": self._generate_recommendations(
+                    missing_images, integrity_analysis
+                ),
+            },
         }
 
         logger.debug("Generated detailed audit report with analysis")
@@ -203,67 +232,87 @@ class AuditReportGenerator:
 
     def _analyze_integrity_trends(self, workflow_steps: List[Dict]) -> Dict:
         """Analyze image integrity trends across workflow steps"""
-        checkpoints = [step for step in workflow_steps if step.get('step_type') == 'checkpoint']
+        checkpoints = [
+            step for step in workflow_steps if step.get("step_type") == "checkpoint"
+        ]
 
         if not checkpoints:
-            return {'trend': 'insufficient_data', 'checkpoints_analyzed': 0}
+            return {"trend": "insufficient_data", "checkpoints_analyzed": 0}
 
         integrity_scores = []
         for checkpoint in checkpoints:
-            image_integrity = checkpoint.get('image_integrity', {})
+            image_integrity = checkpoint.get("image_integrity", {})
             if image_integrity:
-                preserved_count = sum(1 for exists in image_integrity.values() if exists)
+                preserved_count = sum(
+                    1 for exists in image_integrity.values() if exists
+                )
                 total_count = len(image_integrity)
                 score = preserved_count / max(1, total_count)
                 integrity_scores.append(score)
 
         if len(integrity_scores) >= 2:
-            trend = 'improving' if integrity_scores[-1] > integrity_scores[0] else 'degrading'
+            trend = (
+                "improving"
+                if integrity_scores[-1] > integrity_scores[0]
+                else "degrading"
+            )
         else:
-            trend = 'stable'
+            trend = "stable"
 
         return {
-            'trend': trend,
-            'checkpoints_analyzed': len(checkpoints),
-            'integrity_scores': integrity_scores,
-            'average_integrity': sum(integrity_scores) / max(1, len(integrity_scores))
+            "trend": trend,
+            "checkpoints_analyzed": len(checkpoints),
+            "integrity_scores": integrity_scores,
+            "average_integrity": sum(integrity_scores) / max(1, len(integrity_scores)),
         }
 
-    def _assess_risk_level(self, missing_images: List[Path],
-                          registration_manager: 'ImageRegistrationManager') -> str:
+    def _assess_risk_level(
+        self,
+        missing_images: List[Path],
+        registration_manager: "ImageRegistrationManager",
+    ) -> str:
         """Assess risk level based on missing images"""
         total_images = len(registration_manager.tracked_images)
         missing_count = len(missing_images)
 
         if total_images == 0:
-            return 'unknown'
+            return "unknown"
 
         missing_ratio = missing_count / total_images
 
         if missing_ratio == 0:
-            return 'low'
+            return "low"
         elif missing_ratio < 0.1:
-            return 'moderate'
+            return "moderate"
         elif missing_ratio < 0.25:
-            return 'high'
+            return "high"
         else:
-            return 'critical'
+            return "critical"
 
-    def _generate_recommendations(self, missing_images: List[Path],
-                                integrity_analysis: Dict) -> List[str]:
+    def _generate_recommendations(
+        self, missing_images: List[Path], integrity_analysis: Dict
+    ) -> List[str]:
         """Generate actionable recommendations based on analysis"""
         recommendations = []
 
         if missing_images:
-            recommendations.append(f"Investigate {len(missing_images)} missing images immediately")
+            recommendations.append(
+                f"Investigate {len(missing_images)} missing images immediately"
+            )
             recommendations.append("Review AI workflow processes for image handling")
-            recommendations.append("Implement backup/recovery procedures for missing images")
+            recommendations.append(
+                "Implement backup/recovery procedures for missing images"
+            )
 
-        trend = integrity_analysis.get('trend', 'unknown')
-        if trend == 'degrading':
-            recommendations.append("Image integrity is degrading - review recent workflow changes")
-        elif trend == 'improving':
-            recommendations.append("Image integrity is improving - maintain current practices")
+        trend = integrity_analysis.get("trend", "unknown")
+        if trend == "degrading":
+            recommendations.append(
+                "Image integrity is degrading - review recent workflow changes"
+            )
+        elif trend == "improving":
+            recommendations.append(
+                "Image integrity is improving - maintain current practices"
+            )
 
         if not recommendations:
             recommendations.append("Image integrity is stable - continue monitoring")
@@ -277,8 +326,11 @@ class IntegrityValidationEngine:
     def __init__(self):
         logger.debug("IntegrityValidationEngine initialized")
 
-    def validate_workflow_integrity(self, registration_manager: 'ImageRegistrationManager',
-                                  step_tracker: 'WorkflowStepTracker') -> 'WorkflowIntegrityResult':
+    def validate_workflow_integrity(
+        self,
+        registration_manager: "ImageRegistrationManager",
+        step_tracker: "WorkflowStepTracker",
+    ) -> "WorkflowIntegrityResult":
         """Perform comprehensive workflow integrity validation"""
         missing_images = registration_manager.get_missing_images()
         all_preserved = len(missing_images) == 0
@@ -286,28 +338,31 @@ class IntegrityValidationEngine:
         # Extract workflow step names for result
         workflow_steps = []
         for step in step_tracker.workflow_steps:
-            if step.get('step_type') == 'checkpoint':
-                workflow_steps.append(step.get('name', 'unnamed_checkpoint'))
-            elif step.get('step_type') == 'processing_step':
-                workflow_steps.append(step.get('step_name', 'unnamed_step'))
+            if step.get("step_type") == "checkpoint":
+                workflow_steps.append(step.get("name", "unnamed_checkpoint"))
+            elif step.get("step_type") == "processing_step":
+                workflow_steps.append(step.get("step_name", "unnamed_step"))
 
         # Create audit trail from checkpoints
         audit_trail = {}
         for step in step_tracker.workflow_steps:
-            if step.get('step_type') == 'checkpoint':
-                name = step.get('name', 'unnamed')
-                timestamp = step.get('timestamp', '')
+            if step.get("step_type") == "checkpoint":
+                name = step.get("name", "unnamed")
+                timestamp = step.get("timestamp", "")
                 audit_trail[name] = timestamp
 
         from .image_integrity_monitor import WorkflowIntegrityResult
+
         result = WorkflowIntegrityResult(
             all_images_preserved=all_preserved,
             missing_images=missing_images,
             workflow_steps=workflow_steps,
-            audit_trail=audit_trail
+            audit_trail=audit_trail,
         )
 
-        logger.debug(f"Workflow integrity validation: preserved={all_preserved}, missing={len(missing_images)}")
+        logger.debug(
+            f"Workflow integrity validation: preserved={all_preserved}, missing={len(missing_images)}"
+        )
         return result
 
     def validate_single_image(self, image_path: Path) -> bool:
@@ -320,7 +375,9 @@ class IntegrityValidationEngine:
         """Validate existence of a set of images"""
         results = {str(img): img.exists() for img in images}
         missing_count = sum(1 for exists in results.values() if not exists)
-        logger.debug(f"Image set validation: {len(images)} total, {missing_count} missing")
+        logger.debug(
+            f"Image set validation: {len(images)} total, {missing_count} missing"
+        )
         return results
 
 
@@ -361,7 +418,9 @@ class PerformanceOptimizer:
             if str(image) in self.cached_existence:
                 cache_hits += 1
 
-        logger.debug(f"Batch existence check: {len(images)} images, {cache_hits} cache hits")
+        logger.debug(
+            f"Batch existence check: {len(images)} images, {cache_hits} cache hits"
+        )
         return results
 
     def clear_cache(self):
@@ -372,7 +431,7 @@ class PerformanceOptimizer:
     def get_cache_stats(self) -> Dict:
         """Get cache statistics"""
         return {
-            'cached_entries': len(self.cached_existence),
-            'cache_duration': self.cache_duration,
-            'last_cleared': datetime.now().isoformat()
+            "cached_entries": len(self.cached_existence),
+            "cache_duration": self.cache_duration,
+            "last_cleared": datetime.now().isoformat(),
         }

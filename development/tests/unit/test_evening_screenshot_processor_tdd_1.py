@@ -30,7 +30,7 @@ from src.cli.evening_screenshot_utils import (
     ScreenshotOCRProcessor,
     DailyNoteGenerator,
     SmartLinkIntegrator,
-    SafeScreenshotManager
+    SafeScreenshotManager,
 )
 
 
@@ -52,13 +52,15 @@ class TestEveningScreenshotProcessor(unittest.TestCase):
         self.test_screenshots = [
             "Screenshot_20250925_180000_Instagram.jpg",
             "Screenshot_20250925_181500_Samsung Internet.jpg",
-            "Screenshot_20250925_183000_Gmail.jpg"
+            "Screenshot_20250925_183000_Gmail.jpg",
         ]
 
         for screenshot in self.test_screenshots:
             screenshot_path = self.onedrive_dir / screenshot
             # Create minimal JPG file (empty file for testing)
-            screenshot_path.write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')  # Minimal JPEG header
+            screenshot_path.write_bytes(
+                b"\xff\xd8\xff\xe0\x00\x10JFIF"
+            )  # Minimal JPEG header
 
     def tearDown(self):
         """Clean up test environment"""
@@ -69,7 +71,7 @@ class TestEveningScreenshotProcessor(unittest.TestCase):
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
                 onedrive_path=str(self.onedrive_dir),
-                knowledge_path=str(self.knowledge_dir)
+                knowledge_path=str(self.knowledge_dir),
             )
 
     def test_evening_processor_scan_screenshots_fails(self):
@@ -77,7 +79,7 @@ class TestEveningScreenshotProcessor(unittest.TestCase):
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
                 onedrive_path=str(self.onedrive_dir),
-                knowledge_path=str(self.knowledge_dir)
+                knowledge_path=str(self.knowledge_dir),
             )
             screenshots = processor.scan_todays_screenshots()
             self.assertGreaterEqual(len(screenshots), 3)
@@ -87,12 +89,12 @@ class TestEveningScreenshotProcessor(unittest.TestCase):
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
                 onedrive_path=str(self.onedrive_dir),
-                knowledge_path=str(self.knowledge_dir)
+                knowledge_path=str(self.knowledge_dir),
             )
             result = processor.process_evening_batch()
-            self.assertIn('processed_count', result)
-            self.assertIn('daily_note_path', result)
-            self.assertIn('processing_time', result)
+            self.assertIn("processed_count", result)
+            self.assertIn("daily_note_path", result)
+            self.assertIn("processing_time", result)
 
 
 class TestOneDriveScreenshotDetector(unittest.TestCase):
@@ -107,16 +109,18 @@ class TestOneDriveScreenshotDetector(unittest.TestCase):
         # Create test screenshots with various dates
         self.today_screenshots = [
             f"Screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}_Instagram.jpg",
-            f"Screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}_Gmail.jpg"
+            f"Screenshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}_Gmail.jpg",
         ]
 
         self.old_screenshots = [
             "Screenshot_20250920_120000_Facebook.jpg",
-            "Screenshot_20250921_140000_Twitter.jpg"
+            "Screenshot_20250921_140000_Twitter.jpg",
         ]
 
         for screenshot in self.today_screenshots + self.old_screenshots:
-            (self.onedrive_dir / screenshot).write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')
+            (self.onedrive_dir / screenshot).write_bytes(
+                b"\xff\xd8\xff\xe0\x00\x10JFIF"
+            )
 
     def tearDown(self):
         """Clean up test environment"""
@@ -138,17 +142,21 @@ class TestOneDriveScreenshotDetector(unittest.TestCase):
         """RED: Test Samsung screenshot naming pattern detection (should fail - method doesn't exist)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             detector = OneDriveScreenshotDetector(str(self.onedrive_dir))
-            is_samsung = detector.is_samsung_screenshot("Screenshot_20250925_180000_Instagram.jpg")
+            is_samsung = detector.is_samsung_screenshot(
+                "Screenshot_20250925_180000_Instagram.jpg"
+            )
             self.assertTrue(is_samsung)
 
     def test_screenshot_metadata_extraction_fails(self):
         """RED: Test screenshot metadata extraction (should fail - method doesn't exist)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             detector = OneDriveScreenshotDetector(str(self.onedrive_dir))
-            metadata = detector.extract_screenshot_metadata("Screenshot_20250925_180000_Instagram.jpg")
-            self.assertIn('timestamp', metadata)
-            self.assertIn('app_name', metadata)
-            self.assertEqual(metadata['app_name'], 'Instagram')
+            metadata = detector.extract_screenshot_metadata(
+                "Screenshot_20250925_180000_Instagram.jpg"
+            )
+            self.assertIn("timestamp", metadata)
+            self.assertIn("app_name", metadata)
+            self.assertEqual(metadata["app_name"], "Instagram")
 
 
 class TestScreenshotOCRProcessor(unittest.TestCase):
@@ -158,7 +166,7 @@ class TestScreenshotOCRProcessor(unittest.TestCase):
         """Set up test environment"""
         self.temp_dir = tempfile.mkdtemp()
         self.test_image = Path(self.temp_dir) / "test_screenshot.jpg"
-        self.test_image.write_bytes(b'\xff\xd8\xff\xe0\x00\x10JFIF')  # Minimal JPEG
+        self.test_image.write_bytes(b"\xff\xd8\xff\xe0\x00\x10JFIF")  # Minimal JPEG
 
     def tearDown(self):
         """Clean up test environment"""
@@ -214,7 +222,7 @@ class TestDailyNoteGenerator(unittest.TestCase):
                 suggested_connections=["machine-learning", "automation"],
                 content_type="social_media",
                 confidence_score=0.85,
-                processing_time=2.5
+                processing_time=2.5,
             ),
             VisionAnalysisResult(
                 extracted_text="Meeting notes: Project deadline moved to next Friday",
@@ -224,8 +232,8 @@ class TestDailyNoteGenerator(unittest.TestCase):
                 suggested_connections=["workflow", "planning"],
                 content_type="messaging_app",
                 confidence_score=0.90,
-                processing_time=1.8
-            )
+                processing_time=1.8,
+            ),
         ]
 
     def tearDown(self):
@@ -244,7 +252,7 @@ class TestDailyNoteGenerator(unittest.TestCase):
             note_path = generator.generate_daily_note(
                 ocr_results=self.mock_ocr_results,
                 screenshot_paths=["test1.jpg", "test2.jpg"],
-                date_str="2025-09-25"
+                date_str="2025-09-25",
             )
             self.assertTrue(Path(note_path).exists())
 
@@ -253,12 +261,11 @@ class TestDailyNoteGenerator(unittest.TestCase):
         with self.assertRaises((ImportError, NameError, AttributeError)):
             generator = DailyNoteGenerator(str(self.knowledge_dir))
             yaml_content = generator.generate_yaml_frontmatter(
-                ocr_results=self.mock_ocr_results,
-                screenshot_count=2
+                ocr_results=self.mock_ocr_results, screenshot_count=2
             )
-            self.assertIn('type: fleeting', yaml_content)
-            self.assertIn('status: inbox', yaml_content)
-            self.assertIn('created:', yaml_content)
+            self.assertIn("type: fleeting", yaml_content)
+            self.assertIn("status: inbox", yaml_content)
+            self.assertIn("created:", yaml_content)
 
     def test_embedded_images_generation_fails(self):
         """RED: Test embedded image generation (should fail - method doesn't exist)"""
@@ -266,7 +273,7 @@ class TestDailyNoteGenerator(unittest.TestCase):
             generator = DailyNoteGenerator(str(self.knowledge_dir))
             screenshot_paths = ["screenshot1.jpg", "screenshot2.jpg"]
             embedded_content = generator.generate_embedded_images(screenshot_paths)
-            self.assertIn('![](', embedded_content)
+            self.assertIn("![](", embedded_content)
 
 
 class TestSmartLinkIntegrator(unittest.TestCase):
@@ -280,10 +287,14 @@ class TestSmartLinkIntegrator(unittest.TestCase):
 
         # Create mock MOC files
         self.ahs_moc = self.knowledge_dir / "AHS MOC.md"
-        self.ahs_moc.write_text("# AHS Business Strategy\n\n[[business-model]] [[content-creation]]")
+        self.ahs_moc.write_text(
+            "# AHS Business Strategy\n\n[[business-model]] [[content-creation]]"
+        )
 
         self.tech_moc = self.knowledge_dir / "Technical MOC.md"
-        self.tech_moc.write_text("# Technical Notes\n\n[[programming]] [[ai-development]]")
+        self.tech_moc.write_text(
+            "# Technical Notes\n\n[[programming]] [[ai-development]]"
+        )
 
     def tearDown(self):
         """Clean up test environment"""
@@ -306,7 +317,7 @@ class TestSmartLinkIntegrator(unittest.TestCase):
                 suggested_connections=["automation", "ai-tools"],
                 content_type="social_media",
                 confidence_score=0.80,
-                processing_time=2.0
+                processing_time=2.0,
             )
             suggestions = integrator.suggest_moc_connections(ocr_result)
             self.assertGreater(len(suggestions), 0)
@@ -316,11 +327,12 @@ class TestSmartLinkIntegrator(unittest.TestCase):
         with self.assertRaises((ImportError, NameError, AttributeError)):
             integrator = SmartLinkIntegrator(str(self.knowledge_dir))
             daily_note_path = Path(self.temp_dir) / "daily-note.md"
-            daily_note_path.write_text("# Daily Screenshots\n\nContent about AI and business.")
+            daily_note_path.write_text(
+                "# Daily Screenshots\n\nContent about AI and business."
+            )
 
             updated_content = integrator.auto_insert_links(
-                daily_note_path,
-                suggested_links=["[[AHS MOC]]", "[[ai-development]]"]
+                daily_note_path, suggested_links=["[[AHS MOC]]", "[[ai-development]]"]
             )
             self.assertIn("[[AHS MOC]]", updated_content)
 
@@ -362,7 +374,11 @@ class TestSafeScreenshotManager(unittest.TestCase):
         """RED: Test screenshot deduplication (should fail - method doesn't exist)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             manager = SafeScreenshotManager(str(self.knowledge_dir))
-            screenshots = ["screenshot1.jpg", "screenshot2.jpg", "screenshot1.jpg"]  # Duplicate
+            screenshots = [
+                "screenshot1.jpg",
+                "screenshot2.jpg",
+                "screenshot1.jpg",
+            ]  # Duplicate
             deduplicated = manager.deduplicate_screenshots(screenshots)
             self.assertEqual(len(deduplicated), 2)
 
@@ -384,31 +400,28 @@ class TestEveningWorkflowIntegration(unittest.TestCase):
         """RED: Test integration with WorkflowManager (should fail - integration doesn't exist)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
-                onedrive_path="/fake/path",
-                knowledge_path=str(self.knowledge_dir)
+                onedrive_path="/fake/path", knowledge_path=str(self.knowledge_dir)
             )
             # Should integrate with existing WorkflowManager for AI processing
             result = processor.process_with_workflow_manager()
-            self.assertIn('quality_scores', result)
-            self.assertIn('ai_tags', result)
+            self.assertIn("quality_scores", result)
+            self.assertIn("ai_tags", result)
 
     def test_weekly_review_integration_fails(self):
         """RED: Test weekly review integration (should fail - integration doesn't exist)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
-                onedrive_path="/fake/path",
-                knowledge_path=str(self.knowledge_dir)
+                onedrive_path="/fake/path", knowledge_path=str(self.knowledge_dir)
             )
             # Should make daily notes compatible with weekly review
             daily_note = processor.generate_review_compatible_note()
-            self.assertIn('status: inbox', daily_note)
+            self.assertIn("status: inbox", daily_note)
 
     def test_performance_targets_fails(self):
         """RED: Test performance targets (<10 minutes for 5-20 screenshots) (should fail - no implementation)"""
         with self.assertRaises((ImportError, NameError, AttributeError)):
             processor = EveningScreenshotProcessor(
-                onedrive_path="/fake/path",
-                knowledge_path=str(self.knowledge_dir)
+                onedrive_path="/fake/path", knowledge_path=str(self.knowledge_dir)
             )
             # Mock 15 screenshots
             screenshots = [f"screenshot_{i}.jpg" for i in range(15)]
@@ -418,5 +431,5 @@ class TestEveningWorkflowIntegration(unittest.TestCase):
             self.assertLess(processing_time, 600)  # 10 minutes = 600 seconds
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

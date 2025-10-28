@@ -14,7 +14,7 @@ from typing import Dict
 class FleetingFormatter:
     """
     Formatter for fleeting notes health and triage reports
-    
+
     Responsibilities:
     - Format health reports for console display
     - Format triage reports for console display
@@ -25,21 +25,17 @@ class FleetingFormatter:
     def display_health_report(self, health_report: Dict) -> str:
         """
         Display fleeting notes health report to console.
-        
+
         Args:
             health_report: Health report dictionary from WorkflowManager
-            
+
         Returns:
             Formatted string for console output
         """
         lines = []
 
         # Health status with emoji
-        status_emoji = {
-            "HEALTHY": "✅",
-            "ATTENTION": "⚠️",
-            "CRITICAL": "🚨"
-        }
+        status_emoji = {"HEALTHY": "✅", "ATTENTION": "⚠️", "CRITICAL": "🚨"}
 
         status = health_report["health_status"]
         lines.append(f"   Health Status: {status_emoji.get(status, '❓')} {status}")
@@ -81,10 +77,10 @@ class FleetingFormatter:
     def format_health_markdown(self, health_report: Dict) -> str:
         """
         Format fleeting health report as markdown for export.
-        
+
         Args:
             health_report: Health report dictionary from WorkflowManager
-            
+
         Returns:
             Markdown formatted string
         """
@@ -107,7 +103,7 @@ class FleetingFormatter:
 
         # Summary
         lines.append("## Summary")
-        lines.append(health_report['summary'])
+        lines.append(health_report["summary"])
         lines.append("")
 
         # Recommendations
@@ -120,10 +116,10 @@ class FleetingFormatter:
     def display_triage_report(self, triage_report: Dict) -> str:
         """
         Display fleeting triage report to console.
-        
+
         Args:
             triage_report: Triage report dictionary from WorkflowManager
-            
+
         Returns:
             Formatted string for console output
         """
@@ -132,7 +128,9 @@ class FleetingFormatter:
         # Quality assessment
         lines.append("QUALITY ASSESSMENT")
         lines.append("-" * 18)
-        lines.append(f"   Total notes processed: {triage_report['total_notes_processed']}")
+        lines.append(
+            f"   Total notes processed: {triage_report['total_notes_processed']}"
+        )
 
         # Quality distribution
         quality_dist = triage_report["quality_distribution"]
@@ -159,7 +157,11 @@ class FleetingFormatter:
             action_groups[action].append(rec)
 
         for action, recs in action_groups.items():
-            action_emoji = "✅" if "Promote" in action else "⚠️" if "Enhancement" in action else "🚨"
+            action_emoji = (
+                "✅"
+                if "Promote" in action
+                else "⚠️" if "Enhancement" in action else "🚨"
+            )
             lines.append(f"   {action_emoji} {action}: {len(recs)} notes")
             for rec in recs[:3]:  # Show top 3 per category
                 note_name = Path(rec["note_path"]).stem
@@ -173,17 +175,19 @@ class FleetingFormatter:
         lines.append("-" * 24)
         processing_time = triage_report.get("processing_time", 0)
         lines.append(f"   Processing time: {processing_time:.2f} seconds")
-        lines.append(f"   Notes per second: {triage_report['total_notes_processed'] / max(processing_time, 0.1):.1f}")
+        lines.append(
+            f"   Notes per second: {triage_report['total_notes_processed'] / max(processing_time, 0.1):.1f}"
+        )
 
         return "\n".join(lines)
 
     def format_triage_markdown(self, triage_report: Dict) -> str:
         """
         Format fleeting triage report as markdown for export.
-        
+
         Args:
             triage_report: Triage report dictionary from WorkflowManager
-            
+
         Returns:
             Markdown formatted string
         """

@@ -35,11 +35,16 @@ class StressTestManager:
         try:
             # Process dataset in chunks to avoid overwhelming system
             chunk_size = 50
-            chunks = [large_dataset[i:i + chunk_size] for i in range(0, len(large_dataset), chunk_size)]
+            chunks = [
+                large_dataset[i : i + chunk_size]
+                for i in range(0, len(large_dataset), chunk_size)
+            ]
 
             for chunk in chunks:
                 try:
-                    result = self.validator.process_notes_with_performance_tracking(chunk)
+                    result = self.validator.process_notes_with_performance_tracking(
+                        chunk
+                    )
                     if result["success"]:
                         processed_count += result["processed_count"]
 
@@ -59,7 +64,7 @@ class StressTestManager:
                 "processed_count": processed_count,
                 "total_requested": len(large_dataset),
                 "success_rate": processed_count / len(large_dataset),
-                "processing_time": processing_time
+                "processing_time": processing_time,
             }
 
         except Exception as e:
@@ -68,10 +73,12 @@ class StressTestManager:
                 "crashed": True,
                 "processed_count": processed_count,
                 "error": str(e),
-                "processing_time": time.time() - start_time
+                "processing_time": time.time() - start_time,
             }
 
-    def run_memory_pressure_test(self, large_notes: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def run_memory_pressure_test(
+        self, large_notes: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         GREEN Phase: Run memory pressure test
         Minimal implementation for memory pressure validation
@@ -83,7 +90,9 @@ class StressTestManager:
         try:
             with self.memory_monitor.track_memory_usage():
                 # Process large notes with memory monitoring
-                result = self.validator.process_notes_with_performance_tracking(large_notes)
+                result = self.validator.process_notes_with_performance_tracking(
+                    large_notes
+                )
 
                 # Check if memory limits were exceeded
                 peak_memory_mb = self.memory_monitor.get_peak_memory_usage_mb()
@@ -96,7 +105,7 @@ class StressTestManager:
                 "graceful_degradation": graceful_degradation,
                 "peak_memory_mb": peak_memory_mb,
                 "processed_count": result.get("processed_count", 0),
-                "processing_time": time.time() - start_time
+                "processing_time": time.time() - start_time,
             }
 
         except MemoryError:
@@ -104,12 +113,12 @@ class StressTestManager:
                 "completed": False,
                 "memory_exceeded": True,
                 "graceful_degradation": False,
-                "error": "Memory limit exceeded"
+                "error": "Memory limit exceeded",
             }
         except Exception as e:
             return {
                 "completed": False,
                 "memory_exceeded": False,
                 "graceful_degradation": False,
-                "error": str(e)
+                "error": str(e),
             }

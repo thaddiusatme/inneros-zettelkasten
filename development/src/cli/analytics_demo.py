@@ -45,11 +45,13 @@ def display_overview(overview):
         ("Average Quality Score", f"{overview['average_quality_score']:.2f}/1.0"),
         ("Notes with AI Summaries", overview["notes_with_ai_summaries"]),
         ("Total Internal Links", overview["total_internal_links"]),
-        ("Average Links/Note", overview["average_links_per_note"])
+        ("Average Links/Note", overview["average_links_per_note"]),
     ]
 
     for label, value in stats:
-        formatted_value = format_number(value) if isinstance(value, (int, float)) else value
+        formatted_value = (
+            format_number(value) if isinstance(value, (int, float)) else value
+        )
         print(f"   {label:<25}: {formatted_value}")
 
 
@@ -72,14 +74,16 @@ def display_quality_metrics(quality):
     """Display quality metrics."""
     print_section("QUALITY ANALYSIS")
 
-    total_notes = (quality["high_quality_notes"] +
-                  quality["medium_quality_notes"] +
-                  quality["low_quality_notes"])
+    total_notes = (
+        quality["high_quality_notes"]
+        + quality["medium_quality_notes"]
+        + quality["low_quality_notes"]
+    )
 
     quality_levels = [
         ("High Quality (>0.7)", quality["high_quality_notes"]),
         ("Medium Quality (0.4-0.7)", quality["medium_quality_notes"]),
-        ("Low Quality (<0.4)", quality["low_quality_notes"])
+        ("Low Quality (<0.4)", quality["low_quality_notes"]),
     ]
 
     for label, count in quality_levels:
@@ -158,7 +162,9 @@ def display_ai_insights(report):
     print(f"   High-Quality Notes: {high_quality_rate:.1f}%")
 
     if high_quality_rate < 30:
-        print("   📈 Focus on improving note quality through better tagging and content")
+        print(
+            "   📈 Focus on improving note quality through better tagging and content"
+        )
     elif high_quality_rate > 60:
         print("   ✅ Excellent note quality!")
 
@@ -178,22 +184,22 @@ def interactive_mode(analytics):
         try:
             command = input("\n📊 analytics> ").strip().lower()
 
-            if command == 'quit':
+            if command == "quit":
                 break
-            elif command == 'overview':
+            elif command == "overview":
                 report = analytics.generate_report()
                 display_overview(report["overview"])
-            elif command == 'quality':
+            elif command == "quality":
                 report = analytics.generate_report()
                 display_quality_metrics(report["quality_metrics"])
-            elif command == 'types':
+            elif command == "types":
                 report = analytics.generate_report()
                 display_distributions(report["distributions"])
-            elif command == 'recommendations':
+            elif command == "recommendations":
                 report = analytics.generate_report()
                 display_recommendations(report["recommendations"])
-            elif command.startswith('export '):
-                filename = command.split(' ', 1)[1]
+            elif command.startswith("export "):
+                filename = command.split(" ", 1)[1]
                 result = analytics.export_report(filename)
                 print(f"   {result}")
             else:
@@ -217,37 +223,37 @@ Examples:
   python analytics_demo.py /path/to/notes --format json
   python analytics_demo.py /path/to/notes --export report.json
   python analytics_demo.py /path/to/notes --interactive
-        """
+        """,
     )
 
-    parser.add_argument(
-        "directory",
-        help="Path to the notes directory to analyze"
-    )
+    parser.add_argument("directory", help="Path to the notes directory to analyze")
 
     parser.add_argument(
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format (default: text)"
+        help="Output format (default: text)",
     )
 
     parser.add_argument(
-        "--export",
-        metavar="FILENAME",
-        help="Export full report to JSON file"
+        "--export", metavar="FILENAME", help="Export full report to JSON file"
     )
 
     parser.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Run in interactive mode"
+        "--interactive", action="store_true", help="Run in interactive mode"
     )
 
     parser.add_argument(
         "--section",
-        choices=["overview", "distributions", "quality", "temporal", "recommendations", "insights"],
-        help="Show only specific section"
+        choices=[
+            "overview",
+            "distributions",
+            "quality",
+            "temporal",
+            "recommendations",
+            "insights",
+        ],
+        help="Show only specific section",
     )
 
     args = parser.parse_args()

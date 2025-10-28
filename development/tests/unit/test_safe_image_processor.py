@@ -14,11 +14,15 @@ from unittest.mock import patch
 from typing import List
 
 # Add development directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 # These imports will fail until we create the classes - that's the RED phase!
 try:
-    from src.ai.safe_image_processor import SafeImageProcessor, ImageBackupSession, ProcessingResult
+    from src.ai.safe_image_processor import (
+        SafeImageProcessor,
+        ImageBackupSession,
+        ProcessingResult,
+    )
     from src.ai.image_integrity_monitor import ImageIntegrityMonitor
 except ImportError:
     # Expected to fail in RED phase
@@ -67,14 +71,16 @@ class TestSafeImageProcessorRedPhase:
         test_images = []
         image_data = b"FAKE_IMAGE_DATA_FOR_TESTING"
 
-        for i, name in enumerate([
-            "screenshot_messenger.jpg",
-            "diagram_workflow.png",
-            "code_snippet.png",
-            "pasted_image.png"
-        ]):
+        for i, name in enumerate(
+            [
+                "screenshot_messenger.jpg",
+                "diagram_workflow.png",
+                "code_snippet.png",
+                "pasted_image.png",
+            ]
+        ):
             image_path = self.vault_path / "Media" / name
-            image_path.write_bytes(image_data + bytes(str(i), 'utf-8'))
+            image_path.write_bytes(image_data + bytes(str(i), "utf-8"))
             test_images.append(image_path)
 
         return test_images
@@ -151,11 +157,12 @@ This is a literature note with a single image reference.
         if self.processor:
             # This should process a note while preserving all images atomically
             result = self.processor.process_note_with_images(
-                self.test_notes[0],
-                operation="ai_enhancement"
+                self.test_notes[0], operation="ai_enhancement"
             )
             assert result.success is True
-            assert len(result.preserved_images) >= 0  # Images preserved (may be 0 if none found)
+            assert (
+                len(result.preserved_images) >= 0
+            )  # Images preserved (may be 0 if none found)
             assert result.processing_time > 0
 
     def test_backup_and_rollback_works(self):
@@ -186,8 +193,7 @@ This is a literature note with a single image reference.
         if self.processor:
             # Process multiple notes atomically
             results = self.processor.process_notes_batch(
-                self.test_notes,
-                operation="ai_batch_enhancement"
+                self.test_notes, operation="ai_batch_enhancement"
             )
 
             # Should return results for all notes
@@ -195,25 +201,25 @@ This is a literature note with a single image reference.
 
             # Each result should have required fields
             for result in results:
-                assert hasattr(result, 'success')
-                assert hasattr(result, 'processing_time')
-                assert hasattr(result, 'backup_session_id')
+                assert hasattr(result, "success")
+                assert hasattr(result, "processing_time")
+                assert hasattr(result, "backup_session_id")
 
     def test_integration_with_workflow_manager_works(self):
         """GREEN: Integration with existing WorkflowManager works"""
         if self.processor:
             # Mock WorkflowManager processing
             mock_workflow_result = {
-                'success': True,
-                'processed_note': str(self.test_notes[0]),
-                'ai_tags': ['test', 'enhanced'],
-                'quality_score': 0.8
+                "success": True,
+                "processed_note": str(self.test_notes[0]),
+                "ai_tags": ["test", "enhanced"],
+                "quality_score": 0.8,
             }
 
             # Safe processing should integrate with WorkflowManager
             result = self.processor.safe_workflow_processing(
                 note_path=self.test_notes[0],
-                workflow_operation=lambda note: mock_workflow_result
+                workflow_operation=lambda note: mock_workflow_result,
             )
 
             assert result.success is True
@@ -225,9 +231,9 @@ This is a literature note with a single image reference.
         if self.processor:
             # Monitor performance during atomic operations
             performance_data = self.processor.get_performance_metrics()
-            assert 'backup_time' in performance_data
-            assert 'processing_time' in performance_data
-            assert 'rollback_count' in performance_data
+            assert "backup_time" in performance_data
+            assert "processing_time" in performance_data
+            assert "rollback_count" in performance_data
             assert isinstance(performance_data, dict)
 
     def test_concurrent_processing_safety_fails(self):
@@ -252,7 +258,7 @@ This is a literature note with a single image reference.
                 session = ImageBackupSession(
                     vault_path=self.vault_path,
                     operation_name="test_lifecycle",
-                    images_to_backup=self.test_images
+                    images_to_backup=self.test_images,
                 )
 
                 # Session lifecycle: create → backup → process → commit/rollback
@@ -274,7 +280,7 @@ This is a literature note with a single image reference.
                 session = ImageBackupSession(
                     vault_path=self.vault_path,
                     operation_name="integrity_test",
-                    images_to_backup=self.test_images
+                    images_to_backup=self.test_images,
                 )
 
                 # Should validate backup integrity
@@ -295,7 +301,7 @@ This is a literature note with a single image reference.
                     note_path=self.test_notes[0],
                     preserved_images=self.test_images,
                     processing_time=1.5,
-                    backup_session_id="test_session_123"
+                    backup_session_id="test_session_123",
                 )
 
                 assert result.success is True
@@ -306,10 +312,12 @@ This is a literature note with a single image reference.
         with pytest.raises((AttributeError, TypeError)):
             if self.processor:
                 # Test error scenarios and recovery
-                with patch('pathlib.Path.exists', side_effect=PermissionError("Simulated error")):
+                with patch(
+                    "pathlib.Path.exists",
+                    side_effect=PermissionError("Simulated error"),
+                ):
                     result = self.processor.process_note_with_images(
-                        self.test_notes[0],
-                        operation="error_test"
+                        self.test_notes[0], operation="error_test"
                     )
 
                     # Should handle errors gracefully

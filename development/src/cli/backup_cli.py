@@ -13,10 +13,10 @@ Architecture:
 Usage:
     # Prune old backups (keep 5 most recent)
     python3 backup_cli.py prune-backups --keep 5
-    
+
     # Dry-run mode
     python3 backup_cli.py prune-backups --keep 3 --dry-run
-    
+
     # JSON output for automation
     python3 backup_cli.py prune-backups --keep 5 --format json
 """
@@ -34,28 +34,25 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.utils.directory_organizer import DirectoryOrganizer
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s - %(name)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class BackupCLI:
     """
     Dedicated CLI for backup management operations
-    
+
     Responsibilities:
     - Backup pruning (keep N most recent)
     - Handle output formatting (normal/JSON)
-    
+
     Uses DirectoryOrganizer for actual implementation
     """
 
     def __init__(self, vault_path: Optional[str] = None):
         """
         Initialize Backup CLI
-        
+
         Args:
             vault_path: Path to vault root (defaults to current directory)
         """
@@ -65,24 +62,25 @@ class BackupCLI:
 
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print(title)
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
-        return output_format == 'json'
+        return output_format == "json"
 
-    def prune_backups(self, keep: int = 5, dry_run: bool = False,
-                     output_format: str = 'normal') -> int:
+    def prune_backups(
+        self, keep: int = 5, dry_run: bool = False, output_format: str = "normal"
+    ) -> int:
         """
         Remove old backup directories (keeping N most recent)
-        
+
         Args:
             keep: Number of recent backups to keep
             dry_run: Preview changes without deleting
             output_format: 'normal' or 'json'
-            
+
         Returns:
             Exit code (0 for success, 1 for failure)
         """
@@ -106,13 +104,15 @@ class BackupCLI:
                 print(f"✅ Backups to keep: {keep}")
                 print(f"🗑️  Backups to prune: {len(prune_result.get('to_prune', []))}")
 
-                if prune_result.get('to_prune'):
+                if prune_result.get("to_prune"):
                     print("\nBackups marked for deletion:")
-                    for backup in prune_result['to_prune']:
+                    for backup in prune_result["to_prune"]:
                         print(f"  - {backup}")
 
                     if dry_run:
-                        print("\n💡 Run without --dry-run to actually delete these backups")
+                        print(
+                            "\n💡 Run without --dry-run to actually delete these backups"
+                        )
                 else:
                     print("\n✅ No backups need pruning")
 
@@ -127,12 +127,12 @@ class BackupCLI:
 def create_parser() -> argparse.ArgumentParser:
     """
     Create argument parser for Backup CLI
-    
+
     Returns:
         Configured ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        description='Backup Management CLI',
+        description="Backup Management CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -144,46 +144,33 @@ Examples:
   
   # JSON output for automation
   %(prog)s prune-backups --keep 5 --format json
-        """
+        """,
     )
 
     # Global options
     parser.add_argument(
-        '--vault',
+        "--vault",
         type=str,
-        default='.',
-        help='Path to vault root directory (default: current directory)'
+        default=".",
+        help="Path to vault root directory (default: current directory)",
     )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose logging'
-    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 
     # Subcommands
-    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # prune-backups subcommand
     prune_parser = subparsers.add_parser(
-        'prune-backups',
-        help='Remove old backup directories'
+        "prune-backups", help="Remove old backup directories"
     )
     prune_parser.add_argument(
-        '--keep',
-        type=int,
-        required=True,
-        help='Number of recent backups to keep'
+        "--keep", type=int, required=True, help="Number of recent backups to keep"
     )
     prune_parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview changes without deleting'
+        "--dry-run", action="store_true", help="Preview changes without deleting"
     )
     prune_parser.add_argument(
-        '--format',
-        choices=['normal', 'json'],
-        default='normal',
-        help='Output format'
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
     )
 
     return parser
@@ -212,11 +199,9 @@ def main():
 
     # Execute command
     try:
-        if args.command == 'prune-backups':
+        if args.command == "prune-backups":
             return cli.prune_backups(
-                keep=args.keep,
-                dry_run=args.dry_run,
-                output_format=args.format
+                keep=args.keep, dry_run=args.dry_run, output_format=args.format
             )
         else:
             parser.print_help()
@@ -230,5 +215,5 @@ def main():
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

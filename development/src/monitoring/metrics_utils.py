@@ -13,11 +13,11 @@ class TimeWindowManager:
     @staticmethod
     def is_within_window(timestamp: str, hours: int) -> bool:
         """Check if timestamp is within retention window.
-        
+
         Args:
             timestamp: ISO format timestamp string
             hours: Retention window in hours
-            
+
         Returns:
             True if timestamp is within window
         """
@@ -28,10 +28,10 @@ class TimeWindowManager:
     @staticmethod
     def get_hour_key(timestamp: str) -> str:
         """Get hour bucket key for aggregation.
-        
+
         Args:
             timestamp: ISO format timestamp string
-            
+
         Returns:
             Hour key in format "YYYY-MM-DD HH:00"
         """
@@ -41,7 +41,7 @@ class TimeWindowManager:
     @staticmethod
     def get_current_timestamp() -> str:
         """Get current timestamp in ISO format.
-        
+
         Returns:
             Current timestamp string
         """
@@ -54,10 +54,10 @@ class MetricsAggregator:
     @staticmethod
     def group_by_hour(entries: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """Group metrics entries by hour.
-        
+
         Args:
             entries: List of timestamped metric entries
-            
+
         Returns:
             Dictionary mapping hour keys to entry lists
         """
@@ -74,10 +74,10 @@ class MetricsAggregator:
     @staticmethod
     def calculate_hourly_stats(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate statistics for hourly metrics.
-        
+
         Args:
             entries: List of metric entries in same hour
-            
+
         Returns:
             Aggregated statistics
         """
@@ -88,7 +88,7 @@ class MetricsAggregator:
         # Future: Add sum, avg, min, max calculations
         return {
             "count": len(entries),
-            "metrics": entries[0]["metrics"] if entries else {}
+            "metrics": entries[0]["metrics"] if entries else {},
         }
 
 
@@ -98,11 +98,11 @@ class MetricsFormatter:
     @staticmethod
     def format_counter(name: str, value: int) -> str:
         """Format counter metric for display.
-        
+
         Args:
             name: Counter name
             value: Counter value
-            
+
         Returns:
             Formatted string
         """
@@ -111,11 +111,11 @@ class MetricsFormatter:
     @staticmethod
     def format_gauge(name: str, value: float) -> str:
         """Format gauge metric for display.
-        
+
         Args:
             name: Gauge name
             value: Gauge value
-            
+
         Returns:
             Formatted string
         """
@@ -124,11 +124,11 @@ class MetricsFormatter:
     @staticmethod
     def format_histogram_summary(name: str, values: List[float]) -> str:
         """Format histogram summary for display.
-        
+
         Args:
             name: Histogram name
             values: List of recorded values
-            
+
         Returns:
             Formatted summary string
         """
@@ -145,13 +145,13 @@ class MetricsFormatter:
 
 class RingBuffer:
     """Efficient ring buffer for time-windowed storage.
-    
+
     Optimizes memory usage for metrics retention.
     """
 
     def __init__(self, max_size: Optional[int] = None):
         """Initialize ring buffer.
-        
+
         Args:
             max_size: Maximum entries to retain (None for unlimited)
         """
@@ -160,7 +160,7 @@ class RingBuffer:
 
     def append(self, item: Any) -> None:
         """Add item to buffer.
-        
+
         Args:
             item: Item to add
         """
@@ -170,10 +170,10 @@ class RingBuffer:
 
     def filter(self, predicate) -> List[Any]:
         """Filter buffer items.
-        
+
         Args:
             predicate: Filter function
-            
+
         Returns:
             Filtered list
         """
@@ -181,7 +181,7 @@ class RingBuffer:
 
     def get_all(self) -> List[Any]:
         """Get all buffer items.
-        
+
         Returns:
             List of all items
         """

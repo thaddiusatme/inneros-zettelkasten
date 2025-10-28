@@ -25,7 +25,7 @@ import pytest
 class TestMarkerInfrastructure:
     """
     RED Phase tests verifying pytest marker system.
-    
+
     These tests drive creation of fast_integration and slow_integration
     markers in pytest.ini.
     """
@@ -33,7 +33,7 @@ class TestMarkerInfrastructure:
     def test_fast_integration_marker_defined_in_pytest_ini(self):
         """
         RED: pytest.ini must define fast_integration marker
-        
+
         Marker enables developers to run fast tests only:
         pytest -m fast_integration  # Target: <10s
         """
@@ -44,7 +44,9 @@ class TestMarkerInfrastructure:
 
         # Check for marker definition
         has_fast_marker = "fast_integration" in content
-        has_marker_description = "Integration tests <5s" in content or "fast" in content.lower()
+        has_marker_description = (
+            "Integration tests <5s" in content or "fast" in content.lower()
+        )
 
         # This SHOULD FAIL in RED phase (marker not yet defined)
         assert has_fast_marker, (
@@ -52,14 +54,14 @@ class TestMarkerInfrastructure:
             "Add to [tool:pytest] markers section:\n"
             "  fast_integration: Integration tests <5s (isolated, no external APIs)"
         )
-        assert has_marker_description, (
-            "fast_integration marker needs descriptive documentation"
-        )
+        assert (
+            has_marker_description
+        ), "fast_integration marker needs descriptive documentation"
 
     def test_slow_integration_marker_defined_in_pytest_ini(self):
         """
         RED: pytest.ini must define slow_integration marker
-        
+
         Marker categorizes tests with external API dependencies:
         pytest -m slow_integration  # May take minutes
         """
@@ -68,7 +70,9 @@ class TestMarkerInfrastructure:
 
         # Check for marker definition
         has_slow_marker = "slow_integration" in content
-        has_marker_description = "external API" in content.lower() or "slow" in content.lower()
+        has_marker_description = (
+            "external API" in content.lower() or "slow" in content.lower()
+        )
 
         # This SHOULD FAIL in RED phase (marker not yet defined)
         assert has_slow_marker, (
@@ -76,23 +80,23 @@ class TestMarkerInfrastructure:
             "Add to [tool:pytest] markers section:\n"
             "  slow_integration: Integration tests with external API dependencies"
         )
-        assert has_marker_description, (
-            "slow_integration marker needs descriptive documentation"
-        )
+        assert (
+            has_marker_description
+        ), "slow_integration marker needs descriptive documentation"
 
 
 @pytest.mark.integration
 class TestDashboardVaultIsolation:
     """
     RED Phase tests verifying dashboard test isolation.
-    
+
     These tests drive migration from production vault to vault factories.
     """
 
     def test_dashboard_integration_uses_vault_factory(self):
         """
         RED: Dashboard tests must use vault factory, not production vault
-        
+
         Verify test_dashboard_vault_integration.py imports and uses
         vault factory instead of test_dir.parent / 'knowledge'
         """
@@ -103,8 +107,10 @@ class TestDashboardVaultIsolation:
         has_factory_import = "from tests.fixtures.vault_factory import" in content
 
         # Check for production vault path pattern
-        has_production_path = "test_dir.parent / 'knowledge'" in content or \
-                              'test_dir.parent / "knowledge"' in content
+        has_production_path = (
+            "test_dir.parent / 'knowledge'" in content
+            or 'test_dir.parent / "knowledge"' in content
+        )
 
         # This SHOULD FAIL in RED phase (uses production vault)
         assert has_factory_import, (
@@ -119,7 +125,7 @@ class TestDashboardVaultIsolation:
     def test_dashboard_tests_use_tmp_path_fixture(self):
         """
         RED: Dashboard tests must use tmp_path for full isolation
-        
+
         Verify actual_vault_path fixture is replaced with vault_path
         fixture that uses tmp_path.
         """
@@ -128,8 +134,10 @@ class TestDashboardVaultIsolation:
 
         # Check for tmp_path usage
         has_tmp_path = "tmp_path" in content
-        has_create_vault_call = "create_small_vault(tmp_path)" in content or \
-                                "create_minimal_vault(tmp_path)" in content
+        has_create_vault_call = (
+            "create_small_vault(tmp_path)" in content
+            or "create_minimal_vault(tmp_path)" in content
+        )
 
         # This SHOULD FAIL in RED phase (doesn't use tmp_path)
         assert has_tmp_path, (
@@ -144,15 +152,17 @@ class TestDashboardVaultIsolation:
     def test_dashboard_has_fast_integration_marker(self):
         """
         RED: Dashboard tests must have @pytest.mark.fast_integration
-        
+
         Enables selective execution: pytest -m fast_integration
         """
         test_file = Path(__file__).parent / "test_dashboard_vault_integration.py"
         content = test_file.read_text()
 
         # Check for marker decorator
-        has_marker = "@pytest.mark.fast_integration" in content or \
-                     "@pytest.mark.integration" in content
+        has_marker = (
+            "@pytest.mark.fast_integration" in content
+            or "@pytest.mark.integration" in content
+        )
 
         # This SHOULD FAIL in RED phase (marker not yet applied)
         assert "@pytest.mark.fast_integration" in content, (
@@ -170,7 +180,7 @@ class TestIntegrationTestCategorization:
     def test_all_integration_tests_have_performance_markers(self):
         """
         RED: All integration tests must be marked fast or slow
-        
+
         Verifies that existing integration tests have appropriate markers.
         """
         integration_dir = Path(__file__).parent
@@ -178,9 +188,13 @@ class TestIntegrationTestCategorization:
 
         # Files that should be checked (exclude this validation file)
         test_files_to_check = [
-            f for f in test_files
-            if f.name not in ["test_dashboard_vault_migration.py",
-                             "test_vault_factory_migration.py"]
+            f
+            for f in test_files
+            if f.name
+            not in [
+                "test_dashboard_vault_migration.py",
+                "test_vault_factory_migration.py",
+            ]
         ]
 
         unmarked_files = []
@@ -209,7 +223,7 @@ class TestPerformanceValidation:
     def test_fast_integration_suite_executes_under_10_seconds(self):
         """
         RED: Fast integration tests must complete in <10s
-        
+
         Validates that pytest -m fast_integration meets performance target.
         """
         import subprocess
@@ -219,21 +233,21 @@ class TestPerformanceValidation:
         result = subprocess.run(
             ["pytest", "-m", "fast_integration", "-q"],
             cwd=Path(__file__).parent.parent.parent,
-            env={**dict(__import__('os').environ), "PYTHONPATH": "development"},
+            env={**dict(__import__("os").environ), "PYTHONPATH": "development"},
             capture_output=True,
-            text=True
+            text=True,
         )
         elapsed = time.time() - start
 
         # This might FAIL in RED phase if marker system incomplete
-        assert result.returncode == 0, (
-            f"Fast integration tests failed:\n{result.stdout}\n{result.stderr}"
-        )
+        assert (
+            result.returncode == 0
+        ), f"Fast integration tests failed:\n{result.stdout}\n{result.stderr}"
         assert elapsed < 10.0, (
             f"Fast integration suite took {elapsed:.2f}s (target: <10s). "
             f"Need to optimize or recategorize tests."
         )
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

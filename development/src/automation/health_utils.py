@@ -12,13 +12,13 @@ from typing import Dict, Any, List, Optional
 class HealthMetricsCollector:
     """
     Utilities for health metrics collection and analysis.
-    
+
     Provides reusable helper methods for:
     - Execution history tracking
     - Performance statistics calculations
     - Error rate analysis
     - Success rate computation
-    
+
     Size: ~100 LOC (ADR-001 compliant)
     """
 
@@ -32,7 +32,7 @@ class HealthMetricsCollector:
     def record_execution(self, job_id: str, success: bool, duration: float) -> None:
         """
         Record job execution metrics.
-        
+
         Args:
             job_id: Job identifier
             success: Whether job completed successfully
@@ -46,12 +46,14 @@ class HealthMetricsCollector:
             self._failed_executions += 1
 
         # Store execution record
-        self._execution_history.append({
-            "job_id": job_id,
-            "success": success,
-            "duration": duration,
-            "timestamp": time.time(),
-        })
+        self._execution_history.append(
+            {
+                "job_id": job_id,
+                "success": success,
+                "duration": duration,
+                "timestamp": time.time(),
+            }
+        )
 
         # Keep only last 1000 executions to prevent unbounded growth
         if len(self._execution_history) > 1000:
@@ -60,7 +62,7 @@ class HealthMetricsCollector:
     def get_execution_statistics(self) -> Dict[str, Any]:
         """
         Calculate execution statistics.
-        
+
         Returns:
             Dictionary with total, successful, failed counts and success rate
         """
@@ -78,14 +80,16 @@ class HealthMetricsCollector:
 
         return stats
 
-    def get_execution_history(self, job_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_execution_history(
+        self, job_id: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """
         Get recent execution history.
-        
+
         Args:
             job_id: Optional job ID to filter by
             limit: Maximum number of records to return
-            
+
         Returns:
             List of execution records (most recent first)
         """
@@ -101,7 +105,7 @@ class HealthMetricsCollector:
     def calculate_error_rate(self) -> float:
         """
         Calculate current error rate.
-        
+
         Returns:
             Error rate as percentage (0.0 to 1.0)
         """
@@ -113,10 +117,10 @@ class HealthMetricsCollector:
     def get_average_duration(self, job_id: Optional[str] = None) -> Optional[float]:
         """
         Calculate average execution duration.
-        
+
         Args:
             job_id: Optional job ID to filter by
-            
+
         Returns:
             Average duration in seconds, or None if no executions
         """

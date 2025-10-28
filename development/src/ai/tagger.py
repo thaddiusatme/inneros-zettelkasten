@@ -10,10 +10,12 @@ from .ollama_client import OllamaClient
 class AITagger:
     """Generates relevant tags for notes using AI analysis."""
 
-    def __init__(self, min_confidence: float = 0.7, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, min_confidence: float = 0.7, config: Optional[Dict[str, Any]] = None
+    ):
         """
         Initialize AI tagger with configuration.
-        
+
         Args:
             min_confidence: Minimum confidence threshold for tag inclusion
             config: Optional configuration for Ollama client
@@ -21,15 +23,17 @@ class AITagger:
         self.ollama_client = OllamaClient(config=config)
         self.min_confidence = min_confidence
 
-    def generate_tags(self, content: str, min_tags: int = 3, max_tags: int = 8) -> List[str]:
+    def generate_tags(
+        self, content: str, min_tags: int = 3, max_tags: int = 8
+    ) -> List[str]:
         """
         Generate relevant tags for given note content.
-        
+
         Args:
             content: Note content to analyze
             min_tags: Minimum number of tags to return
             max_tags: Maximum number of tags to return
-            
+
         Returns:
             List of unique, relevant tags
         """
@@ -53,10 +57,10 @@ class AITagger:
     def _generate_ollama_tags(self, content: str) -> List[str]:
         """
         Generate tags using real Ollama API with optimized prompt engineering.
-        
+
         Args:
             content: Note content to analyze
-            
+
         Returns:
             List of relevant, unique tags
         """
@@ -75,9 +79,7 @@ class AITagger:
 
             # Generate tags via Ollama
             response = self.ollama_client.generate_completion(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                max_tokens=100
+                prompt=user_prompt, system_prompt=system_prompt, max_tokens=100
             )
 
             # Parse the response
@@ -96,23 +98,23 @@ class AITagger:
     def _strip_yaml_frontmatter(self, content: str) -> str:
         """
         Strip YAML frontmatter from note content.
-        
+
         Args:
             content: Raw note content
-            
+
         Returns:
             Content without YAML frontmatter
         """
         if not content:
             return content
 
-        lines = content.split('\n')
-        if len(lines) >= 3 and lines[0].strip() == '---':
+        lines = content.split("\n")
+        if len(lines) >= 3 and lines[0].strip() == "---":
             # Find the closing ---
             for i in range(1, len(lines)):
-                if lines[i].strip() == '---':
+                if lines[i].strip() == "---":
                     # Return content after the closing ---
-                    return '\n'.join(lines[i+1:])
+                    return "\n".join(lines[i + 1 :])
 
         return content
 
@@ -137,7 +139,7 @@ class AITagger:
             "quantum": ["quantum-computing", "physics"],
             "cryptography": ["cryptography", "security"],
             "drug discovery": ["biotech", "pharmaceuticals"],
-            "optimization": ["optimization", "algorithms"]
+            "optimization": ["optimization", "algorithms"],
         }
 
         for keyword, keyword_tags in keyword_map.items():
@@ -153,10 +155,10 @@ class AITagger:
     def generate_tags_with_confidence(self, content: str) -> List[Tuple[str, float]]:
         """
         Generate tags with confidence scores.
-        
+
         Args:
             content: Note content to analyze
-            
+
         Returns:
             List of (tag, confidence) tuples
         """
@@ -168,5 +170,6 @@ class AITagger:
         confidence_tags = [(tag, 0.9 - (i * 0.1)) for i, tag in enumerate(tags)]
 
         # Filter by minimum confidence
-        return [(tag, conf) for tag, conf in confidence_tags
-                if conf >= self.min_confidence]
+        return [
+            (tag, conf) for tag, conf in confidence_tags if conf >= self.min_confidence
+        ]

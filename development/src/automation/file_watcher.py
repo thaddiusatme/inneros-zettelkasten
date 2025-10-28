@@ -17,16 +17,17 @@ from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
 class FileWatcherError(Exception):
     """File watcher specific errors"""
+
     pass
 
 
 class FileWatcher:
     """
     File system monitor using watchdog for event-driven file processing.
-    
+
     Monitors a directory for file changes and triggers registered callbacks
     with debouncing and path filtering capabilities.
-    
+
     Size: ~150 LOC (ADR-001 compliant)
     """
 
@@ -34,11 +35,11 @@ class FileWatcher:
         self,
         watch_path: Path,
         debounce_seconds: float = 2.0,
-        ignore_patterns: Optional[List[str]] = None
+        ignore_patterns: Optional[List[str]] = None,
     ):
         """
         Initialize file watcher.
-        
+
         Args:
             watch_path: Directory to monitor
             debounce_seconds: Delay before triggering callback (default 2s)
@@ -56,7 +57,7 @@ class FileWatcher:
     def register_callback(self, callback: Callable[[Path, str], None]) -> None:
         """
         Register callback to be invoked on file events.
-        
+
         Args:
             callback: Function(file_path, event_type) called on events
         """
@@ -65,7 +66,7 @@ class FileWatcher:
     def start(self) -> None:
         """
         Start file watching.
-        
+
         Raises:
             FileWatcherError: If watch path doesn't exist or watcher already running
         """
@@ -103,7 +104,7 @@ class FileWatcher:
     def _should_ignore(self, file_path: Path) -> bool:
         """
         Check if file should be ignored based on glob patterns.
-        
+
         Supports standard glob patterns:
         - *.tmp: Extension matching
         - .obsidian/*: Directory patterns
@@ -129,7 +130,7 @@ class FileWatcher:
     def _trigger_callbacks(self, file_path: Path, event_type: str) -> None:
         """
         Trigger registered callbacks with debouncing.
-        
+
         Args:
             file_path: Path to file that changed
             event_type: Type of event ('created', 'modified', 'deleted')
@@ -150,7 +151,7 @@ class FileWatcher:
             timer = threading.Timer(
                 self.debounce_seconds,
                 self._execute_callbacks,
-                args=(file_path, event_type)
+                args=(file_path, event_type),
             )
             self._debounce_timers[file_key] = timer
             timer.start()
@@ -175,7 +176,7 @@ class FileWatcher:
 class _FileEventHandler(FileSystemEventHandler):
     """
     Internal event handler for watchdog.
-    
+
     Translates watchdog events to FileWatcher callbacks.
     """
 

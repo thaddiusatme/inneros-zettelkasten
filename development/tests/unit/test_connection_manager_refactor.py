@@ -32,12 +32,7 @@ def mock_base_dir(tmp_path):
 @pytest.fixture
 def sample_config():
     """Standard config for testing."""
-    return {
-        'connections': {
-            'similarity_threshold': 0.7,
-            'max_suggestions': 5
-        }
-    }
+    return {"connections": {"similarity_threshold": 0.7, "max_suggestions": 5}}
 
 
 @pytest.fixture
@@ -48,30 +43,36 @@ def sample_notes(tmp_path):
     perm_dir.mkdir(parents=True, exist_ok=True)
 
     # Create related notes about machine learning
-    (perm_dir / "ml-basics.md").write_text("""---
+    (perm_dir / "ml-basics.md").write_text(
+        """---
 type: permanent
 tags: [machine-learning, basics]
 ---
 # ML Basics
 Understanding machine learning fundamentals.
-""")
+"""
+    )
 
-    (perm_dir / "neural-networks.md").write_text("""---
+    (perm_dir / "neural-networks.md").write_text(
+        """---
 type: permanent
 tags: [machine-learning, neural-networks]
 ---
 # Neural Networks
 Deep learning and neural network architectures.
-""")
+"""
+    )
 
     # Create unrelated note
-    (perm_dir / "cooking-recipes.md").write_text("""---
+    (perm_dir / "cooking-recipes.md").write_text(
+        """---
 type: permanent
 tags: [cooking, recipes]
 ---
 # Cooking Recipes
 Collection of favorite recipes.
-""")
+"""
+    )
 
     return vault
 
@@ -86,8 +87,8 @@ class TestConnectionDiscoverySemanticSimilarity:
         # Arrange
         mock_embeddings = Mock()
         mock_embeddings.get_similar.return_value = [
-            {'note': 'neural-networks.md', 'score': 0.85},
-            {'note': 'ml-basics.md', 'score': 0.78}
+            {"note": "neural-networks.md", "score": 0.85},
+            {"note": "ml-basics.md", "score": 0.78},
         ]
 
         conn = ConnectionManager(mock_base_dir, sample_config, mock_embeddings)
@@ -104,60 +105,56 @@ class TestConnectionDiscoverySemanticSimilarity:
 
         # Assert - Related notes suggested
         assert len(suggestions) == 2
-        assert suggestions[0]['target'] == 'neural-networks.md'
-        assert suggestions[0]['score'] == 0.85
-        assert suggestions[1]['target'] == 'ml-basics.md'
+        assert suggestions[0]["target"] == "neural-networks.md"
+        assert suggestions[0]["score"] == 0.85
+        assert suggestions[1]["target"] == "ml-basics.md"
 
 
 class TestConnectionLinkPrediction:
     """Test link prediction and suggestion ranking."""
 
-    def test_predict_links_ranks_by_relevance(
-        self, mock_base_dir, sample_config
-    ):
+    def test_predict_links_ranks_by_relevance(self, mock_base_dir, sample_config):
         """Test link predictions are ranked by relevance score."""
         # Arrange
         mock_embeddings = Mock()
         mock_embeddings.get_similar.return_value = [
-            {'note': 'note-a.md', 'score': 0.95},
-            {'note': 'note-b.md', 'score': 0.82},
-            {'note': 'note-c.md', 'score': 0.65},  # Below threshold
+            {"note": "note-a.md", "score": 0.95},
+            {"note": "note-b.md", "score": 0.82},
+            {"note": "note-c.md", "score": 0.65},  # Below threshold
         ]
 
         conn = ConnectionManager(mock_base_dir, sample_config, mock_embeddings)
 
         # Act
-        predictions = conn.predict_links('test.md')
+        predictions = conn.predict_links("test.md")
 
         # Assert - Filtered by threshold (0.7)
         assert len(predictions) == 2
 
         # Assert - Sorted by score descending
-        assert predictions[0]['score'] > predictions[1]['score']
-        assert predictions[0]['target'] == 'note-a.md'
-        assert predictions[1]['target'] == 'note-b.md'
+        assert predictions[0]["score"] > predictions[1]["score"]
+        assert predictions[0]["target"] == "note-a.md"
+        assert predictions[1]["target"] == "note-b.md"
 
         # Assert - Below threshold excluded
-        assert not any(p['target'] == 'note-c.md' for p in predictions)
+        assert not any(p["target"] == "note-c.md" for p in predictions)
 
 
 class TestConnectionFeedbackCollection:
     """Test feedback collection for user link decisions."""
 
-    def test_record_link_acceptance_saves_feedback(
-        self, mock_base_dir, sample_config
-    ):
+    def test_record_link_acceptance_saves_feedback(self, mock_base_dir, sample_config):
         """Test user acceptance of link suggestions is recorded."""
         # Arrange
         conn = ConnectionManager(mock_base_dir, sample_config, Mock())
 
         # Act
         conn.record_link_decision(
-            source='note-a.md',
-            target='note-b.md',
+            source="note-a.md",
+            target="note-b.md",
             accepted=True,
             similarity_score=0.85,
-            reason='semantic_similarity'
+            reason="semantic_similarity",
         )
 
         # Assert - Feedback stored
@@ -166,32 +163,30 @@ class TestConnectionFeedbackCollection:
 
         # Assert - Decision recorded correctly
         decision = feedback[0]
-        assert decision['source'] == 'note-a.md'
-        assert decision['target'] == 'note-b.md'
-        assert decision['accepted'] == True
-        assert decision['similarity_score'] == 0.85
+        assert decision["source"] == "note-a.md"
+        assert decision["target"] == "note-b.md"
+        assert decision["accepted"] == True
+        assert decision["similarity_score"] == 0.85
 
-    def test_record_link_rejection_saves_feedback(
-        self, mock_base_dir, sample_config
-    ):
+    def test_record_link_rejection_saves_feedback(self, mock_base_dir, sample_config):
         """Test user rejection of link suggestions is recorded."""
         # Arrange
         conn = ConnectionManager(mock_base_dir, sample_config, Mock())
 
         # Act
         conn.record_link_decision(
-            source='note-a.md',
-            target='note-c.md',
+            source="note-a.md",
+            target="note-c.md",
             accepted=False,
             similarity_score=0.72,
-            reason='not_relevant'
+            reason="not_relevant",
         )
 
         # Assert - Rejection recorded
         feedback = conn.get_feedback_history()
         decision = feedback[0]
-        assert decision['accepted'] == False
-        assert decision['reason'] == 'not_relevant'
+        assert decision["accepted"] == False
+        assert decision["reason"] == "not_relevant"
 
 
 class TestConnectionParallelExecution:
@@ -205,17 +200,18 @@ class TestConnectionParallelExecution:
         conn = ConnectionManager(mock_base_dir, sample_config, Mock())
 
         # Assert - No Analytics attributes
-        assert not hasattr(conn, 'analytics_manager')
-        assert not hasattr(conn, 'quality_score')
+        assert not hasattr(conn, "analytics_manager")
+        assert not hasattr(conn, "quality_score")
 
         # Assert - __init__ signature verification
         import inspect
+
         sig = inspect.signature(ConnectionManager.__init__)
         param_names = list(sig.parameters.keys())
 
         # Should NOT have analytics_manager parameter
-        assert 'analytics_manager' not in param_names
-        assert 'analytics' not in param_names
+        assert "analytics_manager" not in param_names
+        assert "analytics" not in param_names
 
 
 class TestConnectionDryRun:
@@ -228,20 +224,20 @@ class TestConnectionDryRun:
         # Arrange
         mock_embeddings = Mock()
         mock_embeddings.get_similar.return_value = [
-            {'note': 'related.md', 'score': 0.88}
+            {"note": "related.md", "score": 0.88}
         ]
 
         conn = ConnectionManager(mock_base_dir, sample_config, mock_embeddings)
 
         # Act
-        suggestions = conn.discover_links('test.md', dry_run=True)
+        suggestions = conn.discover_links("test.md", dry_run=True)
 
         # Assert - Suggestions returned
         assert len(suggestions) > 0
 
         # Assert - No files written
         # (dry run should not modify any note files)
-        feedback_files = list(mock_base_dir.glob('**/*feedback*.json'))
+        feedback_files = list(mock_base_dir.glob("**/*feedback*.json"))
         assert len(feedback_files) == 0
 
 
@@ -266,11 +262,11 @@ class TestConnectionBidirectionalLinking:
         analysis = conn.analyze_bidirectional_links()
 
         # Assert - One-way link detected
-        assert 'one_way_links' in analysis
-        assert len(analysis['one_way_links']) > 0
+        assert "one_way_links" in analysis
+        assert len(analysis["one_way_links"]) > 0
 
         # Assert - Suggestion to add backlink
-        one_way = analysis['one_way_links'][0]
-        assert one_way['source'] == 'note-a.md'
-        assert one_way['target'] == 'note-b.md'
-        assert 'suggest_backlink' in one_way or one_way.get('bidirectional') == False
+        one_way = analysis["one_way_links"][0]
+        assert one_way["source"] == "note-a.md"
+        assert one_way["target"] == "note-b.md"
+        assert "suggest_backlink" in one_way or one_way.get("bidirectional") == False

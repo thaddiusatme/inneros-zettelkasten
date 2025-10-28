@@ -49,7 +49,7 @@ tags: [ai, machine-learning]
 
 Artificial intelligence is the simulation of human intelligence by machines.
 Machine learning is a subset of AI that learns from data.
-"""
+""",
         )
 
         self._create_note(
@@ -63,7 +63,7 @@ tags: [ai, deep-learning, neural-networks]
 
 Neural networks are computing systems inspired by biological neural networks.
 Deep learning uses multiple layers of neural networks.
-"""
+""",
         )
 
         self._create_note(
@@ -77,7 +77,7 @@ tags: [programming, python]
 
 Python is a high-level programming language.
 It's widely used for data science and web development.
-"""
+""",
         )
 
     def teardown_method(self):
@@ -89,7 +89,10 @@ It's widely used for data science and web development.
         """Helper to create a test note."""
         path.write_text(content)
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_discover_connections_finds_similar_notes(self):
         """Test discovering connections between a note and corpus."""
         manager = ConnectionCoordinator(str(self.test_dir))
@@ -104,8 +107,7 @@ Neural networks are a popular approach to machine learning.
 
         # Should find ai-basics.md and neural-networks.md as related
         connections = manager.discover_connections(
-            target_content,
-            corpus_dir=self.permanent_dir
+            target_content, corpus_dir=self.permanent_dir
         )
 
         assert len(connections) > 0
@@ -113,12 +115,14 @@ Neural networks are a popular approach to machine learning.
         assert all("similarity" in conn for conn in connections)
         assert all(conn["similarity"] >= 0.0 for conn in connections)
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_discover_connections_respects_quality_threshold(self):
         """Test connection quality filtering."""
         manager = ConnectionCoordinator(
-            str(self.test_dir),
-            min_similarity=0.8  # High threshold
+            str(self.test_dir), min_similarity=0.8  # High threshold
         )
 
         target_content = """---
@@ -131,14 +135,16 @@ Growing vegetables requires proper soil and sunlight.
 
         # Should find few or no connections due to low similarity
         connections = manager.discover_connections(
-            target_content,
-            corpus_dir=self.permanent_dir
+            target_content, corpus_dir=self.permanent_dir
         )
 
         # Either empty or only high-quality matches
         assert all(conn["similarity"] >= 0.8 for conn in connections)
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_load_corpus_caches_notes(self):
         """Test corpus loading and caching."""
         manager = ConnectionCoordinator(str(self.test_dir))
@@ -154,7 +160,10 @@ Growing vegetables requires proper soil and sunlight.
         # Verify content loaded
         assert "Artificial intelligence" in corpus["ai-basics.md"]
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_validate_connections_filters_duplicates(self):
         """Test connection validation removes duplicates."""
         manager = ConnectionCoordinator(str(self.test_dir))
@@ -170,7 +179,9 @@ Growing vegetables requires proper soil and sunlight.
 
         # Should keep only highest similarity for duplicates
         assert len(validated) == 2
-        ai_basics_connections = [c for c in validated if c["filename"] == "ai-basics.md"]
+        ai_basics_connections = [
+            c for c in validated if c["filename"] == "ai-basics.md"
+        ]
         assert len(ai_basics_connections) == 1
         assert ai_basics_connections[0]["similarity"] == 0.85
 
@@ -189,29 +200,37 @@ class TestConnectionCoordinatorIntegration:
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_connection_manager_uses_ai_connections(self):
         """Test ConnectionCoordinator integrates with AIConnections."""
         manager = ConnectionCoordinator(str(self.test_dir))
 
         # Verify AIConnections is initialized
         assert manager.connections is not None
-        assert hasattr(manager.connections, 'find_similar_notes')
+        assert hasattr(manager.connections, "find_similar_notes")
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_discover_connections_handles_empty_corpus(self):
         """Test graceful handling of empty corpus."""
         manager = ConnectionCoordinator(str(self.test_dir))
 
         target_content = "Some content"
         connections = manager.discover_connections(
-            target_content,
-            corpus_dir=self.permanent_dir  # Empty directory
+            target_content, corpus_dir=self.permanent_dir  # Empty directory
         )
 
         assert connections == []
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_discover_connections_handles_invalid_content(self):
         """Test error handling for invalid input."""
         manager = ConnectionCoordinator(str(self.test_dir))
@@ -243,14 +262,19 @@ class TestConnectionCoordinatorMetrics:
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_get_connection_statistics(self):
         """Test connection statistics generation."""
         manager = ConnectionCoordinator(str(self.test_dir))
 
         # Discover some connections
         target = "Machine learning with neural networks"
-        connections = manager.discover_connections(target, corpus_dir=self.permanent_dir)
+        connections = manager.discover_connections(
+            target, corpus_dir=self.permanent_dir
+        )
 
         # Get statistics
         stats = manager.get_connection_statistics()
@@ -259,7 +283,10 @@ class TestConnectionCoordinatorMetrics:
         assert "average_similarity" in stats
         assert stats["total_discoveries"] >= 0
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_clear_connection_cache(self):
         """Test cache clearing functionality."""
         manager = ConnectionCoordinator(str(self.test_dir))
@@ -279,27 +306,30 @@ class TestConnectionCoordinatorMetrics:
 class TestConnectionCoordinatorConfiguration:
     """Tests for ConnectionCoordinator configuration."""
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_custom_similarity_threshold(self):
         """Test custom similarity threshold configuration."""
-        manager = ConnectionCoordinator(
-            ".",
-            min_similarity=0.9  # Very high threshold
-        )
+        manager = ConnectionCoordinator(".", min_similarity=0.9)  # Very high threshold
 
         assert manager.min_similarity == 0.9
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_custom_max_suggestions(self):
         """Test custom max suggestions configuration."""
-        manager = ConnectionCoordinator(
-            ".",
-            max_suggestions=10
-        )
+        manager = ConnectionCoordinator(".", max_suggestions=10)
 
         assert manager.max_suggestions == 10
 
-    @pytest.mark.skipif(ConnectionCoordinator is None, reason="ConnectionCoordinator not implemented yet")
+    @pytest.mark.skipif(
+        ConnectionCoordinator is None,
+        reason="ConnectionCoordinator not implemented yet",
+    )
     def test_default_configuration(self):
         """Test default configuration values."""
         manager = ConnectionCoordinator(".")

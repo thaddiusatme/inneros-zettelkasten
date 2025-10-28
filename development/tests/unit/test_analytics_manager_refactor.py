@@ -34,11 +34,7 @@ def mock_base_dir(tmp_path):
 def sample_config():
     """Standard config for testing."""
     return {
-        'quality_thresholds': {
-            'excellent': 0.8,
-            'good': 0.6,
-            'needs_improvement': 0.4
-        }
+        "quality_thresholds": {"excellent": 0.8, "good": 0.6, "needs_improvement": 0.4}
     }
 
 
@@ -60,7 +56,9 @@ tags: [test, refactoring, architecture]
 This is a sample note with exactly 500 words of content for quality assessment.
 It has multiple [[wiki-link-1]] and [[wiki-link-2]] demonstrating proper structure.
 
-""" + " ".join(["word"] * 490)  # Pad to ~500 words
+""" + " ".join(
+        ["word"] * 490
+    )  # Pad to ~500 words
 
     note_path.write_text(content)
     return note_path
@@ -80,15 +78,15 @@ class TestAnalyticsQualityAssessment:
         result = analytics.assess_quality(str(sample_note_with_quality))
 
         # Assert - Quality score in good range (has tags, links, frontmatter, content)
-        assert result['success'] == True
-        assert 'quality_score' in result
-        assert 0.7 <= result['quality_score'] <= 0.9
+        assert result["success"] == True
+        assert "quality_score" in result
+        assert 0.7 <= result["quality_score"] <= 0.9
 
         # Assert - Metrics calculated correctly
-        assert result['word_count'] >= 490
-        assert result['tag_count'] == 3
-        assert result['link_count'] == 2
-        assert result['has_frontmatter'] == True
+        assert result["word_count"] >= 490
+        assert result["tag_count"] == 3
+        assert result["link_count"] == 2
+        assert result["has_frontmatter"] == True
 
 
 class TestAnalyticsExceptionHandling:
@@ -103,7 +101,7 @@ class TestAnalyticsExceptionHandling:
 
         # Act & Assert
         with pytest.raises(ValueError, match="note_path cannot be empty"):
-            analytics.assess_quality('')
+            analytics.assess_quality("")
 
     def test_assess_quality_raises_file_not_found_on_missing_note(
         self, mock_base_dir, sample_config
@@ -114,7 +112,7 @@ class TestAnalyticsExceptionHandling:
 
         # Act & Assert
         with pytest.raises(FileNotFoundError):
-            analytics.assess_quality('nonexistent.md')
+            analytics.assess_quality("nonexistent.md")
 
 
 class TestAnalyticsOrphanedNoteDetection:
@@ -147,14 +145,14 @@ class TestAnalyticsOrphanedNoteDetection:
         assert len(orphans) == 3
 
         # Assert - Orphan names present
-        orphan_names = [o['note'] for o in orphans]
-        assert 'orphan-1.md' in orphan_names
-        assert 'orphan-2.md' in orphan_names
-        assert 'orphan-3.md' in orphan_names
+        orphan_names = [o["note"] for o in orphans]
+        assert "orphan-1.md" in orphan_names
+        assert "orphan-2.md" in orphan_names
+        assert "orphan-3.md" in orphan_names
 
         # Assert - Connected notes NOT in orphans
-        assert 'note-a.md' not in orphan_names
-        assert 'note-b.md' not in orphan_names
+        assert "note-a.md" not in orphan_names
+        assert "note-b.md" not in orphan_names
 
 
 class TestAnalyticsStaleNoteDetection:
@@ -179,6 +177,7 @@ class TestAnalyticsStaleNoteDetection:
         # Simulate stale note being >90 days old
         old_time = (datetime.now() - timedelta(days=100)).timestamp()
         import os
+
         os.utime(stale_note, (old_time, old_time))
 
         analytics = AnalyticsManager(mock_base_dir, sample_config)
@@ -190,12 +189,12 @@ class TestAnalyticsStaleNoteDetection:
         assert len(stale_notes) >= 1
 
         # Assert - Stale note has correct metadata
-        stale_paths = [s['note'] for s in stale_notes]
-        assert 'stale.md' in stale_paths
+        stale_paths = [s["note"] for s in stale_notes]
+        assert "stale.md" in stale_paths
 
         # Find the stale note entry
-        stale_entry = next(s for s in stale_notes if 'stale.md' in s['note'])
-        assert stale_entry['days_since_modified'] > 90
+        stale_entry = next(s for s in stale_notes if "stale.md" in s["note"])
+        assert stale_entry["days_since_modified"] > 90
 
 
 class TestAnalyticsWorkflowReporting:
@@ -215,10 +214,18 @@ class TestAnalyticsWorkflowReporting:
             dir.mkdir(parents=True, exist_ok=True)
 
         # Create notes in different stages
-        (inbox_dir / "inbox-1.md").write_text("---\ntype: fleeting\nstatus: inbox\n---\n# Inbox 1")
-        (inbox_dir / "inbox-2.md").write_text("---\ntype: fleeting\nstatus: inbox\n---\n# Inbox 2")
-        (fleeting_dir / "fleeting-1.md").write_text("---\ntype: fleeting\nstatus: promoted\n---\n# Fleeting 1")
-        (permanent_dir / "permanent-1.md").write_text("---\ntype: permanent\nstatus: published\n---\n# Permanent 1")
+        (inbox_dir / "inbox-1.md").write_text(
+            "---\ntype: fleeting\nstatus: inbox\n---\n# Inbox 1"
+        )
+        (inbox_dir / "inbox-2.md").write_text(
+            "---\ntype: fleeting\nstatus: inbox\n---\n# Inbox 2"
+        )
+        (fleeting_dir / "fleeting-1.md").write_text(
+            "---\ntype: fleeting\nstatus: promoted\n---\n# Fleeting 1"
+        )
+        (permanent_dir / "permanent-1.md").write_text(
+            "---\ntype: permanent\nstatus: published\n---\n# Permanent 1"
+        )
 
         analytics = AnalyticsManager(mock_base_dir, sample_config)
 
@@ -226,17 +233,17 @@ class TestAnalyticsWorkflowReporting:
         report = analytics.generate_workflow_report()
 
         # Assert - Total notes counted
-        assert report['total_notes'] >= 4
+        assert report["total_notes"] >= 4
 
         # Assert - Notes by type aggregated
-        assert 'notes_by_type' in report
-        assert report['notes_by_type'].get('fleeting', 0) >= 3
-        assert report['notes_by_type'].get('permanent', 0) >= 1
+        assert "notes_by_type" in report
+        assert report["notes_by_type"].get("fleeting", 0) >= 3
+        assert report["notes_by_type"].get("permanent", 0) >= 1
 
         # Assert - Notes by status aggregated
-        assert 'notes_by_status' in report
-        assert report['notes_by_status'].get('inbox', 0) >= 2
-        assert report['notes_by_status'].get('promoted', 0) >= 1
+        assert "notes_by_status" in report
+        assert report["notes_by_status"].get("inbox", 0) >= 2
+        assert report["notes_by_status"].get("promoted", 0) >= 1
 
 
 class TestAnalyticsReviewCandidates:
@@ -252,7 +259,8 @@ class TestAnalyticsReviewCandidates:
 
         # High-quality fleeting note (many tags, links, content)
         high_quality = fleeting_dir / "high-quality.md"
-        high_quality.write_text("""---
+        high_quality.write_text(
+            """---
 type: fleeting
 status: promoted
 tags: [tag1, tag2, tag3, tag4, tag5]
@@ -262,7 +270,9 @@ tags: [tag1, tag2, tag3, tag4, tag5]
 
 This note has substantial content with many [[link-1]] and [[link-2]] and [[link-3]].
 
-""" + " ".join(["word"] * 400))
+"""
+            + " ".join(["word"] * 400)
+        )
 
         # Low-quality fleeting note (minimal content)
         low_quality = fleeting_dir / "low-quality.md"
@@ -274,34 +284,33 @@ This note has substantial content with many [[link-1]] and [[link-2]] and [[link
         candidates = analytics.scan_review_candidates()
 
         # Assert - High-quality note appears in candidates
-        candidate_paths = [c['note'] for c in candidates]
-        assert any('high-quality.md' in p for p in candidate_paths)
+        candidate_paths = [c["note"] for c in candidates]
+        assert any("high-quality.md" in p for p in candidate_paths)
 
 
 class TestAnalyticsAIDependencies:
     """Test Analytics has NO AI dependencies (architecture verification)."""
 
-    def test_analytics_has_no_ai_dependencies(
-        self, mock_base_dir, sample_config
-    ):
+    def test_analytics_has_no_ai_dependencies(self, mock_base_dir, sample_config):
         """Test AnalyticsManager does NOT accept or use AI components."""
         # Arrange & Act
         analytics = AnalyticsManager(mock_base_dir, sample_config)
 
         # Assert - No AI-related attributes
-        assert not hasattr(analytics, 'ai_tagger')
-        assert not hasattr(analytics, 'ai_enhancer')
-        assert not hasattr(analytics, 'ai_summarizer')
+        assert not hasattr(analytics, "ai_tagger")
+        assert not hasattr(analytics, "ai_enhancer")
+        assert not hasattr(analytics, "ai_summarizer")
 
         # Assert - __init__ signature verification
         import inspect
+
         sig = inspect.signature(AnalyticsManager.__init__)
         param_names = list(sig.parameters.keys())
 
         # Should only have: self, base_dir, config
         # NOT: tagger, enhancer, summarizer, or any AI components
-        assert 'tagger' not in param_names
-        assert 'enhancer' not in param_names
-        assert 'summarizer' not in param_names
-        assert 'ai_tagger' not in param_names
-        assert 'ai_enhancer' not in param_names
+        assert "tagger" not in param_names
+        assert "enhancer" not in param_names
+        assert "summarizer" not in param_names
+        assert "ai_tagger" not in param_names
+        assert "ai_enhancer" not in param_names

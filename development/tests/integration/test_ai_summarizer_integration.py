@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -42,7 +42,8 @@ class TestAISummarizerIntegration:
             pytest.skip("Ollama service is not available")
 
         # Create a substantial piece of content
-        long_content = """
+        long_content = (
+            """
         Artificial intelligence (AI) is intelligence demonstrated by machines, 
         in contrast to the natural intelligence displayed by humans and animals. 
         Leading AI textbooks define the field as the study of "intelligent agents": 
@@ -61,7 +62,9 @@ class TestAISummarizerIntegration:
         perception, and the ability to move and manipulate objects. General 
         intelligence is among the field's long-term goals. Approaches include 
         statistical methods, computational intelligence, and traditional symbolic AI.
-        """ * 3  # Make it longer to ensure it meets the threshold
+        """
+            * 3
+        )  # Make it longer to ensure it meets the threshold
 
         start_time = time.time()
         summary = self.summarizer.generate_summary(long_content)
@@ -80,7 +83,8 @@ class TestAISummarizerIntegration:
     def test_real_extractive_summary_quality(self):
         """Test extractive summary quality with real content."""
         # Use a structured piece of content with clear key points
-        content = """
+        content = (
+            """
         Machine learning is a method of data analysis that automates analytical model building. 
         It is a branch of artificial intelligence based on the idea that systems can learn from data, 
         identify patterns and make decisions with minimal human intervention.
@@ -100,7 +104,9 @@ class TestAISummarizerIntegration:
         The study of mathematical optimization delivers methods, theory and application domains to 
         the field of machine learning. Data mining is a related field of study, focusing on 
         exploratory data analysis through unsupervised learning.
-        """ * 2  # Make it long enough
+        """
+            * 2
+        )  # Make it long enough
 
         summary = self.summarizer.generate_extractive_summary(content)
 

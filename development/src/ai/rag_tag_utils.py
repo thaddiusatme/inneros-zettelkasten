@@ -12,6 +12,7 @@ from dataclasses import dataclass
 @dataclass
 class TagAnalysisResult:
     """Structured result for tag analysis operations"""
+
     total_tags: int
     problematic_count: int
     cleanup_suggestions: Dict[str, List[str]]
@@ -22,6 +23,7 @@ class TagAnalysisResult:
 @dataclass
 class CleanupRule:
     """Represents a single tag cleanup rule"""
+
     rule_type: str  # canonicalization, merge, remove
     pattern: str
     replacement: str
@@ -35,15 +37,15 @@ class TagPatternMatcher:
     def __init__(self):
         # Precompiled regex patterns for performance
         self.metadata_pattern = re.compile(
-            r'^(permanent|fleeting|literature|moc|project|inbox|draft|published|archived)$',
-            re.IGNORECASE
+            r"^(permanent|fleeting|literature|moc|project|inbox|draft|published|archived)$",
+            re.IGNORECASE,
         )
         self.ai_artifact_pattern = re.compile(
-            r'(ai-generated|llm-output|auto-tagged|claude-response|gpt-generated|ollama-response|machine-generated)',
-            re.IGNORECASE
+            r"(ai-generated|llm-output|auto-tagged|claude-response|gpt-generated|ollama-response|machine-generated)",
+            re.IGNORECASE,
         )
-        self.invalid_chars_pattern = re.compile(r'[^a-zA-Z0-9\-_]')
-        self.numeric_only_pattern = re.compile(r'^\d+$')
+        self.invalid_chars_pattern = re.compile(r"[^a-zA-Z0-9\-_]")
+        self.numeric_only_pattern = re.compile(r"^\d+$")
 
     def is_metadata_redundant(self, tag: str) -> bool:
         """Check if tag duplicates metadata field"""
@@ -69,14 +71,37 @@ class SemanticTagGrouper:
 
     def __init__(self):
         self.semantic_groups = {
-            "artificial-intelligence": ["ai", "artificial-intelligence", "machine-intelligence"],
-            "machine-learning": ["ml", "machine-learning", "supervised-learning", "unsupervised-learning"],
-            "deep-learning": ["deep-learning", "neural-networks", "artificial-neural-networks"],
-            "productivity": ["productivity", "productivity-tools", "efficiency", "time-management"],
+            "artificial-intelligence": [
+                "ai",
+                "artificial-intelligence",
+                "machine-intelligence",
+            ],
+            "machine-learning": [
+                "ml",
+                "machine-learning",
+                "supervised-learning",
+                "unsupervised-learning",
+            ],
+            "deep-learning": [
+                "deep-learning",
+                "neural-networks",
+                "artificial-neural-networks",
+            ],
+            "productivity": [
+                "productivity",
+                "productivity-tools",
+                "efficiency",
+                "time-management",
+            ],
             "note-taking": ["note-taking", "notes", "knowledge-management", "pkm"],
-            "programming": ["programming", "coding", "software-development", "development"],
+            "programming": [
+                "programming",
+                "coding",
+                "software-development",
+                "development",
+            ],
             "research": ["research", "academic", "scholarly", "literature-review"],
-            "business": ["business", "entrepreneurship", "startup", "enterprise"]
+            "business": ["business", "entrepreneurship", "startup", "enterprise"],
         }
 
         # Create reverse lookup for performance
@@ -112,7 +137,7 @@ class NamespaceValidator:
 
     def __init__(self):
         self.valid_namespaces = {"type", "topic", "context"}
-        self.namespace_pattern = re.compile(r'^(type|topic|context)/[a-z0-9\-]+$')
+        self.namespace_pattern = re.compile(r"^(type|topic|context)/[a-z0-9\-]+$")
 
     def is_valid_namespaced_tag(self, tag: str) -> bool:
         """Check if tag follows namespace convention"""
@@ -120,8 +145,8 @@ class NamespaceValidator:
 
     def extract_namespace(self, tag: str) -> Tuple[str, str]:
         """Extract namespace and tag name from namespaced tag"""
-        if '/' in tag:
-            parts = tag.split('/', 1)
+        if "/" in tag:
+            parts = tag.split("/", 1)
             if len(parts) == 2 and parts[0] in self.valid_namespaces:
                 return parts[0], parts[1]
         return "", tag
@@ -129,7 +154,7 @@ class NamespaceValidator:
     def create_namespaced_tag(self, namespace: str, tag: str) -> str:
         """Create properly formatted namespaced tag"""
         if namespace in self.valid_namespaces:
-            clean_tag = re.sub(r'[^a-z0-9\-]', '-', tag.lower()).strip('-')
+            clean_tag = re.sub(r"[^a-z0-9\-]", "-", tag.lower()).strip("-")
             return f"{namespace}/{clean_tag}"
         return tag
 
@@ -137,7 +162,9 @@ class NamespaceValidator:
 class TagStatisticsCalculator:
     """Calculates comprehensive tag statistics and metrics"""
 
-    def calculate_cleanup_statistics(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_cleanup_statistics(
+        self, analysis_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Calculate cleanup impact statistics"""
         total_tags = analysis_result.get("total_tags", 0)
         problematic = analysis_result.get("total_problematic", 0)
@@ -153,10 +180,13 @@ class TagStatisticsCalculator:
             "impact_score": impact_score,
             "tags_to_remove": problematic,
             "tags_to_keep": total_tags - problematic,
-            "efficiency_gain": cleanup_percentage * 0.8  # Estimated efficiency improvement
+            "efficiency_gain": cleanup_percentage
+            * 0.8,  # Estimated efficiency improvement
         }
 
-    def calculate_namespace_distribution(self, classifications: List[Dict[str, str]]) -> Dict[str, Any]:
+    def calculate_namespace_distribution(
+        self, classifications: List[Dict[str, str]]
+    ) -> Dict[str, Any]:
         """Calculate namespace distribution statistics"""
         distribution = {"type": 0, "topic": 0, "context": 0}
 
@@ -165,13 +195,15 @@ class TagStatisticsCalculator:
             distribution[namespace] += 1
 
         total = sum(distribution.values())
-        percentages = {k: (v / total * 100) if total > 0 else 0 for k, v in distribution.items()}
+        percentages = {
+            k: (v / total * 100) if total > 0 else 0 for k, v in distribution.items()
+        }
 
         return {
             "counts": distribution,
             "percentages": percentages,
             "total": total,
-            "balance_score": self._calculate_balance_score(percentages)
+            "balance_score": self._calculate_balance_score(percentages),
         }
 
     def _calculate_balance_score(self, percentages: Dict[str, float]) -> float:
@@ -195,9 +227,15 @@ class RuleGenerationEngine:
         """Generate comprehensive cleanup rules from vault analysis"""
 
         # Analyze current tags
-        metadata_redundant = [tag for tag in vault_tags if self.pattern_matcher.is_metadata_redundant(tag)]
-        ai_artifacts = [tag for tag in vault_tags if self.pattern_matcher.is_ai_artifact(tag)]
-        parsing_errors = [tag for tag in vault_tags if self.pattern_matcher.has_parsing_errors(tag)]
+        metadata_redundant = [
+            tag for tag in vault_tags if self.pattern_matcher.is_metadata_redundant(tag)
+        ]
+        ai_artifacts = [
+            tag for tag in vault_tags if self.pattern_matcher.is_ai_artifact(tag)
+        ]
+        parsing_errors = [
+            tag for tag in vault_tags if self.pattern_matcher.has_parsing_errors(tag)
+        ]
         semantic_groups = self.semantic_grouper.find_semantic_groups(vault_tags)
 
         # Generate canonicalization rules
@@ -219,7 +257,7 @@ class RuleGenerationEngine:
             "remove_metadata_duplicates": len(metadata_redundant) > 0,
             "remove_ai_artifacts": len(ai_artifacts) > 0,
             "fix_parsing_errors": len(parsing_errors) > 0,
-            "merge_semantic_duplicates": len(semantic_groups) > 0
+            "merge_semantic_duplicates": len(semantic_groups) > 0,
         }
 
         return {
@@ -230,24 +268,53 @@ class RuleGenerationEngine:
             "removal_candidates": metadata_redundant + ai_artifacts + parsing_errors,
             "statistics": {
                 "total_rules": len(canonicalization) + len(merges),
-                "cleanup_impact": len(metadata_redundant + ai_artifacts + parsing_errors),
-                "merge_impact": sum(len(group) - 1 for group in semantic_groups)
-            }
+                "cleanup_impact": len(
+                    metadata_redundant + ai_artifacts + parsing_errors
+                ),
+                "merge_impact": sum(len(group) - 1 for group in semantic_groups),
+            },
         }
 
-    def _generate_namespace_mappings(self, vault_tags: List[str]) -> Dict[str, Dict[str, List[str]]]:
+    def _generate_namespace_mappings(
+        self, vault_tags: List[str]
+    ) -> Dict[str, Dict[str, List[str]]]:
         """Generate namespace mapping suggestions"""
-        type_tags = [tag for tag in vault_tags if self.pattern_matcher.is_metadata_redundant(tag)]
+        type_tags = [
+            tag for tag in vault_tags if self.pattern_matcher.is_metadata_redundant(tag)
+        ]
 
         # Simple heuristics for demonstration
-        topic_indicators = ["quantum", "ai", "machine", "deep", "neural", "computing", "technology"]
-        context_indicators = ["inbox", "draft", "review", "priority", "urgent", "scheduled"]
+        topic_indicators = [
+            "quantum",
+            "ai",
+            "machine",
+            "deep",
+            "neural",
+            "computing",
+            "technology",
+        ]
+        context_indicators = [
+            "inbox",
+            "draft",
+            "review",
+            "priority",
+            "urgent",
+            "scheduled",
+        ]
 
-        topic_tags = [tag for tag in vault_tags if any(indicator in tag.lower() for indicator in topic_indicators)]
-        context_tags = [tag for tag in vault_tags if any(indicator in tag.lower() for indicator in context_indicators)]
+        topic_tags = [
+            tag
+            for tag in vault_tags
+            if any(indicator in tag.lower() for indicator in topic_indicators)
+        ]
+        context_tags = [
+            tag
+            for tag in vault_tags
+            if any(indicator in tag.lower() for indicator in context_indicators)
+        ]
 
         return {
             "type": {"suggested": type_tags, "confidence": 0.9},
             "topic": {"suggested": topic_tags, "confidence": 0.7},
-            "context": {"suggested": context_tags, "confidence": 0.8}
+            "context": {"suggested": context_tags, "confidence": 0.8},
         }

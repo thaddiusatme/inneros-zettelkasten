@@ -15,7 +15,6 @@ from datetime import datetime, timedelta
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-
 class TestFleetingHealthCLI:
     """Test cases for --fleeting-health CLI command."""
 
@@ -23,7 +22,9 @@ class TestFleetingHealthCLI:
         """Set up test environment."""
         self.temp_dir = tempfile.mkdtemp()
         self.vault_path = Path(self.temp_dir)
-        self.cli_script = Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+        self.cli_script = (
+            Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+        )
 
         # Create basic vault structure
         (self.vault_path / "knowledge" / "Fleeting Notes").mkdir(parents=True)
@@ -36,10 +37,16 @@ class TestFleetingHealthCLI:
     def test_fleeting_health_argument_parsing(self):
         """Test that --fleeting-health argument is properly parsed."""
         # This test will fail until we add the argument to the parser
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         # Should not fail with "unrecognized arguments" error
         assert "unrecognized arguments" not in result.stderr
@@ -51,10 +58,16 @@ class TestFleetingHealthCLI:
         self._create_test_fleeting_note("old-note.md", days_ago=100)
         self._create_test_fleeting_note("recent-note.md", days_ago=5)
 
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         assert result.returncode == 0
         output = result.stdout
@@ -70,10 +83,18 @@ class TestFleetingHealthCLI:
         """Test fleeting health report with JSON output format."""
         self._create_test_fleeting_note("test-note.md", days_ago=10)
 
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health", "--format", "json"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         assert result.returncode == 0
 
@@ -89,10 +110,16 @@ class TestFleetingHealthCLI:
 
     def test_fleeting_health_empty_vault(self):
         """Test fleeting health report with no fleeting notes."""
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         assert result.returncode == 0
         output = result.stdout
@@ -105,14 +132,20 @@ class TestFleetingHealthCLI:
         """Test that fleeting health command completes within performance target."""
         # Create multiple test notes
         for i in range(10):
-            self._create_test_fleeting_note(f"note-{i}.md", days_ago=i*10)
+            self._create_test_fleeting_note(f"note-{i}.md", days_ago=i * 10)
 
         start_time = datetime.now()
 
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
@@ -126,10 +159,18 @@ class TestFleetingHealthCLI:
         self._create_test_fleeting_note("test-note.md", days_ago=30)
         export_path = self.vault_path / "health-report.md"
 
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            str(self.vault_path), "--fleeting-health", "--export", str(export_path)
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(self.cli_script),
+                str(self.vault_path),
+                "--fleeting-health",
+                "--export",
+                str(export_path),
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         assert result.returncode == 0
         assert export_path.exists()
@@ -142,10 +183,11 @@ class TestFleetingHealthCLI:
         """Test error handling for invalid vault paths."""
         invalid_path = "/nonexistent/path"
 
-        result = subprocess.run([
-            sys.executable, str(self.cli_script),
-            invalid_path, "--fleeting-health"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, str(self.cli_script), invalid_path, "--fleeting-health"],
+            capture_output=True,
+            text=True,
+        )
 
         # Should handle errors gracefully (not crash)
         # Return code may be non-zero, but should not be a Python traceback
@@ -172,6 +214,7 @@ This is a test fleeting note created {days_ago} days ago.
 
         # Set file modification time to match created date
         import os
+
         timestamp = created_date.timestamp()
         os.utime(note_path, (timestamp, timestamp))
 
@@ -185,13 +228,16 @@ class TestFleetingHealthIntegration:
             vault_path = Path(temp_dir)
             (vault_path / "knowledge").mkdir()
 
-            cli_script = Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+            cli_script = (
+                Path(__file__).parent.parent.parent / "src" / "cli" / "workflow_demo.py"
+            )
 
             # Test fleeting health output
-            result = subprocess.run([
-                sys.executable, str(cli_script),
-                str(vault_path), "--fleeting-health"
-            ], capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, str(cli_script), str(vault_path), "--fleeting-health"],
+                capture_output=True,
+                text=True,
+            )
 
             output = result.stdout
 

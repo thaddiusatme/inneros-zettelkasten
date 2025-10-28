@@ -13,10 +13,10 @@ from io import StringIO
 def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     """
     Parse YAML frontmatter from markdown content.
-    
+
     Args:
         content: Raw markdown content potentially containing frontmatter
-        
+
     Returns:
         Tuple of (metadata_dict, body_content)
         - metadata_dict: Parsed YAML frontmatter as dictionary (empty if none/invalid)
@@ -26,18 +26,18 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
         return {}, content or ""
 
     # Check for frontmatter delimiters
-    if not content.strip().startswith('---'):
+    if not content.strip().startswith("---"):
         return {}, content
 
     # Find closing delimiter
-    lines = content.split('\n')
+    lines = content.split("\n")
     if len(lines) < 2:
         return {}, content
 
     # Look for closing '---' delimiter
     closing_delimiter_idx = None
     for i in range(1, len(lines)):
-        if lines[i].strip() == '---':
+        if lines[i].strip() == "---":
             closing_delimiter_idx = i
             break
 
@@ -47,11 +47,11 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
 
     # Extract YAML content between delimiters
     yaml_lines = lines[1:closing_delimiter_idx]
-    yaml_content = '\n'.join(yaml_lines)
+    yaml_content = "\n".join(yaml_lines)
 
     # Extract body content after frontmatter
-    body_lines = lines[closing_delimiter_idx + 1:]
-    body_content = '\n'.join(body_lines)
+    body_lines = lines[closing_delimiter_idx + 1 :]
+    body_content = "\n".join(body_lines)
 
     # Parse YAML with error handling
     try:
@@ -69,11 +69,11 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
 def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
     """
     Build markdown content with YAML frontmatter.
-    
+
     Args:
         metadata: Dictionary of frontmatter fields
         body: Main content body
-        
+
     Returns:
         Complete markdown content with frontmatter and body
     """
@@ -82,27 +82,27 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
 
     # Define field ordering for consistency
     field_order = [
-        'created',
-        'type',
-        'scope',
-        'status',
-        'visibility',
-        'tags',
+        "created",
+        "type",
+        "scope",
+        "status",
+        "visibility",
+        "tags",
         # Review note fields
-        'week_id',
-        'period_start',
-        'period_end',
-        'sprint_id',
-        'tz',
+        "week_id",
+        "period_start",
+        "period_end",
+        "sprint_id",
+        "tz",
         # Reading intake fields
-        'source',
-        'url',
-        'saved_at',
-        'claims',
-        'quotes',
-        'linked_notes',
-        'quality_score',
-        'ai_tags'
+        "source",
+        "url",
+        "saved_at",
+        "claims",
+        "quotes",
+        "linked_notes",
+        "quality_score",
+        "ai_tags",
     ]
 
     # Create ordered metadata dict
@@ -128,13 +128,13 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
         value = []
         for item_key, item_value in data.items():
             node_key = dumper.represent_data(item_key)
-            if item_key == 'tags' and isinstance(item_value, list):
+            if item_key == "tags" and isinstance(item_value, list):
                 node_value = dumper.represent_list(item_value)
                 node_value.flow_style = True
             else:
                 node_value = dumper.represent_data(item_value)
             value.append((node_key, node_value))
-        return yaml.MappingNode('tag:yaml.org,2002:map', value, flow_style=False)
+        return yaml.MappingNode("tag:yaml.org,2002:map", value, flow_style=False)
 
     # Register our custom representer for dicts to preserve ordering and inline tags
     _InlineTagsDumper.add_representer(dict, _represent_mapping_with_inline_tags)
@@ -148,7 +148,7 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
         allow_unicode=True,
         sort_keys=False,  # Preserve our custom ordering
         width=80,
-        indent=2
+        indent=2,
     )
 
     yaml_content = yaml_stream.getvalue()
@@ -163,10 +163,10 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
 def validate_frontmatter(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     """
     Validate frontmatter metadata for common issues.
-    
+
     Args:
         metadata: Dictionary of frontmatter fields
-        
+
     Returns:
         Tuple of (is_valid, error_message)
     """
@@ -175,11 +175,11 @@ def validate_frontmatter(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]
 
     # Check required field types
     type_checks = {
-        'created': str,
-        'type': str,
-        'status': str,
-        'tags': list,
-        'visibility': str
+        "created": str,
+        "type": str,
+        "status": str,
+        "tags": list,
+        "visibility": str,
     }
 
     for field, expected_type in type_checks.items():
@@ -187,16 +187,24 @@ def validate_frontmatter(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]
             return False, f"Field '{field}' must be of type {expected_type.__name__}"
 
     # Validate enum values
-    valid_types = {'permanent', 'fleeting', 'literature', 'MOC', 'review', 'daily', 'weekly'}
-    if 'type' in metadata and metadata['type'] not in valid_types:
+    valid_types = {
+        "permanent",
+        "fleeting",
+        "literature",
+        "MOC",
+        "review",
+        "daily",
+        "weekly",
+    }
+    if "type" in metadata and metadata["type"] not in valid_types:
         return False, f"Field 'type' must be one of: {valid_types}"
 
-    valid_statuses = {'inbox', 'promoted', 'draft', 'published', 'archived'}
-    if 'status' in metadata and metadata['status'] not in valid_statuses:
+    valid_statuses = {"inbox", "promoted", "draft", "published", "archived"}
+    if "status" in metadata and metadata["status"] not in valid_statuses:
         return False, f"Field 'status' must be one of: {valid_statuses}"
 
-    valid_visibility = {'private', 'shared', 'team', 'public'}
-    if 'visibility' in metadata and metadata['visibility'] not in valid_visibility:
+    valid_visibility = {"private", "shared", "team", "public"}
+    if "visibility" in metadata and metadata["visibility"] not in valid_visibility:
         return False, f"Field 'visibility' must be one of: {valid_visibility}"
 
     return True, None
@@ -205,12 +213,12 @@ def validate_frontmatter(metadata: Dict[str, Any]) -> Tuple[bool, Optional[str]]
 def update_frontmatter_field(content: str, field: str, value: Any) -> str:
     """
     Update a specific field in frontmatter content.
-    
+
     Args:
         content: Original markdown content with frontmatter
         field: Field name to update
         value: New value for the field
-        
+
     Returns:
         Updated content with modified frontmatter
     """
@@ -222,11 +230,11 @@ def update_frontmatter_field(content: str, field: str, value: Any) -> str:
 def remove_frontmatter_field(content: str, field: str) -> str:
     """
     Remove a specific field from frontmatter content.
-    
+
     Args:
         content: Original markdown content with frontmatter
         field: Field name to remove
-        
+
     Returns:
         Updated content with field removed from frontmatter
     """

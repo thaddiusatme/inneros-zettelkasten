@@ -15,14 +15,14 @@ from .screenshot_cli_utils import (
     CLIProgressReporter,
     ConfigurationManager,
     CLIOutputFormatter,
-    CLIExportManager
+    CLIExportManager,
 )
 
 # Make classes available at module level for test imports
 __all__ = [
-    'EveningScreenshotCLIOrchestrator',
-    'CLIProgressReporter',
-    'ConfigurationManager',
-    'CLIOutputFormatter',
-    'CLIExportManager'
+    "EveningScreenshotCLIOrchestrator",
+    "CLIProgressReporter",
+    "ConfigurationManager",
+    "CLIOutputFormatter",
+    "CLIExportManager",
 ]

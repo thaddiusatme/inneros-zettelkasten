@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -25,7 +25,7 @@ from ai.analytics import NoteAnalytics
 @pytest.mark.fast_integration
 class TestAnalyticsIntegration:
     """Integration tests for NoteAnalytics with realistic data.
-    
+
     Performance: 0.11s (already fast, uses tmp_path)
     """
 
@@ -121,7 +121,7 @@ Key resources for deeper understanding:
 - "Pattern Recognition and Machine Learning" by Christopher Bishop
 - "The Elements of Statistical Learning" by Hastie, Tibshirani, and Friedman
 - Online courses from Stanford CS229 and MIT 6.034
-"""
+""",
             },
             {
                 "filename": "quantum-computing-principles.md",
@@ -204,8 +204,8 @@ This field intersects with numerous other areas:
 - [[linear-algebra-foundations]] - Mathematical basis of quantum mechanics
 - [[complexity-theory]] - Computational complexity classes and quantum advantage
 - [[quantum-error-correction]] - Protecting quantum information from noise
-"""
-            }
+""",
+            },
         ]
 
         # Medium-quality fleeting notes
@@ -242,7 +242,7 @@ Had an interesting thought about using blockchain technology for secure, transpa
 - Explore pilot program possibilities
 
 This could connect to my notes on [[cryptographic-protocols]] and [[digital-identity-systems]].
-"""
+""",
             },
             {
                 "filename": "meeting-notes-ai-ethics.md",
@@ -275,8 +275,8 @@ Notes from team meeting on AI ethics guidelines.
 - Partnership on AI best practices
 
 Need to develop this into a more comprehensive framework.
-"""
-            }
+""",
+            },
         ]
 
         # Literature notes
@@ -352,7 +352,7 @@ This connects to several other important papers:
 - [[bert-paper-analysis]] - Bidirectional encoder representations
 - [[gpt-architecture-evolution]] - Generative pre-training approach
 - [[vision-transformer-paper]] - Applying transformers to images
-"""
+""",
             }
         ]
 
@@ -367,7 +367,7 @@ status: inbox
 ---
 
 Quick thought about something I read today. Need to develop this more.
-"""
+""",
             },
             {
                 "filename": "todo-research.md",
@@ -381,8 +381,8 @@ Research topics:
 - Blockchain maybe?
 
 Need to organize this better.
-"""
-            }
+""",
+            },
         ]
 
         # Create all notes
@@ -390,7 +390,7 @@ Need to organize this better.
             ("Permanent Notes", permanent_notes),
             ("Fleeting Notes", fleeting_notes),
             ("Literature Notes", literature_notes),
-            ("Inbox", inbox_notes)
+            ("Inbox", inbox_notes),
         ]
 
         for directory, notes in all_notes:
@@ -398,7 +398,7 @@ Need to organize this better.
                 note_path = self.notes_dir / directory / note_data["filename"]
                 note_path.parent.mkdir(parents=True, exist_ok=True)
 
-                with open(note_path, 'w', encoding='utf-8') as f:
+                with open(note_path, "w", encoding="utf-8") as f:
                     f.write(note_data["content"])
 
     def test_comprehensive_note_scanning(self):
@@ -417,12 +417,16 @@ Need to organize this better.
 
         # Check quality distribution
         quality_scores = [note.quality_score for note in notes]
-        assert max(quality_scores) > 0.7  # High-quality notes exist (realistic threshold)
+        assert (
+            max(quality_scores) > 0.7
+        )  # High-quality notes exist (realistic threshold)
         assert min(quality_scores) < 0.3  # Low-quality notes exist
 
         # Check AI feature detection
         notes_with_summaries = [note for note in notes if note.has_summary]
-        assert len(notes_with_summaries) >= 2  # Permanent and literature notes have summaries
+        assert (
+            len(notes_with_summaries) >= 2
+        )  # Permanent and literature notes have summaries
 
     def test_realistic_report_generation(self):
         """Test comprehensive report generation with realistic data."""
@@ -451,7 +455,10 @@ Need to organize this better.
         quality = report["quality_metrics"]
         assert quality["high_quality_notes"] >= 1
         assert quality["low_quality_notes"] >= 1
-        assert quality["quality_distribution"]["min"] < quality["quality_distribution"]["max"]
+        assert (
+            quality["quality_distribution"]["min"]
+            < quality["quality_distribution"]["max"]
+        )
 
         # Check temporal analysis
         temporal = report["temporal_analysis"]
@@ -477,12 +484,17 @@ Need to organize this better.
         assert output_file.exists()
 
         # Verify JSON structure
-        with open(output_file, 'r') as f:
+        with open(output_file, "r") as f:
             exported_data = json.load(f)
 
         # Check all expected sections
-        expected_sections = ["overview", "distributions", "quality_metrics",
-                           "temporal_analysis", "recommendations"]
+        expected_sections = [
+            "overview",
+            "distributions",
+            "quality_metrics",
+            "temporal_analysis",
+            "recommendations",
+        ]
         for section in expected_sections:
             assert section in exported_data
 
@@ -503,20 +515,26 @@ Need to organize this better.
         # Find specific notes by filename
         ml_note = next((n for n in notes if "machine-learning" in n.filename), None)
         random_note = next((n for n in notes if "random-thought" in n.filename), None)
-        literature_note = next((n for n in notes if "attention-is-all" in n.filename), None)
+        literature_note = next(
+            (n for n in notes if "attention-is-all" in n.filename), None
+        )
 
         assert ml_note is not None
         assert random_note is not None
         assert literature_note is not None
 
         # Machine learning note should have high quality
-        assert ml_note.quality_score > 0.7  # Realistic threshold for high-quality content
+        assert (
+            ml_note.quality_score > 0.7
+        )  # Realistic threshold for high-quality content
         assert ml_note.word_count > 300  # Realistic threshold for substantial content
         assert ml_note.tag_count >= 4
         assert ml_note.link_count > 0
 
         # Random thought should have low quality
-        assert random_note.quality_score < 0.4  # Realistic threshold for low-quality content
+        assert (
+            random_note.quality_score < 0.4
+        )  # Realistic threshold for low-quality content
         assert random_note.word_count < 50
         assert random_note.tag_count == 0
 

@@ -8,15 +8,13 @@ from typing import List
 from ai.link_suggestion_engine import LinkSuggestion
 
 
-def display_suggestion_interactively(suggestion: LinkSuggestion, current: int, total: int) -> str:
+def display_suggestion_interactively(
+    suggestion: LinkSuggestion, current: int, total: int
+) -> str:
     """Display a suggestion interactively and get user choice"""
 
     # Quality emoji indicators
-    quality_emoji = {
-        "high": "🟢",
-        "medium": "🟡",
-        "low": "🔴"
-    }
+    quality_emoji = {"high": "🟢", "medium": "🟡", "low": "🔴"}
 
     emoji = quality_emoji.get(suggestion.confidence, "⚪")
 
@@ -36,16 +34,16 @@ def get_user_choice_for_suggestion() -> str:
     while True:
         try:
             choice = input("Your choice: ").lower().strip()
-            if choice in ['a', 'accept']:
-                return 'accept'
-            elif choice in ['r', 'reject']:
-                return 'reject'
-            elif choice in ['s', 'skip']:
-                return 'skip'
+            if choice in ["a", "accept"]:
+                return "accept"
+            elif choice in ["r", "reject"]:
+                return "reject"
+            elif choice in ["s", "skip"]:
+                return "skip"
             else:
                 print("Invalid choice. Please enter A, R, or S.")
         except (EOFError, KeyboardInterrupt):
-            return 'skip'
+            return "skip"
 
 
 def display_progress(current: int, total: int, message: str = ""):
@@ -60,13 +58,19 @@ def display_batch_progress(current: int, total: int, current_note: str = ""):
     print(f"Processing: {current}/{total} ({percent:.1f}%) - {current_note}")
 
 
-def filter_suggestions_by_quality(suggestions: List[LinkSuggestion], min_quality: float) -> List[LinkSuggestion]:
+def filter_suggestions_by_quality(
+    suggestions: List[LinkSuggestion], min_quality: float
+) -> List[LinkSuggestion]:
     """Filter suggestions by minimum quality threshold"""
     return [s for s in suggestions if s.quality_score >= min_quality]
 
 
-def display_suggestions_summary(suggestions: List[LinkSuggestion], processed: int = None,
-                               accepted: int = None, rejected: int = None):
+def display_suggestions_summary(
+    suggestions: List[LinkSuggestion],
+    processed: int = None,
+    accepted: int = None,
+    rejected: int = None,
+):
     """Display summary of suggestions processing"""
     print("\n📊 Summary:")
     print(f"   Total suggestions: {len(suggestions)}")
@@ -93,7 +97,9 @@ def display_cli_error(error_message: str, context: str = ""):
         print(f"   Context: {context}")
 
 
-def process_suggestions_batch(suggestions: List[LinkSuggestion], interactive: bool = False) -> List[dict]:
+def process_suggestions_batch(
+    suggestions: List[LinkSuggestion], interactive: bool = False
+) -> List[dict]:
     """Process a batch of suggestions with progress tracking"""
     results = []
 
@@ -102,16 +108,10 @@ def process_suggestions_batch(suggestions: List[LinkSuggestion], interactive: bo
 
         if interactive:
             choice = display_suggestion_interactively(suggestion, i, len(suggestions))
-            results.append({
-                'suggestion': suggestion,
-                'action': choice
-            })
+            results.append({"suggestion": suggestion, "action": choice})
         else:
             # Auto-accept high quality suggestions in non-interactive mode
-            action = 'accept' if suggestion.confidence == 'high' else 'skip'
-            results.append({
-                'suggestion': suggestion,
-                'action': action
-            })
+            action = "accept" if suggestion.confidence == "high" else "skip"
+            results.append({"suggestion": suggestion, "action": action})
 
     return results

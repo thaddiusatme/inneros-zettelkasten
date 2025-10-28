@@ -41,7 +41,7 @@ class TestWorkflowReportingCoordinator:
         analytics.generate_report.return_value = {
             "total_notes": 100,
             "avg_quality": 0.75,
-            "connection_density": 3.5
+            "connection_density": 3.5,
         }
         return analytics
 
@@ -163,18 +163,22 @@ class TestWorkflowReportingCoordinator:
     def test_analyze_ai_usage_no_features(self, coordinator, temp_vault):
         """Test AI usage analysis with notes lacking AI features."""
         # Create notes without AI frontmatter
-        (temp_vault / "Permanent Notes" / "note1.md").write_text("""---
+        (temp_vault / "Permanent Notes" / "note1.md").write_text(
+            """---
 title: Test Note
 tags: [test, manual]
 ---
 
-# Manual Note""")
+# Manual Note"""
+        )
 
-        (temp_vault / "Inbox" / "note2.md").write_text("""---
+        (temp_vault / "Inbox" / "note2.md").write_text(
+            """---
 title: Another Note
 ---
 
-# Another Manual Note""")
+# Another Manual Note"""
+        )
 
         report = coordinator.generate_workflow_report()
         ai_usage = report["ai_features"]
@@ -191,29 +195,35 @@ title: Another Note
     def test_analyze_ai_usage_with_features(self, coordinator, temp_vault):
         """Test AI usage analysis detects AI-enhanced notes."""
         # Note with AI summary
-        (temp_vault / "Permanent Notes" / "ai_note1.md").write_text("""---
+        (temp_vault / "Permanent Notes" / "ai_note1.md").write_text(
+            """---
 title: AI Enhanced Note
 ai_summary: This is an AI-generated summary
 ai_processed: true
 tags: [machine-learning, artificial-intelligence, deep-learning]
 ---
 
-# AI Enhanced Note""")
+# AI Enhanced Note"""
+        )
 
         # Note with AI processing only
-        (temp_vault / "Inbox" / "ai_note2.md").write_text("""---
+        (temp_vault / "Inbox" / "ai_note2.md").write_text(
+            """---
 title: Processed Note
 ai_processed: true
 ---
 
-# Processed Note""")
+# Processed Note"""
+        )
 
         # Manual note for comparison
-        (temp_vault / "Fleeting Notes" / "manual.md").write_text("""---
+        (temp_vault / "Fleeting Notes" / "manual.md").write_text(
+            """---
 title: Manual Note
 ---
 
-# Manual Note""")
+# Manual Note"""
+        )
 
         report = coordinator.generate_workflow_report()
         ai_usage = report["ai_features"]
@@ -248,18 +258,21 @@ title: Manual Note
         """Test recommendations for low AI feature adoption."""
         # Create 10 notes with no AI features
         for i in range(10):
-            (temp_vault / "Permanent Notes" / f"note{i}.md").write_text(f"""---
+            (temp_vault / "Permanent Notes" / f"note{i}.md").write_text(
+                f"""---
 title: Note {i}
 ---
 
-# Note {i}""")
+# Note {i}"""
+            )
 
         report = coordinator.generate_workflow_report()
         recommendations = report["recommendations"]
 
         # Should recommend AI processing or summarization
-        assert any("AI" in rec or "summarization" in rec.lower()
-                  for rec in recommendations)
+        assert any(
+            "AI" in rec or "summarization" in rec.lower() for rec in recommendations
+        )
 
     # ============================================================================
     # Test 11: Recommendations - Note Type Balance
@@ -269,18 +282,24 @@ title: Note {i}
         """Test recommendations for fleeting/permanent note imbalance."""
         # Create many fleeting notes
         for i in range(20):
-            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(f"# Fleeting {i}")
+            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(
+                f"# Fleeting {i}"
+            )
 
         # Create few permanent notes (imbalance ratio > 2)
         for i in range(5):
-            (temp_vault / "Permanent Notes" / f"perm{i}.md").write_text(f"# Permanent {i}")
+            (temp_vault / "Permanent Notes" / f"perm{i}.md").write_text(
+                f"# Permanent {i}"
+            )
 
         report = coordinator.generate_workflow_report()
         recommendations = report["recommendations"]
 
         # Should recommend promoting fleeting notes
-        assert any("promot" in rec.lower() and "fleeting" in rec.lower()
-                  for rec in recommendations)
+        assert any(
+            "promot" in rec.lower() and "fleeting" in rec.lower()
+            for rec in recommendations
+        )
 
     # ============================================================================
     # Test 12: Missing Directories Handling
@@ -290,6 +309,7 @@ title: Note {i}
         """Test coordinator handles missing directories gracefully."""
         # Remove some directories
         import shutil
+
         shutil.rmtree(temp_vault / "Archive")
         shutil.rmtree(temp_vault / "Fleeting Notes")
 
@@ -311,19 +331,23 @@ title: Note {i}
     def test_malformed_yaml_handling(self, coordinator, temp_vault):
         """Test AI usage analysis handles malformed YAML gracefully."""
         # Create note with malformed YAML
-        (temp_vault / "Inbox" / "malformed.md").write_text("""---
+        (temp_vault / "Inbox" / "malformed.md").write_text(
+            """---
 title: Malformed
 tags: [unclosed, array
 ---
 
-# Malformed Note""")
+# Malformed Note"""
+        )
 
         # Create valid note
-        (temp_vault / "Inbox" / "valid.md").write_text("""---
+        (temp_vault / "Inbox" / "valid.md").write_text(
+            """---
 title: Valid
 ---
 
-# Valid Note""")
+# Valid Note"""
+        )
 
         # Should not crash, should count at least the valid note
         report = coordinator.generate_workflow_report()
@@ -347,7 +371,7 @@ title: Valid
         coordinator = WorkflowReportingCoordinator(temp_vault, mock_analytics)
 
         # Verify it matches expected interface
-        assert hasattr(coordinator, 'generate_workflow_report')
+        assert hasattr(coordinator, "generate_workflow_report")
         assert callable(coordinator.generate_workflow_report)
 
     # ============================================================================
@@ -363,16 +387,20 @@ title: Valid
 
         # Create notes with high AI adoption
         for i in range(8):
-            (temp_vault / "Permanent Notes" / f"ai_note{i}.md").write_text(f"""---
+            (temp_vault / "Permanent Notes" / f"ai_note{i}.md").write_text(
+                f"""---
 ai_processed: true
 ai_summary: Summary {i}
 ---
 
-# AI Note {i}""")
+# AI Note {i}"""
+            )
 
         # Balanced fleeting notes (not > 2x permanent)
         for i in range(10):
-            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(f"# Fleeting {i}")
+            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(
+                f"# Fleeting {i}"
+            )
 
         report = coordinator.generate_workflow_report()
 

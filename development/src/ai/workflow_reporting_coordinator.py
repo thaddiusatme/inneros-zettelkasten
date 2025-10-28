@@ -20,15 +20,15 @@ from src.utils.frontmatter import parse_frontmatter
 class WorkflowReportingCoordinator:
     """
     Coordinates workflow reporting and health assessment operations.
-    
+
     ADR-002 Phase 10: Extracted from WorkflowManager (~120 LOC reduction).
-    
+
     Responsibilities:
     - Generate comprehensive workflow status reports
     - Analyze AI feature usage across the vault
     - Assess workflow health status
     - Generate intelligent recommendations for workflow improvement
-    
+
     Integration:
     - Uses NoteAnalytics for collection-wide analytics
     - Consumed by CLI layer (workflow_demo.py)
@@ -38,7 +38,7 @@ class WorkflowReportingCoordinator:
     def __init__(self, base_dir: Path, analytics):
         """
         Initialize WorkflowReportingCoordinator.
-        
+
         Args:
             base_dir: Base directory of the Zettelkasten vault
             analytics: NoteAnalytics instance for collection analysis
@@ -55,7 +55,7 @@ class WorkflowReportingCoordinator:
     def generate_workflow_report(self) -> Dict:
         """
         Generate a comprehensive workflow status report.
-        
+
         Returns:
             Dict containing:
                 - workflow_status: Health, directory counts, total notes
@@ -84,17 +84,17 @@ class WorkflowReportingCoordinator:
             "workflow_status": {
                 "health": workflow_health,
                 "directory_counts": directory_counts,
-                "total_notes": sum(directory_counts.values())
+                "total_notes": sum(directory_counts.values()),
             },
             "ai_features": ai_usage,
             "analytics": analytics_report,
-            "recommendations": recommendations
+            "recommendations": recommendations,
         }
 
     def _count_notes_by_directory(self) -> Dict[str, int]:
         """
         Count markdown notes in each workflow directory.
-        
+
         Returns:
             Dictionary mapping directory names to note counts
         """
@@ -104,7 +104,7 @@ class WorkflowReportingCoordinator:
             ("Inbox", self.inbox_dir),
             ("Fleeting Notes", self.fleeting_dir),
             ("Permanent Notes", self.permanent_dir),
-            ("Archive", self.archive_dir)
+            ("Archive", self.archive_dir),
         ]:
             if dir_path.exists():
                 directory_counts[dir_name] = len(list(dir_path.glob("*.md")))
@@ -116,10 +116,10 @@ class WorkflowReportingCoordinator:
     def _assess_workflow_health(self, directory_counts: Dict[str, int]) -> str:
         """
         Assess workflow health based on inbox backlog.
-        
+
         Args:
             directory_counts: Directory note counts
-            
+
         Returns:
             Health status: "healthy", "needs_attention", or "critical"
         """
@@ -135,12 +135,12 @@ class WorkflowReportingCoordinator:
     def _analyze_ai_usage(self) -> Dict:
         """
         Analyze usage of AI features across the collection.
-        
+
         Scans all markdown notes in the vault and counts:
         - Notes with AI-generated tags (heuristic: kebab-case tags)
         - Notes with AI summaries
         - Notes with AI processing flags
-        
+
         Returns:
             Dictionary with AI usage statistics
         """
@@ -148,13 +148,13 @@ class WorkflowReportingCoordinator:
             "notes_with_ai_tags": 0,
             "notes_with_ai_summaries": 0,
             "notes_with_ai_processing": 0,
-            "total_analyzed": 0
+            "total_analyzed": 0,
         }
 
         # Scan all notes for AI features
         for md_file in self.base_dir.rglob("*.md"):
             try:
-                with open(md_file, 'r', encoding='utf-8') as f:
+                with open(md_file, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 frontmatter, _ = parse_frontmatter(content)
@@ -172,7 +172,7 @@ class WorkflowReportingCoordinator:
                 tags = frontmatter.get("tags", [])
                 if isinstance(tags, list) and len(tags) >= 3:
                     # Look for AI-style kebab-case tags
-                    ai_style_tags = [t for t in tags if '-' in t and len(t) > 5]
+                    ai_style_tags = [t for t in tags if "-" in t and len(t) > 5]
                     if len(ai_style_tags) >= 2:
                         usage_stats["notes_with_ai_tags"] += 1
 
@@ -183,22 +183,20 @@ class WorkflowReportingCoordinator:
         return usage_stats
 
     def _generate_workflow_recommendations(
-        self,
-        directory_counts: Dict[str, int],
-        ai_usage: Dict
+        self, directory_counts: Dict[str, int], ai_usage: Dict
     ) -> List[str]:
         """
         Generate workflow improvement recommendations.
-        
+
         Analyzes workflow state and AI adoption to suggest improvements:
         - Inbox management recommendations
         - AI feature adoption suggestions
         - Note type balance recommendations
-        
+
         Args:
             directory_counts: Directory note counts
             ai_usage: AI usage statistics
-            
+
         Returns:
             List of recommendation strings
         """

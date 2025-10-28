@@ -39,13 +39,13 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
         self.assertTrue(self.history_file.exists())
 
         # Should have correct structure
-        with open(self.history_file, 'r') as f:
+        with open(self.history_file, "r") as f:
             data = json.load(f)
 
-        self.assertIn('processed_screenshots', data)
-        self.assertIn('version', data)
-        self.assertEqual(data['version'], '1.0')
-        self.assertEqual(len(data['processed_screenshots']), 0)
+        self.assertIn("processed_screenshots", data)
+        self.assertIn("version", data)
+        self.assertEqual(data["version"], "1.0")
+        self.assertEqual(len(data["processed_screenshots"]), 0)
 
     def test_mark_screenshot_processed(self):
         """Test 2: Mark a screenshot as processed"""
@@ -59,13 +59,13 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
 
         # Verify entry exists in history
         history = tracker.get_history()
-        self.assertIn(screenshot_path.name, history['processed_screenshots'])
+        self.assertIn(screenshot_path.name, history["processed_screenshots"])
 
         # Verify metadata
-        entry = history['processed_screenshots'][screenshot_path.name]
-        self.assertIn('processed_at', entry)
-        self.assertEqual(entry['daily_note'], daily_note)
-        self.assertIn('file_hash', entry)
+        entry = history["processed_screenshots"][screenshot_path.name]
+        self.assertIn("processed_at", entry)
+        self.assertEqual(entry["daily_note"], daily_note)
+        self.assertIn("file_hash", entry)
 
     def test_is_processed_detection(self):
         """Test 3: Detect if screenshot has been processed"""
@@ -144,10 +144,10 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
         # Get statistics
         stats = tracker.get_statistics(screenshots)
 
-        self.assertEqual(stats['total'], 3)
-        self.assertEqual(stats['already_processed'], 1)
-        self.assertEqual(stats['new_screenshots'], 2)
-        self.assertIn(screenshots[0].name, stats['processed_files'])
+        self.assertEqual(stats["total"], 3)
+        self.assertEqual(stats["already_processed"], 1)
+        self.assertEqual(stats["new_screenshots"], 2)
+        self.assertIn(screenshots[0].name, stats["processed_files"])
 
     def test_history_persistence(self):
         """Test 7: History persists across tracker instances"""
@@ -162,7 +162,7 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
         # Should load history from disk
         self.assertTrue(tracker2.is_processed(screenshot))
         history = tracker2.get_history()
-        self.assertIn(screenshot.name, history['processed_screenshots'])
+        self.assertIn(screenshot.name, history["processed_screenshots"])
 
     def test_concurrent_safety(self):
         """Test 8: Safe concurrent writes to history file"""
@@ -170,8 +170,7 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
 
         # Simulate concurrent writes
         screenshots = [
-            Path(f"/path/Screenshot_2025092{i}_100000_App.jpg")
-            for i in range(5)
+            Path(f"/path/Screenshot_2025092{i}_100000_App.jpg") for i in range(5)
         ]
 
         # Mark all in quick succession
@@ -181,10 +180,10 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
         # Verify all were recorded
         history = tracker.get_history()
         for screenshot in screenshots:
-            self.assertIn(screenshot.name, history['processed_screenshots'])
+            self.assertIn(screenshot.name, history["processed_screenshots"])
 
         # Verify no corruption
-        self.assertEqual(len(history['processed_screenshots']), 5)
+        self.assertEqual(len(history["processed_screenshots"]), 5)
 
 
 class TestEveningScreenshotProcessorIntegration(unittest.TestCase):
@@ -216,5 +215,5 @@ class TestEveningScreenshotProcessorIntegration(unittest.TestCase):
         self.fail("Integration test not yet implemented - RED phase")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

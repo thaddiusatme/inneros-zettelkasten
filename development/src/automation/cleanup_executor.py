@@ -110,7 +110,9 @@ class ExecutionReportBuilder:
             "source": item.get("source"),
             "destination": item.get("destination"),
             "rationale": item.get("rationale"),
-            "status": "completed" if execution_result.get("status") == "success" else "failed",
+            "status": (
+                "completed" if execution_result.get("status") == "success" else "failed"
+            ),
         }
 
         # Flow-through metadata (trigger, monitoring)

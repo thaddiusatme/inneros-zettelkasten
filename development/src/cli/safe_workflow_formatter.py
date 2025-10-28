@@ -12,7 +12,7 @@ from typing import Dict, Any
 class SafeWorkflowFormatter:
     """
     Formatter for safe workflow operation reports
-    
+
     Responsibilities:
     - Format processing results for console display
     - Format reports to markdown for export
@@ -22,10 +22,10 @@ class SafeWorkflowFormatter:
     def format_process_inbox_result(self, result: Dict[str, Any]) -> str:
         """
         Format inbox processing result for console display.
-        
+
         Args:
             result: Processing result dictionary
-            
+
         Returns:
             Formatted string for console output
         """
@@ -33,8 +33,12 @@ class SafeWorkflowFormatter:
 
         if result.get("success"):
             processing_result = result.get("result", {})
-            lines.append(f"   ✅ Processed: {processing_result.get('successful_notes', 0)}/{processing_result.get('total_notes', 0)} notes")
-            lines.append(f"   🖼️ Images preserved: {processing_result.get('total_images_preserved', 0)}")
+            lines.append(
+                f"   ✅ Processed: {processing_result.get('successful_notes', 0)}/{processing_result.get('total_notes', 0)} notes"
+            )
+            lines.append(
+                f"   🖼️ Images preserved: {processing_result.get('total_images_preserved', 0)}"
+            )
         else:
             lines.append(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -43,10 +47,10 @@ class SafeWorkflowFormatter:
     def format_batch_process_result(self, result: Dict[str, Any]) -> str:
         """
         Format batch processing result for console display.
-        
+
         Args:
             result: Batch processing result dictionary
-            
+
         Returns:
             Formatted string for console output
         """
@@ -54,8 +58,12 @@ class SafeWorkflowFormatter:
 
         if result.get("success"):
             batch_result = result.get("result", {})
-            lines.append(f"   ✅ Total files processed: {batch_result.get('total_files', 0)}")
-            lines.append(f"   🖼️ Images preserved: {batch_result.get('images_preserved_total', 0)}")
+            lines.append(
+                f"   ✅ Total files processed: {batch_result.get('total_files', 0)}"
+            )
+            lines.append(
+                f"   🖼️ Images preserved: {batch_result.get('images_preserved_total', 0)}"
+            )
         else:
             lines.append(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -64,10 +72,10 @@ class SafeWorkflowFormatter:
     def format_performance_report(self, result: Dict[str, Any]) -> str:
         """
         Format performance report for console display.
-        
+
         Args:
             result: Performance report dictionary
-            
+
         Returns:
             Formatted string for console output
         """
@@ -79,10 +87,10 @@ class SafeWorkflowFormatter:
     def format_integrity_report(self, result: Dict[str, Any]) -> str:
         """
         Format integrity report for console display.
-        
+
         Args:
             result: Integrity report dictionary
-            
+
         Returns:
             Formatted string for console output
         """
@@ -94,10 +102,10 @@ class SafeWorkflowFormatter:
     def format_backup_created(self, result: Dict[str, Any]) -> str:
         """
         Format backup creation result for console display.
-        
+
         Args:
             result: Backup result dictionary
-            
+
         Returns:
             Formatted string for console output
         """
@@ -109,10 +117,10 @@ class SafeWorkflowFormatter:
     def format_backup_list(self, result: Dict[str, Any]) -> str:
         """
         Format backup list for console display.
-        
+
         Args:
             result: Backup list dictionary
-            
+
         Returns:
             Formatted string for console output
         """

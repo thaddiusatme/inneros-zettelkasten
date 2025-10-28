@@ -18,7 +18,7 @@ from .rag_tag_utils import (
     SemanticTagGrouper,
     NamespaceValidator,
     TagStatisticsCalculator,
-    RuleGenerationEngine
+    RuleGenerationEngine,
 )
 
 
@@ -37,7 +37,9 @@ class TagCleanupEngine:
     def detect_metadata_redundant_tags(self, tags: List[str]) -> List[str]:
         """Detect tags that duplicate metadata fields using optimized patterns"""
         try:
-            return [tag for tag in tags if self.pattern_matcher.is_metadata_redundant(tag)]
+            return [
+                tag for tag in tags if self.pattern_matcher.is_metadata_redundant(tag)
+            ]
         except Exception as e:
             self.logger.error(f"Error detecting metadata redundant tags: {e}")
             return []
@@ -78,7 +80,9 @@ class TagCleanupEngine:
             semantic_duplicates = self.detect_duplicate_semantic_tags(tags)
 
             # Calculate problematic count
-            problematic_count = len(metadata_redundant) + len(ai_artifacts) + len(parsing_errors)
+            problematic_count = (
+                len(metadata_redundant) + len(ai_artifacts) + len(parsing_errors)
+            )
             for group in semantic_duplicates:
                 problematic_count += len(group) - 1  # Keep one from each group
 
@@ -99,14 +103,20 @@ class TagCleanupEngine:
                 "semantic_duplicates": semantic_duplicates,
                 "clean_tags": clean_tags,
                 "total_problematic": problematic_count,
-                "cleanup_percentage": (problematic_count / len(tags) * 100) if tags else 0
+                "cleanup_percentage": (
+                    (problematic_count / len(tags) * 100) if tags else 0
+                ),
             }
 
             # Add enhanced statistics
-            result.update(self.statistics_calculator.calculate_cleanup_statistics(result))
+            result.update(
+                self.statistics_calculator.calculate_cleanup_statistics(result)
+            )
             result["performance_metrics"] = {
                 "analysis_time_seconds": analysis_time,
-                "tags_per_second": len(tags) / analysis_time if analysis_time > 0 else 0
+                "tags_per_second": (
+                    len(tags) / analysis_time if analysis_time > 0 else 0
+                ),
             }
 
             return result
@@ -121,7 +131,7 @@ class TagCleanupEngine:
                 "clean_tags": tags,  # Return original tags as fallback
                 "total_problematic": 0,
                 "cleanup_percentage": 0,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -136,12 +146,25 @@ class NamespaceClassifier:
 
         # Keep original patterns for backward compatibility
         self.type_patterns = {
-            "permanent", "fleeting", "literature", "moc", "project",
-            "index", "reference", "template"
+            "permanent",
+            "fleeting",
+            "literature",
+            "moc",
+            "project",
+            "index",
+            "reference",
+            "template",
         }
         self.context_patterns = {
-            "inbox", "draft", "review-needed", "high-priority", "low-priority",
-            "archived", "published", "private", "public"
+            "inbox",
+            "draft",
+            "review-needed",
+            "high-priority",
+            "low-priority",
+            "archived",
+            "published",
+            "private",
+            "public",
         }
 
     def classify_tag(self, tag: str) -> Dict[str, Any]:
@@ -150,25 +173,31 @@ class NamespaceClassifier:
             tag_lower = tag.lower()
 
             if tag_lower in self.type_patterns:
-                canonical_form = self.namespace_validator.create_namespaced_tag("type", tag)
+                canonical_form = self.namespace_validator.create_namespaced_tag(
+                    "type", tag
+                )
                 return {
                     "namespace": "type",
                     "canonical_form": canonical_form,
-                    "confidence": 1.0
+                    "confidence": 1.0,
                 }
             elif tag_lower in self.context_patterns:
-                canonical_form = self.namespace_validator.create_namespaced_tag("context", tag)
+                canonical_form = self.namespace_validator.create_namespaced_tag(
+                    "context", tag
+                )
                 return {
                     "namespace": "context",
                     "canonical_form": canonical_form,
-                    "confidence": 1.0
+                    "confidence": 1.0,
                 }
             else:
-                canonical_form = self.namespace_validator.create_namespaced_tag("topic", tag)
+                canonical_form = self.namespace_validator.create_namespaced_tag(
+                    "topic", tag
+                )
                 return {
                     "namespace": "topic",
                     "canonical_form": canonical_form,
-                    "confidence": 0.8
+                    "confidence": 0.8,
                 }
         except Exception as e:
             self.logger.error(f"Error classifying tag '{tag}': {e}")
@@ -176,7 +205,7 @@ class NamespaceClassifier:
                 "namespace": "topic",  # Default fallback
                 "canonical_form": f"topic/{tag}",
                 "confidence": 0.5,
-                "error": str(e)
+                "error": str(e),
             }
 
     def classify_batch(self, tags: List[str]) -> List[Dict[str, Any]]:
@@ -185,20 +214,31 @@ class NamespaceClassifier:
             return [self.classify_tag(tag) for tag in tags]
         except Exception as e:
             self.logger.error(f"Error in batch classification: {e}")
-            return [{"namespace": "topic", "canonical_form": f"topic/{tag}", "confidence": 0.0} for tag in tags]
+            return [
+                {
+                    "namespace": "topic",
+                    "canonical_form": f"topic/{tag}",
+                    "confidence": 0.0,
+                }
+                for tag in tags
+            ]
 
     def get_classification_stats(self, tags: List[str]) -> Dict[str, Any]:
         """Get enhanced classification statistics"""
         try:
             classifications = self.classify_batch(tags)
-            return self.statistics_calculator.calculate_namespace_distribution(classifications)
+            return self.statistics_calculator.calculate_namespace_distribution(
+                classifications
+            )
         except Exception as e:
             self.logger.error(f"Error calculating classification stats: {e}")
             return {
-                "type": 0, "topic": len(tags), "context": 0,
+                "type": 0,
+                "topic": len(tags),
+                "context": 0,
                 "total_tags": len(tags),
                 "coverage_percentage": 100.0,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -219,22 +259,27 @@ class TagRulesEngine:
             self.logger.error(f"Error generating cleanup rules: {e}")
             # Fallback to basic rules
             return {
-                "canonicalization": {"ai": "artificial-intelligence", "ml": "machine-learning"},
+                "canonicalization": {
+                    "ai": "artificial-intelligence",
+                    "ml": "machine-learning",
+                },
                 "merges": {"artificial-intelligence": ["ai", "machine-learning", "ml"]},
                 "namespaces": {
                     "type": ["permanent", "fleeting", "literature"],
                     "topic": ["quantum-computing", "artificial-intelligence"],
-                    "context": ["inbox", "draft", "review-needed"]
+                    "context": ["inbox", "draft", "review-needed"],
                 },
                 "cleanup_patterns": {
                     "remove_metadata_duplicates": True,
                     "remove_ai_artifacts": True,
-                    "fix_parsing_errors": True
+                    "fix_parsing_errors": True,
                 },
-                "error": str(e)
+                "error": str(e),
             }
 
-    def apply_canonicalization(self, tags: List[str], rules: Dict[str, Any]) -> List[str]:
+    def apply_canonicalization(
+        self, tags: List[str], rules: Dict[str, Any]
+    ) -> List[str]:
         """Apply canonicalization rules with enhanced error handling"""
         try:
             canonicalization = rules.get("canonicalization", {})
@@ -279,12 +324,16 @@ class TagRulesEngine:
                     compliant_count += 1
                     compliance_details.append({"tag": tag, "compliant": True})
                 else:
-                    namespace, base_tag = self.namespace_validator.extract_namespace(tag)
-                    compliance_details.append({
-                        "tag": tag,
-                        "compliant": False,
-                        "suggested_namespace": namespace or "topic"
-                    })
+                    namespace, base_tag = self.namespace_validator.extract_namespace(
+                        tag
+                    )
+                    compliance_details.append(
+                        {
+                            "tag": tag,
+                            "compliant": False,
+                            "suggested_namespace": namespace or "topic",
+                        }
+                    )
 
             compliance_percentage = (compliant_count / len(tags) * 100) if tags else 100
 
@@ -292,7 +341,7 @@ class TagRulesEngine:
                 "compliance_percentage": compliance_percentage,
                 "compliant_tags": compliant_count,
                 "total_tags": len(tags),
-                "compliance_details": compliance_details
+                "compliance_details": compliance_details,
             }
         except Exception as e:
             self.logger.error(f"Error validating namespace compliance: {e}")
@@ -300,7 +349,7 @@ class TagRulesEngine:
                 "compliance_percentage": 0,
                 "compliant_tags": 0,
                 "total_tags": len(tags),
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -325,7 +374,9 @@ class SessionBackupManager:
 
         return backup_path
 
-    def preview_changes(self, changes: Dict[str, Dict[str, List[str]]]) -> Dict[str, Any]:
+    def preview_changes(
+        self, changes: Dict[str, Dict[str, List[str]]]
+    ) -> Dict[str, Any]:
         """Preview tag changes without applying them"""
         total_files = len(changes)
         total_tag_changes = 0
@@ -345,7 +396,7 @@ class SessionBackupManager:
         return {
             "total_files": total_files,
             "total_tag_changes": total_tag_changes,
-            "namespace_additions": namespace_additions
+            "namespace_additions": namespace_additions,
         }
 
     def rollback_from_backup(self, backup_path: Path) -> Dict[str, Any]:
@@ -354,15 +405,14 @@ class SessionBackupManager:
             if backup_path.exists() and self.vault_path.exists():
                 # Simple rollback - in production would be more sophisticated
                 files_restored = len(list(backup_path.glob("**/*.md")))
-                return {
-                    "success": True,
-                    "files_restored": files_restored
-                }
+                return {"success": True, "files_restored": files_restored}
             return {"success": False, "files_restored": 0}
         except Exception as e:
             return {"success": False, "error": str(e), "files_restored": 0}
 
-    def validate_safety(self, changes: Dict[str, Dict[str, List[str]]]) -> Dict[str, Any]:
+    def validate_safety(
+        self, changes: Dict[str, Dict[str, List[str]]]
+    ) -> Dict[str, Any]:
         """Validate safety before applying changes"""
         warnings = []
         risk_level = "low"
@@ -379,7 +429,7 @@ class SessionBackupManager:
         return {
             "safe": len(warnings) == 0,
             "warnings": warnings,
-            "risk_level": risk_level
+            "risk_level": risk_level,
         }
 
 
@@ -405,13 +455,15 @@ class RAGReadyTagEngine:
         """Analyze entire vault tag system"""
         all_tags = self._scan_vault_tags()
         cleanup_analysis = self.cleanup_engine.analyze_all_tags(all_tags)
-        classification_stats = self.namespace_classifier.get_classification_stats(all_tags)
+        classification_stats = self.namespace_classifier.get_classification_stats(
+            all_tags
+        )
 
         return {
             "total_tags": len(all_tags),
             "problematic_tags": cleanup_analysis["total_problematic"],
             "cleanup_recommendations": cleanup_analysis,
-            "namespace_distribution": classification_stats
+            "namespace_distribution": classification_stats,
         }
 
     def generate_rag_ready_strategy(self) -> Dict[str, Any]:
@@ -420,31 +472,36 @@ class RAGReadyTagEngine:
 
         return {
             "cleanup_plan": self.cleanup_engine.analyze_all_tags(vault_tags),
-            "namespace_organization": self.namespace_classifier.get_classification_stats(vault_tags),
+            "namespace_organization": self.namespace_classifier.get_classification_stats(
+                vault_tags
+            ),
             "rules_configuration": self.rules_engine.generate_cleanup_rules(vault_tags),
             "implementation_steps": [
                 "Create session backup",
                 "Apply cleanup rules",
                 "Implement namespace classification",
                 "Validate results",
-                "Generate analytics report"
+                "Generate analytics report",
             ],
-            "rollback_plan": "Session backup available for complete rollback"
+            "rollback_plan": "Session backup available for complete rollback",
         }
 
     def execute_transformation(self, preview_mode: bool = True) -> Dict[str, Any]:
         """Execute transformation with preview mode"""
         if preview_mode:
             mock_changes = {
-                "file1.md": {"old_tags": ["ai"], "new_tags": ["topic/artificial-intelligence"]},
-                "file2.md": {"old_tags": ["permanent"], "new_tags": ["type/permanent"]}
+                "file1.md": {
+                    "old_tags": ["ai"],
+                    "new_tags": ["topic/artificial-intelligence"],
+                },
+                "file2.md": {"old_tags": ["permanent"], "new_tags": ["type/permanent"]},
             }
 
             return {
                 "preview_mode": True,
                 "changes_preview": self.backup_manager.preview_changes(mock_changes),
                 "safety_analysis": self.backup_manager.validate_safety(mock_changes),
-                "execution_plan": "Would apply namespace transformation to 2 files"
+                "execution_plan": "Would apply namespace transformation to 2 files",
             }
 
         # Real execution would go here
@@ -457,12 +514,9 @@ class RAGReadyTagEngine:
         return {
             "summary": f"Analyzed {analysis['total_tags']} tags, found {analysis['problematic_tags']} problematic",
             "actions": ["cleanup", "namespace-classify", "generate-rules"],
-            "export_data": analysis
+            "export_data": analysis,
         }
 
     def validate_existing_compatibility(self) -> Dict[str, bool]:
         """Validate compatibility with existing systems"""
-        return {
-            "compatible": True,
-            "potential_issues": []
-        }
+        return {"compatible": True, "potential_issues": []}

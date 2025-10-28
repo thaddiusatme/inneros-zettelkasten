@@ -13,7 +13,9 @@ from datetime import datetime
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.ai.workflow_manager_adapter import LegacyWorkflowManagerAdapter as WorkflowManager
+from src.ai.workflow_manager_adapter import (
+    LegacyWorkflowManagerAdapter as WorkflowManager,
+)
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
 from src.utils.directory_organizer import DirectoryOrganizer
 from src.ai.import_manager import (
@@ -26,12 +28,13 @@ from src.cli.screenshot_cli_utils import (
     CLIProgressReporter,
     ConfigurationManager,
     CLIOutputFormatter,
-    CLIExportManager
+    CLIExportManager,
 )
 from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
 
 
 # TDD ITERATION 2 REFACTOR: Evening Screenshot Helper Methods
+
 
 def _validate_evening_screenshot_config(config, args):
     """Validate evening screenshot configuration and handle errors."""
@@ -40,7 +43,7 @@ def _validate_evening_screenshot_config(config, args):
         formatter = CLIOutputFormatter(args.format)
         error_output = formatter.format_error(
             path_validation.get("error", "Invalid OneDrive path"),
-            [path_validation.get("suggestion", "")]
+            [path_validation.get("suggestion", "")],
         )
         print(error_output)
         return False
@@ -56,7 +59,7 @@ def _execute_evening_screenshot_dry_run(processor, config, progress_reporter):
     result = {
         "screenshots_found": len(screenshots),
         "onedrive_path": config.get("onedrive_path"),
-        "dry_run": True
+        "dry_run": True,
     }
 
     if progress_reporter:
@@ -98,7 +101,7 @@ def _format_evening_screenshot_output(result, config, args):
             print(f"   📄 Daily note: {result.get('daily_note_path', 'N/A')}")
             print(f"   🔤 OCR results: {result.get('ocr_results', 0)}")
             print(f"   ⏱️  Processing time: {result.get('processing_time', 0):.2f}s")
-            if result.get('backup_path'):
+            if result.get("backup_path"):
                 print(f"   🛡️  Backup: {result.get('backup_path')}")
 
 
@@ -130,11 +133,7 @@ def display_workflow_status(status):
     """Display workflow status information."""
     print_section("WORKFLOW STATUS")
 
-    health_emoji = {
-        "healthy": "✅",
-        "needs_attention": "⚠️",
-        "critical": "🚨"
-    }
+    health_emoji = {"healthy": "✅", "needs_attention": "⚠️", "critical": "🚨"}
 
     health = status["health"]
     print(f"   Health Status: {health_emoji.get(health, '❓')} {health.upper()}")
@@ -157,7 +156,7 @@ def display_ai_features(ai_features):
     features = [
         ("AI Summaries", ai_features["notes_with_ai_summaries"]),
         ("AI Processing", ai_features["notes_with_ai_processing"]),
-        ("AI Tags", ai_features["notes_with_ai_tags"])
+        ("AI Tags", ai_features["notes_with_ai_tags"]),
     ]
 
     for feature_name, count in features:
@@ -180,11 +179,7 @@ def display_recommendations(recommendations):
 def display_fleeting_health_report(health_report):
     """Display fleeting notes health report."""
     # Health status with emoji
-    status_emoji = {
-        "HEALTHY": "✅",
-        "ATTENTION": "⚠️",
-        "CRITICAL": "🚨"
-    }
+    status_emoji = {"HEALTHY": "✅", "ATTENTION": "⚠️", "CRITICAL": "🚨"}
 
     status = health_report["health_status"]
     print(f"   Health Status: {status_emoji.get(status, '❓')} {status}")
@@ -239,7 +234,7 @@ def format_fleeting_health_report_markdown(health_report):
 
     # Summary
     lines.append("## Summary")
-    lines.append(health_report['summary'])
+    lines.append(health_report["summary"])
     lines.append("")
 
     # Recommendations
@@ -269,9 +264,9 @@ def display_processing_results(results):
     print(f"   Processed: {results['processed']}")
     print(f"   Failed: {results['failed']}")
 
-    if results['processed'] > 0:
+    if results["processed"] > 0:
         print("\n   Recommendations Summary:")
-        summary = results['summary']
+        summary = results["summary"]
         print(f"     Promote to Permanent: {summary['promote_to_permanent']}")
         print(f"     Move to Fleeting: {summary['move_to_fleeting']}")
         print(f"     Needs Improvement: {summary['needs_improvement']}")
@@ -305,7 +300,9 @@ def display_fleeting_triage_report(triage_report):
         action_groups[action].append(rec)
 
     for action, recs in action_groups.items():
-        action_emoji = "✅" if "Promote" in action else "⚠️" if "Enhancement" in action else "🚨"
+        action_emoji = (
+            "✅" if "Promote" in action else "⚠️" if "Enhancement" in action else "🚨"
+        )
         print(f"   {action_emoji} {action}: {len(recs)} notes")
         for rec in recs[:3]:  # Show top 3 per category
             note_name = Path(rec["note_path"]).stem
@@ -317,7 +314,9 @@ def display_fleeting_triage_report(triage_report):
     print_section("BATCH PROCESSING RESULTS")
     processing_time = triage_report.get("processing_time", 0)
     print(f"   Processing time: {processing_time:.2f} seconds")
-    print(f"   Notes per second: {triage_report['total_notes_processed'] / max(processing_time, 0.1):.1f}")
+    print(
+        f"   Notes per second: {triage_report['total_notes_processed'] / max(processing_time, 0.1):.1f}"
+    )
 
 
 def format_fleeting_triage_report_markdown(triage_report):
@@ -340,7 +339,9 @@ def format_fleeting_triage_report_markdown(triage_report):
     lines.append("")
 
     if triage_report.get("quality_threshold"):
-        lines.append(f"**Quality threshold applied**: {triage_report['quality_threshold']}")
+        lines.append(
+            f"**Quality threshold applied**: {triage_report['quality_threshold']}"
+        )
         lines.append("")
 
     # Recommendations
@@ -370,7 +371,9 @@ def display_promotion_results(promotion_result):
         print("   🔍 PREVIEW MODE - No changes made")
 
     if promotion_result.get("batch_mode"):
-        print(f"   Batch promotion with quality threshold: {promotion_result.get('quality_threshold', 0.7)}")
+        print(
+            f"   Batch promotion with quality threshold: {promotion_result.get('quality_threshold', 0.7)}"
+        )
 
     promoted_notes = promotion_result.get("promoted_notes", [])
     print(f"   Total notes processed: {len(promoted_notes)}")
@@ -413,25 +416,29 @@ def format_promotion_report_markdown(promotion_result):
     lines.append(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append("")
 
-    promoted_notes = promotion_result.get('promoted_notes', [])
-    stats = promotion_result.get('statistics', {})
+    promoted_notes = promotion_result.get("promoted_notes", [])
+    stats = promotion_result.get("statistics", {})
 
     lines.append("## Summary")
     lines.append("")
     lines.append(f"- **Notes processed**: {stats.get('notes_processed', 0)}")
-    lines.append(f"- **Successfully promoted**: {stats.get('successful_promotions', 0)}")
+    lines.append(
+        f"- **Successfully promoted**: {stats.get('successful_promotions', 0)}"
+    )
     lines.append(f"- **Errors encountered**: {stats.get('promotion_errors', 0)}")
-    lines.append(f"- **Processing time**: {promotion_result.get('processing_time', 0):.2f} seconds")
+    lines.append(
+        f"- **Processing time**: {promotion_result.get('processing_time', 0):.2f} seconds"
+    )
     lines.append("")
 
     if promoted_notes:
         lines.append("## Promoted Notes")
         lines.append("")
         for note in promoted_notes:
-            status = "✅" if not note.get('error') else "❌"
+            status = "✅" if not note.get("error") else "❌"
             lines.append(f"### {status} {note['original_path']}")
             lines.append("")
-            if note.get('error'):
+            if note.get("error"):
                 lines.append(f"**Error**: {note['error']}")
             else:
                 lines.append(f"**New location**: {note['new_path']}")
@@ -455,7 +462,7 @@ def display_backup_list(backups):
     for i, backup in enumerate(backups, 1):
         # Extract timestamp from backup name
         backup_name = backup.name
-        timestamp_match = re.search(r'(\d{8})-(\d{6})', backup_name)
+        timestamp_match = re.search(r"(\d{8})-(\d{6})", backup_name)
         if timestamp_match:
             date_str = timestamp_match.group(1)
             time_str = timestamp_match.group(2)
@@ -523,7 +530,9 @@ def display_prune_plan(prune_result):
 
         success = prune_result.get("success", False)
         status_emoji = "✅" if success else "⚠️"
-        print(f"   {status_emoji} Operation completed: {deleted_count} backup(s) deleted")
+        print(
+            f"   {status_emoji} Operation completed: {deleted_count} backup(s) deleted"
+        )
 
 
 def display_note_processing_result(result):
@@ -545,8 +554,12 @@ def display_note_processing_result(result):
             added_tags = tags_info.get("added", [])
             total_tags = tags_info.get("total", 0)
             if added_tags:
-                print(f"      🏷️  Tags: Added {len(added_tags)} tags (total: {total_tags})")
-                print(f"           New: {', '.join(added_tags[:3])}{'...' if len(added_tags) > 3 else ''}")
+                print(
+                    f"      🏷️  Tags: Added {len(added_tags)} tags (total: {total_tags})"
+                )
+                print(
+                    f"           New: {', '.join(added_tags[:3])}{'...' if len(added_tags) > 3 else ''}"
+                )
             else:
                 print(f"      🏷️  Tags: No new tags added (total: {total_tags})")
 
@@ -570,7 +583,9 @@ def display_note_processing_result(result):
             if similar_notes:
                 print(f"      🔗 Connections: Found {len(similar_notes)} similar notes")
                 top_match = similar_notes[0]
-                print(f"           Top match: {top_match['file']} ({top_match['similarity']:.2f})")
+                print(
+                    f"           Top match: {top_match['file']} ({top_match['similarity']:.2f})"
+                )
 
     # Display recommendations
     recommendations = result.get("recommendations", [])
@@ -611,21 +626,28 @@ def _plan_filename_for_row(row: dict) -> str:
 
 def _load_csv_rows(path: Path) -> list[dict]:
     rows: list[dict] = []
-    with open(path, newline='', encoding='utf-8') as f:
+    with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for r in reader:
-            rows.append({k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in r.items()})
+            rows.append(
+                {
+                    k.strip(): (v.strip() if isinstance(v, str) else v)
+                    for k, v in r.items()
+                }
+            )
     return rows
 
 
 def _load_json_rows(path: Path) -> list[dict]:
-    with open(path, encoding='utf-8') as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     if isinstance(data, list):
         return [dict(item) for item in data]
     if isinstance(data, dict) and "items" in data and isinstance(data["items"], list):
         return [dict(item) for item in data["items"]]
-    raise ValueError("Unsupported JSON structure: expected a list or an object with 'items'.")
+    raise ValueError(
+        "Unsupported JSON structure: expected a list or an object with 'items'."
+    )
 
 
 def interactive_mode(workflow):
@@ -644,20 +666,22 @@ def interactive_mode(workflow):
         try:
             command = input("\n🔄 workflow> ").strip()
 
-            if command == 'quit':
+            if command == "quit":
                 break
-            elif command == 'help':
+            elif command == "help":
                 print("Available commands:")
-                print("  status, inbox, promote <file> [type], report, list <dir>, help, quit")
-            elif command == 'status':
+                print(
+                    "  status, inbox, promote <file> [type], report, list <dir>, help, quit"
+                )
+            elif command == "status":
                 report = workflow.generate_workflow_report()
                 display_workflow_status(report["workflow_status"])
                 display_ai_features(report["ai_features"])
-            elif command == 'inbox':
+            elif command == "inbox":
                 print("Processing inbox notes...")
                 results = workflow.batch_process_inbox()
                 display_processing_results(results)
-            elif command.startswith('promote '):
+            elif command.startswith("promote "):
                 parts = command.split()
                 if len(parts) < 2:
                     print("Usage: promote <filename> [type]")
@@ -685,13 +709,13 @@ def interactive_mode(workflow):
                         print("   Added AI summary")
                 else:
                     print(f"❌ Error: {result.get('error', 'Unknown error')}")
-            elif command.startswith('list '):
+            elif command.startswith("list "):
                 directory = command.split()[1].lower()
                 dir_map = {
                     "inbox": workflow.inbox_dir,
                     "fleeting": workflow.fleeting_dir,
                     "permanent": workflow.permanent_dir,
-                    "archive": workflow.archive_dir
+                    "archive": workflow.archive_dir,
                 }
 
                 if directory not in dir_map:
@@ -709,7 +733,7 @@ def interactive_mode(workflow):
                         print(f"No notes found in {directory}")
                 else:
                     print(f"Directory {directory} does not exist")
-            elif command == 'report':
+            elif command == "report":
                 print("Generating workflow report...")
                 report = workflow.generate_workflow_report()
                 display_workflow_status(report["workflow_status"])
@@ -727,9 +751,9 @@ def interactive_mode(workflow):
 
 def print_deprecation_warning():
     """Print deprecation warning for workflow_demo.py (ADR-004)."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("⚠️  DEPRECATION WARNING: workflow_demo.py")
-    print("="*70)
+    print("=" * 70)
     print("\n📢 This monolithic CLI is being phased out per ADR-004.")
     print("\n🎯 Please migrate to dedicated CLIs:")
     print("   • Weekly Review:  python3 development/src/cli/weekly_review_cli.py")
@@ -741,7 +765,7 @@ def print_deprecation_warning():
     print("\n📖 See MIGRATION-GUIDE.md for full command mappings.")
     print("\n⏰ Transition Period: Until November 11, 2025")
     print("   After this date, workflow_demo.py moves to development/legacy/")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 def main():
@@ -762,70 +786,57 @@ Examples:
   python workflow_demo.py /path/to/zettelkasten --weekly-review --export-checklist weekly-review.md
   python workflow_demo.py /path/to/zettelkasten --enhanced-metrics
   python workflow_demo.py /path/to/zettelkasten --enhanced-metrics --format json --export metrics.json
-        """
+        """,
     )
 
-    parser.add_argument(
-        "directory",
-        help="Path to the Zettelkasten root directory"
-    )
+    parser.add_argument("directory", help="Path to the Zettelkasten root directory")
 
     # Action arguments (mutually exclusive)
     action_group = parser.add_mutually_exclusive_group()
 
     action_group.add_argument(
-        "--status",
-        action="store_true",
-        help="Show workflow status"
+        "--status", action="store_true", help="Show workflow status"
     )
 
     action_group.add_argument(
-        "--process-inbox",
-        action="store_true",
-        help="Process all inbox notes"
+        "--process-inbox", action="store_true", help="Process all inbox notes"
     )
 
     action_group.add_argument(
         "--promote",
         nargs=2,
         metavar=("FILE", "TYPE"),
-        help="Promote a note (TYPE: permanent|fleeting)"
+        help="Promote a note (TYPE: permanent|fleeting)",
     )
 
     action_group.add_argument(
-        "--report",
-        action="store_true",
-        help="Generate full workflow report"
+        "--report", action="store_true", help="Generate full workflow report"
     )
 
     action_group.add_argument(
-        "--interactive",
-        action="store_true",
-        help="Run in interactive mode"
+        "--interactive", action="store_true", help="Run in interactive mode"
     )
 
     action_group.add_argument(
-        "--weekly-review",
-        action="store_true",
-        help="Generate weekly review checklist"
+        "--weekly-review", action="store_true", help="Generate weekly review checklist"
     )
 
     action_group.add_argument(
         "--enhanced-metrics",
         action="store_true",
-        help="Generate enhanced metrics report with orphaned notes, stale notes, and analytics"
+        help="Generate enhanced metrics report with orphaned notes, stale notes, and analytics",
     )
 
     action_group.add_argument(
         "--fleeting-health",
         action="store_true",
-        help="Generate fleeting notes health report with age analysis and recommendations"
+        help="Generate fleeting notes health report with age analysis and recommendations",
     )
 
     action_group.add_argument(
         "--fleeting-triage",
         action="store_true",
-        help="Generate AI-powered triage report for fleeting notes with quality assessment and recommendations"
+        help="Generate AI-powered triage report for fleeting notes with quality assessment and recommendations",
     )
 
     action_group.add_argument(
@@ -833,57 +844,55 @@ Examples:
         metavar="NOTE_PATH",
         nargs="?",
         const="BATCH_MODE",
-        help="Promote fleeting note to permanent/literature note with safe file operations"
+        help="Promote fleeting note to permanent/literature note with safe file operations",
     )
 
     action_group.add_argument(
         "--process-youtube-note",
         metavar="NOTE_PATH",
-        help="Process single YouTube note with AI quote extraction and enhancement"
+        help="Process single YouTube note with AI quote extraction and enhancement",
     )
 
     action_group.add_argument(
         "--process-youtube-notes",
         action="store_true",
-        help="Batch process YouTube notes in Inbox with AI enhancement"
+        help="Batch process YouTube notes in Inbox with AI enhancement",
     )
 
     action_group.add_argument(
         "--comprehensive-orphaned",
         action="store_true",
-        help="Find ALL orphaned notes across the entire repository (not just workflow directories)"
+        help="Find ALL orphaned notes across the entire repository (not just workflow directories)",
     )
 
     action_group.add_argument(
         "--remediate-orphans",
         action="store_true",
-        help="Remediate orphaned notes by inserting bidirectional links into a target note or generate a checklist"
+        help="Remediate orphaned notes by inserting bidirectional links into a target note or generate a checklist",
     )
 
     parser.add_argument(
         "--format",
         choices=["text", "json"],
         default="text",
-        help="Output format for reports (default: text)"
+        help="Output format for reports (default: text)",
     )
 
     parser.add_argument(
-        "--export",
-        metavar="FILENAME",
-        help="Export report to JSON file"
+        "--export", metavar="FILENAME", help="Export report to JSON file"
     )
 
     # Weekly review specific options
     parser.add_argument(
         "--export-checklist",
         metavar="PATH",
-        help="Export weekly review checklist to markdown file"
+        help="Export weekly review checklist to markdown file",
     )
 
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Preview recommendations without processing notes"
+        help="Preview recommendations without processing notes",
     )
 
     # Fleeting triage specific options
@@ -891,33 +900,33 @@ Examples:
         "--min-quality",
         type=float,
         metavar="THRESHOLD",
-        help="Minimum quality threshold for triage filtering (0.0-1.0)"
+        help="Minimum quality threshold for triage filtering (0.0-1.0)",
     )
 
     # Promotion specific options
     parser.add_argument(
         "--batch",
         action="store_true",
-        help="Batch promotion mode (use with --promote-note and --min-quality)"
+        help="Batch promotion mode (use with --promote-note and --min-quality)",
     )
 
     parser.add_argument(
         "--to",
         choices=["permanent", "literature"],
-        help="Target directory for promotion (permanent|literature)"
+        help="Target directory for promotion (permanent|literature)",
     )
 
     parser.add_argument(
         "--preview",
         action="store_true",
-        help="Preview promotion plan without executing (dry-run mode)"
+        help="Preview promotion plan without executing (dry-run mode)",
     )
 
     # YouTube processing specific options
     parser.add_argument(
         "--categories",
         metavar="LIST",
-        help="Comma-separated list of quote categories to extract (key-insights,actionable,notable,definitions)"
+        help="Comma-separated list of quote categories to extract (key-insights,actionable,notable,definitions)",
     )
 
     # Import options remediation options
@@ -925,113 +934,111 @@ Examples:
         "--remediate-mode",
         choices=["link", "checklist"],
         default="link",
-        help="Remediation mode: insert links directly (link) or generate a checklist (checklist)"
+        help="Remediation mode: insert links directly (link) or generate a checklist (checklist)",
     )
     parser.add_argument(
         "--remediate-scope",
         choices=["permanent", "fleeting", "all"],
         default="permanent",
-        help="Which orphaned notes to consider (default: permanent)"
+        help="Which orphaned notes to consider (default: permanent)",
     )
     parser.add_argument(
         "--remediate-limit",
         type=int,
         default=10,
-        help="Maximum number of orphaned notes to remediate (default: 10)"
+        help="Maximum number of orphaned notes to remediate (default: 10)",
     )
     parser.add_argument(
         "--target-note",
         metavar="PATH",
         default=None,
-        help="Explicit target note/MOC path (relative to vault root or absolute). Defaults to 'Home Note.md' or first MOC."
+        help="Explicit target note/MOC path (relative to vault root or absolute). Defaults to 'Home Note.md' or first MOC.",
     )
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Apply changes (disable dry-run) for orphan remediation"
+        help="Apply changes (disable dry-run) for orphan remediation",
     )
 
     # Reading Intake Pipeline (PR1 Skeleton) options
     action_group.add_argument(
         "--import-csv",
         metavar="PATH",
-        help="Import CSV reading list into Inbox (skeleton: validate/dry-run only)"
+        help="Import CSV reading list into Inbox (skeleton: validate/dry-run only)",
     )
     action_group.add_argument(
         "--import-json",
         metavar="PATH",
-        help="Import JSON reading list into Inbox (skeleton: validate/dry-run only)"
+        help="Import JSON reading list into Inbox (skeleton: validate/dry-run only)",
     )
 
     # Backup management commands
     action_group.add_argument(
-        "--backup",
-        action="store_true",
-        help="Create a timestamped backup of the vault"
+        "--backup", action="store_true", help="Create a timestamped backup of the vault"
     )
 
     action_group.add_argument(
         "--list-backups",
         action="store_true",
-        help="List all existing backups (newest first)"
+        help="List all existing backups (newest first)",
     )
 
     action_group.add_argument(
         "--prune-backups",
         action="store_true",
-        help="Remove old backup directories (use with --keep)"
+        help="Remove old backup directories (use with --keep)",
     )
 
     # TDD Iteration 4: Safe Workflow Processing Commands (GREEN Phase)
     action_group.add_argument(
         "--process-inbox-safe",
         action="store_true",
-        help="Process inbox notes with image preservation and atomic operations"
+        help="Process inbox notes with image preservation and atomic operations",
     )
 
     action_group.add_argument(
         "--batch-process-safe",
         action="store_true",
-        help="Batch process notes with comprehensive safety guarantees and image preservation"
+        help="Batch process notes with comprehensive safety guarantees and image preservation",
     )
 
     action_group.add_argument(
         "--performance-report",
         action="store_true",
-        help="Generate comprehensive performance metrics report for safe workflow processing"
+        help="Generate comprehensive performance metrics report for safe workflow processing",
     )
 
     action_group.add_argument(
         "--integrity-report",
         action="store_true",
-        help="Generate comprehensive image integrity report with monitoring details"
+        help="Generate comprehensive image integrity report with monitoring details",
     )
 
     action_group.add_argument(
         "--start-safe-session",
         metavar="SESSION_NAME",
-        help="Start a new concurrent safe processing session"
+        help="Start a new concurrent safe processing session",
     )
 
     action_group.add_argument(
         "--process-in-session",
         nargs=2,
         metavar=("SESSION_ID", "NOTE_PATH"),
-        help="Process note within specified session"
+        help="Process note within specified session",
     )
 
     # Screenshot Processing Workflow CLI Integration
     action_group.add_argument(
         "--screenshots",
         action="store_true",
-        help="Process Samsung screenshots from OneDrive (last 7 days) into daily notes with OCR and smart linking"
+        help="Process Samsung screenshots from OneDrive (last 7 days) into daily notes with OCR and smart linking",
     )
 
     # TDD Iteration 2: Evening Screenshots CLI Integration
     action_group.add_argument(
         "--evening-screenshots",
         action="store_true",
-        help="Process Samsung screenshots from OneDrive with evening workflow (OCR, daily notes, smart linking)"
+        help="Process Samsung screenshots from OneDrive with evening workflow (OCR, daily notes, smart linking)",
     )
 
     parser.add_argument(
@@ -1039,24 +1046,24 @@ Examples:
         type=int,
         metavar="N",
         default=None,
-        help="Limit number of screenshots to process (most recent N)"
+        help="Limit number of screenshots to process (most recent N)",
     )
 
     parser.add_argument(
         "--validate-only",
         action="store_true",
-        help="Validate inputs only (no file writes)"
+        help="Validate inputs only (no file writes)",
     )
     parser.add_argument(
         "--dest-dir",
         metavar="PATH",
         default=None,
-        help="Destination directory for notes (default: knowledge/Inbox)"
+        help="Destination directory for notes (default: knowledge/Inbox)",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force write even if (url, saved_at) duplicate detected"
+        help="Force write even if (url, saved_at) duplicate detected",
     )
 
     # Backup management options
@@ -1064,14 +1071,14 @@ Examples:
         "--keep",
         type=int,
         metavar="N",
-        help="Number of recent backups to keep when pruning (use with --prune-backups)"
+        help="Number of recent backups to keep when pruning (use with --prune-backups)",
     )
 
     # TDD Iteration 4: Safe Processing Options (GREEN Phase)
     parser.add_argument(
         "--performance-metrics",
         action="store_true",
-        help="Include performance metrics in safe processing operations"
+        help="Include performance metrics in safe processing operations",
     )
 
     parser.add_argument(
@@ -1079,19 +1086,19 @@ Examples:
         type=int,
         default=2,
         metavar="N",
-        help="Maximum number of concurrent processing sessions (default: 2)"
+        help="Maximum number of concurrent processing sessions (default: 2)",
     )
 
     parser.add_argument(
         "--progress",
         action="store_true",
-        help="Show progress indicators during batch processing"
+        help="Show progress indicators during batch processing",
     )
 
     parser.add_argument(
         "--benchmark-mode",
         action="store_true",
-        help="Enable benchmark mode for performance testing"
+        help="Enable benchmark mode for performance testing",
     )
 
     parser.add_argument(
@@ -1099,13 +1106,11 @@ Examples:
         type=int,
         default=10,
         metavar="N",
-        help="Number of notes to process per batch (default: 10)"
+        help="Number of notes to process per batch (default: 10)",
     )
 
     parser.add_argument(
-        "--note",
-        metavar="PATH",
-        help="Specific note path for session-based processing"
+        "--note", metavar="PATH", help="Specific note path for session-based processing"
     )
 
     # TDD Iteration 2: Samsung Screenshot Evening Workflow Options
@@ -1113,21 +1118,21 @@ Examples:
         "--onedrive-path",
         metavar="PATH",
         default="/Users/thaddius/Library/CloudStorage/OneDrive-Personal/backlog/Pictures/Samsung Gallery/DCIM/Screenshots/",
-        help="Path to OneDrive Samsung Screenshots directory"
+        help="Path to OneDrive Samsung Screenshots directory",
     )
 
     parser.add_argument(
         "--max-screenshots",
         type=int,
         metavar="N",
-        help="Maximum number of screenshots to process"
+        help="Maximum number of screenshots to process",
     )
 
     parser.add_argument(
         "--quality-threshold",
         type=float,
         metavar="THRESHOLD",
-        help="Quality threshold for filtering (0.0-1.0)"
+        help="Quality threshold for filtering (0.0-1.0)",
     )
 
     args = parser.parse_args()
@@ -1153,15 +1158,28 @@ Examples:
         # Case 1: repo root that contains knowledge/Inbox
         if (zettel_dir / "knowledge" / "Inbox").exists():
             base_dir = zettel_dir / "knowledge"
-            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            auto_note = (
+                f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            )
         # Case 2: user passed a subdirectory like Inbox/Fleeting Notes/Permanent Notes
-        elif zettel_dir.name in ("Inbox", "Fleeting Notes", "Permanent Notes") and _has_vault_markers(zettel_dir.parent):
+        elif zettel_dir.name in (
+            "Inbox",
+            "Fleeting Notes",
+            "Permanent Notes",
+        ) and _has_vault_markers(zettel_dir.parent):
             base_dir = zettel_dir.parent
-            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            auto_note = (
+                f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            )
         # Case 3: user passed '.' and cwd has knowledge/Inbox
-        elif args.directory in (".", "./") and (Path.cwd() / "knowledge" / "Inbox").exists():
+        elif (
+            args.directory in (".", "./")
+            and (Path.cwd() / "knowledge" / "Inbox").exists()
+        ):
             base_dir = Path.cwd() / "knowledge"
-            auto_note = f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            auto_note = (
+                f"Auto-detected vault root at '{base_dir}' (from '{args.directory}')"
+            )
 
     # Suppress initialization messages for JSON output
     if args.format != "json":
@@ -1218,12 +1236,12 @@ Examples:
         try:
             if not candidate.is_absolute():
                 # Try CWD-relative
-                cwd_path = (Path.cwd() / candidate)
+                cwd_path = Path.cwd() / candidate
                 if cwd_path.exists():
                     resolved_path = cwd_path
             if resolved_path is None:
                 # Try base_dir-relative
-                base_path = (Path(workflow.base_dir) / candidate)
+                base_path = Path(workflow.base_dir) / candidate
                 if base_path.exists():
                     resolved_path = base_path
             if resolved_path is None:
@@ -1239,12 +1257,16 @@ Examples:
             resolved_path = None
 
         if resolved_path is None or not resolved_path.exists():
-            print(f"❌ Error: File not found in inbox/fleeting or at provided path: {file_arg}")
+            print(
+                f"❌ Error: File not found in inbox/fleeting or at provided path: {file_arg}"
+            )
             sys.exit(1)
 
         result = workflow.promote_note(str(resolved_path), note_type.lower())
         if result.get("success"):
-            print(f"✅ Successfully promoted to {result.get('type')}:\n   {result.get('source')} → {result.get('target')}")
+            print(
+                f"✅ Successfully promoted to {result.get('type')}:\n   {result.get('source')} → {result.get('target')}"
+            )
             if result.get("has_summary"):
                 print("   Added AI summary")
         else:
@@ -1267,11 +1289,15 @@ Examples:
         print(f"   Loaded {len(raw_rows)} rows")
 
         # Basic validation preview (as in PR1)
-        missing_required = sum(1 for r in raw_rows if not r.get("title") or not r.get("url"))
+        missing_required = sum(
+            1 for r in raw_rows if not r.get("title") or not r.get("url")
+        )
         if args.validate_only:
             print("   🔎 VALIDATE-ONLY: Basic checks complete")
             if missing_required:
-                print(f"   ⚠️  Rows missing required fields (title/url): {missing_required}")
+                print(
+                    f"   ⚠️  Rows missing required fields (title/url): {missing_required}"
+                )
             print("   ✅ No files written (validate-only)")
             return
 
@@ -1279,7 +1305,11 @@ Examples:
         items = CSVImportAdapter.load(source_path)
         print(f"   Parsed {len(items)} valid items")
 
-        dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
+        dest_dir = (
+            Path(args.dest_dir)
+            if args.dest_dir
+            else (workflow.base_dir / "knowledge" / "Inbox")
+        )
         if args.dry_run:
             print("   🔍 DRY RUN MODE - Planned files (no write):")
             writer = NoteWriter(workflow.base_dir)
@@ -1293,7 +1323,9 @@ Examples:
 
         # Real write
         writer = NoteWriter(workflow.base_dir)
-        written, skipped, paths = writer.write_items(items, dest_dir=dest_dir, force=args.force)
+        written, skipped, paths = writer.write_items(
+            items, dest_dir=dest_dir, force=args.force
+        )
         print("   ✅ Write complete")
         print(f"   Written: {written}, Skipped (duplicates): {skipped}")
         if paths:
@@ -1316,18 +1348,26 @@ Examples:
             sys.exit(1)
 
         print(f"   Loaded {len(raw_rows)} items")
-        missing_required = sum(1 for r in raw_rows if not r.get("title") or not r.get("url"))
+        missing_required = sum(
+            1 for r in raw_rows if not r.get("title") or not r.get("url")
+        )
         if args.validate_only:
             print("   🔎 VALIDATE-ONLY: Basic checks complete")
             if missing_required:
-                print(f"   ⚠️  Items missing required fields (title/url): {missing_required}")
+                print(
+                    f"   ⚠️  Items missing required fields (title/url): {missing_required}"
+                )
             print("   ✅ No files written (validate-only)")
             return
 
         items = JSONImportAdapter.load(source_path)
         print(f"   Parsed {len(items)} valid items")
 
-        dest_dir = Path(args.dest_dir) if args.dest_dir else (workflow.base_dir / "knowledge" / "Inbox")
+        dest_dir = (
+            Path(args.dest_dir)
+            if args.dest_dir
+            else (workflow.base_dir / "knowledge" / "Inbox")
+        )
         if args.dry_run:
             print("   🔍 DRY RUN MODE - Planned files (no write):")
             writer = NoteWriter(workflow.base_dir)
@@ -1340,7 +1380,9 @@ Examples:
             return
 
         writer = NoteWriter(workflow.base_dir)
-        written, skipped, paths = writer.write_items(items, dest_dir=dest_dir, force=args.force)
+        written, skipped, paths = writer.write_items(
+            items, dest_dir=dest_dir, force=args.force
+        )
         print("   ✅ Write complete")
         print(f"   Written: {written}, Skipped (duplicates): {skipped}")
         if paths:
@@ -1354,7 +1396,7 @@ Examples:
         report = workflow.generate_workflow_report()
 
         if args.export:
-            with open(args.export, 'w') as f:
+            with open(args.export, "w") as f:
                 json.dump(report, f, indent=2, default=str)
             print(f"📄 Report exported to: {args.export}")
 
@@ -1375,8 +1417,12 @@ Examples:
                     print_section("ANALYTICS SUMMARY")
                     overview = analytics["overview"]
                     print(f"   Total Words: {overview.get('total_words', 0):,}")
-                    print(f"   Average Quality: {overview.get('average_quality_score', 0):.2f}/1.0")
-                    print(f"   High Quality Notes: {analytics.get('quality_metrics', {}).get('high_quality_notes', 0)}")
+                    print(
+                        f"   Average Quality: {overview.get('average_quality_score', 0):.2f}/1.0"
+                    )
+                    print(
+                        f"   High Quality Notes: {analytics.get('quality_metrics', {}).get('high_quality_notes', 0)}"
+                    )
 
     elif args.weekly_review:
         print("📋 Generating weekly review checklist...")
@@ -1410,7 +1456,9 @@ Examples:
         # Show completion message
         summary = recommendations["summary"]
         if summary["total_notes"] > 0:
-            print(f"\n✨ Review {summary['total_notes']} notes above and check them off as you complete each action.")
+            print(
+                f"\n✨ Review {summary['total_notes']} notes above and check them off as you complete each action."
+            )
         else:
             print("\n🎉 No notes require review - your workflow is up to date!")
 
@@ -1420,7 +1468,9 @@ Examples:
         effective_dry_run = not args.apply
         if effective_dry_run:
             print("   🔍 DRY RUN MODE - No files will be modified")
-        print(f"   Mode: {args.remediate_mode}, Scope: {args.remediate_scope}, Limit: {args.remediate_limit}")
+        print(
+            f"   Mode: {args.remediate_mode}, Scope: {args.remediate_scope}, Limit: {args.remediate_limit}"
+        )
         if args.target_note:
             print(f"   Target: {args.target_note}")
 
@@ -1453,14 +1503,18 @@ Examples:
                         print_section("ACTIONS (First 3)")
                         for a in actions[:3]:
                             if a.get("error"):
-                                print(f"   ⚠️  {a['orphan']} → {a['target']} :: {a['error']}")
+                                print(
+                                    f"   ⚠️  {a['orphan']} → {a['target']} :: {a['error']}"
+                                )
                             else:
-                                print(f"   ✅ {a['orphan']} ↔ {a['target']} (orphan:{a.get('modified_orphan')}, target:{a.get('modified_target')})")
+                                print(
+                                    f"   ✅ {a['orphan']} ↔ {a['target']} (orphan:{a.get('modified_orphan')}, target:{a.get('modified_target')})"
+                                )
 
         # Export results if requested
         if args.export:
             export_path = Path(args.export)
-            with open(export_path, 'w', encoding='utf-8') as f:
+            with open(export_path, "w", encoding="utf-8") as f:
                 if args.format == "json" or args.remediate_mode == "link":
                     json.dump(result, f, indent=2, default=str)
                 else:
@@ -1482,7 +1536,7 @@ Examples:
         # Export if requested
         if args.export:
             export_path = Path(args.export)
-            with open(export_path, 'w', encoding='utf-8') as f:
+            with open(export_path, "w", encoding="utf-8") as f:
                 if args.format == "json":
                     json.dump(metrics, f, indent=2, default=str)
                 else:
@@ -1491,9 +1545,13 @@ Examples:
 
         # Show summary insights
         summary = metrics["summary"]
-        print(f"\n📈 Summary: {summary['total_notes']} total notes, {summary['total_orphaned']} orphaned, {summary['total_stale']} stale")
-        if summary['total_orphaned'] > 0 or summary['total_stale'] > 0:
-            print("💡 Consider addressing orphaned and stale notes to improve your knowledge graph")
+        print(
+            f"\n📈 Summary: {summary['total_notes']} total notes, {summary['total_orphaned']} orphaned, {summary['total_stale']} stale"
+        )
+        if summary["total_orphaned"] > 0 or summary["total_stale"] > 0:
+            print(
+                "💡 Consider addressing orphaned and stale notes to improve your knowledge graph"
+            )
 
     elif args.comprehensive_orphaned:
         print("� Finding ALL orphaned notes across the entire repository...")
@@ -1502,17 +1560,21 @@ Examples:
         print(f"\n📊 Found {len(orphaned_notes)} orphaned notes:")
         if orphaned_notes:
             for note in orphaned_notes:
-                note_path = note.get('path', '')
+                note_path = note.get("path", "")
                 if note_path:
-                    relative_path = note_path.replace(str(workflow.base_dir) + '/', '')
+                    relative_path = note_path.replace(str(workflow.base_dir) + "/", "")
                 else:
-                    relative_path = 'Unknown path'
+                    relative_path = "Unknown path"
                 print(f"   📄 {note.get('title', 'Untitled')} ({relative_path})")
         else:
             print("   🎉 No orphaned notes found!")
 
-        print("\n💡 Comparison: Standard detection found 17 orphaned notes in workflow directories")
-        print(f"💡 Comprehensive detection found {len(orphaned_notes)} orphaned notes across entire repository")
+        print(
+            "\n💡 Comparison: Standard detection found 17 orphaned notes in workflow directories"
+        )
+        print(
+            f"💡 Comprehensive detection found {len(orphaned_notes)} orphaned notes across entire repository"
+        )
 
     elif args.fleeting_health:
         if args.format != "json":
@@ -1528,7 +1590,7 @@ Examples:
         # Export if requested
         if args.export:
             export_path = Path(args.export)
-            with open(export_path, 'w', encoding='utf-8') as f:
+            with open(export_path, "w", encoding="utf-8") as f:
                 if args.format == "json":
                     json.dump(health_report, f, indent=2, default=str)
                 else:
@@ -1538,7 +1600,9 @@ Examples:
 
     elif args.fleeting_triage:
         # Validate quality threshold if provided
-        if args.min_quality is not None and (args.min_quality < 0.0 or args.min_quality > 1.0):
+        if args.min_quality is not None and (
+            args.min_quality < 0.0 or args.min_quality > 1.0
+        ):
             print("❌ Error: Quality threshold must be between 0.0 and 1.0")
             return 1
 
@@ -1547,7 +1611,7 @@ Examples:
 
         triage_report = workflow.generate_fleeting_triage_report(
             quality_threshold=args.min_quality,
-            fast=True  # Use fast mode for better performance
+            fast=True,  # Use fast mode for better performance
         )
 
         if args.format == "json":
@@ -1559,7 +1623,7 @@ Examples:
         # Export if requested
         if args.export:
             export_path = Path(args.export)
-            with open(export_path, 'w', encoding='utf-8') as f:
+            with open(export_path, "w", encoding="utf-8") as f:
                 if args.format == "json":
                     json.dump(triage_report, f, indent=2, default=str)
                 else:
@@ -1580,23 +1644,25 @@ Examples:
                 promotion_result = workflow.promote_fleeting_notes_batch(
                     quality_threshold=args.min_quality or 0.7,
                     target_type=args.to,
-                    preview_mode=args.preview
+                    preview_mode=args.preview,
                 )
             else:
                 # Single note promotion
                 if not args.promote_note or args.promote_note == "BATCH_MODE":
-                    print("❌ Error: --promote-note requires a note path unless using --batch mode")
+                    print(
+                        "❌ Error: --promote-note requires a note path unless using --batch mode"
+                    )
                     return 1
 
                 promotion_result = workflow.promote_fleeting_note(
                     note_path=args.promote_note,
                     target_type=args.to,
-                    preview_mode=args.preview
+                    preview_mode=args.preview,
                 )
 
             # Check if any promotions had errors and return appropriate exit code
-            promoted_notes = promotion_result.get('promoted_notes', [])
-            has_errors = any(note.get('error') for note in promoted_notes)
+            promoted_notes = promotion_result.get("promoted_notes", [])
+            has_errors = any(note.get("error") for note in promoted_notes)
 
             if args.format == "json":
                 print(json.dumps(promotion_result, indent=2, default=str))
@@ -1607,7 +1673,7 @@ Examples:
             # Export if requested
             if args.export:
                 export_path = Path(args.export)
-                with open(export_path, 'w', encoding='utf-8') as f:
+                with open(export_path, "w", encoding="utf-8") as f:
                     if args.format == "json":
                         json.dump(promotion_result, f, indent=2, default=str)
                     else:
@@ -1634,10 +1700,11 @@ Examples:
         # Validate it's a YouTube note
         try:
             from src.utils.frontmatter import parse_frontmatter
+
             content = note_path.read_text()
             metadata, _ = parse_frontmatter(content)
 
-            if metadata.get('source') != 'youtube':
+            if metadata.get("source") != "youtube":
                 print("❌ Error: Not a YouTube note (missing source: youtube)")
                 return 1
         except Exception as e:
@@ -1650,7 +1717,7 @@ Examples:
             from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
 
             # Extract video URL from metadata
-            video_url = metadata.get('url', '')
+            video_url = metadata.get("url", "")
             if not video_url:
                 print("❌ Error: No YouTube URL found in note metadata")
                 return 1
@@ -1667,33 +1734,38 @@ Examples:
 
             # Fetch transcript
             transcript_data = processor.fetcher.fetch_transcript(video_id)
-            if not transcript_data or 'transcript' not in transcript_data:
+            if not transcript_data or "transcript" not in transcript_data:
                 print("❌ Error: Transcript unavailable for this video")
                 return 1
 
             # Format transcript for LLM processing
-            formatted_transcript = processor.fetcher.format_for_llm(transcript_data['transcript'])
+            formatted_transcript = processor.fetcher.format_for_llm(
+                transcript_data["transcript"]
+            )
 
             # Extract quotes
             print("⏳ Extracting quotes with AI...")
             quotes = processor.extractor.extract_quotes(
-                transcript=formatted_transcript,
-                user_context=metadata.get('notes', '')
+                transcript=formatted_transcript, user_context=metadata.get("notes", "")
             )
 
             # Filter by quality if specified
-            if hasattr(args, 'min_quality') and args.min_quality:
+            if hasattr(args, "min_quality") and args.min_quality:
                 min_quality = float(args.min_quality)
                 for category in quotes:
-                    quotes[category] = [q for q in quotes[category] if q.get('relevance', 0) >= min_quality]
+                    quotes[category] = [
+                        q
+                        for q in quotes[category]
+                        if q.get("relevance", 0) >= min_quality
+                    ]
 
             # Filter by categories if specified
-            if hasattr(args, 'categories') and args.categories:
-                selected_categories = [c.strip() for c in args.categories.split(',')]
+            if hasattr(args, "categories") and args.categories:
+                selected_categories = [c.strip() for c in args.categories.split(",")]
                 quotes = {k: v for k, v in quotes.items() if k in selected_categories}
 
             # Preview mode - just show quotes without modifying
-            if hasattr(args, 'preview') and args.preview:
+            if hasattr(args, "preview") and args.preview:
                 print("\n📋 Preview of quotes to be inserted:")
                 for category, category_quotes in quotes.items():
                     if category_quotes:
@@ -1710,7 +1782,9 @@ Examples:
 
             if result.success:
                 print("✅ Successfully enhanced note")
-                print(f"   📝 {len([q for cat in quotes.values() for q in cat])} quotes inserted")
+                print(
+                    f"   📝 {len([q for cat in quotes.values() for q in cat])} quotes inserted"
+                )
                 print(f"   💾 Backup: {result.backup_path}")
             else:
                 print(f"❌ Enhancement failed: {result.message}")
@@ -1718,7 +1792,7 @@ Examples:
 
         except Exception as e:
             error_msg = str(e).lower()
-            if 'transcript' in error_msg or 'video id' in error_msg:
+            if "transcript" in error_msg or "video id" in error_msg:
                 print(f"❌ Error: Transcript unavailable - {e}", file=sys.stderr)
             else:
                 print(f"❌ Error: {e}", file=sys.stderr)
@@ -1740,18 +1814,22 @@ Examples:
 
             # Get all YouTube notes in Inbox (excluding backup files)
             all_youtube_notes = workflow.scan_youtube_notes()
-            youtube_notes = [(path, meta) for path, meta in all_youtube_notes if '_backup_' not in path.name]
+            youtube_notes = [
+                (path, meta)
+                for path, meta in all_youtube_notes
+                if "_backup_" not in path.name
+            ]
 
             print(f"📊 Found {len(youtube_notes)} unprocessed YouTube notes")
 
             if not youtube_notes:
                 # Output JSON if requested even when no notes
-                if hasattr(args, 'format') and args.format == 'json':
+                if hasattr(args, "format") and args.format == "json":
                     json_output = {
-                        'successful': 0,
-                        'failed': 0,
-                        'skipped': 0,
-                        'total': 0
+                        "successful": 0,
+                        "failed": 0,
+                        "skipped": 0,
+                        "total": 0,
                     }
                     print(json.dumps(json_output))
                 else:
@@ -1770,7 +1848,7 @@ Examples:
                 print(f"\n🔄 Processing {i}/{len(youtube_notes)}: {note_path.name}")
 
                 try:
-                    video_url = metadata.get('url', '')
+                    video_url = metadata.get("url", "")
                     if not video_url:
                         print("   ⚠️ Skipped: No URL found")
                         skipped += 1
@@ -1786,24 +1864,28 @@ Examples:
 
                     # Fetch and extract
                     transcript_data = processor.fetcher.fetch_transcript(video_id)
-                    if not transcript_data or 'transcript' not in transcript_data:
+                    if not transcript_data or "transcript" not in transcript_data:
                         print("   ❌ Failed: Transcript unavailable")
                         failed += 1
                         continue
 
                     # Format transcript for LLM processing
-                    formatted_transcript = processor.fetcher.format_for_llm(transcript_data['transcript'])
+                    formatted_transcript = processor.fetcher.format_for_llm(
+                        transcript_data["transcript"]
+                    )
 
                     quotes = processor.extractor.extract_quotes(
                         transcript=formatted_transcript,
-                        user_context=metadata.get('notes', '')
+                        user_context=metadata.get("notes", ""),
                     )
 
                     # Enhance note
                     result = enhancer.enhance_note(note_path, quotes)
 
                     if result.success:
-                        print(f"   ✅ Enhanced with {len([q for cat in quotes.values() for q in cat])} quotes")
+                        print(
+                            f"   ✅ Enhanced with {len([q for cat in quotes.values() for q in cat])} quotes"
+                        )
                         successful += 1
                     else:
                         print(f"   ❌ Failed: {result.message}")
@@ -1817,12 +1899,13 @@ Examples:
                     # Log full traceback for debugging
                     import traceback
                     import logging
+
                     logging.error(f"YouTube processing error for {note_path.name}")
                     logging.error(traceback.format_exc())
                     failed += 1
 
             # Summary (skip if JSON output requested)
-            if not (hasattr(args, 'format') and args.format == 'json'):
+            if not (hasattr(args, "format") and args.format == "json"):
                 print("\n" + "=" * 60)
                 print("📊 Batch Processing Summary:")
                 print(f"   ✅ Successful: {successful}")
@@ -1831,7 +1914,7 @@ Examples:
                 print("=" * 60)
 
             # Export if requested (skip print if JSON output)
-            if hasattr(args, 'export') and args.export:
+            if hasattr(args, "export") and args.export:
                 export_path = Path(args.export)
                 report = f"""# YouTube Processing Report
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -1843,16 +1926,16 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 - Total: {len(youtube_notes)}
 """
                 export_path.write_text(report)
-                if not (hasattr(args, 'format') and args.format == 'json'):
+                if not (hasattr(args, "format") and args.format == "json"):
                     print(f"\n📄 Report exported to {export_path}")
 
             # JSON output if requested
-            if hasattr(args, 'format') and args.format == 'json':
+            if hasattr(args, "format") and args.format == "json":
                 json_output = {
-                    'successful': successful,
-                    'failed': failed,
-                    'skipped': skipped,
-                    'total': len(youtube_notes)
+                    "successful": successful,
+                    "failed": failed,
+                    "skipped": skipped,
+                    "total": len(youtube_notes),
                 }
                 print(json.dumps(json_output))
 
@@ -1896,7 +1979,9 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # Prune old backups
         if args.keep is None:
             print("❌ Error: --prune-backups requires --keep N parameter")
-            print("💡 Example: python3 src/cli/workflow_demo.py . --prune-backups --keep 5")
+            print(
+                "💡 Example: python3 src/cli/workflow_demo.py . --prune-backups --keep 5"
+            )
             return 1
 
         print(f"🗑️  Pruning backups (keeping {args.keep} most recent)...")
@@ -1925,11 +2010,14 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir), max_concurrent=args.max_concurrent)
-            result = cli.execute_command("process-inbox-safe", {
-                "progress": args.progress,
-                "performance_metrics": args.performance_metrics,
-                "batch_size": args.batch_size
-            })
+            result = cli.execute_command(
+                "process-inbox-safe",
+                {
+                    "progress": args.progress,
+                    "performance_metrics": args.performance_metrics,
+                    "batch_size": args.batch_size,
+                },
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -1937,10 +2025,16 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 print_header("SAFE INBOX PROCESSING COMPLETE")
                 if result.get("success"):
                     processing_result = result.get("result", {})
-                    print(f"   ✅ Processed: {processing_result.get('successful_notes', 0)}/{processing_result.get('total_notes', 0)} notes")
-                    print(f"   🖼️ Images preserved: {processing_result.get('total_images_preserved', 0)}")
+                    print(
+                        f"   ✅ Processed: {processing_result.get('successful_notes', 0)}/{processing_result.get('total_notes', 0)} notes"
+                    )
+                    print(
+                        f"   🖼️ Images preserved: {processing_result.get('total_images_preserved', 0)}"
+                    )
                     print("   🛡️ Atomic operations: Enabled")
-                    print(f"   ⏱️ Execution time: {result.get('execution_time', 0):.2f}s")
+                    print(
+                        f"   ⏱️ Execution time: {result.get('execution_time', 0):.2f}s"
+                    )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -1955,11 +2049,14 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir), max_concurrent=args.max_concurrent)
-            result = cli.execute_command("batch-process-safe", {
-                "batch_size": args.batch_size,
-                "progress": args.progress,
-                "performance_metrics": args.performance_metrics
-            })
+            result = cli.execute_command(
+                "batch-process-safe",
+                {
+                    "batch_size": args.batch_size,
+                    "progress": args.progress,
+                    "performance_metrics": args.performance_metrics,
+                },
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -1967,10 +2064,18 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 print_header("SAFE BATCH PROCESSING COMPLETE")
                 if result.get("success"):
                     batch_result = result.get("result", {})
-                    print(f"   ✅ Total files processed: {batch_result.get('total_files', 0)}")
-                    print(f"   🖼️ Total images preserved: {batch_result.get('images_preserved_total', 0)}")
-                    print(f"   ⏱️ Processing time: {result.get('execution_time', 0):.2f}s")
-                    print(f"   🛡️ Image integrity: {batch_result.get('image_integrity_report', {}).get('successful_image_preservation', 0)} successful")
+                    print(
+                        f"   ✅ Total files processed: {batch_result.get('total_files', 0)}"
+                    )
+                    print(
+                        f"   🖼️ Total images preserved: {batch_result.get('images_preserved_total', 0)}"
+                    )
+                    print(
+                        f"   ⏱️ Processing time: {result.get('execution_time', 0):.2f}s"
+                    )
+                    print(
+                        f"   🛡️ Image integrity: {batch_result.get('image_integrity_report', {}).get('successful_image_preservation', 0)} successful"
+                    )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -1985,10 +2090,13 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir))
-            result = cli.execute_command("performance-report", {
-                "format": args.format,
-                "performance_metrics": args.performance_metrics
-            })
+            result = cli.execute_command(
+                "performance-report",
+                {
+                    "format": args.format,
+                    "performance_metrics": args.performance_metrics,
+                },
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -1998,8 +2106,12 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     stats = result.get("result", {})
                     print(f"   📈 Total operations: {stats.get('total_operations', 0)}")
                     print(f"   ✅ Success rate: {stats.get('success_rate', 0):.2%}")
-                    print(f"   ⏱️ Average processing time: {stats.get('average_processing_time', 0):.2f}s")
-                    print(f"   🖼️ Total images preserved: {stats.get('total_images_preserved', 0)}")
+                    print(
+                        f"   ⏱️ Average processing time: {stats.get('average_processing_time', 0):.2f}s"
+                    )
+                    print(
+                        f"   🖼️ Total images preserved: {stats.get('total_images_preserved', 0)}"
+                    )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -2014,10 +2126,13 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir))
-            result = cli.execute_command("integrity-report", {
-                "format": args.format,
-                "export": args.export if hasattr(args, 'export') else None
-            })
+            result = cli.execute_command(
+                "integrity-report",
+                {
+                    "format": args.format,
+                    "export": args.export if hasattr(args, "export") else None,
+                },
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -2025,13 +2140,17 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 print_header("IMAGE INTEGRITY REPORT")
                 if result.get("success"):
                     report = result.get("result", {})
-                    print(f"   🖼️ Images tracked: {len(report.get('tracked_images', {}))}")
+                    print(
+                        f"   🖼️ Images tracked: {len(report.get('tracked_images', {}))}"
+                    )
                     print("   📊 Monitoring enabled: Yes")
                     print(f"   🔍 Scan complete: {report.get('scan_timestamp', 'N/A')}")
 
                     # Export notification if requested
                     if result.get("exported"):
-                        print(f"\n📄 Integrity report exported to: {result.get('export_path')}")
+                        print(
+                            f"\n📄 Integrity report exported to: {result.get('export_path')}"
+                        )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -2046,10 +2165,10 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir))
-            result = cli.execute_command("start-safe-session", {
-                "session_name": args.start_safe_session,
-                "format": args.format
-            })
+            result = cli.execute_command(
+                "start-safe-session",
+                {"session_name": args.start_safe_session, "format": args.format},
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -2060,7 +2179,9 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     print(f"   🆔 Session ID: {session_data.get('session_id', 'N/A')}")
                     print(f"   📝 Session Name: {args.start_safe_session}")
                     print("   ✅ Status: Active")
-                    print(f"\n💡 Use --process-in-session {session_data.get('session_id')} <note_path> to process notes")
+                    print(
+                        f"\n💡 Use --process-in-session {session_data.get('session_id')} <note_path> to process notes"
+                    )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -2076,11 +2197,14 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             from src.cli.safe_workflow_cli_utils import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI(str(base_dir))
-            result = cli.execute_command("process-in-session", {
-                "session_id": session_id,
-                "note_path": note_path,
-                "format": args.format
-            })
+            result = cli.execute_command(
+                "process-in-session",
+                {
+                    "session_id": session_id,
+                    "note_path": note_path,
+                    "format": args.format,
+                },
+            )
 
             if args.format == "json":
                 print(json.dumps(result, indent=2, default=str))
@@ -2089,8 +2213,12 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 if result.get("success"):
                     processing_data = result.get("result", {})
                     print(f"   ✅ Success: {processing_data.get('success', False)}")
-                    print(f"   🆔 Session ID: {processing_data.get('session_id', session_id)}")
-                    print(f"   🖼️ Images preserved: {processing_data.get('processing_result', {}).get('image_preservation', {}).get('images_preserved', 0)}")
+                    print(
+                        f"   🆔 Session ID: {processing_data.get('session_id', session_id)}"
+                    )
+                    print(
+                        f"   🖼️ Images preserved: {processing_data.get('processing_result', {}).get('image_preservation', {}).get('images_preserved', 0)}"
+                    )
                 else:
                     print(f"   ❌ Error: {result.get('error', 'Unknown error')}")
 
@@ -2110,16 +2238,14 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             if not path_validation["valid"]:
                 formatter = CLIOutputFormatter(args.format)
                 error_output = formatter.format_error(
-                    path_validation["error"],
-                    [path_validation.get("suggestion", "")]
+                    path_validation["error"], [path_validation.get("suggestion", "")]
                 )
                 print(error_output)
                 return 1
 
             # Initialize CLI orchestrator
             orchestrator = ScreenshotCLIOrchestrator(
-                knowledge_path=str(base_dir),
-                onedrive_path=config["onedrive_path"]
+                knowledge_path=str(base_dir), onedrive_path=config["onedrive_path"]
             )
 
             # Initialize progress reporter if requested
@@ -2146,7 +2272,9 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     progress_reporter.update_progress(4, "Processing complete")
                     metrics = progress_reporter.complete_progress()
                     if config["performance_metrics"]:
-                        progress_reporter.report_performance_metrics(result.get("result", {}))
+                        progress_reporter.report_performance_metrics(
+                            result.get("result", {})
+                        )
 
             # Handle results
             if not result["success"]:
@@ -2174,9 +2302,7 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             if args.export:
                 export_manager = CLIExportManager()
                 export_success = export_manager.export_results(
-                    result["result"],
-                    args.export,
-                    "json"
+                    result["result"], args.export, "json"
                 )
                 if export_success:
                     print(f"\n📄 Results exported to: {args.export}")
@@ -2200,16 +2326,21 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
             # Initialize processor and progress reporter
             processor = EveningScreenshotProcessor(
-                onedrive_path=config.get("onedrive_path"),
-                knowledge_path=str(base_dir)
+                onedrive_path=config.get("onedrive_path"), knowledge_path=str(base_dir)
             )
-            progress_reporter = CLIProgressReporter() if config.get("progress", False) else None
+            progress_reporter = (
+                CLIProgressReporter() if config.get("progress", False) else None
+            )
 
             # Execute based on mode (dry-run or full processing)
             if config.get("dry_run", False):
-                result = _execute_evening_screenshot_dry_run(processor, config, progress_reporter)
+                result = _execute_evening_screenshot_dry_run(
+                    processor, config, progress_reporter
+                )
             else:
-                result = _execute_evening_screenshot_processing(processor, config, progress_reporter)
+                result = _execute_evening_screenshot_processing(
+                    processor, config, progress_reporter
+                )
 
             # Format and display output
             _format_evening_screenshot_output(result, config, args)

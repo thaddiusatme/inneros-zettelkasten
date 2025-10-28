@@ -16,10 +16,13 @@ class CSVImportAdapter:
     @staticmethod
     def load(path: Path) -> List[ImportItem]:
         items: List[ImportItem] = []
-        with open(path, newline='', encoding='utf-8') as f:
+        with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for raw in reader:
-                data = {k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in raw.items()}
+                data = {
+                    k.strip(): (v.strip() if isinstance(v, str) else v)
+                    for k, v in raw.items()
+                }
                 try:
                     items.append(validate_item(data))
                 except Exception:
@@ -33,7 +36,7 @@ class JSONImportAdapter:
 
     @staticmethod
     def load(path: Path) -> List[ImportItem]:
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         rows: List[Dict[str, Any]]
         if isinstance(data, list):
@@ -41,7 +44,9 @@ class JSONImportAdapter:
         elif isinstance(data, dict) and isinstance(data.get("items"), list):
             rows = [dict(x) for x in data["items"]]
         else:
-            raise ValueError("Unsupported JSON structure: expected a list or an object with 'items'.")
+            raise ValueError(
+                "Unsupported JSON structure: expected a list or an object with 'items'."
+            )
         items: List[ImportItem] = []
         for raw in rows:
             try:
@@ -57,7 +62,7 @@ _YAML_KEY_RE = re.compile(r"^([A-Za-z0-9_]+):\s*(.*)$")
 
 def _read_yaml_frontmatter(md_path: Path) -> Dict[str, Any]:
     """Very small YAML-like frontmatter reader for url/saved_at."""
-    content = md_path.read_text(encoding='utf-8', errors='ignore').splitlines()
+    content = md_path.read_text(encoding="utf-8", errors="ignore").splitlines()
     if not content or content[0].strip() != _FRONTMATTER_BOUNDARY:
         return {}
     data: Dict[str, Any] = {}
@@ -106,7 +111,11 @@ class NoteWriter:
     @staticmethod
     def _yaml_frontmatter(item: ImportItem, created: datetime | None = None) -> str:
         created_dt = created or datetime.now()
-        topics_block = "[]" if not item.topics else f"[{', '.join([repr(t) for t in item.topics])}]"
+        topics_block = (
+            "[]"
+            if not item.topics
+            else f"[{', '.join([repr(t) for t in item.topics])}]"
+        )
         # Ensure saved_at ISO format without microseconds
         saved_iso = item.saved_at.replace(microsecond=0).isoformat()
         return (
@@ -127,18 +136,11 @@ class NoteWriter:
             p = self.base_dir / template_rel
             if p.exists():
                 try:
-                    return p.read_text(encoding='utf-8')
+                    return p.read_text(encoding="utf-8")
                 except Exception:
                     pass
         # Fallback scaffold
-        return (
-            "## Claims\n\n"
-            "- \n\n"
-            "## Quotes\n\n"
-            "> \n\n"
-            "## Links\n\n"
-            "- \n"
-        )
+        return "## Claims\n\n" "- \n\n" "## Quotes\n\n" "> \n\n" "## Links\n\n" "- \n"
 
     def _is_duplicate(self, dest: Path, item: ImportItem) -> bool:
         # Quick scan for existing notes on the same date
@@ -150,14 +152,20 @@ class NoteWriter:
             if fm.get("url") == item.url and fm.get("saved_at"):
                 # Normalize saved_at for comparison up to seconds
                 try:
-                    existing_dt = datetime.fromisoformat(fm["saved_at"].replace("Z", "+00:00"))
-                    if existing_dt.replace(microsecond=0) == item.saved_at.replace(microsecond=0):
+                    existing_dt = datetime.fromisoformat(
+                        fm["saved_at"].replace("Z", "+00:00")
+                    )
+                    if existing_dt.replace(microsecond=0) == item.saved_at.replace(
+                        microsecond=0
+                    ):
                         return True
                 except Exception:
                     pass
         return False
 
-    def write_items(self, items: List[ImportItem], dest_dir: Path | None = None, force: bool = False) -> Tuple[int, int, List[Path]]:
+    def write_items(
+        self, items: List[ImportItem], dest_dir: Path | None = None, force: bool = False
+    ) -> Tuple[int, int, List[Path]]:
         dest = self._dest_dir(dest_dir)
         dest.mkdir(parents=True, exist_ok=True)
         written = 0
@@ -168,8 +176,10 @@ class NoteWriter:
                 skipped += 1
                 continue
             target = self._unique_filename(dest, item)
-            content = self._yaml_frontmatter(item) + self._body(Path("Templates/literature.md"))
-            target.write_text(content, encoding='utf-8')
+            content = self._yaml_frontmatter(item) + self._body(
+                Path("Templates/literature.md")
+            )
+            target.write_text(content, encoding="utf-8")
             paths.append(target)
             written += 1
         return written, skipped, paths

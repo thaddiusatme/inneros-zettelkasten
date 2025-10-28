@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TDD Iteration 7: Enhanced Connection Discovery System Tests
-RED Phase - Comprehensive failing tests for relationship type detection, 
+RED Phase - Comprehensive failing tests for relationship type detection,
 connection strength scoring, and cross-domain discovery.
 
 Building on proven TDD patterns from Iterations 1-6.
@@ -15,7 +15,7 @@ import sys
 from unittest.mock import patch
 
 # Add development directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Import will fail initially - this is expected RED phase behavior
 try:
@@ -30,12 +30,12 @@ except ImportError:
 class TestEnhancedConnectionsEngine(unittest.TestCase):
     """
     TDD Test Suite for Enhanced Connection Discovery Engine
-    
+
     P0 Features:
     - Semantic relationship type detection (builds_on, contradicts, bridges, examples)
-    - Connection strength scoring with confidence intervals  
+    - Connection strength scoring with confidence intervals
     - Cross-domain connection discovery (analogies between knowledge areas)
-    
+
     P1 Features:
     - Real-time connection suggestions during capture processing
     - Connection preview integration with voice note pipeline
@@ -54,6 +54,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
     def tearDown(self):
         """Clean up test environment"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def _create_sample_capture_notes(self):
@@ -66,7 +67,11 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
                 Training requires large datasets and computational resources.
                 """,
                 "domain": "technology",
-                "concepts": ["machine learning", "neural networks", "pattern recognition"]
+                "concepts": [
+                    "machine learning",
+                    "neural networks",
+                    "pattern recognition",
+                ],
             },
             "cooking-flavor-chemistry.md": {
                 "content": """
@@ -75,7 +80,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
                 Experience teaches pattern recognition in taste combinations.
                 """,
                 "domain": "culinary",
-                "concepts": ["chemistry", "pattern recognition", "experience"]
+                "concepts": ["chemistry", "pattern recognition", "experience"],
             },
             "zettelkasten-knowledge-building.md": {
                 "content": """
@@ -84,7 +89,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
                 Knowledge networks emerge from individual building blocks.
                 """,
                 "domain": "knowledge_management",
-                "concepts": ["knowledge networks", "atomic ideas", "building blocks"]
+                "concepts": ["knowledge networks", "atomic ideas", "building blocks"],
             },
             "music-harmony-theory.md": {
                 "content": """
@@ -93,8 +98,12 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
                 Musicians develop pattern recognition through practice.
                 """,
                 "domain": "music",
-                "concepts": ["mathematical patterns", "tension resolution", "pattern recognition"]
-            }
+                "concepts": [
+                    "mathematical patterns",
+                    "tension resolution",
+                    "pattern recognition",
+                ],
+            },
         }
 
     # RED PHASE - P0 Critical Features Tests
@@ -106,9 +115,13 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
 
         # Test case: One note builds conceptually on another
         base_note = "Supervised learning uses labeled data for training."
-        extending_note = "Deep learning is a subset of supervised learning using neural networks."
+        extending_note = (
+            "Deep learning is a subset of supervised learning using neural networks."
+        )
 
-        result = self.enhanced_engine.detect_relationship_type(base_note, extending_note)
+        result = self.enhanced_engine.detect_relationship_type(
+            base_note, extending_note
+        )
 
         self.assertEqual(result["relationship_type"], "builds_on")
         self.assertGreater(result["confidence"], 0.8)
@@ -139,7 +152,9 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         bridge_note = "The brain's visual cortex processes images hierarchically, similar to CNN layers."
         domain_b = "Human vision recognizes objects through feature detection."
 
-        result = self.enhanced_engine.detect_relationship_type_triple(domain_a, bridge_note, domain_b)
+        result = self.enhanced_engine.detect_relationship_type_triple(
+            domain_a, bridge_note, domain_b
+        )
 
         self.assertEqual(result["relationship_type"], "bridges")
         self.assertGreater(result["confidence"], 0.7)
@@ -152,9 +167,13 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
 
         # Test case: Specific example of general concept
         general_note = "Reinforcement learning agents learn through trial and error."
-        example_note = "AlphaGo mastered Go by playing millions of games against itself."
+        example_note = (
+            "AlphaGo mastered Go by playing millions of games against itself."
+        )
 
-        result = self.enhanced_engine.detect_relationship_type(general_note, example_note)
+        result = self.enhanced_engine.detect_relationship_type(
+            general_note, example_note
+        )
 
         self.assertEqual(result["relationship_type"], "examples")
         self.assertGreater(result["confidence"], 0.8)
@@ -169,8 +188,12 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         strong_connection = ("Machine learning", "Deep learning algorithms")
         weak_connection = ("Machine learning", "Italian cooking recipes")
 
-        strong_result = self.enhanced_engine.calculate_connection_strength(*strong_connection)
-        weak_result = self.enhanced_engine.calculate_connection_strength(*weak_connection)
+        strong_result = self.enhanced_engine.calculate_connection_strength(
+            *strong_connection
+        )
+        weak_result = self.enhanced_engine.calculate_connection_strength(
+            *weak_connection
+        )
 
         # Strong connection should have high score and narrow confidence interval
         self.assertGreater(strong_result["strength_score"], 0.8)
@@ -186,17 +209,24 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
             self.fail("EnhancedConnectionsEngine not implemented yet")
 
         # Test finding analogies between different knowledge domains
-        result = self.enhanced_engine.discover_cross_domain_connections(self.sample_capture_notes)
+        result = self.enhanced_engine.discover_cross_domain_connections(
+            self.sample_capture_notes
+        )
 
         # Should find pattern recognition connection across domains
-        cross_domain_connections = [conn for conn in result if conn["connection_type"] == "cross_domain"]
+        cross_domain_connections = [
+            conn for conn in result if conn["connection_type"] == "cross_domain"
+        ]
         self.assertGreater(len(cross_domain_connections), 0)
 
         # Verify specific cross-domain connection exists
         pattern_recognition_connection = next(
-            (conn for conn in cross_domain_connections
-             if "pattern recognition" in conn["shared_concept"].lower()),
-            None
+            (
+                conn
+                for conn in cross_domain_connections
+                if "pattern recognition" in conn["shared_concept"].lower()
+            ),
+            None,
         )
         self.assertIsNotNone(pattern_recognition_connection)
         self.assertGreater(pattern_recognition_connection["analogy_strength"], 0.6)
@@ -239,7 +269,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         capture_data = {
             "content": "New insight about pattern recognition in cooking",
             "timestamp": datetime.now(),
-            "domain": "culinary"
+            "domain": "culinary",
         }
 
         preview = self.enhanced_engine.generate_connection_preview(
@@ -266,7 +296,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
             "target_note": "cooking-flavor-chemistry.md",
             "relationship_type": "bridges",
             "shared_concept": "pattern recognition",
-            "confidence": 0.75
+            "confidence": 0.75,
         }
 
         # Simulate user feedback (accept/reject)
@@ -279,8 +309,9 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
 
         # Test rejection feedback
         rejection_result = self.enhanced_engine.validate_connection_with_feedback(
-            suggested_connection, user_feedback="reject",
-            rejection_reason="too_abstract"
+            suggested_connection,
+            user_feedback="reject",
+            rejection_reason="too_abstract",
         )
 
         self.assertFalse(rejection_result["accepted"])
@@ -294,11 +325,11 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
             self.fail("Integration classes not implemented yet")
 
         # Test that enhanced connections integrates with existing AI workflow
-        with patch('src.ai.workflow_manager.WorkflowManager') as mock_workflow:
+        with patch("src.ai.workflow_manager.WorkflowManager") as mock_workflow:
             mock_workflow.return_value.process_inbox_note.return_value = {
                 "quality_score": 0.8,
                 "ai_tags": ["machine-learning", "neural-networks"],
-                "summary": "Note about ML fundamentals"
+                "summary": "Note about ML fundamentals",
             }
 
             enhanced_result = self.enhanced_engine.process_with_workflow_integration(
@@ -321,10 +352,12 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         start_time = time.time()
 
         results = []
-        for i, (note_name, note_data) in enumerate(list(self.sample_capture_notes.items())[:5]):
-            result = self.enhanced_engine.discover_cross_domain_connections({
-                note_name: note_data
-            })
+        for i, (note_name, note_data) in enumerate(
+            list(self.sample_capture_notes.items())[:5]
+        ):
+            result = self.enhanced_engine.discover_cross_domain_connections(
+                {note_name: note_data}
+            )
             results.append(result)
 
         processing_time = time.time() - start_time
@@ -347,7 +380,7 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         voice_note_3a = {
             "atomic_concept": "Backpropagation algorithm in neural networks",
             "associate_connections": ["gradient descent", "chain rule", "optimization"],
-            "advance_insights": "Similar to how water flows downhill, gradients flow towards minimum error"
+            "advance_insights": "Similar to how water flows downhill, gradients flow towards minimum error",
         }
 
         enhanced_result = self.enhanced_engine.process_3a_formula_note(voice_note_3a)
@@ -360,12 +393,16 @@ class TestEnhancedConnectionsEngine(unittest.TestCase):
         # Should identify the analogy in advancement section
         advancement_connections = enhanced_result["advancement_bridges"]
         water_analogy = next(
-            (conn for conn in advancement_connections if "analogy" in conn["connection_type"]),
-            None
+            (
+                conn
+                for conn in advancement_connections
+                if "analogy" in conn["connection_type"]
+            ),
+            None,
         )
         self.assertIsNotNone(water_analogy)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run tests with verbose output for TDD development
     unittest.main(verbosity=2)

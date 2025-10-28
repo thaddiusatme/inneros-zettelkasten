@@ -23,18 +23,18 @@ STANDARD_VAULT_DIRS: List[str] = [
     "Inbox",
     "Permanent Notes",
     "Fleeting Notes",
-    "Literature Notes"
+    "Literature Notes",
 ]
 
 
 def _create_vault_structure(base_path: Path, vault_name: str) -> Path:
     """
     Create standard Zettelkasten directory structure.
-    
+
     Args:
         base_path: Base directory for vault creation
         vault_name: Unique name for the vault
-        
+
     Returns:
         Path to created vault directory
     """
@@ -51,15 +51,15 @@ def _create_vault_structure(base_path: Path, vault_name: str) -> Path:
 def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     """
     Create a minimal test vault with 3 notes (1 permanent, 1 fleeting, 1 literature).
-    
+
     Args:
         tmp_path: pytest tmp_path fixture for isolated test directory
-        
+
     Returns:
         Tuple of (vault_path, metadata) where:
         - vault_path: Path to created vault directory
         - metadata: Dict with note counts and creation statistics
-        
+
     Performance: <1 second
     """
     start_time = time.time()
@@ -71,26 +71,26 @@ def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     # Copy sample notes to appropriate directories
     shutil.copy(
         SAMPLE_NOTES_DIR / "permanent-test-note.md",
-        vault_path / "Permanent Notes" / "permanent-test-note.md"
+        vault_path / "Permanent Notes" / "permanent-test-note.md",
     )
     shutil.copy(
         SAMPLE_NOTES_DIR / "fleeting-test-note.md",
-        vault_path / "Fleeting Notes" / "fleeting-test-note.md"
+        vault_path / "Fleeting Notes" / "fleeting-test-note.md",
     )
     shutil.copy(
         SAMPLE_NOTES_DIR / "literature-test-note.md",
-        vault_path / "Literature Notes" / "literature-test-note.md"
+        vault_path / "Literature Notes" / "literature-test-note.md",
     )
 
     # Create metadata
     elapsed = time.time() - start_time
     metadata = {
-        'note_count': 3,
-        'permanent_notes': 1,
-        'fleeting_notes': 1,
-        'literature_notes': 1,
-        'creation_time_seconds': elapsed,
-        'vault_path': str(vault_path)
+        "note_count": 3,
+        "permanent_notes": 1,
+        "fleeting_notes": 1,
+        "literature_notes": 1,
+        "creation_time_seconds": elapsed,
+        "vault_path": str(vault_path),
     }
 
     return vault_path, metadata
@@ -99,15 +99,15 @@ def create_minimal_vault(tmp_path: Path) -> Tuple[Path, Dict]:
 def create_small_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     """
     Create a small test vault with 15 notes for more comprehensive testing.
-    
+
     Args:
         tmp_path: pytest tmp_path fixture for isolated test directory
-        
+
     Returns:
         Tuple of (vault_path, metadata) where:
         - vault_path: Path to created vault directory
         - metadata: Dict with note counts and creation statistics
-        
+
     Performance: <5 seconds
     """
     start_time = time.time()
@@ -142,12 +142,12 @@ def create_small_vault(tmp_path: Path) -> Tuple[Path, Dict]:
     # Create metadata
     elapsed = time.time() - start_time
     metadata = {
-        'note_count': 15,
-        'permanent_notes': permanent_count,
-        'fleeting_notes': fleeting_count,
-        'literature_notes': literature_count,
-        'creation_time_seconds': elapsed,
-        'vault_path': str(vault_path)
+        "note_count": 15,
+        "permanent_notes": permanent_count,
+        "fleeting_notes": fleeting_count,
+        "literature_notes": literature_count,
+        "creation_time_seconds": elapsed,
+        "vault_path": str(vault_path),
     }
 
     return vault_path, metadata

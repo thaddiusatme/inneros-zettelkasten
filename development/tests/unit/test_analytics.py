@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import tempfile
@@ -37,7 +37,7 @@ class TestNoteAnalytics:
         note_path = self.notes_dir / filename
         note_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(note_path, 'w', encoding='utf-8') as f:
+        with open(note_path, "w", encoding="utf-8") as f:
             f.write(content)
 
         return note_path
@@ -83,7 +83,7 @@ This is the body content."""
             ("2024-01-01 10:00", "%Y-%m-%d %H:%M"),
             ("2024-01-01", "%Y-%m-%d"),
             ("2024-01-01T10:00:00", "%Y-%m-%dT%H:%M:%S"),
-            ("2024-01-01 10:00:00", "%Y-%m-%d %H:%M:%S")
+            ("2024-01-01 10:00:00", "%Y-%m-%d %H:%M:%S"),
         ]
 
         for date_str, expected_format in test_cases:
@@ -105,7 +105,7 @@ This is the body content."""
         frontmatter = {
             "type": "permanent",
             "created": "2024-01-01",
-            "status": "published"
+            "status": "published",
         }
         score = self.analytics._calculate_quality_score(1000, 5, 3, frontmatter)
         assert score > 0.8
@@ -162,7 +162,9 @@ This helps test the word counting functionality of the analytics system.
 
         assert stats is not None
         assert stats.filename == "minimal.md"
-        assert stats.word_count == 6  # "Just a simple note without frontmatter." = 6 words
+        assert (
+            stats.word_count == 6
+        )  # "Just a simple note without frontmatter." = 6 words
         assert stats.tag_count == 0
         assert stats.link_count == 0
         assert stats.note_type == "unknown"
@@ -174,20 +176,29 @@ This helps test the word counting functionality of the analytics system.
         """Test scanning multiple note files."""
         # Create multiple test notes
         notes_data = [
-            ("note1.md", """---
+            (
+                "note1.md",
+                """---
 type: permanent
 tags: ["test"]
 ---
-Content for note 1 with some text."""),
-            ("note2.md", """---
+Content for note 1 with some text.""",
+            ),
+            (
+                "note2.md",
+                """---
 type: fleeting
 ---
-Shorter content."""),
-            ("subdir/note3.md", """---
+Shorter content.""",
+            ),
+            (
+                "subdir/note3.md",
+                """---
 type: literature
 tags: ["research", "academic"]
 ---
-Academic content with more detailed information and analysis.""")
+Academic content with more detailed information and analysis.""",
+            ),
         ]
 
         for filename, content in notes_data:
@@ -212,7 +223,9 @@ Academic content with more detailed information and analysis.""")
         """Test comprehensive report generation."""
         # Create test notes
         notes_data = [
-            ("high-quality.md", """---
+            (
+                "high-quality.md",
+                """---
 type: permanent
 created: 2024-01-01 10:00
 tags: ["ai", "machine-learning", "research"]
@@ -223,18 +236,25 @@ This is a high-quality permanent note with comprehensive content.
 It includes multiple paragraphs, proper tagging, and internal links.
 The content is well-structured and provides valuable information.
 It has sufficient length and depth to be considered high quality.
-"""),
-            ("medium-quality.md", """---
+""",
+            ),
+            (
+                "medium-quality.md",
+                """---
 type: fleeting
 tags: ["idea"]
 ---
 This is a medium quality fleeting note.
 It has some content but needs development.
-"""),
-            ("low-quality.md", """---
+""",
+            ),
+            (
+                "low-quality.md",
+                """---
 type: unknown
 ---
-Short note.""")
+Short note.""",
+            ),
         ]
 
         for filename, content in notes_data:
@@ -272,11 +292,37 @@ Short note.""")
         """Test recommendation generation."""
         # Create notes with various quality levels
         notes = [
-            NoteStats("high.md", 800, 5, 3, None, None, "permanent", "published", True, 0.9),
-            NoteStats("medium.md", 300, 2, 1, None, None, "fleeting", "draft", False, 0.6),
+            NoteStats(
+                "high.md", 800, 5, 3, None, None, "permanent", "published", True, 0.9
+            ),
+            NoteStats(
+                "medium.md", 300, 2, 1, None, None, "fleeting", "draft", False, 0.6
+            ),
             NoteStats("low.md", 50, 0, 0, None, None, "unknown", "inbox", False, 0.2),
-            NoteStats("untagged.md", 200, 0, 2, None, None, "permanent", "published", False, 0.5),
-            NoteStats("long-no-summary.md", 1000, 3, 2, None, None, "permanent", "published", False, 0.7)
+            NoteStats(
+                "untagged.md",
+                200,
+                0,
+                2,
+                None,
+                None,
+                "permanent",
+                "published",
+                False,
+                0.5,
+            ),
+            NoteStats(
+                "long-no-summary.md",
+                1000,
+                3,
+                2,
+                None,
+                None,
+                "permanent",
+                "published",
+                False,
+                0.7,
+            ),
         ]
 
         recommendations = self.analytics._generate_recommendations(notes)
@@ -296,10 +342,13 @@ Short note.""")
     def test_export_report(self):
         """Test report export functionality."""
         # Create a test note
-        self.create_test_note("test.md", """---
+        self.create_test_note(
+            "test.md",
+            """---
 type: permanent
 ---
-Test content.""")
+Test content.""",
+        )
 
         output_file = self.notes_dir / "report.json"
         result = self.analytics.export_report(str(output_file))
@@ -309,7 +358,8 @@ Test content.""")
 
         # Verify JSON content
         import json
-        with open(output_file, 'r') as f:
+
+        with open(output_file, "r") as f:
             report_data = json.load(f)
 
         assert "overview" in report_data
@@ -340,7 +390,7 @@ class TestNoteStats:
             note_type="permanent",
             status="published",
             has_summary=True,
-            quality_score=0.8
+            quality_score=0.8,
         )
 
         assert stats.filename == "test.md"
@@ -364,7 +414,7 @@ class TestNoteStats:
             note_type="unknown",
             status="inbox",
             has_summary=False,
-            quality_score=0.3
+            quality_score=0.3,
         )
 
         assert stats.creation_date is None

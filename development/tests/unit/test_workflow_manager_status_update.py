@@ -48,17 +48,21 @@ class TestWorkflowManagerStatusUpdate:
         """Create WorkflowManager instance for testing."""
         return WorkflowManager(base_directory=str(temp_vault))
 
-    def create_test_note(self, base_dir: Path, directory: str, filename: str, content: str) -> Path:
+    def create_test_note(
+        self, base_dir: Path, directory: str, filename: str, content: str
+    ) -> Path:
         """Helper to create a test note in the proper directory structure."""
         note_path = base_dir / directory / filename
         note_path.parent.mkdir(parents=True, exist_ok=True)
         note_path.write_text(content, encoding="utf-8")
         return note_path
 
-    def test_process_inbox_note_updates_status_to_promoted(self, workflow_manager, temp_vault):
+    def test_process_inbox_note_updates_status_to_promoted(
+        self, workflow_manager, temp_vault
+    ):
         """
         CRITICAL: Status should update from 'inbox' to 'promoted' after AI processing.
-        
+
         This is the core bug fix - 77 notes are stuck with ai_processed: true but status: inbox.
         """
         # Create test note in Inbox with status: inbox
@@ -72,29 +76,40 @@ tags: [test]
 
 This is a test note with good quality content for AI processing."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-note.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-note.md", note_content
+        )
 
         # Mock AI services to ensure they run
-        with patch('src.ai.tagger.AITagger.generate_tags') as mock_tagger, \
-             patch('src.ai.enhancer.AIEnhancer.enhance_note') as mock_enhancer:
+        with patch("src.ai.tagger.AITagger.generate_tags") as mock_tagger, patch(
+            "src.ai.enhancer.AIEnhancer.enhance_note"
+        ) as mock_enhancer:
 
             mock_tagger.return_value = ["test", "ai-generated"]
             mock_enhancer.return_value = {
                 "quality": {"score": 0.85, "reason": "High quality content"},
-                "summary": "Test summary"
+                "summary": "Test summary",
             }
 
             # Process the note (AI processing should happen)
             results = workflow_manager.process_inbox_note(str(note_path), fast=False)
 
             # Verify status was updated in results
-            assert "status_updated" in results, "Results should include status_updated field"
-            assert results["status_updated"] == "promoted", "Status should be updated to 'promoted'"
+            assert (
+                "status_updated" in results
+            ), "Results should include status_updated field"
+            assert (
+                results["status_updated"] == "promoted"
+            ), "Status should be updated to 'promoted'"
 
             # Verify status was persisted to disk
             updated_content = note_path.read_text(encoding="utf-8")
-            assert "status: promoted" in updated_content, "Status should be 'promoted' in file"
-            assert "status: inbox" not in updated_content, "Old status 'inbox' should be gone"
+            assert (
+                "status: promoted" in updated_content
+            ), "Status should be 'promoted' in file"
+            assert (
+                "status: inbox" not in updated_content
+            ), "Old status 'inbox' should be gone"
 
     def test_process_inbox_note_adds_processed_date(self, workflow_manager, temp_vault):
         """
@@ -110,16 +125,19 @@ tags: [test]
 
 Quality content for processing."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-note-date.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-note-date.md", note_content
+        )
 
         # Mock AI services
-        with patch('src.ai.tagger.AITagger.generate_tags') as mock_tagger, \
-             patch('src.ai.enhancer.AIEnhancer.enhance_note') as mock_enhancer:
+        with patch("src.ai.tagger.AITagger.generate_tags") as mock_tagger, patch(
+            "src.ai.enhancer.AIEnhancer.enhance_note"
+        ) as mock_enhancer:
 
             mock_tagger.return_value = ["test"]
             mock_enhancer.return_value = {
                 "quality": {"score": 0.75, "reason": "Good quality"},
-                "summary": "Test"
+                "summary": "Test",
             }
 
             # Process the note
@@ -130,18 +148,24 @@ Quality content for processing."""
 
             # Check for processed_date in format YYYY-MM-DD HH:MM
             import re
-            assert re.search(r'processed_date:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}', updated_content), \
-                "processed_date should be added with correct format"
+
+            assert re.search(
+                r"processed_date:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", updated_content
+            ), "processed_date should be added with correct format"
 
             # Verify it's a recent timestamp (within last minute)
-            match = re.search(r'processed_date:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})', updated_content)
+            match = re.search(
+                r"processed_date:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})", updated_content
+            )
             if match:
                 timestamp_str = match.group(1)
                 timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M")
                 time_diff = abs((datetime.now() - timestamp).total_seconds())
                 assert time_diff < 60, "processed_date should be current timestamp"
 
-    def test_process_inbox_note_idempotent_status_update(self, workflow_manager, temp_vault):
+    def test_process_inbox_note_idempotent_status_update(
+        self, workflow_manager, temp_vault
+    ):
         """
         Re-running process_inbox_note should be safe (idempotent).
         Should not duplicate timestamps or break existing status.
@@ -156,16 +180,19 @@ tags: [test]
 
 Content for idempotence testing."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-idempotent.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-idempotent.md", note_content
+        )
 
         # Mock AI services
-        with patch('src.ai.tagger.AITagger.generate_tags') as mock_tagger, \
-             patch('src.ai.enhancer.AIEnhancer.enhance_note') as mock_enhancer:
+        with patch("src.ai.tagger.AITagger.generate_tags") as mock_tagger, patch(
+            "src.ai.enhancer.AIEnhancer.enhance_note"
+        ) as mock_enhancer:
 
             mock_tagger.return_value = ["test"]
             mock_enhancer.return_value = {
                 "quality": {"score": 0.80, "reason": "Good"},
-                "summary": "Test"
+                "summary": "Test",
             }
 
             # First processing
@@ -181,10 +208,17 @@ Content for idempotence testing."""
 
             # Count occurrences of processed_date (should be 1, not duplicated)
             import re
-            processed_date_count = len(re.findall(r'processed_date:', content_after_second))
-            assert processed_date_count == 1, "processed_date should not be duplicated on re-run"
 
-    def test_process_inbox_note_status_not_updated_on_error(self, workflow_manager, temp_vault):
+            processed_date_count = len(
+                re.findall(r"processed_date:", content_after_second)
+            )
+            assert (
+                processed_date_count == 1
+            ), "processed_date should not be duplicated on re-run"
+
+    def test_process_inbox_note_status_not_updated_on_error(
+        self, workflow_manager, temp_vault
+    ):
         """
         Status should remain 'inbox' if AI processing fails.
         Prevents partial updates that could cause data loss.
@@ -199,28 +233,36 @@ tags: [test]
 
 Content that will fail processing."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-error.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-error.md", note_content
+        )
 
         # Mock AI services to raise exception
-        with patch('src.ai.tagger.AITagger.generate_tags') as mock_tagger, \
-             patch('src.ai.enhancer.AIEnhancer.enhance_note') as mock_enhancer:
+        with patch("src.ai.tagger.AITagger.generate_tags") as mock_tagger, patch(
+            "src.ai.enhancer.AIEnhancer.enhance_note"
+        ) as mock_enhancer:
 
             mock_tagger.side_effect = Exception("AI service unavailable")
-            mock_enhancer.return_value = {
-                "quality": {"score": 0.50},
-                "summary": "Test"
-            }
+            mock_enhancer.return_value = {"quality": {"score": 0.50}, "summary": "Test"}
 
             # Process the note (should handle error gracefully)
             results = workflow_manager.process_inbox_note(str(note_path), fast=False)
 
             # Verify status was NOT updated
             updated_content = note_path.read_text(encoding="utf-8")
-            assert "status: inbox" in updated_content, "Status should remain 'inbox' on error"
-            assert "status: promoted" not in updated_content, "Status should not be 'promoted' on error"
-            assert "processed_date" not in updated_content, "processed_date should not be added on error"
+            assert (
+                "status: inbox" in updated_content
+            ), "Status should remain 'inbox' on error"
+            assert (
+                "status: promoted" not in updated_content
+            ), "Status should not be 'promoted' on error"
+            assert (
+                "processed_date" not in updated_content
+            ), "processed_date should not be added on error"
 
-    def test_process_inbox_note_status_update_preserves_other_metadata(self, workflow_manager, temp_vault):
+    def test_process_inbox_note_status_update_preserves_other_metadata(
+        self, workflow_manager, temp_vault
+    ):
         """
         Status update should not affect other frontmatter fields.
         """
@@ -236,16 +278,19 @@ custom_field: important_value
 
 Content with various metadata."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-preserve.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-preserve.md", note_content
+        )
 
         # Mock AI services
-        with patch('src.ai.tagger.AITagger.generate_tags') as mock_tagger, \
-             patch('src.ai.enhancer.AIEnhancer.enhance_note') as mock_enhancer:
+        with patch("src.ai.tagger.AITagger.generate_tags") as mock_tagger, patch(
+            "src.ai.enhancer.AIEnhancer.enhance_note"
+        ) as mock_enhancer:
 
             mock_tagger.return_value = ["test", "ai-added"]
             mock_enhancer.return_value = {
                 "quality": {"score": 0.85, "reason": "Excellent"},
-                "summary": "Test"
+                "summary": "Test",
             }
 
             # Process the note
@@ -260,7 +305,9 @@ Content with various metadata."""
             assert "created: 2025-01-01 10:00" in updated_content
             assert "custom_field: important_value" in updated_content
 
-    def test_process_inbox_note_fast_mode_skips_status_update(self, workflow_manager, temp_vault):
+    def test_process_inbox_note_fast_mode_skips_status_update(
+        self, workflow_manager, temp_vault
+    ):
         """
         Fast mode (no AI processing) should not update status.
         Only full AI processing should trigger status update.
@@ -275,13 +322,21 @@ tags: [test]
 
 Fast mode test content."""
 
-        note_path = self.create_test_note(temp_vault, "Inbox", "test-fast.md", note_content)
+        note_path = self.create_test_note(
+            temp_vault, "Inbox", "test-fast.md", note_content
+        )
 
         # Process in fast mode (no AI processing)
         results = workflow_manager.process_inbox_note(str(note_path), fast=True)
 
         # Verify status was NOT updated (fast mode doesn't do AI processing)
         updated_content = note_path.read_text(encoding="utf-8")
-        assert "status: inbox" in updated_content, "Status should remain 'inbox' in fast mode"
-        assert "status_updated" not in results, "Results should not include status_updated in fast mode"
-        assert "processed_date" not in updated_content, "processed_date should not be added in fast mode"
+        assert (
+            "status: inbox" in updated_content
+        ), "Status should remain 'inbox' in fast mode"
+        assert (
+            "status_updated" not in results
+        ), "Results should not include status_updated in fast mode"
+        assert (
+            "processed_date" not in updated_content
+        ), "processed_date should not be added in fast mode"

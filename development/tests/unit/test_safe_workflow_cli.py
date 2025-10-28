@@ -18,11 +18,10 @@ import time
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 
-
 class TestSafeWorkflowCLIIntegration:
     """
     RED PHASE: Comprehensive failing tests for CLI integration with safe workflow processing
-    
+
     Tests CLI commands enhanced with SafeWorkflowProcessor capabilities:
     - --process-inbox-safe: Safe inbox processing with image preservation
     - --batch-process-safe: Batch processing with atomic guarantees
@@ -45,9 +44,18 @@ class TestSafeWorkflowCLIIntegration:
 
         # Create test notes with images
         test_notes = [
-            ("inbox-note-1.md", "# Test Note 1\n\nContent with ![image](Media/test1.png)\n\ntype: permanent\nstatus: inbox\n"),
-            ("inbox-note-2.md", "# Test Note 2\n\n![img](Media/test2.jpg) and ![img2](Media/test3.png)\n\ntype: fleeting\nstatus: inbox\n"),
-            ("inbox-note-3.md", "# Test Note 3\n\nNo images here\n\ntype: literature\nstatus: inbox\n")
+            (
+                "inbox-note-1.md",
+                "# Test Note 1\n\nContent with ![image](Media/test1.png)\n\ntype: permanent\nstatus: inbox\n",
+            ),
+            (
+                "inbox-note-2.md",
+                "# Test Note 2\n\n![img](Media/test2.jpg) and ![img2](Media/test3.png)\n\ntype: fleeting\nstatus: inbox\n",
+            ),
+            (
+                "inbox-note-3.md",
+                "# Test Note 3\n\nNo images here\n\ntype: literature\nstatus: inbox\n",
+            ),
         ]
 
         for filename, content in test_notes:
@@ -68,10 +76,13 @@ class TestSafeWorkflowCLIIntegration:
     def test_cli_process_inbox_safe_command_works(self, temp_vault):
         """GREEN: --process-inbox-safe command exists and recognized (may timeout during initialization)"""
         # GREEN phase: Test that command is recognized by checking help first
-        help_result = subprocess.run([
-            sys.executable, "src/cli/workflow_demo.py", "--help"
-        ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-           capture_output=True, text=True, timeout=5)
+        help_result = subprocess.run(
+            [sys.executable, "src/cli/workflow_demo.py", "--help"],
+            cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
 
         # Command should be documented in help
         assert help_result.returncode == 0
@@ -80,12 +91,18 @@ class TestSafeWorkflowCLIIntegration:
 
         # Try to execute command (may timeout in GREEN phase)
         try:
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--process-inbox-safe"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=3)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--process-inbox-safe",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
 
             # If it completes, should not be an argument error
             assert result.returncode in [0, 1]  # Success or handled error
@@ -100,13 +117,19 @@ class TestSafeWorkflowCLIIntegration:
         """RED: --batch-process-safe command with atomic guarantees doesn't exist"""
         with pytest.raises((SystemExit, AttributeError, TypeError)):
             # Should provide batch processing with comprehensive safety
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--batch-process-safe",
-                "--performance-metrics"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--batch-process-safe",
+                    "--performance-metrics",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
 
             # Should process all notes safely
             assert result.returncode == 0
@@ -117,25 +140,40 @@ class TestSafeWorkflowCLIIntegration:
         """RED: --start-safe-session and --process-in-session commands don't exist"""
         with pytest.raises((SystemExit, AttributeError, TypeError)):
             # Should support concurrent session-based processing
-            session_result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--start-safe-session", "test_session"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=30)
+            session_result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--start-safe-session",
+                    "test_session",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             assert session_result.returncode == 0
             assert "session_id" in session_result.stdout
 
             # Extract session ID and process notes
             session_id = session_result.stdout.strip().split()[-1]
-            process_result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--process-in-session", session_id,
-                "--note", "Inbox/inbox-note-1.md"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=30)
+            process_result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--process-in-session",
+                    session_id,
+                    "--note",
+                    "Inbox/inbox-note-1.md",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             assert process_result.returncode == 0
 
@@ -143,13 +181,20 @@ class TestSafeWorkflowCLIIntegration:
         """RED: Performance metrics integration with CLI doesn't exist"""
         with pytest.raises((SystemExit, AttributeError, TypeError)):
             # Should provide comprehensive performance reporting
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--performance-report",
-                "--format", "json"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--performance-report",
+                    "--format",
+                    "json",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             assert result.returncode == 0
 
@@ -163,13 +208,20 @@ class TestSafeWorkflowCLIIntegration:
         """RED: --integrity-report command doesn't exist"""
         with pytest.raises((SystemExit, AttributeError, TypeError)):
             # Should generate comprehensive integrity reports
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--integrity-report",
-                "--export", "integrity_report.json"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--integrity-report",
+                    "--export",
+                    "integrity_report.json",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             assert result.returncode == 0
             assert "integrity analysis complete" in result.stdout.lower()
@@ -193,14 +245,21 @@ class TestSafeWorkflowCLIIntegration:
         with pytest.raises((TimeoutError, MemoryError, AttributeError)):
             # Should handle large datasets efficiently
             start_time = time.time()
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--batch-process-safe",
-                "--max-concurrent", "4",
-                "--progress"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=300)  # 5 minute timeout
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--batch-process-safe",
+                    "--max-concurrent",
+                    "4",
+                    "--progress",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )  # 5 minute timeout
 
             processing_time = time.time() - start_time
 
@@ -218,13 +277,19 @@ class TestSafeWorkflowCLIIntegration:
         with pytest.raises((TimeoutError, AssertionError)):
             # Should meet strict performance targets
             start_time = time.time()
-            result = subprocess.run([
-                sys.executable, "src/cli/workflow_demo.py",
-                str(temp_vault),
-                "--process-inbox-safe",
-                "--benchmark-mode"
-            ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-               capture_output=True, text=True, timeout=600)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "src/cli/workflow_demo.py",
+                    str(temp_vault),
+                    "--process-inbox-safe",
+                    "--benchmark-mode",
+                ],
+                cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
 
             total_time = time.time() - start_time
 
@@ -249,23 +314,34 @@ class TestSafeWorkflowCLIIntegration:
 
             # Start multiple sessions
             for i in range(session_count):
-                result = subprocess.run([
-                    sys.executable, "src/cli/workflow_demo.py",
-                    str(temp_vault),
-                    "--start-safe-session", f"stress_test_{i}"
-                ], capture_output=True, text=True)
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "src/cli/workflow_demo.py",
+                        str(temp_vault),
+                        "--start-safe-session",
+                        f"stress_test_{i}",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
 
                 sessions.append(result.stdout.strip().split()[-1])
 
             # Process notes concurrently
             processes = []
             for i, session_id in enumerate(sessions):
-                proc = subprocess.Popen([
-                    sys.executable, "src/cli/workflow_demo.py",
-                    str(temp_vault),
-                    "--process-in-session", session_id,
-                    "--batch-size", "5"
-                ])
+                proc = subprocess.Popen(
+                    [
+                        sys.executable,
+                        "src/cli/workflow_demo.py",
+                        str(temp_vault),
+                        "--process-in-session",
+                        session_id,
+                        "--batch-size",
+                        "5",
+                    ]
+                )
                 processes.append(proc)
 
             # Wait for all to complete
@@ -284,9 +360,9 @@ class TestSafeWorkflowCLIIntegration:
             from src.cli.workflow_demo import SafeWorkflowCLI
 
             cli = SafeWorkflowCLI()
-            assert hasattr(cli, 'safe_workflow_processor')
-            assert hasattr(cli, 'concurrent_session_manager')
-            assert hasattr(cli, 'performance_metrics_collector')
+            assert hasattr(cli, "safe_workflow_processor")
+            assert hasattr(cli, "concurrent_session_manager")
+            assert hasattr(cli, "performance_metrics_collector")
 
     def test_cli_modular_architecture_fails(self):
         """RED: CLI doesn't use modular architecture from workflow_integration_utils"""
@@ -294,31 +370,36 @@ class TestSafeWorkflowCLIIntegration:
             # Should leverage extracted utility classes
             from src.cli.safe_workflow_cli_utils import (
                 CLISafeWorkflowProcessor,
-                CLIPerformanceReporter
+                CLIPerformanceReporter,
             )
 
             # Each utility should be independently testable
             processor = CLISafeWorkflowProcessor()
-            assert hasattr(processor, 'process_notes_safely')
+            assert hasattr(processor, "process_notes_safely")
 
             reporter = CLIPerformanceReporter()
-            assert hasattr(reporter, 'generate_performance_report')
+            assert hasattr(reporter, "generate_performance_report")
 
     def test_cli_backward_compatibility_fails(self):
         """RED: Existing CLI commands don't maintain backward compatibility"""
         with pytest.raises(AssertionError):
             # All existing commands should continue to work
             existing_commands = [
-                "--status", "--process-inbox", "--report",
-                "--weekly-review", "--enhanced-metrics"
+                "--status",
+                "--process-inbox",
+                "--report",
+                "--weekly-review",
+                "--enhanced-metrics",
             ]
 
             for command in existing_commands:
                 # Should maintain identical behavior
-                result = subprocess.run([
-                    sys.executable, "src/cli/workflow_demo.py",
-                    "/tmp", command
-                ], capture_output=True, text=True, timeout=30)
+                result = subprocess.run(
+                    [sys.executable, "src/cli/workflow_demo.py", "/tmp", command],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
 
                 # Should not break existing functionality
                 assert result.returncode == 0 or "usage:" in result.stderr
@@ -326,10 +407,12 @@ class TestSafeWorkflowCLIIntegration:
     def test_cli_help_documentation_works(self):
         """GREEN: Help documentation includes new safe processing options"""
         # Should document all new safe processing capabilities
-        result = subprocess.run([
-            sys.executable, "src/cli/workflow_demo.py", "--help"
-        ], cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
-           capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, "src/cli/workflow_demo.py", "--help"],
+            cwd="/Users/thaddius/repos/inneros-zettelkasten/development",
+            capture_output=True,
+            text=True,
+        )
 
         help_text = result.stdout
 
@@ -349,7 +432,9 @@ class TestSafeWorkflowCLIIntegration:
     # Helper Methods for Test Data Generation
     # ============================================================================
 
-    def _create_large_test_dataset(self, vault_dir: Path, note_count: int, image_count: int):
+    def _create_large_test_dataset(
+        self, vault_dir: Path, note_count: int, image_count: int
+    ):
         """Create large test dataset for performance testing"""
         # Create many notes with varied image content
         for i in range(note_count):
@@ -365,7 +450,9 @@ This is test note {i} for performance testing.
                     img_name = f"test_image_{i}_{j}.png"
                     note_content += f"![Image {j}](Media/{img_name})\n\n"
                     # Create actual image file
-                    (vault_dir / "Media" / img_name).write_text(f"fake image data {i}_{j}")
+                    (vault_dir / "Media" / img_name).write_text(
+                        f"fake image data {i}_{j}"
+                    )
 
             note_content += f"""
 type: {"permanent" if i % 2 == 0 else "fleeting"}
@@ -381,6 +468,6 @@ tags: [test-tag-{i}, performance-test]
         # This is a placeholder - actual implementation would parse CLI output
         return {
             "avg_processing_time": 15.0,  # Will fail benchmark
-            "images_per_second": 0.5,     # Will fail benchmark
-            "memory_efficiency": 0.6      # Will fail benchmark
+            "images_per_second": 0.5,  # Will fail benchmark
+            "memory_efficiency": 0.6,  # Will fail benchmark
         }

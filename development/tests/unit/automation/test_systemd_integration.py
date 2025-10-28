@@ -22,7 +22,7 @@ class TestSystemdServiceGeneration:
         generator = SystemdServiceGenerator(
             daemon_path="/usr/local/bin/inneros-daemon",
             config_path="/etc/inneros/config.yaml",
-            user="inneros"
+            user="inneros",
         )
         service_content = generator.generate()
 
@@ -49,7 +49,7 @@ class TestSystemdServiceGeneration:
             daemon_path=str(Path.home() / ".local/bin/inneros-daemon"),
             config_path=str(Path.home() / ".config/inneros/config.yaml"),
             user=None,  # User mode doesn't specify User= directive
-            mode="user"
+            mode="user",
         )
         service_content = generator.generate()
 
@@ -67,7 +67,7 @@ class TestSystemdServiceGeneration:
             daemon_path="/usr/local/bin/inneros-daemon",
             config_path="/etc/inneros/config.yaml",
             user="inneros",
-            mode="system"
+            mode="system",
         )
         service_content = generator.generate()
 
@@ -83,7 +83,7 @@ class TestSystemdServiceGeneration:
             daemon_path="/usr/local/bin/inneros-daemon",
             config_path="/etc/inneros/config.yaml",
             restart_policy="always",
-            restart_sec=10
+            restart_sec=10,
         )
         service_content = generator.generate()
 
@@ -96,7 +96,7 @@ class TestSystemdServiceGeneration:
 
         generator = SystemdServiceGenerator(
             daemon_path="/usr/local/bin/inneros-daemon",
-            config_path="/etc/inneros/config.yaml"
+            config_path="/etc/inneros/config.yaml",
         )
         service_content = generator.generate()
 
@@ -114,8 +114,7 @@ class TestHealthCheckScript:
         from src.automation.systemd_integration import HealthCheckScriptGenerator
 
         generator = HealthCheckScriptGenerator(
-            daemon_host="localhost",
-            daemon_port=8080
+            daemon_host="localhost", daemon_port=8080
         )
         script_content = generator.generate()
 
@@ -133,9 +132,7 @@ class TestHealthCheckScript:
         from src.automation.systemd_integration import HealthCheckScriptGenerator
 
         generator = HealthCheckScriptGenerator(
-            daemon_host="localhost",
-            daemon_port=8080,
-            timeout_seconds=5
+            daemon_host="localhost", daemon_port=8080, timeout_seconds=5
         )
         script_content = generator.generate()
 
@@ -177,7 +174,7 @@ class TestInstallationPathResolution:
         resolver = InstallationPathResolver(
             mode="system",
             custom_daemon_path="/opt/inneros/bin/daemon",
-            custom_config_path="/opt/inneros/etc/config.yaml"
+            custom_config_path="/opt/inneros/etc/config.yaml",
         )
         paths = resolver.resolve()
 
@@ -240,7 +237,7 @@ class TestServiceInstaller:
         installer = ServiceInstaller(mode="system", dry_run=True)
         result = installer.install(
             daemon_path="/usr/local/bin/inneros-daemon",
-            config_path="/etc/inneros/config.yaml"
+            config_path="/etc/inneros/config.yaml",
         )
 
         assert result["success"] is True
@@ -258,8 +255,7 @@ class TestServiceInstaller:
 
             installer = ServiceInstaller(mode="user")
             result = installer.install(
-                daemon_path=str(nonexistent_daemon),
-                config_path=str(nonexistent_config)
+                daemon_path=str(nonexistent_daemon), config_path=str(nonexistent_config)
             )
 
             assert result["success"] is False
@@ -284,12 +280,10 @@ class TestServiceInstaller:
             service_dir.mkdir(parents=True)
 
             installer = ServiceInstaller(
-                mode="user",
-                service_dir_override=str(service_dir)
+                mode="user", service_dir_override=str(service_dir)
             )
             result = installer.install(
-                daemon_path=str(daemon_path),
-                config_path=str(config_path)
+                daemon_path=str(daemon_path), config_path=str(config_path)
             )
 
             service_file = service_dir / "inneros-daemon.service"
@@ -328,11 +322,13 @@ class TestDaemonEntryPoint:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "test_config.yaml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 daemon:
   check_interval: 60
   log_level: INFO
-""")
+"""
+            )
 
             # This should fail gracefully since we're just testing parsing
             # Real daemon startup requires more infrastructure

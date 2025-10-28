@@ -21,7 +21,7 @@ from src.cli.multi_device_detector import MultiDeviceDetector, DeviceType
 @pytest.mark.fast_integration
 class TestMultiDeviceScanning:
     """Test multi-device path scanning and screenshot detection.
-    
+
     Performance: Fast (uses tempfile, no external APIs)
     """
 
@@ -61,12 +61,12 @@ class TestMultiDeviceScanning:
             f.write_text("mock ipad screenshot")
 
         yield {
-            'temp_dir': temp_dir,
-            'samsung_path': samsung_path,
-            'ipad_path': ipad_path,
-            'knowledge_path': knowledge_path,
-            'samsung_files': samsung_files,
-            'ipad_files': ipad_files
+            "temp_dir": temp_dir,
+            "samsung_path": samsung_path,
+            "ipad_path": ipad_path,
+            "knowledge_path": knowledge_path,
+            "samsung_files": samsung_files,
+            "ipad_files": ipad_files,
         }
 
         # Cleanup
@@ -76,39 +76,43 @@ class TestMultiDeviceScanning:
         """Should scan and find screenshots from both Samsung and iPad paths"""
         # Arrange
         device_paths = [
-            str(temp_test_env['samsung_path']),
-            str(temp_test_env['ipad_path'])
+            str(temp_test_env["samsung_path"]),
+            str(temp_test_env["ipad_path"]),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(temp_test_env['knowledge_path'])
+            knowledge_path=str(temp_test_env["knowledge_path"]),
         )
 
         # Act
         screenshots = processor.scan_multi_device_screenshots()
 
         # Assert
-        assert len(screenshots) == 6, f"Expected 6 screenshots (3 Samsung + 3 iPad), got {len(screenshots)}"
+        assert (
+            len(screenshots) == 6
+        ), f"Expected 6 screenshots (3 Samsung + 3 iPad), got {len(screenshots)}"
 
         # Verify we got screenshots from both devices
-        samsung_count = sum(1 for s in screenshots if 'Screenshot_' in s.name)
-        ipad_count = sum(1 for s in screenshots if '_iOS.png' in s.name)
+        samsung_count = sum(1 for s in screenshots if "Screenshot_" in s.name)
+        ipad_count = sum(1 for s in screenshots if "_iOS.png" in s.name)
 
-        assert samsung_count == 3, f"Expected 3 Samsung screenshots, got {samsung_count}"
+        assert (
+            samsung_count == 3
+        ), f"Expected 3 Samsung screenshots, got {samsung_count}"
         assert ipad_count == 3, f"Expected 3 iPad screenshots, got {ipad_count}"
 
     def test_sort_by_timestamp_across_devices(self, temp_test_env):
         """Should merge and sort screenshots by timestamp (oldest first)"""
         # Arrange
         device_paths = [
-            str(temp_test_env['samsung_path']),
-            str(temp_test_env['ipad_path'])
+            str(temp_test_env["samsung_path"]),
+            str(temp_test_env["ipad_path"]),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(temp_test_env['knowledge_path'])
+            knowledge_path=str(temp_test_env["knowledge_path"]),
         )
 
         # Act
@@ -123,8 +127,9 @@ class TestMultiDeviceScanning:
 
         # Verify sorted order (oldest first)
         for i in range(len(timestamps) - 1):
-            assert timestamps[i] <= timestamps[i + 1], \
-                f"Screenshots not sorted by timestamp: {timestamps[i]} > {timestamps[i + 1]}"
+            assert (
+                timestamps[i] <= timestamps[i + 1]
+            ), f"Screenshots not sorted by timestamp: {timestamps[i]} > {timestamps[i + 1]}"
 
         # First should be Samsung from March 1
         assert screenshots[0].name == "Screenshot_20240301_095442_Chrome.jpg"
@@ -135,13 +140,13 @@ class TestMultiDeviceScanning:
         """Should detect device type for each screenshot during scanning"""
         # Arrange
         device_paths = [
-            str(temp_test_env['samsung_path']),
-            str(temp_test_env['ipad_path'])
+            str(temp_test_env["samsung_path"]),
+            str(temp_test_env["ipad_path"]),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(temp_test_env['knowledge_path'])
+            knowledge_path=str(temp_test_env["knowledge_path"]),
         )
 
         # Act
@@ -152,15 +157,15 @@ class TestMultiDeviceScanning:
 
         # Check each screenshot has device metadata
         for metadata in screenshot_metadata:
-            assert 'screenshot_path' in metadata
-            assert 'device_type' in metadata
-            assert 'timestamp' in metadata
+            assert "screenshot_path" in metadata
+            assert "device_type" in metadata
+            assert "timestamp" in metadata
 
             # Verify device types are correct
-            if 'Screenshot_' in Path(metadata['screenshot_path']).name:
-                assert metadata['device_type'] == DeviceType.SAMSUNG_S23.value
-            elif '_iOS.png' in Path(metadata['screenshot_path']).name:
-                assert metadata['device_type'] == DeviceType.IPAD.value
+            if "Screenshot_" in Path(metadata["screenshot_path"]).name:
+                assert metadata["device_type"] == DeviceType.SAMSUNG_S23.value
+            elif "_iOS.png" in Path(metadata["screenshot_path"]).name:
+                assert metadata["device_type"] == DeviceType.IPAD.value
 
 
 class TestUnifiedProcessingPipeline:
@@ -185,10 +190,10 @@ class TestUnifiedProcessingPipeline:
         knowledge_path.mkdir()
 
         yield {
-            'temp_dir': temp_dir,
-            'samsung_file': samsung_file,
-            'ipad_file': ipad_file,
-            'knowledge_path': knowledge_path
+            "temp_dir": temp_dir,
+            "samsung_file": samsung_file,
+            "ipad_file": ipad_file,
+            "knowledge_path": knowledge_path,
         }
 
         shutil.rmtree(temp_dir)
@@ -197,82 +202,83 @@ class TestUnifiedProcessingPipeline:
         """Should include device_type in note frontmatter"""
         # Arrange
         device_paths = [
-            str(mock_screenshots['samsung_file'].parent),
-            str(mock_screenshots['ipad_file'].parent)
+            str(mock_screenshots["samsung_file"].parent),
+            str(mock_screenshots["ipad_file"].parent),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(mock_screenshots['knowledge_path'])
+            knowledge_path=str(mock_screenshots["knowledge_path"]),
         )
 
         # Act - Process screenshots and generate notes
         result = processor.process_multi_device_batch(limit=2)
 
         # Assert
-        assert result['processed_count'] == 2
-        assert 'individual_note_paths' in result
+        assert result["processed_count"] == 2
+        assert "individual_note_paths" in result
 
         # Check each note has device metadata
-        for note_path in result['individual_note_paths']:
+        for note_path in result["individual_note_paths"]:
             note_content = Path(note_path).read_text()
 
             # Should have device_type in frontmatter
-            assert 'device_type:' in note_content
-            assert 'device_name:' in note_content
+            assert "device_type:" in note_content
+            assert "device_name:" in note_content
 
             # Device type should be Samsung Galaxy S23 or iPad
-            assert 'Samsung Galaxy S23' in note_content or 'iPad' in note_content
+            assert "Samsung Galaxy S23" in note_content or "iPad" in note_content
 
     def test_process_mixed_device_batch(self, mock_screenshots):
         """Should process Samsung + iPad with same OCR pipeline"""
         # Arrange
         device_paths = [
-            str(mock_screenshots['samsung_file'].parent),
-            str(mock_screenshots['ipad_file'].parent)
+            str(mock_screenshots["samsung_file"].parent),
+            str(mock_screenshots["ipad_file"].parent),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(mock_screenshots['knowledge_path'])
+            knowledge_path=str(mock_screenshots["knowledge_path"]),
         )
 
         # Act
         result = processor.process_multi_device_batch(limit=2)
 
         # Assert - Both devices processed
-        assert result['processed_count'] == 2
-        assert len(result['individual_note_paths']) == 2
+        assert result["processed_count"] == 2
+        assert len(result["individual_note_paths"]) == 2
 
         # Assert - OCR results for both devices
-        assert result['ocr_results'] == 2
+        assert result["ocr_results"] == 2
 
         # Assert - Processing time reasonable
-        assert result['processing_time'] < 300  # Less than 5 minutes
+        assert result["processing_time"] < 300  # Less than 5 minutes
 
     def test_no_filename_collisions(self, mock_screenshots):
         """Should ensure no filename collisions between device notes"""
         # Arrange
         device_paths = [
-            str(mock_screenshots['samsung_file'].parent),
-            str(mock_screenshots['ipad_file'].parent)
+            str(mock_screenshots["samsung_file"].parent),
+            str(mock_screenshots["ipad_file"].parent),
         ]
 
         processor = ScreenshotProcessor(
             device_paths=device_paths,
-            knowledge_path=str(mock_screenshots['knowledge_path'])
+            knowledge_path=str(mock_screenshots["knowledge_path"]),
         )
 
         # Act
         result = processor.process_multi_device_batch(limit=2)
 
         # Assert
-        note_paths = result['individual_note_paths']
+        note_paths = result["individual_note_paths"]
         note_filenames = [Path(p).name for p in note_paths]
 
         # Check for duplicates
-        assert len(note_filenames) == len(set(note_filenames)), \
-            f"Duplicate filenames detected: {note_filenames}"
+        assert len(note_filenames) == len(
+            set(note_filenames)
+        ), f"Duplicate filenames detected: {note_filenames}"
 
 
 class TestDeviceFilterCLI:

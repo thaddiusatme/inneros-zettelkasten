@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -83,7 +83,7 @@ It should be preserved after stripping YAML.
         assert self.summarizer._count_words("") == 0
         assert self.summarizer._count_words("   ") == 0
 
-    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch("ai.summarizer.AISummarizer._generate_ollama_summary")
     def test_generate_summary_success(self, mock_ollama):
         """Test successful summary generation."""
         long_content = " ".join(["word"] * 600)
@@ -94,7 +94,7 @@ It should be preserved after stripping YAML.
         assert result == "This is a concise summary of the content."
         mock_ollama.assert_called_once()
 
-    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch("ai.summarizer.AISummarizer._generate_ollama_summary")
     def test_generate_summary_short_content(self, mock_ollama):
         """Test summary generation with short content."""
         short_content = "This is too short to summarize."
@@ -104,7 +104,7 @@ It should be preserved after stripping YAML.
         assert result is None
         mock_ollama.assert_not_called()
 
-    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch("ai.summarizer.AISummarizer._generate_ollama_summary")
     def test_generate_summary_api_failure(self, mock_ollama):
         """Test summary generation when API fails."""
         long_content = " ".join(["word"] * 600)
@@ -114,7 +114,7 @@ It should be preserved after stripping YAML.
 
         assert result is None
 
-    @patch('ai.summarizer.AISummarizer._generate_ollama_summary')
+    @patch("ai.summarizer.AISummarizer._generate_ollama_summary")
     def test_generate_summary_with_metadata(self, mock_ollama):
         """Test summary generation with metadata context."""
         content_with_yaml = """---
@@ -123,7 +123,9 @@ created: 2025-01-01
 tags: [research, ai]
 ---
 
-""" + " ".join(["content"] * 600)
+""" + " ".join(
+            ["content"] * 600
+        )
 
         mock_ollama.return_value = "Research summary about AI."
 
@@ -150,7 +152,7 @@ tags: [research, ai]
             "This is a less important filler sentence.",
             "This is another crucial point about the topic.",
             "More filler content that is not as relevant.",
-            "This concludes the main argument effectively."
+            "This concludes the main argument effectively.",
         ]
         long_content = " ".join(sentences * 20)  # Make it long enough
 
@@ -159,12 +161,19 @@ tags: [research, ai]
         assert result is not None
         assert len(result) < len(long_content)
         # Should contain some of the original content
-        assert any(word in result.lower() for word in ["important", "crucial", "concludes"])
+        assert any(
+            word in result.lower() for word in ["important", "crucial", "concludes"]
+        )
 
     def test_generate_ollama_summary_success(self):
         """Test Ollama API summary generation."""
-        with patch.object(self.summarizer.ollama_client, 'health_check', return_value=True), \
-             patch.object(self.summarizer.ollama_client, 'generate', return_value="Generated summary from Ollama.") as mock_generate:
+        with patch.object(
+            self.summarizer.ollama_client, "health_check", return_value=True
+        ), patch.object(
+            self.summarizer.ollama_client,
+            "generate",
+            return_value="Generated summary from Ollama.",
+        ) as mock_generate:
 
             content = " ".join(["word"] * 600)
             result = self.summarizer._generate_ollama_summary(content)
@@ -174,7 +183,9 @@ tags: [research, ai]
 
     def test_generate_ollama_summary_api_down(self):
         """Test Ollama summary when API is down."""
-        with patch.object(self.summarizer.ollama_client, 'health_check', return_value=False):
+        with patch.object(
+            self.summarizer.ollama_client, "health_check", return_value=False
+        ):
             content = " ".join(["word"] * 600)
 
             with pytest.raises(Exception, match="Ollama service is not available"):
@@ -182,8 +193,13 @@ tags: [research, ai]
 
     def test_generate_ollama_summary_api_error(self):
         """Test Ollama summary with API error."""
-        with patch.object(self.summarizer.ollama_client, 'health_check', return_value=True), \
-             patch.object(self.summarizer.ollama_client, 'generate', side_effect=Exception("API Error")):
+        with patch.object(
+            self.summarizer.ollama_client, "health_check", return_value=True
+        ), patch.object(
+            self.summarizer.ollama_client,
+            "generate",
+            side_effect=Exception("API Error"),
+        ):
 
             content = " ".join(["word"] * 600)
 

@@ -54,10 +54,12 @@ class TestAutoPromotionSystem:
         note_path.write_text(content, encoding="utf-8")
         return note_path
 
-    def test_auto_promote_filters_by_quality_threshold(self, workflow_manager, temp_dir):
+    def test_auto_promote_filters_by_quality_threshold(
+        self, workflow_manager, temp_dir
+    ):
         """
         RED: Only notes with quality_score >= 0.7 should be promoted.
-        
+
         Notes below threshold should be skipped with clear reason.
         """
         # Create high-quality note (should be promoted)
@@ -91,9 +93,12 @@ This note needs more work."""
         # Assertions
         assert result["promoted_count"] == 1, "Should promote 1 high-quality note"
         assert result["skipped_count"] == 1, "Should skip 1 low-quality note"
-        assert "low-quality.md" in result["skipped_notes"], "Low quality note should be in skipped list"
-        assert "threshold" in result["skipped_notes"]["low-quality.md"].lower(), \
-            "Skip reason should mention threshold"
+        assert (
+            "low-quality.md" in result["skipped_notes"]
+        ), "Low quality note should be in skipped list"
+        assert (
+            "threshold" in result["skipped_notes"]["low-quality.md"].lower()
+        ), "Skip reason should mention threshold"
 
     def test_auto_promote_routes_by_type_fleeting(self, workflow_manager, temp_dir):
         """
@@ -133,7 +138,9 @@ tags: [research, paper]
 
 # Literature Note from Research Paper"""
 
-        note_path = self.create_test_note(temp_dir, "lit-research-paper.md", note_content)
+        note_path = self.create_test_note(
+            temp_dir, "lit-research-paper.md", note_content
+        )
 
         # Run auto-promotion
         result = workflow_manager.auto_promote_ready_notes()
@@ -158,7 +165,9 @@ tags: [concept, atomic]
 
 # Permanent Concept Note"""
 
-        note_path = self.create_test_note(temp_dir, "permanent-concept.md", note_content)
+        note_path = self.create_test_note(
+            temp_dir, "permanent-concept.md", note_content
+        )
 
         # Run auto-promotion
         result = workflow_manager.auto_promote_ready_notes()
@@ -173,7 +182,7 @@ tags: [concept, atomic]
     def test_auto_promote_updates_status_to_published(self, workflow_manager, temp_dir):
         """
         RED: Status should transition from 'promoted' to 'published' after successful move.
-        
+
         Uses NoteLifecycleManager for consistent status management.
         """
         note_content = """---
@@ -195,13 +204,17 @@ tags: [test]
         moved_path = temp_dir / "Fleeting Notes" / "status-test.md"
         moved_content = moved_path.read_text(encoding="utf-8")
 
-        assert "status: published" in moved_content, "Status should be updated to 'published'"
+        assert (
+            "status: published" in moved_content
+        ), "Status should be updated to 'published'"
         assert "status: promoted" not in moved_content, "Old status should be removed"
 
-    def test_auto_promote_adds_promoted_date_timestamp(self, workflow_manager, temp_dir):
+    def test_auto_promote_adds_promoted_date_timestamp(
+        self, workflow_manager, temp_dir
+    ):
         """
         RED: Promoted notes should have 'promoted_date' timestamp added.
-        
+
         Timestamp should be in format: YYYY-MM-DD HH:MM
         """
         note_content = """---
@@ -224,11 +237,15 @@ tags: [test]
         moved_content = moved_path.read_text(encoding="utf-8")
 
         import re
-        assert re.search(r'promoted_date:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}', moved_content), \
-            "promoted_date should be added with correct format (YYYY-MM-DD HH:MM)"
+
+        assert re.search(
+            r"promoted_date:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", moved_content
+        ), "promoted_date should be added with correct format (YYYY-MM-DD HH:MM)"
 
         # Verify timestamp is recent (within last minute)
-        match = re.search(r'promoted_date:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})', moved_content)
+        match = re.search(
+            r"promoted_date:\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})", moved_content
+        )
         if match:
             timestamp_str = match.group(1)
             timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M")
@@ -238,7 +255,7 @@ tags: [test]
     def test_auto_promote_dry_run_no_changes(self, workflow_manager, temp_dir):
         """
         RED: Dry-run mode should preview promotions without making any changes.
-        
+
         No files should be moved, no statuses updated, but results should show what would happen.
         """
         note_content = """---
@@ -263,13 +280,17 @@ tags: [test]
 
         # Verify dry-run results
         assert result["dry_run"] is True, "Result should indicate dry-run mode"
-        assert result["would_promote_count"] == 1, "Should show 1 note would be promoted"
-        assert any(p["note"] == "dry-run-test.md" for p in result["preview"]), "Preview should include note name"
+        assert (
+            result["would_promote_count"] == 1
+        ), "Should show 1 note would be promoted"
+        assert any(
+            p["note"] == "dry-run-test.md" for p in result["preview"]
+        ), "Preview should include note name"
 
     def test_auto_promote_custom_quality_threshold(self, workflow_manager, temp_dir):
         """
         RED: Custom quality threshold should be respected.
-        
+
         Allow configurable threshold (e.g., 0.8 instead of default 0.7).
         """
         # Create note with quality 0.75 (above 0.7, below 0.8)
@@ -285,8 +306,12 @@ tags: [test]
         self.create_test_note(temp_dir, "threshold-test.md", note_content)
 
         # Should be promoted with default threshold (0.7)
-        result_default = workflow_manager.auto_promote_ready_notes(quality_threshold=0.7)
-        assert result_default["promoted_count"] == 1, "Should promote with threshold 0.7"
+        result_default = workflow_manager.auto_promote_ready_notes(
+            quality_threshold=0.7
+        )
+        assert (
+            result_default["promoted_count"] == 1
+        ), "Should promote with threshold 0.7"
 
         # Create another note for second test
         self.create_test_note(temp_dir, "threshold-test-2.md", note_content)
@@ -295,10 +320,12 @@ tags: [test]
         result_high = workflow_manager.auto_promote_ready_notes(quality_threshold=0.8)
         assert result_high["skipped_count"] == 1, "Should skip with threshold 0.8"
 
-    def test_auto_promote_batch_processing_multiple_notes(self, workflow_manager, temp_dir):
+    def test_auto_promote_batch_processing_multiple_notes(
+        self, workflow_manager, temp_dir
+    ):
         """
         RED: Batch processing should handle multiple notes with summary statistics.
-        
+
         Process all ready notes in Inbox and return comprehensive summary.
         """
         # Create 3 notes of different types and quality
@@ -336,7 +363,7 @@ tags: [test]
     def test_auto_promote_handles_missing_type_field(self, workflow_manager, temp_dir):
         """
         RED: Notes without 'type' field should be skipped with clear error.
-        
+
         Error handling for malformed notes.
         """
         note_content = """---
@@ -355,13 +382,14 @@ tags: [test]
         # Verify error handling
         assert result["error_count"] == 1, "Should count 1 error"
         assert "no-type.md" in result["errors"], "Error should be tracked"
-        assert "type" in result["errors"]["no-type.md"].lower(), \
-            "Error message should mention missing 'type' field"
+        assert (
+            "type" in result["errors"]["no-type.md"].lower()
+        ), "Error message should mention missing 'type' field"
 
     def test_auto_promote_skips_non_promoted_status(self, workflow_manager, temp_dir):
         """
         RED: Only notes with status='promoted' should be candidates.
-        
+
         Notes with 'inbox' or 'published' status should be ignored.
         """
         # Create notes with different statuses
@@ -388,5 +416,7 @@ quality_score: 0.85
         result = workflow_manager.auto_promote_ready_notes()
 
         # Verify only promoted notes are candidates
-        assert result["total_candidates"] == 0, "Should find 0 candidate notes (none have status='promoted')"
+        assert (
+            result["total_candidates"] == 0
+        ), "Should find 0 candidate notes (none have status='promoted')"
         assert result["promoted_count"] == 0, "Should promote 0 notes"

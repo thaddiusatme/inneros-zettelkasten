@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 @dataclass
 class HealthReport:
     """Health check report"""
+
     is_healthy: bool
     status_code: int
     checks: Dict[str, bool] = field(default_factory=dict)
@@ -25,17 +26,17 @@ class HealthReport:
 class HealthCheckManager:
     """
     Health monitoring and metrics collection.
-    
+
     Tracks daemon health, job execution statistics, and performance metrics.
     Provides HTTP-style status codes for monitoring integration.
-    
+
     Size: ~200 LOC (ADR-001 compliant)
     """
 
-    def __init__(self, daemon: 'AutomationDaemon'):
+    def __init__(self, daemon: "AutomationDaemon"):
         """
         Initialize health check manager.
-        
+
         Args:
             daemon: Parent AutomationDaemon instance
         """
@@ -45,7 +46,7 @@ class HealthCheckManager:
     def get_health_status(self) -> HealthReport:
         """
         Comprehensive health check.
-        
+
         Returns:
             HealthReport with health status and component checks
         """
@@ -56,8 +57,7 @@ class HealthCheckManager:
 
         # Check scheduler
         scheduler_healthy = (
-            self._daemon._scheduler is not None and
-            self._daemon._scheduler.running
+            self._daemon._scheduler is not None and self._daemon._scheduler.running
         )
 
         # Check file watcher (if configured)
@@ -69,7 +69,7 @@ class HealthCheckManager:
         event_handler_healthy = True
         if self._daemon.event_handler:
             handler_health = self._daemon.event_handler.get_health_status()
-            event_handler_healthy = handler_health.get('is_healthy', True)
+            event_handler_healthy = handler_health.get("is_healthy", True)
 
         # Overall health
         is_healthy = daemon_running and scheduler_healthy
@@ -83,15 +83,13 @@ class HealthCheckManager:
         }
 
         return HealthReport(
-            is_healthy=is_healthy,
-            status_code=status_code,
-            checks=checks
+            is_healthy=is_healthy, status_code=status_code, checks=checks
         )
 
     def get_metrics(self) -> Dict[str, Any]:
         """
         Performance and operational metrics.
-        
+
         Returns:
             Dictionary with uptime, job counts, and execution statistics
         """
@@ -115,7 +113,7 @@ class HealthCheckManager:
     def record_job_execution(self, job_id: str, success: bool, duration: float) -> None:
         """
         Track job execution history.
-        
+
         Args:
             job_id: Job identifier
             success: Whether job completed successfully
@@ -124,14 +122,16 @@ class HealthCheckManager:
         # Delegate to metrics collector
         self._metrics_collector.record_execution(job_id, success, duration)
 
-    def get_execution_history(self, job_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_execution_history(
+        self, job_id: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """
         Get recent execution history.
-        
+
         Args:
             job_id: Optional job ID to filter by
             limit: Maximum number of records to return
-            
+
         Returns:
             List of execution records
         """

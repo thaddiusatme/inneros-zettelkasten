@@ -12,7 +12,7 @@ import os
 @pytest.mark.slow_integration
 class TestAIIntegration:
     """Integration tests for AI-powered note processing.
-    
+
     Performance: 47s (slow due to real Ollama API calls)
     """
 
@@ -47,9 +47,11 @@ class TestAIIntegration:
 
         # Verify tags are relevant to content
         content_lower = note_content.lower()
-        relevant_tags = [tag for tag in tags if any(
-            keyword in content_lower for keyword in tag.split('-')
-        )]
+        relevant_tags = [
+            tag
+            for tag in tags
+            if any(keyword in content_lower for keyword in tag.split("-"))
+        ]
         assert len(relevant_tags) > 0
 
     def test_note_processing_with_empty_content(self):
@@ -115,20 +117,22 @@ class TestAIIntegration:
         from src.ai.tagger import AITagger
 
         # Create a temporary note file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
-            f.write("""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write(
+                """
             # Deep Learning Advances
             
             Deep learning represents a subset of machine learning methods
             based on artificial neural networks with multiple layers. These
             architectures have revolutionized computer vision and natural
             language processing tasks.
-            """)
+            """
+            )
             temp_file = f.name
 
         try:
             # Read the note content
-            with open(temp_file, 'r') as f:
+            with open(temp_file, "r") as f:
                 content = f.read()
 
             tagger = AITagger()
@@ -167,18 +171,18 @@ class TestAIIntegration:
 
         # Verify structure of enhancement result
         assert isinstance(result, dict)
-        assert 'quality_score' in result
-        assert 'suggestions' in result
-        assert 'missing_elements' in result
-        assert 'link_suggestions' in result
-        assert 'structure_suggestions' in result
+        assert "quality_score" in result
+        assert "suggestions" in result
+        assert "missing_elements" in result
+        assert "link_suggestions" in result
+        assert "structure_suggestions" in result
 
         # Verify basic quality metrics
-        assert 0 <= result['quality_score'] <= 1
-        assert isinstance(result['suggestions'], list)
-        assert isinstance(result['missing_elements'], list)
-        assert isinstance(result['link_suggestions'], list)
-        assert isinstance(result['structure_suggestions'], dict)
+        assert 0 <= result["quality_score"] <= 1
+        assert isinstance(result["suggestions"], list)
+        assert isinstance(result["missing_elements"], list)
+        assert isinstance(result["link_suggestions"], list)
+        assert isinstance(result["structure_suggestions"], dict)
 
     def test_combined_ai_features_workflow(self):
         """Test combined workflow: tags + enhancement working together."""
@@ -217,12 +221,14 @@ class TestAIIntegration:
         assert all(isinstance(tag, str) for tag in tags)
 
         assert isinstance(enhancement, dict)
-        assert 'quality_score' in enhancement
-        assert enhancement['quality_score'] > 0.5  # Should be decent quality
+        assert "quality_score" in enhancement
+        assert enhancement["quality_score"] > 0.5  # Should be decent quality
 
         # Verify tags and enhancement suggestions are complementary
         tag_set = set(tags)
-        link_suggestions = [link.strip('[[]]') for link in enhancement['link_suggestions']]
+        link_suggestions = [
+            link.strip("[[]]") for link in enhancement["link_suggestions"]
+        ]
 
         # Some overlap expected between tags and link suggestions
         overlapping_concepts = tag_set.intersection(set(link_suggestions))
@@ -259,8 +265,8 @@ Quantum cryptography uses quantum mechanical properties to perform cryptographic
 
         # Should analyze content without YAML affecting results
         assert isinstance(analysis, dict)
-        assert 'quality_score' in analysis
-        assert analysis['quality_score'] > 0.4  # Should recognize decent content
+        assert "quality_score" in analysis
+        assert analysis["quality_score"] > 0.4  # Should recognize decent content
 
     def test_enhancer_error_handling(self):
         """Test enhancer handles edge cases gracefully."""
@@ -270,16 +276,16 @@ Quantum cryptography uses quantum mechanical properties to perform cryptographic
 
         # Test empty content
         result = enhancer.enhance_note("")
-        assert result['quality_score'] == 0.0
-        assert len(result['suggestions']) > 0
+        assert result["quality_score"] == 0.0
+        assert len(result["suggestions"]) > 0
 
         # Test minimal content
         result = enhancer.enhance_note("# Test")
         # Minimal content should have some quality score (updated expectation)
-        assert 0.0 <= result['quality_score'] <= 1.0
+        assert 0.0 <= result["quality_score"] <= 1.0
 
         # Test very long content (should not crash)
         long_content = "# Long Note\n" + "This is a test sentence. " * 100
         result = enhancer.analyze_note_quality(long_content)
         assert isinstance(result, dict)
-        assert 'quality_score' in result
+        assert "quality_score" in result

@@ -20,14 +20,14 @@ import re
 class AnalyticsCoordinator:
     """
     Coordinates analytics and metrics operations for note collections.
-    
+
     Responsibilities:
     - Detect orphaned notes (no incoming/outgoing links)
     - Detect stale notes (not modified within threshold)
     - Generate comprehensive enhanced metrics
     - Build and analyze link graphs
     - Calculate productivity metrics
-    
+
     This class follows the Single Responsibility Principle by focusing
     exclusively on analytics and metrics calculation.
     """
@@ -35,7 +35,7 @@ class AnalyticsCoordinator:
     def __init__(self, base_dir: Path):
         """
         Initialize AnalyticsCoordinator.
-        
+
         Args:
             base_dir: Root directory of the Zettelkasten vault
         """
@@ -47,11 +47,11 @@ class AnalyticsCoordinator:
     def detect_orphaned_notes(self) -> List[Dict]:
         """
         Detect notes that have no bidirectional links to other notes.
-        
+
         Orphaned notes are permanent notes that:
         - Are not linked to by any other notes
         - Do not link to any other notes
-        
+
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
@@ -68,10 +68,10 @@ class AnalyticsCoordinator:
     def detect_orphaned_notes_comprehensive(self) -> List[Dict]:
         """
         Detect orphaned notes across the entire repository (not just workflow directories).
-        
+
         This scans ALL markdown files in the repository, not just Inbox/Fleeting/Permanent.
         Use this for a complete view of isolated notes in your knowledge graph.
-        
+
         Returns:
             List of orphaned note dictionaries with path, title, last_modified
         """
@@ -88,10 +88,10 @@ class AnalyticsCoordinator:
     def detect_stale_notes(self, days_threshold: int = 90) -> List[Dict]:
         """
         Detect notes that haven't been modified in a specified time period.
-        
+
         Args:
             days_threshold: Number of days to consider a note stale (default: 90)
-            
+
         Returns:
             List of stale note dictionaries with path, title, last_modified, days_since_modified
         """
@@ -105,7 +105,9 @@ class AnalyticsCoordinator:
                 if last_modified < cutoff_date:
                     days_since_modified = (datetime.now() - last_modified).days
                     stale_notes.append(
-                        self._create_stale_note_info(note_path, last_modified, days_since_modified)
+                        self._create_stale_note_info(
+                            note_path, last_modified, days_since_modified
+                        )
                     )
             except (OSError, AttributeError):
                 # Skip if we can't get file stats
@@ -119,7 +121,7 @@ class AnalyticsCoordinator:
         """
         Generate comprehensive metrics for weekly review including orphaned notes,
         stale notes, and advanced analytics.
-        
+
         Returns:
             Dictionary with enhanced metrics:
             - orphaned_notes: List of orphaned notes
@@ -134,7 +136,7 @@ class AnalyticsCoordinator:
             "stale_notes": self.detect_stale_notes(),
             "link_density": self._calculate_link_density(),
             "note_age_distribution": self._calculate_note_age_distribution(),
-            "productivity_metrics": self._calculate_productivity_metrics()
+            "productivity_metrics": self._calculate_productivity_metrics(),
         }
 
         # Add summary statistics
@@ -142,7 +144,7 @@ class AnalyticsCoordinator:
             "total_orphaned": len(metrics["orphaned_notes"]),
             "total_stale": len(metrics["stale_notes"]),
             "avg_links_per_note": metrics["link_density"],
-            "total_notes": len(self._get_all_notes())
+            "total_notes": len(self._get_all_notes()),
         }
 
         return metrics
@@ -168,10 +170,10 @@ class AnalyticsCoordinator:
     def _build_link_graph(self, all_notes: List[Path]) -> Dict[str, set]:
         """
         Build a graph of note links.
-        
+
         Args:
             all_notes: List of note paths to analyze
-            
+
         Returns:
             Dictionary mapping note names to sets of linked note names
         """
@@ -182,14 +184,14 @@ class AnalyticsCoordinator:
             link_graph[note_name] = set()
 
             try:
-                with open(note_path, 'r', encoding='utf-8') as f:
+                with open(note_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Find all [[wiki-style]] links
-                wiki_links = re.findall(r'\[\[([^\]]+)\]\]', content)
+                wiki_links = re.findall(r"\[\[([^\]]+)\]\]", content)
                 for link in wiki_links:
                     # Clean up the link (remove .md extension if present)
-                    clean_link = link.replace('.md', '')
+                    clean_link = link.replace(".md", "")
                     link_graph[note_name].add(clean_link)
 
             except (UnicodeDecodeError, FileNotFoundError):
@@ -200,11 +202,11 @@ class AnalyticsCoordinator:
     def _is_orphaned_note(self, note_path: Path, link_graph: Dict[str, set]) -> bool:
         """
         Check if a note is orphaned (no incoming or outgoing links).
-        
+
         Args:
             note_path: Path to the note to check
             link_graph: Complete link graph for all notes
-            
+
         Returns:
             True if note is orphaned, False otherwise
         """
@@ -219,7 +221,8 @@ class AnalyticsCoordinator:
 
         # Check if note has incoming links
         has_incoming_links = any(
-            note_name in links for other_note, links in link_graph.items()
+            note_name in links
+            for other_note, links in link_graph.items()
             if other_note != note_name
         )
 
@@ -238,7 +241,7 @@ class AnalyticsCoordinator:
             "path": str(note_path),
             "title": title,
             "last_modified": last_modified.isoformat() if last_modified else None,
-            "directory": note_path.parent.name
+            "directory": note_path.parent.name,
         }
 
     def _create_stale_note_info(
@@ -252,17 +255,17 @@ class AnalyticsCoordinator:
             "title": title,
             "last_modified": last_modified.isoformat(),
             "days_since_modified": days_since_modified,
-            "directory": note_path.parent.name
+            "directory": note_path.parent.name,
         }
 
     def _extract_note_title(self, note_path: Path) -> str:
         """Extract title from note (first # heading or filename)."""
         try:
-            with open(note_path, 'r', encoding='utf-8') as f:
+            with open(note_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Look for first markdown heading
-            heading_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+            heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
             if heading_match:
                 return heading_match.group(1).strip()
 
@@ -287,10 +290,10 @@ class AnalyticsCoordinator:
         """Calculate distribution of note ages."""
         all_notes = self._get_all_notes()
         age_buckets = {
-            "new": 0,        # < 7 days
-            "recent": 0,     # 7-30 days
-            "mature": 0,     # 30-90 days
-            "old": 0         # > 90 days
+            "new": 0,  # < 7 days
+            "recent": 0,  # 7-30 days
+            "mature": 0,  # 30-90 days
+            "old": 0,  # > 90 days
         }
 
         now = datetime.now()
@@ -340,8 +343,20 @@ class AnalyticsCoordinator:
         modification_counts = list(weekly_modification.values())
 
         return {
-            "avg_notes_created_per_week": sum(creation_counts) / len(creation_counts) if creation_counts else 0,
-            "avg_notes_modified_per_week": sum(modification_counts) / len(modification_counts) if modification_counts else 0,
-            "most_productive_week_creation": max(weekly_creation.items(), key=lambda x: x[1]) if weekly_creation else None,
-            "total_weeks_active": len(set(list(weekly_creation.keys()) + list(weekly_modification.keys())))
+            "avg_notes_created_per_week": (
+                sum(creation_counts) / len(creation_counts) if creation_counts else 0
+            ),
+            "avg_notes_modified_per_week": (
+                sum(modification_counts) / len(modification_counts)
+                if modification_counts
+                else 0
+            ),
+            "most_productive_week_creation": (
+                max(weekly_creation.items(), key=lambda x: x[1])
+                if weekly_creation
+                else None
+            ),
+            "total_weeks_active": len(
+                set(list(weekly_creation.keys()) + list(weekly_modification.keys()))
+            ),
         }

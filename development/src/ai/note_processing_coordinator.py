@@ -24,8 +24,8 @@ from src.utils.io import safe_write
 class NoteProcessingCoordinator:
     """
     Coordinator for AI-powered note processing and template handling.
-    
-    Extracted from WorkflowManager (ADR-002 Phase 6) to maintain single 
+
+    Extracted from WorkflowManager (ADR-002 Phase 6) to maintain single
     responsibility principle. Handles all note processing logic including
     AI tagging, quality scoring, connection discovery, and template fixes.
     """
@@ -36,11 +36,11 @@ class NoteProcessingCoordinator:
         summarizer,
         enhancer,
         connection_coordinator,
-        config: Optional[Dict] = None
+        config: Optional[Dict] = None,
     ):
         """
         Initialize note processing coordinator.
-        
+
         Args:
             tagger: AI tagger component for generating tags
             summarizer: AI summarizer component for creating summaries
@@ -59,7 +59,7 @@ class NoteProcessingCoordinator:
             "auto_summarize_long_notes": True,
             "min_words_for_summary": 500,
             "max_tags_per_note": 8,
-            "similarity_threshold": 0.7
+            "similarity_threshold": 0.7,
         }
 
         # Update with user config if provided
@@ -71,19 +71,19 @@ class NoteProcessingCoordinator:
         note_path: str,
         dry_run: bool = False,
         fast: Optional[bool] = None,
-        corpus_dir: Optional[Path] = None
+        corpus_dir: Optional[Path] = None,
     ) -> Dict:
         """
         Process a note with AI assistance.
-        
+
         Extracted from WorkflowManager.process_inbox_note() for single responsibility.
-        
+
         Args:
             note_path: Path to the note file
             dry_run: If True, do not write changes to disk
             fast: If True, skip AI calls and use heuristics (defaults to dry_run)
             corpus_dir: Optional directory for connection discovery
-            
+
         Returns:
             Processing results with processing details, recommendations, and metadata
         """
@@ -93,18 +93,20 @@ class NoteProcessingCoordinator:
             return {"error": "Note file not found"}
 
         try:
-            with open(note_file, 'r', encoding='utf-8') as f:
+            with open(note_file, "r", encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             return {"error": f"Failed to read note: {e}"}
 
         # Preprocess raw content to fix 'created' placeholders that break YAML parsing
-        content, raw_template_fixed = self._preprocess_created_placeholder_in_raw(content, note_file)
+        content, raw_template_fixed = self._preprocess_created_placeholder_in_raw(
+            content, note_file
+        )
 
         results = {
             "original_file": str(note_file),
             "processing": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Extract frontmatter and body using centralized utility
@@ -150,33 +152,33 @@ class NoteProcessingCoordinator:
             results["processing"]["quality"] = {
                 "score": quality_score,
                 "suggestions": [
-                    "Add more detail and structure to improve quality" if word_count < 200
-                    else "Refine key points and add links to related notes"
-                ]
+                    (
+                        "Add more detail and structure to improve quality"
+                        if word_count < 200
+                        else "Refine key points and add links to related notes"
+                    )
+                ],
             }
-            results["processing"]["tags"] = {
-                "added": [],
-                "total": len(existing_tags)
-            }
+            results["processing"]["tags"] = {"added": [], "total": len(existing_tags)}
 
             # Primary recommendation based on heuristic score
             if quality_score > 0.7:
                 primary = {
                     "action": "promote_to_permanent",
                     "reason": "High quality (heuristic) suitable for permanent notes",
-                    "confidence": "medium"
+                    "confidence": "medium",
                 }
             elif quality_score > 0.4:
                 primary = {
                     "action": "move_to_fleeting",
                     "reason": "Medium quality (heuristic) needs development",
-                    "confidence": "medium"
+                    "confidence": "medium",
                 }
             else:
                 primary = {
                     "action": "improve_or_archive",
                     "reason": "Low quality (heuristic) needs significant improvement",
-                    "confidence": "high"
+                    "confidence": "high",
                 }
 
             results["recommendations"].append(primary)
@@ -214,7 +216,7 @@ class NoteProcessingCoordinator:
                     frontmatter["tags"] = merged_tags
                     results["processing"]["tags"] = {
                         "added": list(set(merged_tags) - set(existing_tags)),
-                        "total": len(merged_tags)
+                        "total": len(merged_tags),
                     }
 
                 results["processing"]["ai_tags"] = merged_tags
@@ -234,28 +236,34 @@ class NoteProcessingCoordinator:
 
             results["processing"]["quality"] = {
                 "score": quality_score,
-                "suggestions": enhancement.get("suggestions", [])[:3]
+                "suggestions": enhancement.get("suggestions", [])[:3],
             }
 
             # Generate workflow recommendations based on quality
             if quality_score > 0.7:
-                results["recommendations"].append({
-                    "action": "promote_to_permanent",
-                    "reason": "High quality content suitable for permanent notes",
-                    "confidence": "high"
-                })
+                results["recommendations"].append(
+                    {
+                        "action": "promote_to_permanent",
+                        "reason": "High quality content suitable for permanent notes",
+                        "confidence": "high",
+                    }
+                )
             elif quality_score > 0.4:
-                results["recommendations"].append({
-                    "action": "move_to_fleeting",
-                    "reason": "Medium quality content needs development",
-                    "confidence": "medium"
-                })
+                results["recommendations"].append(
+                    {
+                        "action": "move_to_fleeting",
+                        "reason": "Medium quality content needs development",
+                        "confidence": "medium",
+                    }
+                )
             else:
-                results["recommendations"].append({
-                    "action": "improve_or_archive",
-                    "reason": "Low quality content needs significant improvement",
-                    "confidence": "high"
-                })
+                results["recommendations"].append(
+                    {
+                        "action": "improve_or_archive",
+                        "reason": "Low quality content needs significant improvement",
+                        "confidence": "high",
+                    }
+                )
         except Exception as e:
             results["processing"]["quality"] = {"error": str(e)}
             ai_processing_errors.append(("quality", str(e)))
@@ -264,28 +272,34 @@ class NoteProcessingCoordinator:
         try:
             if corpus_dir:
                 connections = self.connection_coordinator.discover_connections(
-                    body,
-                    corpus_dir=corpus_dir
+                    body, corpus_dir=corpus_dir
                 )
 
                 if connections:
                     results["processing"]["connections"] = {
                         "similar_notes": [
-                            {"file": conn["filename"], "similarity": float(conn["similarity"])}
+                            {
+                                "file": conn["filename"],
+                                "similarity": float(conn["similarity"]),
+                            }
                             for conn in connections[:3]
                         ]
                     }
 
-                    results["recommendations"].append({
-                        "action": "add_links",
-                        "reason": f"Found {len(connections)} related notes",
-                        "details": connections[:3]
-                    })
+                    results["recommendations"].append(
+                        {
+                            "action": "add_links",
+                            "reason": f"Found {len(connections)} related notes",
+                            "details": connections[:3],
+                        }
+                    )
         except Exception as e:
             results["processing"]["connections"] = {"error": str(e)}
 
         # Update note with AI enhancements (skip when dry_run)
-        needs_ai_update = any(key in results["processing"] for key in ["tags", "quality"])
+        needs_ai_update = any(
+            key in results["processing"] for key in ["tags", "quality"]
+        )
 
         if needs_ai_update or any_template_fixed:
             if dry_run:
@@ -297,8 +311,13 @@ class NoteProcessingCoordinator:
                     if needs_ai_update:
                         frontmatter["ai_processed"] = datetime.now().isoformat()
 
-                        if "quality" in results["processing"] and "score" in results["processing"]["quality"]:
-                            frontmatter["quality_score"] = results["processing"]["quality"]["score"]
+                        if (
+                            "quality" in results["processing"]
+                            and "score" in results["processing"]["quality"]
+                        ):
+                            frontmatter["quality_score"] = results["processing"][
+                                "quality"
+                            ]["score"]
 
                     # Rebuild content using centralized utility
                     updated_content = build_frontmatter(frontmatter, body)
@@ -319,11 +338,11 @@ class NoteProcessingCoordinator:
     def _fix_template_placeholders(self, frontmatter: Dict, note_file: Path) -> bool:
         """
         Fix template placeholders in frontmatter, particularly {{date:...}} patterns.
-        
+
         Args:
             frontmatter: The frontmatter dictionary to modify
             note_file: Path to the note file for timestamp inference
-            
+
         Returns:
             True if any changes were made, False otherwise
         """
@@ -333,12 +352,14 @@ class NoteProcessingCoordinator:
         created_value = frontmatter.get("created")
 
         # Fix template placeholders like {{date:YYYY-MM-DD HH:mm}} or missing created field
-        if (created_value is None or
-            (isinstance(created_value, str) and (
-                "{{date" in created_value or
-                "<% tp.date.now(" in created_value or
-                "<% tp.file.creation_date(" in created_value
-            ))):
+        if created_value is None or (
+            isinstance(created_value, str)
+            and (
+                "{{date" in created_value
+                or "<% tp.date.now(" in created_value
+                or "<% tp.file.creation_date(" in created_value
+            )
+        ):
 
             try:
                 file_stat = os.stat(note_file)
@@ -352,27 +373,29 @@ class NoteProcessingCoordinator:
 
         return changes_made
 
-    def _preprocess_created_placeholder_in_raw(self, content: str, note_file: Path) -> tuple[str, bool]:
+    def _preprocess_created_placeholder_in_raw(
+        self, content: str, note_file: Path
+    ) -> tuple[str, bool]:
         """
         Replace invalid 'created' placeholders directly in the raw frontmatter block.
-        
+
         This is necessary when placeholders make YAML unparseable, causing parse_frontmatter()
         to return empty metadata. Preprocessing ensures YAML becomes valid.
-        
+
         Returns:
             Tuple of (possibly updated content, changes_made)
         """
         try:
             text = content if isinstance(content, str) else ""
-            if not text or not text.lstrip().startswith('---'):
+            if not text or not text.lstrip().startswith("---"):
                 return content, False
 
-            lines = text.split('\n')
+            lines = text.split("\n")
 
             # Locate closing delimiter
             closing_idx = None
             for i in range(1, len(lines)):
-                if lines[i].strip() == '---':
+                if lines[i].strip() == "---":
                     closing_idx = i
                     break
 
@@ -382,7 +405,7 @@ class NoteProcessingCoordinator:
             placeholder_markers = (
                 "{{date",
                 "<% tp.date.now(",
-                "<% tp.file.creation_date("
+                "<% tp.file.creation_date(",
             )
 
             changed = False
@@ -399,6 +422,7 @@ class NoteProcessingCoordinator:
                 if any(marker in value_str for marker in placeholder_markers):
                     try:
                         import os
+
                         ts = datetime.fromtimestamp(os.stat(note_file).st_mtime)
                     except Exception:
                         ts = datetime.now()
@@ -421,11 +445,11 @@ class NoteProcessingCoordinator:
     def _merge_tags(self, existing_tags: List[str], new_tags: List[str]) -> List[str]:
         """
         Merge existing and new tags intelligently.
-        
+
         Args:
             existing_tags: Current tags in the note
             new_tags: New tags to add
-            
+
         Returns:
             Merged and deduplicated tag list (limited by max_tags_per_note)
         """
@@ -433,4 +457,4 @@ class NoteProcessingCoordinator:
         new_set = set(new_tags) if new_tags else set()
 
         merged = sorted(list(existing_set | new_set))
-        return merged[:self.config["max_tags_per_note"]]
+        return merged[: self.config["max_tags_per_note"]]

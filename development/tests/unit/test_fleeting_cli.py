@@ -12,13 +12,14 @@ import shutil
 from pathlib import Path
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 class TestDedicatedFleetingCLI:
     """
     Test cases for the NEW dedicated fleeting_cli.py module.
-    
+
     RED PHASE: These tests will fail until we create fleeting_cli.py
     """
 
@@ -41,6 +42,7 @@ class TestDedicatedFleetingCLI:
         """TEST 1: Verify fleeting_cli module can be imported."""
         try:
             from src.cli import fleeting_cli
+
             assert fleeting_cli is not None
         except ImportError as e:
             pytest.fail(f"fleeting_cli module should exist and be importable: {e}")
@@ -52,7 +54,7 @@ class TestDedicatedFleetingCLI:
         cli = FleetingCLI(vault_path=str(self.base_dir))
 
         # Execute fleeting health command
-        exit_code = cli.fleeting_health(output_format='normal')
+        exit_code = cli.fleeting_health(output_format="normal")
 
         # Should execute without errors
         assert exit_code == 0
@@ -65,9 +67,7 @@ class TestDedicatedFleetingCLI:
 
         # Execute fleeting triage command
         exit_code = cli.fleeting_triage(
-            quality_threshold=0.7,
-            fast=True,
-            output_format='normal'
+            quality_threshold=0.7, fast=True, output_format="normal"
         )
 
         # Should execute without errors
@@ -76,7 +76,7 @@ class TestDedicatedFleetingCLI:
     def test_bug_3_fixed_no_attributeerror(self):
         """
         TEST 4: Verify Bug #3 is fixed (AttributeError: 'AnalyticsManager' object has no attribute 'analyze_fleeting_notes').
-        
+
         Bug Report: Projects/ACTIVE/bug-fleeting-health-attributeerror-2025-10-10.md
         Root Cause: workflow_manager_adapter.py calls self.analytics.analyze_fleeting_notes() which doesn't exist
         Fix: Use WorkflowManager directly in dedicated CLI (bypass buggy adapter)
@@ -88,13 +88,14 @@ class TestDedicatedFleetingCLI:
         cli = FleetingCLI(vault_path=str(self.base_dir))
 
         # Verify it's using WorkflowManager directly
-        assert hasattr(cli, 'workflow')
-        assert isinstance(cli.workflow, WorkflowManager), \
-            "FleetingCLI should use WorkflowManager directly to avoid Bug #3"
+        assert hasattr(cli, "workflow")
+        assert isinstance(
+            cli.workflow, WorkflowManager
+        ), "FleetingCLI should use WorkflowManager directly to avoid Bug #3"
 
         # Execute fleeting health command - should NOT raise AttributeError
         try:
-            exit_code = cli.fleeting_health(output_format='normal')
+            exit_code = cli.fleeting_health(output_format="normal")
             assert exit_code == 0, "fleeting_health should execute successfully"
         except AttributeError as e:
             if "analyze_fleeting_notes" in str(e):

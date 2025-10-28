@@ -58,18 +58,18 @@ class TestOrphanRemediationCoordinator:
             {
                 "path": str(temp_vault / "Permanent Notes" / "orphan1.md"),
                 "title": "Orphan 1",
-                "last_modified": "2024-10-01"
+                "last_modified": "2024-10-01",
             },
             {
                 "path": str(temp_vault / "Fleeting Notes" / "orphan2.md"),
                 "title": "Orphan 2",
-                "last_modified": "2024-10-02"
+                "last_modified": "2024-10-02",
             },
             {
                 "path": str(temp_vault / "Permanent Notes" / "orphan3.md"),
                 "title": "Orphan 3",
-                "last_modified": "2024-10-03"
-            }
+                "last_modified": "2024-10-03",
+            },
         ]
         return coordinator
 
@@ -79,21 +79,21 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         assert coordinator.base_dir == str(temp_vault)
         assert coordinator.analytics_coordinator == mock_analytics_coordinator
 
     # Test 2: Orphan filtering by scope - permanent only
-    def test_list_orphans_by_scope_permanent(self, mock_analytics_coordinator, temp_vault):
+    def test_list_orphans_by_scope_permanent(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test filtering orphans by scope='permanent'."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         orphans = coordinator.list_orphans_by_scope("permanent")
@@ -103,13 +103,14 @@ class TestOrphanRemediationCoordinator:
         assert all("Permanent Notes" in o["path"] for o in orphans)
 
     # Test 3: Orphan filtering by scope - fleeting only
-    def test_list_orphans_by_scope_fleeting(self, mock_analytics_coordinator, temp_vault):
+    def test_list_orphans_by_scope_fleeting(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test filtering orphans by scope='fleeting'."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         orphans = coordinator.list_orphans_by_scope("fleeting")
@@ -124,8 +125,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         orphans = coordinator.list_orphans_by_scope("all")
@@ -139,8 +139,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         target_path = temp_vault / "Home Note.md"
@@ -150,13 +149,14 @@ class TestOrphanRemediationCoordinator:
         assert result.exists()
 
     # Test 6: Target note resolution - Home Note fallback
-    def test_find_target_home_note_fallback(self, mock_analytics_coordinator, temp_vault):
+    def test_find_target_home_note_fallback(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test target resolution defaults to Home Note when no target specified."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.resolve_target_note(target=None)
@@ -176,8 +176,7 @@ class TestOrphanRemediationCoordinator:
         (temp_vault / "Permanent Notes" / "Test MOC.md").write_text("# MOC\n")
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.resolve_target_note(target=None)
@@ -191,8 +190,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         text = "Some content with [[test-note]] link."
@@ -205,8 +203,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         text = "Content with [[test-note|Custom Alias]] link."
@@ -218,8 +215,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         text = "# Note\n\n## Linked Notes\n\n- [[existing-link]]\n"
@@ -235,8 +231,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         text = "# Note\n\nSome content without linked section."
@@ -246,7 +241,9 @@ class TestOrphanRemediationCoordinator:
         assert "[[new-link]]" in result
 
     # Test 12: Bidirectional link insertion - both files modified
-    def test_insert_bidirectional_links_both_modified(self, mock_analytics_coordinator, temp_vault):
+    def test_insert_bidirectional_links_both_modified(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test bidirectional link insertion modifies both orphan and target."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
@@ -256,14 +253,11 @@ class TestOrphanRemediationCoordinator:
         orphan_path.write_text("# Orphan\n\nContent")
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.insert_bidirectional_links(
-            orphan_path=orphan_path,
-            target_path=target_path,
-            dry_run=False
+            orphan_path=orphan_path, target_path=target_path, dry_run=False
         )
 
         assert result["modified_target"] is True
@@ -271,7 +265,9 @@ class TestOrphanRemediationCoordinator:
         assert "backups" in result
 
     # Test 13: Bidirectional link insertion - skip duplicates
-    def test_insert_bidirectional_links_skip_duplicates(self, mock_analytics_coordinator, temp_vault):
+    def test_insert_bidirectional_links_skip_duplicates(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test link insertion skips when links already exist."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
@@ -282,14 +278,11 @@ class TestOrphanRemediationCoordinator:
         (temp_vault / "Home Note.md").write_text("# Home\n\n[[orphan]]")
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.insert_bidirectional_links(
-            orphan_path=orphan_path,
-            target_path=target_path,
-            dry_run=False
+            orphan_path=orphan_path, target_path=target_path, dry_run=False
         )
 
         # No modifications needed - links already exist
@@ -305,8 +298,7 @@ class TestOrphanRemediationCoordinator:
         test_file.write_text("Original content")
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         backup_path = coordinator.backup_file(test_file)
@@ -317,13 +309,14 @@ class TestOrphanRemediationCoordinator:
         assert backup_path.read_text() == "Original content"
 
     # Test 15: Dry-run mode - no file modifications
-    def test_remediate_dry_run_no_modifications(self, mock_analytics_coordinator, temp_vault):
+    def test_remediate_dry_run_no_modifications(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test dry-run mode doesn't modify any files."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         original_home_content = (temp_vault / "Home Note.md").read_text()
@@ -333,7 +326,7 @@ class TestOrphanRemediationCoordinator:
             scope="permanent",
             limit=1,
             target=str(temp_vault / "Home Note.md"),
-            dry_run=True
+            dry_run=True,
         )
 
         # No files should be modified in dry-run
@@ -347,8 +340,7 @@ class TestOrphanRemediationCoordinator:
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.remediate_orphaned_notes(
@@ -356,7 +348,7 @@ class TestOrphanRemediationCoordinator:
             scope="permanent",
             limit=5,
             target=str(temp_vault / "Home Note.md"),
-            dry_run=True
+            dry_run=True,
         )
 
         assert result["mode"] == "checklist"
@@ -365,13 +357,14 @@ class TestOrphanRemediationCoordinator:
         assert "- [ ]" in result["checklist_markdown"]
 
     # Test 17: Link mode with limit
-    def test_remediate_link_mode_with_limit(self, mock_analytics_coordinator, temp_vault):
+    def test_remediate_link_mode_with_limit(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test link mode respects limit parameter."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.remediate_orphaned_notes(
@@ -379,7 +372,7 @@ class TestOrphanRemediationCoordinator:
             scope="all",
             limit=2,  # Limit to 2 orphans
             target=str(temp_vault / "Home Note.md"),
-            dry_run=True
+            dry_run=True,
         )
 
         assert result["limit"] == 2
@@ -387,13 +380,14 @@ class TestOrphanRemediationCoordinator:
         # With dry_run, processed count reflects attempted operations
 
     # Test 18: Error handling - missing target note
-    def test_remediate_error_missing_target(self, mock_analytics_coordinator, temp_vault):
+    def test_remediate_error_missing_target(
+        self, mock_analytics_coordinator, temp_vault
+    ):
         """Test error handling when target note doesn't exist."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
         coordinator = OrphanRemediationCoordinator(
-            base_dir=str(temp_vault),
-            analytics_coordinator=mock_analytics_coordinator
+            base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
         )
 
         result = coordinator.remediate_orphaned_notes(
@@ -401,7 +395,7 @@ class TestOrphanRemediationCoordinator:
             scope="permanent",
             limit=10,
             target="/nonexistent/path.md",
-            dry_run=True
+            dry_run=True,
         )
 
         assert "error" in result

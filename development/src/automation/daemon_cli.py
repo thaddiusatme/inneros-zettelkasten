@@ -30,10 +30,10 @@ from automation.config import ConfigurationLoader
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     """
     Parse command-line arguments.
-    
+
     Args:
         args: Optional list of arguments (for testing)
-    
+
     Returns:
         Parsed arguments namespace
     """
@@ -50,20 +50,20 @@ Examples:
   
   # Default config location
   inneros-daemon
-"""
+""",
     )
 
     parser.add_argument(
         "--config",
         type=str,
         default=str(Path.home() / ".config/inneros/config.yaml"),
-        help="Path to configuration file (default: ~/.config/inneros/config.yaml)"
+        help="Path to configuration file (default: ~/.config/inneros/config.yaml)",
     )
 
     parser.add_argument(
         "--version",
         action="version",
-        version="InnerOS Automation Daemon v1.0.0 (TDD Iteration 8)"
+        version="InnerOS Automation Daemon v1.0.0 (TDD Iteration 8)",
     )
 
     return parser.parse_args(args)
@@ -72,10 +72,10 @@ Examples:
 def main(args: Optional[List[str]] = None) -> int:
     """
     Main daemon entry point.
-    
+
     Args:
         args: Optional command-line arguments (for testing)
-    
+
     Returns:
         Exit code (0 = success, 1 = error)
     """
@@ -133,6 +133,7 @@ def main(args: Optional[List[str]] = None) -> int:
     except Exception as e:
         print(f"❌ Daemon failed: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 1
 

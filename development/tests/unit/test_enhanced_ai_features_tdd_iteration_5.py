@@ -30,7 +30,7 @@ from src.ai.enhanced_ai_features import (
     ContextualIntelligenceProcessor,
     QualityScoringRecalibrator,
     InteractiveWorkflowIntegrator,
-    RealDataValidator
+    RealDataValidator,
 )
 from src.cli.advanced_tag_enhancement_cli import AdvancedTagEnhancementCLI
 
@@ -49,21 +49,29 @@ class TestEnhancedSuggestionEngine(unittest.TestCase):
             "this-note-discusses-machine-learning-applications",
             "ai-automation-workflows-integration-strategies",
             "quantum-computing-variational-algorithms-implementation",
-
             # Numeric-only tags (3 found in real data)
-            "2024", "123", "456",
-
+            "2024",
+            "123",
+            "456",
             # Missing hyphens
-            "machinelearning", "artificialintelligence", "quantumcomputing",
-
+            "machinelearning",
+            "artificialintelligence",
+            "quantumcomputing",
             # Inconsistent case
-            "AI", "ML", "API", "GPT",
-
+            "AI",
+            "ML",
+            "API",
+            "GPT",
             # Semantic fragments
-            "this discusses", "note about", "related to",
-
+            "this discusses",
+            "note about",
+            "related to",
             # Domain-specific improvements needed
-            "quantum", "ai", "automation", "productivity", "workflow"
+            "quantum",
+            "ai",
+            "automation",
+            "productivity",
+            "workflow",
         ]
 
     def test_enhanced_suggestion_engine_initialization(self):
@@ -106,7 +114,9 @@ class TestEnhancedSuggestionEngine(unittest.TestCase):
             # Should suggest more specific tags based on content
             self.assertIn("machine-learning", [s.suggested_tag for s in suggestions])
             self.assertIn("quantum-computing", [s.suggested_tag for s in suggestions])
-            self.assertIn("variational-algorithms", [s.suggested_tag for s in suggestions])
+            self.assertIn(
+                "variational-algorithms", [s.suggested_tag for s in suggestions]
+            )
 
     def test_semantic_domain_mapping_enhancement(self):
         """Test enhanced semantic domain mapping for better suggestions"""
@@ -116,9 +126,18 @@ class TestEnhancedSuggestionEngine(unittest.TestCase):
 
             # Test domain-specific enhancements
             domain_tests = [
-                ("ai", ["artificial-intelligence", "machine-learning", "deep-learning"]),
-                ("quantum", ["quantum-computing", "quantum-mechanics", "quantum-algorithms"]),
-                ("automation", ["workflow-automation", "process-automation", "ai-automation"])
+                (
+                    "ai",
+                    ["artificial-intelligence", "machine-learning", "deep-learning"],
+                ),
+                (
+                    "quantum",
+                    ["quantum-computing", "quantum-mechanics", "quantum-algorithms"],
+                ),
+                (
+                    "automation",
+                    ["workflow-automation", "process-automation", "ai-automation"],
+                ),
             ]
 
             for input_tag, expected_suggestions in domain_tests:
@@ -127,7 +146,9 @@ class TestEnhancedSuggestionEngine(unittest.TestCase):
 
                 # Should provide multiple relevant alternatives
                 self.assertGreater(len(suggestion_tags), 0)
-                self.assertTrue(any(exp in suggestion_tags for exp in expected_suggestions))
+                self.assertTrue(
+                    any(exp in suggestion_tags for exp in expected_suggestions)
+                )
 
     def test_complex_tag_simplification(self):
         """Test simplification of overly complex tags"""
@@ -135,12 +156,14 @@ class TestEnhancedSuggestionEngine(unittest.TestCase):
         with self.assertRaises(AttributeError):
             engine = EnhancedSuggestionEngine()
 
-            complex_tag = "this-note-discusses-machine-learning-applications-in-quantum-computing"
+            complex_tag = (
+                "this-note-discusses-machine-learning-applications-in-quantum-computing"
+            )
             suggestions = engine.generate_enhanced_suggestions(complex_tag)
 
             # Should suggest simpler, more focused alternatives
             suggested_tags = [s.suggested_tag for s in suggestions]
-            self.assertTrue(any(len(tag.split('-')) <= 3 for tag in suggested_tags))
+            self.assertTrue(any(len(tag.split("-")) <= 3 for tag in suggested_tags))
             self.assertIn("machine-learning", suggested_tags)
             self.assertIn("quantum-computing", suggested_tags)
 
@@ -170,14 +193,29 @@ class TestQualityScoringRecalibrator(unittest.TestCase):
         # Real data showed 100% problematic - need realistic distribution
         self.sample_tags = [
             # Should be excellent quality (20%)
-            "machine-learning", "quantum-computing", "artificial-intelligence",
-
+            "machine-learning",
+            "quantum-computing",
+            "artificial-intelligence",
             # Should be good quality (60%)
-            "ai", "automation", "productivity", "workflow", "api", "database",
-            "python", "javascript", "docker", "kubernetes", "testing", "security",
-
+            "ai",
+            "automation",
+            "productivity",
+            "workflow",
+            "api",
+            "database",
+            "python",
+            "javascript",
+            "docker",
+            "kubernetes",
+            "testing",
+            "security",
             # Should need improvement (20%)
-            "123", "this discusses", "note about", "", "AI", "ML"
+            "123",
+            "this discusses",
+            "note about",
+            "",
+            "AI",
+            "ML",
         ]
 
     def test_quality_scoring_recalibrator_initialization(self):
@@ -219,7 +257,7 @@ class TestQualityScoringRecalibrator(unittest.TestCase):
             contexts = [
                 ("ai", "This note discusses AI applications in healthcare.", 0.7),
                 ("ai", "AI is transformative technology with machine learning.", 0.8),
-                ("ai", "Just some thoughts about AI stuff.", 0.4)
+                ("ai", "Just some thoughts about AI stuff.", 0.4),
             ]
 
             for tag, context, expected_min_score in contexts:
@@ -234,8 +272,14 @@ class TestQualityScoringRecalibrator(unittest.TestCase):
 
             # Tags that should NOT be flagged as problematic
             good_quality_tags = [
-                "python", "javascript", "database", "security", "testing",
-                "machine-learning", "data-science", "web-development"
+                "python",
+                "javascript",
+                "database",
+                "security",
+                "testing",
+                "machine-learning",
+                "data-science",
+                "web-development",
             ]
 
             problematic_count = 0
@@ -274,7 +318,9 @@ The focus is on production deployment automation and CI/CD integration.
             """
 
             existing_tags = ["ml", "optimization"]
-            suggestions = processor.analyze_content_for_suggestions(note_content, existing_tags)
+            suggestions = processor.analyze_content_for_suggestions(
+                note_content, existing_tags
+            )
 
             # Should suggest relevant tags based on content analysis
             suggested_tags = [s.suggested_tag for s in suggestions]
@@ -290,9 +336,22 @@ The focus is on production deployment automation and CI/CD integration.
             processor = ContextualIntelligenceProcessor()
 
             domain_contexts = [
-                ("quantum computing variational algorithms", ["quantum-computing", "variational-algorithms", "quantum-optimization"]),
-                ("react hooks typescript state management", ["react", "typescript", "state-management", "frontend-development"]),
-                ("docker kubernetes microservices architecture", ["docker", "kubernetes", "microservices", "cloud-architecture"])
+                (
+                    "quantum computing variational algorithms",
+                    [
+                        "quantum-computing",
+                        "variational-algorithms",
+                        "quantum-optimization",
+                    ],
+                ),
+                (
+                    "react hooks typescript state management",
+                    ["react", "typescript", "state-management", "frontend-development"],
+                ),
+                (
+                    "docker kubernetes microservices architecture",
+                    ["docker", "kubernetes", "microservices", "cloud-architecture"],
+                ),
             ]
 
             for content, expected_suggestions in domain_contexts:
@@ -311,12 +370,24 @@ The focus is on production deployment automation and CI/CD integration.
 
             # Test relationship-based enhancement
             existing_tags = ["machine-learning", "python"]
-            related_suggestions = processor.generate_relationship_suggestions(existing_tags)
+            related_suggestions = processor.generate_relationship_suggestions(
+                existing_tags
+            )
 
             # Should suggest related concepts
             suggested_tags = [s.suggested_tag for s in related_suggestions]
-            self.assertTrue(any("scikit-learn" in tag or "tensorflow" in tag for tag in suggested_tags))
-            self.assertTrue(any("data-science" in tag or "neural-networks" in tag for tag in suggested_tags))
+            self.assertTrue(
+                any(
+                    "scikit-learn" in tag or "tensorflow" in tag
+                    for tag in suggested_tags
+                )
+            )
+            self.assertTrue(
+                any(
+                    "data-science" in tag or "neural-networks" in tag
+                    for tag in suggested_tags
+                )
+            )
 
 
 class TestInteractiveWorkflowIntegrator(unittest.TestCase):
@@ -337,7 +408,11 @@ class TestInteractiveWorkflowIntegrator(unittest.TestCase):
             # Mock weekly review data
             review_candidates = [
                 {"note": "test-note.md", "tags": ["ai", "ml"], "quality": 0.6},
-                {"note": "another-note.md", "tags": ["123", "this discusses"], "quality": 0.3}
+                {
+                    "note": "another-note.md",
+                    "tags": ["123", "this discusses"],
+                    "quality": 0.3,
+                },
             ]
 
             enhancements = integrator.generate_review_enhancements(review_candidates)
@@ -356,7 +431,7 @@ class TestInteractiveWorkflowIntegrator(unittest.TestCase):
                 "original_tag": "ai",
                 "suggested_tag": "artificial-intelligence",
                 "user_action": "accepted",
-                "context": "Note about AI applications in healthcare"
+                "context": "Note about AI applications in healthcare",
             }
 
             learning_result = integrator.process_user_feedback(feedback_data)
@@ -402,8 +477,12 @@ class TestRealDataValidator(unittest.TestCase):
             self.assertLess(processing_time, 30.0)
 
             # Quality requirements based on real data insights
-            self.assertGreaterEqual(results["suggestion_rate"], 0.9)  # 90% vs current 7.3%
-            self.assertLess(results["false_positive_rate"], 0.3)  # <30% vs current ~100%
+            self.assertGreaterEqual(
+                results["suggestion_rate"], 0.9
+            )  # 90% vs current 7.3%
+            self.assertLess(
+                results["false_positive_rate"], 0.3
+            )  # <30% vs current ~100%
 
     def test_performance_scaling_validation(self):
         """Test performance scales to 1000+ tags maintaining quality"""
@@ -459,11 +538,13 @@ class TestRealDataValidator(unittest.TestCase):
             self.assertTrue(enhanced_result["backwards_compatible"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run all tests - these will FAIL during RED phase as expected
     print("🔴 TDD ITERATION 5: Enhanced AI Features - RED PHASE")
     print("Expected: All tests will FAIL until implementation is complete")
-    print("Target: 90% suggestion rate, realistic quality scoring, contextual intelligence")
+    print(
+        "Target: 90% suggestion rate, realistic quality scoring, contextual intelligence"
+    )
     print()
 
     unittest.main(verbosity=2)
