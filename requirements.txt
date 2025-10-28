@@ -26,8 +26,10 @@ flask==3.1.0
 # Utilities
 python-dateutil==2.9.0
 requests==2.31.0  # Required by ollama_client.py for AI API calls
+apscheduler==3.10.4  # Required by automation daemon for scheduled tasks
 
 # Terminal UI (for workflow dashboard)
 rich==13.7.0
 
+# System monitoring
 psutil==5.9.8
