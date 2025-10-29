@@ -140,17 +140,9 @@ class TestTemplateStateTransitions:
     """Test that template sets up proper initial state for state machine."""
 
     @pytest.fixture
-    def template_path(self):
-        return (
-            Path(__file__).parent.parent.parent.parent
-            / "knowledge"
-            / "Templates"
-            / "youtube-video.md"
-        )
-
-    @pytest.fixture
-    def template_content(self, template_path):
-        return template_path.read_text()
+    def template_content(self):
+        """Load template content from fixtures."""
+        return get_template_content("youtube-video.md")
 
     def test_initial_state_is_draft(self, template_content):
         """RED: New notes should start in 'draft' state."""
