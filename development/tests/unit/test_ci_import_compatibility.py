@@ -29,26 +29,26 @@ class TestMonitoringModuleImports:
         """Test that direct module import from src.monitoring works."""
         # This tests the pattern used in test_metrics_collection.py
         from src.monitoring.metrics_collector import MetricsCollector
-        
+
         # Should be able to instantiate
         collector = MetricsCollector()
         assert collector is not None
-        assert hasattr(collector, 'increment_counter')
+        assert hasattr(collector, "increment_counter")
 
     def test_package_level_import_works(self):
         """Test that package-level import from src.monitoring works."""
         # This tests the pattern used in terminal_dashboard.py
         from src.monitoring import MetricsCollector
-        
+
         # Should be able to instantiate
         collector = MetricsCollector()
         assert collector is not None
-        assert hasattr(collector, 'increment_counter')
+        assert hasattr(collector, "increment_counter")
 
     def test_metrics_storage_import_works(self):
         """Test that MetricsStorage can be imported."""
         from src.monitoring import MetricsStorage
-        
+
         storage = MetricsStorage(retention_hours=24)
         assert storage is not None
 
@@ -56,7 +56,7 @@ class TestMonitoringModuleImports:
         """Test that MetricsEndpoint can be imported."""
         from src.monitoring import MetricsEndpoint
         from src.monitoring import MetricsCollector, MetricsStorage
-        
+
         collector = MetricsCollector()
         storage = MetricsStorage(retention_hours=24)
         endpoint = MetricsEndpoint(collector, storage)
@@ -65,9 +65,9 @@ class TestMonitoringModuleImports:
     def test_all_monitoring_exports_accessible(self):
         """Test that all __all__ exports from monitoring package work."""
         import src.monitoring as monitoring
-        
+
         # Check __all__ exports exist
-        assert hasattr(monitoring, '__all__')
+        assert hasattr(monitoring, "__all__")
         expected_exports = [
             "MetricsCollector",
             "MetricsStorage",
@@ -79,7 +79,7 @@ class TestMonitoringModuleImports:
             "MetricsDisplayFormatter",
             "WebDashboardMetrics",
         ]
-        
+
         for export in expected_exports:
             assert export in monitoring.__all__, f"{export} missing from __all__"
             assert hasattr(monitoring, export), f"{export} not accessible from package"
@@ -88,11 +88,13 @@ class TestMonitoringModuleImports:
         """Test that monitoring module can be found in sys.path."""
         # This verifies the PYTHONPATH configuration is correct
         import src.monitoring
-        
+
         # Get the module file path
         module_path = Path(src.monitoring.__file__).parent
         assert module_path.exists(), "Monitoring module path doesn't exist"
-        assert (module_path / "metrics_collector.py").exists(), "metrics_collector.py missing"
+        assert (
+            module_path / "metrics_collector.py"
+        ).exists(), "metrics_collector.py missing"
         assert (module_path / "__init__.py").exists(), "__init__.py missing"
 
 
@@ -103,9 +105,10 @@ class TestCIEnvironmentSimulation:
         """Test that imports work even if PYTHONPATH doesn't include 'development/'."""
         # CI might have different PYTHONPATH setup
         # This test verifies imports work with various configurations
-        
+
         try:
             from src.monitoring.metrics_collector import MetricsCollector
+
             collector = MetricsCollector()
             assert collector is not None
         except ModuleNotFoundError as e:
@@ -115,9 +118,10 @@ class TestCIEnvironmentSimulation:
         """Test that imports work from test directory context."""
         # Tests are run from various working directories in CI
         current_dir = Path.cwd()
-        
+
         # Should work regardless of working directory
         from src.monitoring import MetricsCollector
+
         collector = MetricsCollector()
         assert collector is not None
 
@@ -127,7 +131,7 @@ class TestCIEnvironmentSimulation:
         try:
             from src.monitoring import MetricsCollector
             from src.cli.terminal_dashboard import MetricsCollector as DashboardMetrics
-            
+
             # Both should reference the same class
             assert MetricsCollector is DashboardMetrics
         except ImportError as e:
@@ -140,8 +144,8 @@ class TestImportErrorDiagnostics:
     def test_pythonpath_includes_development_dir(self):
         """Verify PYTHONPATH is configured correctly."""
         # Check if 'development' is in sys.path
-        development_in_path = any('development' in p for p in sys.path)
-        
+        development_in_path = any("development" in p for p in sys.path)
+
         if not development_in_path:
             pytest.fail(
                 f"PYTHONPATH missing 'development' directory.\n"
@@ -157,14 +161,16 @@ class TestImportErrorDiagnostics:
             src_dir = Path(path) / "src"
             if src_dir.exists():
                 src_found = True
-                
+
                 # Check monitoring subdirectory
                 monitoring_dir = src_dir / "monitoring"
                 assert monitoring_dir.exists(), f"monitoring/ missing from {src_dir}"
                 assert (monitoring_dir / "__init__.py").exists(), "__init__.py missing"
-                assert (monitoring_dir / "metrics_collector.py").exists(), "metrics_collector.py missing"
+                assert (
+                    monitoring_dir / "metrics_collector.py"
+                ).exists(), "metrics_collector.py missing"
                 break
-        
+
         assert src_found, "src/ directory not found in sys.path"
 
     def test_module_import_error_message_helpful(self):

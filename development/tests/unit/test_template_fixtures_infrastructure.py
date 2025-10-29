@@ -35,14 +35,14 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
         """
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
         templates_dir = fixtures_dir / "templates"
-        
+
         self.assertTrue(
             templates_dir.exists(),
-            f"Templates directory should exist at: {templates_dir}"
+            f"Templates directory should exist at: {templates_dir}",
         )
         self.assertTrue(
             templates_dir.is_dir(),
-            f"Templates path should be a directory: {templates_dir}"
+            f"Templates path should be a directory: {templates_dir}",
         )
 
     def test_all_required_templates_present(self):
@@ -53,10 +53,10 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
         """
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
         templates_dir = fixtures_dir / "templates"
-        
+
         # Required templates based on CI failure analysis
         required_templates = [
-            "youtube-video.md",       # Primary blocker (65+ failures)
+            "youtube-video.md",  # Primary blocker (65+ failures)
             "daily.md",
             "weekly-review.md",
             "fleeting.md",
@@ -70,17 +70,15 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
             "sprint-review.md",
             "permanent Note Morning Check In Template.md",
         ]
-        
+
         missing_templates = []
         for template_name in required_templates:
             template_path = templates_dir / template_name
             if not template_path.exists():
                 missing_templates.append(template_name)
-        
+
         self.assertEqual(
-            [],
-            missing_templates,
-            f"Missing templates: {missing_templates}"
+            [], missing_templates, f"Missing templates: {missing_templates}"
         )
 
     def test_template_loader_utility_exists(self):
@@ -91,19 +89,19 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
         """
         try:
             from tests.fixtures import template_loader
-            
+
             # Verify required function exists
             self.assertTrue(
-                hasattr(template_loader, 'get_template_path'),
-                "template_loader should have get_template_path() function"
+                hasattr(template_loader, "get_template_path"),
+                "template_loader should have get_template_path() function",
             )
-            
+
             # Verify TEMPLATES_DIR constant exists
             self.assertTrue(
-                hasattr(template_loader, 'TEMPLATES_DIR'),
-                "template_loader should have TEMPLATES_DIR constant"
+                hasattr(template_loader, "TEMPLATES_DIR"),
+                "template_loader should have TEMPLATES_DIR constant",
             )
-            
+
         except ImportError as e:
             self.fail(f"Failed to import template_loader: {e}")
 
@@ -114,47 +112,44 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
         Templates can be either:
         - YAML frontmatter templates (start with ---)
         - Templater templates (start with <%*)
-        
+
         Currently FAILS because:
         1. Templates don't exist in fixtures yet
         2. Can't read/validate files that aren't there
         """
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
         templates_dir = fixtures_dir / "templates"
-        
+
         # Sample of critical templates to validate
         critical_templates = [
             "youtube-video.md",  # Templater template
-            "daily.md",          # YAML template
+            "daily.md",  # YAML template
             "weekly-review.md",  # YAML template
         ]
-        
+
         for template_name in critical_templates:
             template_path = templates_dir / template_name
-            
+
             # Template must exist
             self.assertTrue(
-                template_path.exists(),
-                f"Template must exist: {template_name}"
+                template_path.exists(), f"Template must exist: {template_name}"
             )
-            
+
             # Template must be readable
-            content = template_path.read_text(encoding='utf-8')
+            content = template_path.read_text(encoding="utf-8")
             self.assertGreater(
-                len(content),
-                0,
-                f"Template must have content: {template_name}"
+                len(content), 0, f"Template must have content: {template_name}"
             )
-            
+
             # Template should have valid format (YAML or Templater)
-            has_yaml = content.startswith('---')
-            has_templater = content.startswith('<%*')
-            
+            has_yaml = content.startswith("---")
+            has_templater = content.startswith("<%*")
+
             self.assertTrue(
                 has_yaml or has_templater,
-                f"Template should be YAML or Templater format: {template_name}"
+                f"Template should be YAML or Templater format: {template_name}",
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
