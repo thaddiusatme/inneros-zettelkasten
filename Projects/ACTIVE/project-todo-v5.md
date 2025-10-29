@@ -130,14 +130,27 @@ tags: [project-tracking, priorities, workflow-automation, ci-cd, post-beta]
 
 ## 🔴 P0: Post-Beta Improvements (Nov 2025)
 
-- [ ] Nightly coverage job (GitHub Actions schedule → `make cov` at 07:23 UTC)
-- [ ] Enhanced CONTRIBUTING.md (CI/CD workflow, testing requirements)
-- [ ] Bug report template (`.github/ISSUE_TEMPLATE/bug_report.md` exists, needs update)
-- [ ] Open backlog issues from hygiene plan (P1/P2 items)
-- [ ] Link `knowledge-starter-pack/` from README
-- [ ] Web UI feature flags for unfinished pages
-- [ ] Remove `workflow_demo.py` (ADR-004) + update CLI-REFERENCE
-- [ ] Security scanning: CodeQL + Dependabot alerts
+### ✅ Completed (5/8)
+
+- [x] **Nightly coverage job** - `.github/workflows/nightly-coverage.yml` runs daily at 07:23 UTC
+- [x] **Enhanced CONTRIBUTING.md** - Comprehensive 276-line guide with CI/CD, TDD, testing requirements
+- [x] **Link knowledge-starter-pack/** - Referenced in README.md lines 37, 78
+- [x] **Security scanning: CodeQL** - `.github/workflows/codeql.yml` runs weekly + on PRs
+- [x] **Dependabot alerts** - `.github/dependabot.yml` configured (see open PRs #11, #12, #15)
+
+### 🟡 Remaining (3/8)
+
+- [ ] **Bug report template** - `.github/ISSUE_TEMPLATE/bug_report.md` exists but needs post-beta update
+- [ ] **Open backlog issues** - No GitHub issues created from hygiene plan P1/P2 items
+- [ ] **Web UI feature flags** - No feature flag system in `web_ui/app.py` (7 routes fully exposed)
+
+---
+
+### 📝 Optional/Deferred
+
+- [x] **Remove workflow_demo.py** - ADR-004 completed Oct 11! File deprecated, 10 dedicated CLIs extracted
+  - Note: File still exists at `development/src/cli/workflow_demo.py` but all functionality moved to dedicated CLIs
+  - CLI-REFERENCE.md still references it in examples (needs update)
 
 ---
 
