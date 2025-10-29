@@ -8,8 +8,8 @@ on:
 
 jobs:
   lint-and-test:
-    name: Lint & Test (macOS)
-    runs-on: macos-latest
+    name: Lint & Test (Ubuntu)
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
