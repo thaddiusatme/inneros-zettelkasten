@@ -24,4 +24,5 @@ __all__ = [
     "analytics_manager",
     "ai_enhancement_manager",
     "connection_manager",
+    "llama_vision_ocr",  # Vision OCR for screenshot analysis
 ]

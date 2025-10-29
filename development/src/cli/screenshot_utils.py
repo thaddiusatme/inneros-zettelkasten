@@ -148,7 +148,7 @@ class ScreenshotOCRProcessor:
 
     def __init__(self):
         """Initialize Screenshot OCR Processor"""
-        from src.cli.evening_screenshot_utils import LlamaVisionOCR
+        from src.ai.llama_vision_ocr import LlamaVisionOCR
 
         self.vision_ocr = LlamaVisionOCR(local_mode=True)
         logger.info("Initialized ScreenshotOCRProcessor with LlamaVisionOCR")
