@@ -7,8 +7,14 @@ from src.perplexity_fetcher import fetch_from_jsonl, slugify
 
 
 def test_slugify_basic():
-    assert slugify("One spoon equals instant Moroccan dinner") == "one-spoon-equals-instant-moroccan-dinner"
-    assert slugify("Cooking vs finishing oils in Moroccan cuisine") == "cooking-vs-finishing-oils-in-moroccan-cuisine"
+    assert (
+        slugify("One spoon equals instant Moroccan dinner")
+        == "one-spoon-equals-instant-moroccan-dinner"
+    )
+    assert (
+        slugify("Cooking vs finishing oils in Moroccan cuisine")
+        == "cooking-vs-finishing-oils-in-moroccan-cuisine"
+    )
 
 
 def test_fetch_from_jsonl_dry_run_creates_outputs(tmp_path: Path):
@@ -17,12 +23,12 @@ def test_fetch_from_jsonl_dry_run_creates_outputs(tmp_path: Path):
         {
             "title": "One spoon equals instant Moroccan dinner",
             "tags": ["mustapha-social-campaign"],
-            "prompt": "Title: \"One spoon equals instant Moroccan dinner\"\nObjective: ..."
+            "prompt": 'Title: "One spoon equals instant Moroccan dinner"\nObjective: ...',
         },
         {
             "title": "Cooking vs finishing oils in Moroccan cuisine",
             "tags": ["mustapha-social-campaign"],
-            "prompt": "Title: \"Cooking vs finishing oils in Moroccan cuisine\"\nObjective: ..."
+            "prompt": 'Title: "Cooking vs finishing oils in Moroccan cuisine"\nObjective: ...',
         },
     ]
     jsonl_path = tmp_path / "briefs.jsonl"
@@ -57,13 +63,15 @@ def test_fetch_from_jsonl_dry_run_creates_outputs(tmp_path: Path):
         assert "Original Prompt" in content
 
 
-@pytest.mark.skip(reason="Network call; enable when PERPLEXITY_API_KEY is configured and network calls are allowed")
+@pytest.mark.skip(
+    reason="Network call; enable when PERPLEXITY_API_KEY is configured and network calls are allowed"
+)
 def test_fetch_real_api_call(tmp_path: Path):
     # This test is opt-in and will perform a real API call when enabled.
     item = {
         "title": "Preserved lemons, the magic ingredient you are sleeping on",
         "tags": ["mustapha-social-campaign"],
-        "prompt": "Title: \"Preserved lemons, the magic ingredient you are sleeping on\"\nObjective: ...",
+        "prompt": 'Title: "Preserved lemons, the magic ingredient you are sleeping on"\nObjective: ...',
     }
     jsonl_path = tmp_path / "briefs.jsonl"
     with jsonl_path.open("w", encoding="utf-8") as f:

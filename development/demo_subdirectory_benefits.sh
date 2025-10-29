@@ -1,0 +1,1 @@
+../scripts/demo_subdirectory_benefits.sh

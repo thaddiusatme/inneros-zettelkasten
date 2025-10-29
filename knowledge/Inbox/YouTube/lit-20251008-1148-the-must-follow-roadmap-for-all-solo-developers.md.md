@@ -1,9 +1,11 @@
 ---
 created: 2025-10-08 11:48
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [youtube, video-content]
+tags:
+- youtube
+- video-content
 source: youtube
 author: DevWorm
 video_id: IeVxir50Q2Q
@@ -12,6 +14,7 @@ ai_processed: true
 processed_at: 2025-10-08 11:49
 quote_count: 3
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.706781'
 ---
 
 

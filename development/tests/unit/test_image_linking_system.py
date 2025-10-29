@@ -4,19 +4,13 @@ TDD Iteration 10: Image Linking System Tests (GREEN Phase)
 Critical system integrity tests for image preservation across all workflows.
 Tests map to user stories in Projects/ACTIVE/image-linking-user-stories.md
 """
-import os
-import re
+
 import tempfile
-import shutil
 from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Optional
-import pytest
 
 # Import implementations
 from src.utils.image_attachment_manager import ImageAttachmentManager
 from src.utils.image_link_manager import ImageLinkManager
-from src.utils.image_link_parser import ImageLinkParser
 
 
 # ============================================================================
@@ -34,12 +28,12 @@ def test_centralized_image_storage():
         # Filename: Screenshot_20251002_083000_Chrome.jpg
         test_image = Path(tmpdir) / "Screenshot_20251002_083000_Chrome.jpg"
         test_image.write_text("fake image data")
-        
+
         # When: ImageAttachmentManager saves image (auto-detects date and device)
         base_path = Path(tmpdir) / "knowledge"
         manager = ImageAttachmentManager(base_path=base_path)
         saved_path = manager.save_to_attachments(test_image)
-        
+
         # Then: Image stored in attachments/2025-10/ with device prefix
         assert saved_path.exists()
         assert saved_path.parent.name == "2025-10"  # Auto-detected from filename
@@ -65,7 +59,7 @@ status: inbox
 
 This is a test note with an embedded image.
 """
-    
+
     # When: Move note from Inbox/ to Fleeting Notes/
     source_path = Path("knowledge/Inbox/test-note.md")
     dest_path = Path("knowledge/Fleeting Notes/test-note.md")
@@ -73,9 +67,12 @@ This is a test note with an embedded image.
     updated_content = image_manager.update_image_links_for_move(
         note_content, source_path, dest_path
     )
-    
+
     # Then: Image link still contains correct path (stays same since both at same depth)
-    assert "![Chrome screenshot](../attachments/2025-10/samsung-20251002-083000.jpg)" in updated_content
+    assert (
+        "![Chrome screenshot](../attachments/2025-10/samsung-20251002-083000.jpg)"
+        in updated_content
+    )
     assert "# Test Note with Screenshot" in updated_content
 
 
@@ -97,7 +94,7 @@ status: inbox
 
 Research findings from iPad capture.
 """
-    
+
     # When: Move note from Inbox/ to Literature Notes/
     source_path = Path("knowledge/Inbox/lit-note.md")
     dest_path = Path("knowledge/Literature Notes/lit-note.md")
@@ -105,7 +102,7 @@ Research findings from iPad capture.
     updated_content = image_manager.update_image_links_for_move(
         note_content, source_path, dest_path
     )
-    
+
     # Then: Wiki image link unchanged (wiki links don't need path updates)
     assert "![[ipad-20251002-083000.png]]" in updated_content
     assert "# Literature Note with iPad Screenshot" in updated_content
@@ -131,16 +128,16 @@ Some content for quality scoring and tagging.
 
 ![Screenshot 2](../attachments/2025-10/screenshot-2.jpg)
 """
-    
+
     # When: Parse image links (simulating AI processing)
     image_manager = ImageLinkManager()
     image_links = image_manager.parse_image_links(note_content)
-    
+
     # Then: Image references detected and preserved
     assert len(image_links) == 2
     assert image_links[0]["path"] == "../attachments/2025-10/screenshot-1.jpg"
     assert image_links[1]["path"] == "../attachments/2025-10/screenshot-2.jpg"
-    
+
     # Image content remains unchanged during parsing
     assert "![Screenshot 1](../attachments/2025-10/screenshot-1.jpg)" in note_content
     assert "![Screenshot 2](../attachments/2025-10/screenshot-2.jpg)" in note_content
@@ -170,11 +167,11 @@ status: inbox
 This image doesn't exist.
 """
     note_path = Path("knowledge/Inbox/broken-link-note.md")
-    
+
     # When: Validate image links
     image_manager = ImageLinkManager()
     broken_links = image_manager.validate_image_links(note_path, note_content)
-    
+
     # Then: Broken link detected and reported with details
     assert len(broken_links) == 1
     broken_link = broken_links[0]
@@ -207,16 +204,28 @@ Wiki style:
 Wiki with width:
 ![[screenshot-3.png|200]]
 """
-    
+
     # When: Parse image links from content
     image_manager = ImageLinkManager()
     image_links = image_manager.parse_image_links(note_content)
-    
+
     # Then: All three link styles detected correctly
     assert len(image_links) == 3
-    assert any(link["type"] == "markdown" and link["path"] == "../attachments/2025-10/screenshot-1.png" for link in image_links)
-    assert any(link["type"] == "wiki" and link["filename"] == "screenshot-2.png" for link in image_links)
-    assert any(link["type"] == "wiki" and link["filename"] == "screenshot-3.png" and link["width"] == "200" for link in image_links)
+    assert any(
+        link["type"] == "markdown"
+        and link["path"] == "../attachments/2025-10/screenshot-1.png"
+        for link in image_links
+    )
+    assert any(
+        link["type"] == "wiki" and link["filename"] == "screenshot-2.png"
+        for link in image_links
+    )
+    assert any(
+        link["type"] == "wiki"
+        and link["filename"] == "screenshot-3.png"
+        and link["width"] == "200"
+        for link in image_links
+    )
 
 
 def test_multiple_images_in_note():
@@ -242,24 +251,24 @@ Step 2: Dashboard
 Step 3: Settings
 ![Settings](../attachments/2025-10/screenshot-settings.png)
 """
-    
+
     # When: Parse and validate multiple images
     image_manager = ImageLinkManager()
     image_links = image_manager.parse_image_links(note_content)
-    
+
     # Then: All 3 images detected and can be validated
     assert len(image_links) == 3
     assert image_links[0]["alt_text"] == "Login"
     assert image_links[1]["alt_text"] == "Dashboard"
     assert image_links[2]["alt_text"] == "Settings"
-    
+
     # When: Move note to new location
     source_path = Path("knowledge/Inbox/multi-image-note.md")
     dest_path = Path("knowledge/Fleeting Notes/multi-image-note.md")
     updated_content = image_manager.update_image_links_for_move(
         note_content, source_path, dest_path
     )
-    
+
     # Then: All 3 images still work from new location
     assert updated_content.count("![") == 3
     assert "../attachments/2025-10/screenshot-login.png" in updated_content
@@ -284,7 +293,7 @@ type: fleeting
 
 ![Test](../attachments/2025-10/test.png)
 """
-    
+
     # When: Simulate directory move with ImageLinkManager
     source_path = Path("knowledge/Inbox/test-note.md")
     dest_path = Path("knowledge/Fleeting Notes/test-note.md")
@@ -292,7 +301,7 @@ type: fleeting
     updated_content = image_manager.update_image_links_for_move(
         note_content, source_path, dest_path
     )
-    
+
     # Then: Image links preserved after move (same depth, path unchanged)
     assert "../attachments/2025-10/test.png" in updated_content
     assert "![Test]" in updated_content
@@ -315,11 +324,11 @@ status: inbox
 ![Image 1](../attachments/2025-10/img1.jpg)
 ![Image 2](../attachments/2025-10/img2.jpg)
 """
-    
+
     # When: Extract image references using ImageLinkManager
     image_manager = ImageLinkManager()
     image_links = image_manager.parse_image_links(note_content)
-    
+
     # Then: Image references properly tracked
     assert len(image_links) == 2
     assert any("img1.jpg" in link["filename"] for link in image_links)
@@ -337,17 +346,17 @@ def test_multi_image_processing_performance():
     US-6 requirement: Fast processing for multi-image notes
     """
     import time
-    
+
     # Given: Note with 10 embedded images
     images = [f"![Image {i}](../attachments/2025-10/img-{i}.png)" for i in range(10)]
     note_content = "\n\n".join(images)
-    
+
     # When: Parse and validate images
     start = time.time()
     image_manager = ImageLinkManager()
     image_links = image_manager.parse_image_links(note_content)
     elapsed = time.time() - start
-    
+
     # Then: Processing completes in <0.5s
     assert len(image_links) == 10
     assert elapsed < 0.5, f"Processing took {elapsed:.3f}s, expected <0.5s"

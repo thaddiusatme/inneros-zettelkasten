@@ -33,7 +33,9 @@ def _ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
 
 
-def _markdown_scaffold(title: str, prompt: str, body: Optional[str] = None, include_prompt: bool = True) -> str:
+def _markdown_scaffold(
+    title: str, prompt: str, body: Optional[str] = None, include_prompt: bool = True
+) -> str:
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     parts: List[str] = []
     parts.append(f"# Perplexity Research — {title}")
@@ -66,7 +68,9 @@ def _markdown_scaffold(title: str, prompt: str, body: Optional[str] = None, incl
     return "\n".join(parts)
 
 
-def _call_perplexity_api(prompt: str, model: str = "sonar-pro", api_key: Optional[str] = None) -> str:
+def _call_perplexity_api(
+    prompt: str, model: str = "sonar-pro", api_key: Optional[str] = None
+) -> str:
     api_key = api_key or os.getenv("PERPLEXITY_API_KEY")
     if not api_key:
         raise RuntimeError("PERPLEXITY_API_KEY not set; cannot perform real API call")
@@ -82,7 +86,10 @@ def _call_perplexity_api(prompt: str, model: str = "sonar-pro", api_key: Optiona
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are a factual research assistant. Return well-structured Markdown."},
+            {
+                "role": "system",
+                "content": "You are a factual research assistant. Return well-structured Markdown.",
+            },
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.2,
@@ -97,7 +104,9 @@ def _call_perplexity_api(prompt: str, model: str = "sonar-pro", api_key: Optiona
     return content
 
 
-def fetch_from_jsonl(input_path: str, output_dir: str, model: str = "sonar-pro", dry_run: bool = True) -> List[str]:
+def fetch_from_jsonl(
+    input_path: str, output_dir: str, model: str = "sonar-pro", dry_run: bool = True
+) -> List[str]:
     """
     Read prompts from JSONL and write one Markdown output per item.
 
@@ -120,7 +129,9 @@ def fetch_from_jsonl(input_path: str, output_dir: str, model: str = "sonar-pro",
                 body = _call_perplexity_api(prompt=prompt, model=model)
             except Exception as e:  # pragma: no cover
                 body = f"Error calling API: {e}\n\n"
-            md = _markdown_scaffold(title=title, prompt=prompt, body=body, include_prompt=True)
+            md = _markdown_scaffold(
+                title=title, prompt=prompt, body=body, include_prompt=True
+            )
 
         out_path.write_text(md, encoding="utf-8")
         outputs.append(str(out_path))
@@ -136,11 +147,25 @@ def main() -> None:  # pragma: no cover
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Perplexity Deep Research batch fetcher")
-    parser.add_argument("--input", required=True, help="Path to JSONL file with prompts")
-    parser.add_argument("--out", required=True, help="Directory to write Markdown outputs")
-    parser.add_argument("--model", default="sonar-pro", help="Model name for API calls (default: sonar-pro)")
-    parser.add_argument("--dry-run", action="store_true", help="Generate scaffolds without making API calls")
+    parser = argparse.ArgumentParser(
+        description="Perplexity Deep Research batch fetcher"
+    )
+    parser.add_argument(
+        "--input", required=True, help="Path to JSONL file with prompts"
+    )
+    parser.add_argument(
+        "--out", required=True, help="Directory to write Markdown outputs"
+    )
+    parser.add_argument(
+        "--model",
+        default="sonar-pro",
+        help="Model name for API calls (default: sonar-pro)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Generate scaffolds without making API calls",
+    )
     args = parser.parse_args()
 
     outputs = fetch_from_jsonl(

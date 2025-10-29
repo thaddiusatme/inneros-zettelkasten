@@ -1,0 +1,189 @@
+items:
+- destination: Projects/COMPLETED-2025-10/youtube-api-trigger-system-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-api-trigger-system-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/model-migration-gpt-oss-20b-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/model-migration-gpt-oss-20b-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-workflow-demo-tdd-iteration-6-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-workflow-demo-tdd-iteration-6-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-transcript-archival-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-transcript-archival-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/adr-004-cli-layer-extraction.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/adr-004-cli-layer-extraction.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-api-trigger-tdd-iteration-1-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-api-trigger-tdd-iteration-1-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-inventory-2025-10-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-inventory-2025-10-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-api-requirements-review.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-api-requirements-review.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-decision-log-tdd-iteration-3-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-decision-log-tdd-iteration-3-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/NEXT-EPIC-PLANNING-2025-10-15.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/NEXT-EPIC-PLANNING-2025-10-15.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/CURRENT-SESSION-STATUS-2025-10-21.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/CURRENT-SESSION-STATUS-2025-10-21.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/README-ACTIVE.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/README-ACTIVE.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-checkbox-approval-automation-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-checkbox-approval-automation-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/retro-tui-design-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/retro-tui-design-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/source-code-reorganization-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/source-code-reorganization-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-checkbox-approval-pbi-001-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-checkbox-approval-pbi-001-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-auto-promotion-integration-manifest.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-executor-tdd-iteration-5-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-executor-tdd-iteration-5-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-api-templater-tdd-iteration-2-status.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-api-templater-tdd-iteration-2-status.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-cli-review-tdd-iteration-4-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-cli-review-tdd-iteration-4-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-checkbox-approval-pbi-004-complete-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-checkbox-approval-pbi-004-complete-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/youtube-checkbox-approval-pbi-003-status-sync-lessons-learned.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/youtube-checkbox-approval-pbi-003-status-sync-lessons-learned.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/cleanup-inventory-2025-10.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/cleanup-inventory-2025-10.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/project-todo-v3.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/project-todo-v3.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/CURRENT-SESSION-STATUS-2025-10-19.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/CURRENT-SESSION-STATUS-2025-10-19.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/adr-003-distribution-architecture.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/adr-003-distribution-architecture.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/11-auto-promotion-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/11-auto-promotion-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/07-backup-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/07-backup-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/09-inbox-processing-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/09-inbox-processing-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/01-core-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/01-core-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/08-daemon-automation-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/08-daemon-automation-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/README-ACTIVE.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/README-ACTIVE.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/04-youtube-processing-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/04-youtube-processing-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/README.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/README.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/03-fleeting-notes-lifecycle.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/03-fleeting-notes-lifecycle.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/02-weekly-review-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/02-weekly-review-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/06-tag-enhancement-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/06-tag-enhancement-workflow.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/10-note-lifecycle-complete.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/10-note-lifecycle-complete.md
+  status: approved
+- destination: Projects/COMPLETED-2025-10/workflow-diagrams/05-connection-discovery-workflow.md
+  rationale: Archive project documentation into monthly completion folder.
+  source: Projects/ACTIVE/workflow-diagrams/05-connection-discovery-workflow.md
+  status: approved
+- destination: Projects/REFERENCE/rate-limit-validation-guide.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/RATE-LIMIT-VALIDATION-GUIDE.md
+  status: approved
+- destination: Projects/REFERENCE/production-release-tdd-iteration-1-lessons-learned.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/production-release-tdd-iteration-1-lessons-learned.md
+  status: approved
+- destination: Projects/REFERENCE/systemd-installation.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/SYSTEMD-INSTALLATION.md
+  status: approved
+- destination: Projects/REFERENCE/feature-handlers.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/FEATURE-HANDLERS.md
+  status: approved
+- destination: Projects/REFERENCE/developer-quickstart.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/DEVELOPER-QUICKSTART.md
+  status: approved
+- destination: Projects/REFERENCE/youtube-integration-maintenance.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/YOUTUBE-INTEGRATION-MAINTENANCE.md
+  status: approved
+- destination: Projects/REFERENCE/youtube-transcript-api-migration.md
+  rationale: Promote development documentation into reference library.
+  source: development/docs/youtube-transcript-api-migration.md
+  status: approved

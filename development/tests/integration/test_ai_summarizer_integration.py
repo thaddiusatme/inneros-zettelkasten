@@ -8,7 +8,7 @@ import os
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-src_dir = os.path.join(project_root, 'src')
+src_dir = os.path.join(project_root, "src")
 sys.path.insert(0, src_dir)
 
 import pytest
@@ -21,12 +21,12 @@ from ai.ollama_client import OllamaClient
 @pytest.mark.slow_integration  # AI API calls
 class TestAISummarizerIntegration:
     """Integration tests for AISummarizer with real API."""
-    
+
     def setup_method(self):
         """Set up test fixtures."""
         self.summarizer = AISummarizer()
         self.client = OllamaClient()
-    
+
     @pytest.mark.integration
     def test_real_api_health_check(self):
         """Test that Ollama API is available for integration tests."""
@@ -34,15 +34,16 @@ class TestAISummarizerIntegration:
         if not is_healthy:
             pytest.skip("Ollama service is not available")
         assert is_healthy
-    
+
     @pytest.mark.integration
     def test_real_summary_generation_performance(self):
         """Test real summary generation performance."""
         if not self.client.health_check():
             pytest.skip("Ollama service is not available")
-        
+
         # Create a substantial piece of content
-        long_content = """
+        long_content = (
+            """
         Artificial intelligence (AI) is intelligence demonstrated by machines, 
         in contrast to the natural intelligence displayed by humans and animals. 
         Leading AI textbooks define the field as the study of "intelligent agents": 
@@ -61,26 +62,29 @@ class TestAISummarizerIntegration:
         perception, and the ability to move and manipulate objects. General 
         intelligence is among the field's long-term goals. Approaches include 
         statistical methods, computational intelligence, and traditional symbolic AI.
-        """ * 3  # Make it longer to ensure it meets the threshold
-        
+        """
+            * 3
+        )  # Make it longer to ensure it meets the threshold
+
         start_time = time.time()
         summary = self.summarizer.generate_summary(long_content)
         end_time = time.time()
-        
+
         # Performance check
         assert end_time - start_time < 10.0  # Should complete within 10 seconds
-        
+
         # Quality checks
         assert summary is not None
         assert len(summary) > 0
         assert len(summary) < len(long_content)
         assert "artificial intelligence" in summary.lower() or "ai" in summary.lower()
-    
+
     @pytest.mark.integration
     def test_real_extractive_summary_quality(self):
         """Test extractive summary quality with real content."""
         # Use a structured piece of content with clear key points
-        content = """
+        content = (
+            """
         Machine learning is a method of data analysis that automates analytical model building. 
         It is a branch of artificial intelligence based on the idea that systems can learn from data, 
         identify patterns and make decisions with minimal human intervention.
@@ -100,23 +104,25 @@ class TestAISummarizerIntegration:
         The study of mathematical optimization delivers methods, theory and application domains to 
         the field of machine learning. Data mining is a related field of study, focusing on 
         exploratory data analysis through unsupervised learning.
-        """ * 2  # Make it long enough
-        
+        """
+            * 2
+        )  # Make it long enough
+
         summary = self.summarizer.generate_extractive_summary(content)
-        
+
         assert summary is not None
         assert len(summary) > 0
         assert len(summary) < len(content)
         # Should contain key concepts
         key_terms = ["machine learning", "data", "algorithms", "patterns"]
         assert any(term in summary.lower() for term in key_terms)
-    
+
     @pytest.mark.integration
     def test_real_api_with_yaml_frontmatter(self):
         """Test real API integration with YAML frontmatter."""
         if not self.client.health_check():
             pytest.skip("Ollama service is not available")
-        
+
         content_with_yaml = """---
 type: literature
 created: 2025-01-01
@@ -190,25 +196,25 @@ The concept of 'garbage in, garbage out' is particularly relevant in machine
 learning, where biased or incomplete training data can lead to flawed models. 
 Data preprocessing, augmentation, and careful curation are essential steps 
 in developing reliable AI systems that generalize well to real-world scenarios."""
-        
+
         summary = self.summarizer.generate_summary(content_with_yaml)
-        
+
         assert summary is not None
         assert "---" not in summary  # YAML should be stripped
         assert "type: literature" not in summary
         assert len(summary) > 0
         assert "artificial intelligence" in summary.lower() or "ai" in summary.lower()
-    
+
     @pytest.mark.integration
     def test_real_api_error_handling(self):
         """Test error handling with real API."""
         if not self.client.health_check():
             pytest.skip("Ollama service is not available")
-        
+
         # Test with empty content
         result = self.summarizer.generate_summary("")
         assert result is None
-        
+
         # Test with short content
         short_content = "This is too short."
         result = self.summarizer.generate_summary(short_content)

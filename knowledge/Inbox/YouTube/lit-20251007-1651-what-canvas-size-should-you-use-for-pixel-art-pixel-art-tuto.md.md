@@ -1,9 +1,11 @@
 ---
 created: 2025-10-07 16:50
 type: literature
-status: inbox
+status: promoted
 visibility: private
-tags: [youtube, video-content]
+tags:
+- youtube
+- video-content
 source: youtube
 author: null
 video_id: Z8earctNBxg
@@ -12,6 +14,7 @@ ai_processed: true
 processed_at: 2025-10-08 13:12
 quote_count: 2
 processing_time_seconds: 0.0
+processed_date: '2025-10-22T17:22:49.704758'
 ---
 
 

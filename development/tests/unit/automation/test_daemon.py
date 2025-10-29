@@ -67,7 +67,9 @@ def test_daemon_initializes_handlers_from_config(tmp_path, caplog):
     assert daemon.smart_link_handler.vault_path == Path(tmp_path)
 
     # And callbacks were registered
-    assert any(getattr(cb, "__name__", "").endswith("process") for cb in watcher.callbacks)
+    assert any(
+        getattr(cb, "__name__", "").endswith("process") for cb in watcher.callbacks
+    )
 
 
 def test_daemon_skips_disabled_handlers(tmp_path):
@@ -115,12 +117,12 @@ def test_daemon_health_includes_handler_metrics(tmp_path):
     daemon._setup_feature_handlers()
 
     health = daemon.get_daemon_health()
-    assert 'handlers' in health
-    assert 'screenshot' in health['handlers']
-    assert 'smart_link' in health['handlers']
+    assert "handlers" in health
+    assert "screenshot" in health["handlers"]
+    assert "smart_link" in health["handlers"]
     # Screenshot health should include performance keys
-    ss = health['handlers']['screenshot']
-    assert 'status' in ss
+    ss = health["handlers"]["screenshot"]
+    assert "status" in ss
 
 
 def test_daemon_metrics_export_combines_handler_metrics(tmp_path):
@@ -144,8 +146,8 @@ def test_daemon_metrics_export_combines_handler_metrics(tmp_path):
     daemon._setup_feature_handlers()
 
     metrics = daemon.export_handler_metrics()
-    assert 'screenshot' in metrics
-    assert 'smart_link' in metrics
+    assert "screenshot" in metrics
+    assert "smart_link" in metrics
 
 
 def test_daemon_exports_prometheus_metrics(tmp_path):

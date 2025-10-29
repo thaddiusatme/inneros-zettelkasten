@@ -30,12 +30,12 @@ from src.utils.bug_reporter import BugReporter
 class AIEnhancementManager:
     """
     AI-powered note enhancement with 3-tier fallback strategy.
-    
+
     Fallback tiers:
     1. Local LLM (Ollama) - Preferred, fast and private
     2. External API - Backup when local unavailable
     3. Degraded - Empty but valid results
-    
+
     Features:
     - Auto-tagging with kebab-case enforcement
     - Summarization
@@ -43,18 +43,18 @@ class AIEnhancementManager:
     - Bug reports on failures
     - Dry run mode
     """
-    
+
     def __init__(
         self,
         base_dir: Path,
         config: ConfigDict,
         local_llm: Optional[Any] = None,
         ai_tagger: Optional[Any] = None,
-        ai_summarizer: Optional[Any] = None
+        ai_summarizer: Optional[Any] = None,
     ) -> None:
         """
         Initialize AIEnhancementManager.
-        
+
         Args:
             base_dir: Base directory of the Zettelkasten vault
             config: Configuration dict with AI settings
@@ -69,26 +69,23 @@ class AIEnhancementManager:
         self.ai_summarizer = ai_summarizer
         self.external_api = None  # Can be injected for testing/fallback
         self.bug_reporter = BugReporter(base_dir)
-    
+
     def enhance_note(
-        self,
-        note_path: str,
-        fast: bool = False,
-        dry_run: bool = False
+        self, note_path: str, fast: bool = False, dry_run: bool = False
     ) -> AIEnhancementResult:
         """
         Enhance note with AI-generated tags and summary.
-        
+
         Uses 3-tier fallback strategy for maximum reliability:
         1. Try local LLM (Ollama) - Fast, private, no cost
         2. If fails, try external API - Backup for when local unavailable
         3. If fails, return degraded results - Empty but valid output
-        
+
         Args:
             note_path: Path to the note file (relative to base_dir)
             fast: If True, use faster (less thorough) AI processing
             dry_run: If True, skip AI calls to prevent costs
-            
+
         Returns:
             Dict with enhancement results:
             {
@@ -101,7 +98,7 @@ class AIEnhancementManager:
                 'skipped': bool (if dry_run),
                 'error': str (if degraded)
             }
-            
+
         Examples:
             >>> # Example 1: Successful local LLM enhancement (tier 1)
             >>> ai_manager = AIEnhancementManager(
@@ -122,7 +119,7 @@ class AIEnhancementManager:
             Tier: local (fallback: False)
             >>> print(f"Source: {result['source']}")
             Source: local_ollama
-            
+
             >>> # Example 2: Fallback to external API (tier 2)
             >>> # Local LLM fails, automatically tries external API
             >>> ai_manager_no_local = AIEnhancementManager(
@@ -139,7 +136,7 @@ class AIEnhancementManager:
             >>> print(f"Source: {result['source']}")
             Source: external_api
             >>> # Bug report automatically created for local LLM failure
-            
+
             >>> # Example 3: Degraded mode (tier 3 - all tiers failed)
             >>> ai_manager_degraded = AIEnhancementManager(
             ...     base_dir=Path('knowledge'),
@@ -154,11 +151,11 @@ class AIEnhancementManager:
             >>> print(f"Tier: {result['tier']} (fallback: {result['fallback']})")
             Tier: degraded (fallback: True)
             >>> print(f"Tags: {result['tags']}, Summary: {result['summary']}")
-            Tags: [], Summary: 
+            Tags: [], Summary:
             >>> print(f"Error: {result['error']}")
             Error: All AI tiers failed
             >>> # Note: Degraded results are still valid - workflow continues
-            
+
             >>> # Example 4: Dry run mode - skip AI costs
             >>> result = ai_manager.enhance_note('Inbox/test.md', dry_run=True)
             >>> print(f"Skipped: {result.get('skipped')}")
@@ -168,14 +165,14 @@ class AIEnhancementManager:
             >>> # No AI calls made, no costs incurred
             >>> assert result['tags'] == []
             >>> assert result['summary'] == ''
-            
+
             >>> # Example 5: Fast mode for quick processing
             >>> result = ai_manager.enhance_note('Inbox/quick.md', fast=True)
             >>> # Fast mode uses lighter AI models or quicker processing
             >>> if result['success']:
             ...     print(f"Fast enhancement: {len(result['tags'])} tags generated")
             Fast enhancement: 3 tags generated
-            
+
             >>> # Example 6: Understanding tier fallback behavior
             >>> result = ai_manager.enhance_note('Inbox/complex-note.md')
             >>> if not result['fallback']:
@@ -186,7 +183,7 @@ class AIEnhancementManager:
             ... elif result['tier'] == 'degraded':
             ...     print("Tier 3 degraded - all AI unavailable")
             ...     print("Note can still be processed, just without AI enhancement")
-            
+
             >>> # Example 7: Kebab-case tag enforcement
             >>> result = ai_manager.enhance_note('Inbox/note-with-tags.md')
             >>> # All tags automatically converted to kebab-case
@@ -199,71 +196,67 @@ class AIEnhancementManager:
         """
         if dry_run:
             return {
-                'success': True,
-                'tags': [],
-                'summary': '',
-                'skipped': True,
-                'reason': 'dry_run',
-                'source': 'dry_run'
+                "success": True,
+                "tags": [],
+                "summary": "",
+                "skipped": True,
+                "reason": "dry_run",
+                "source": "dry_run",
             }
-        
+
         # Try tier 1: Local LLM
         try:
             result = self._enhance_with_local_llm(note_path)
-            if result['success']:
-                result['fallback'] = False
-                result['tier'] = 'local'
-                result['source'] = 'local_ollama'
+            if result["success"]:
+                result["fallback"] = False
+                result["tier"] = "local"
+                result["source"] = "local_ollama"
                 return result
         except Exception as e:
             # Local LLM failed - create bug report and try API
-            self.bug_reporter.create_ai_failure_report(note_path, {
-                'tier': 'local_llm',
-                'error': str(e),
-                'error_type': type(e).__name__
-            })
+            self.bug_reporter.create_ai_failure_report(
+                note_path,
+                {"tier": "local_llm", "error": str(e), "error_type": type(e).__name__},
+            )
             pass
-        
+
         # Try tier 2: External API
         try:
             result = self._enhance_with_external_api(note_path)
-            if result['success']:
-                result['fallback'] = True
-                result['tier'] = 'api'
-                result['source'] = 'external_api'
+            if result["success"]:
+                result["fallback"] = True
+                result["tier"] = "api"
+                result["source"] = "external_api"
                 return result
-        except Exception as e:
+        except Exception:
             # API failed, will degrade
             pass
-        
+
         # Tier 3: Degraded mode
         return {
-            'success': False,
-            'tags': [],
-            'summary': '',
-            'quality_score': 0.5,
-            'fallback': True,
-            'tier': 'degraded',
-            'source': 'degraded',
-            'error': 'All AI tiers failed'
+            "success": False,
+            "tags": [],
+            "summary": "",
+            "quality_score": 0.5,
+            "fallback": True,
+            "tier": "degraded",
+            "source": "degraded",
+            "error": "All AI tiers failed",
         }
-    
-    def assess_promotion_readiness(
-        self,
-        note_path: str
-    ) -> AIEnhancementResult:
+
+    def assess_promotion_readiness(self, note_path: str) -> AIEnhancementResult:
         """
         Assess if a fleeting note is ready for promotion to permanent.
-        
+
         Uses AI to evaluate note maturity across multiple dimensions:
         - Content maturity (well-developed vs rough draft)
         - Atomic concept clarity (single clear idea vs multiple mixed concepts)
         - Connection potential (linkable to existing knowledge)
         - Structural completeness (frontmatter, tags, links)
-        
+
         Args:
             note_path: Path to the note file (relative to base_dir)
-            
+
         Returns:
             Dict with promotion assessment:
             {
@@ -273,7 +266,7 @@ class AIEnhancementManager:
                 'suggestions': List[str] (how to improve if not ready),
                 'recommended_type': str ('permanent', 'literature', etc.)
             }
-            
+
         Examples:
             >>> # Example 1: Note ready for promotion
             >>> ai_manager = AIEnhancementManager(
@@ -298,7 +291,7 @@ class AIEnhancementManager:
               - Complete frontmatter and metadata
             >>> print(f"Recommended type: {result['recommended_type']}")
             Recommended type: permanent
-            
+
             >>> # Example 2: Note not ready yet
             >>> result = ai_manager.assess_promotion_readiness(
             ...     'Fleeting Notes/rough-draft.md'
@@ -315,7 +308,7 @@ class AIEnhancementManager:
               - Clarify the atomic concept
               - Add links to related notes
               - Expand content to at least 300 words
-            
+
             >>> # Example 3: Use with weekly review automation
             >>> from pathlib import Path
             >>> fleeting_dir = Path('knowledge/Fleeting Notes')
@@ -334,7 +327,7 @@ class AIEnhancementManager:
             >>> promotion_candidates.sort(key=lambda x: x['confidence'], reverse=True)
             >>> print(f"Found {len(promotion_candidates)} promotion candidates")
             Found 5 promotion candidates
-            
+
             >>> # Example 4: Different note type recommendations
             >>> # Literature note with citations
             >>> result = ai_manager.assess_promotion_readiness(
@@ -345,7 +338,7 @@ class AIEnhancementManager:
             ...     print(f"Reason: {result['reasons'][0]}")
             This note should become a literature note
             Reason: Contains citations and external source analysis
-            
+
             >>> # Example 5: Confidence-based workflow
             >>> result = ai_manager.assess_promotion_readiness(
             ...     'Fleeting Notes/borderline-note.md'
@@ -361,7 +354,7 @@ class AIEnhancementManager:
             Medium confidence - review manually
               Consider: Add 2-3 more examples
               Consider: Link to related concepts
-            
+
             >>> # Example 6: Integration with quality scoring
             >>> from src.ai.analytics_manager import AnalyticsManager
             >>> analytics = AnalyticsManager(Path('knowledge'), config)
@@ -380,30 +373,30 @@ class AIEnhancementManager:
         """
         # Placeholder implementation
         return {
-            'ready_for_promotion': True,
-            'confidence': 0.8,
-            'reasons': ['Content is well-developed', 'Clear atomic concept'],
-            'suggestions': [],
-            'recommended_type': 'permanent'
+            "ready_for_promotion": True,
+            "confidence": 0.8,
+            "reasons": ["Content is well-developed", "Clear atomic concept"],
+            "suggestions": [],
+            "recommended_type": "permanent",
         }
-    
+
     def generate_ai_tags(self, content: str) -> List[str]:
         """
         Generate AI tags from content with kebab-case enforcement.
-        
+
         Analyzes note content to extract relevant topics and converts
         them to Zettelkasten-compliant kebab-case tags.
-        
+
         Args:
             content: Note content to analyze (full markdown content)
-            
+
         Returns:
             List of kebab-case formatted AI-generated tags:
             - All lowercase
             - Words separated by hyphens
             - No spaces, underscores, or special characters
             - Duplicates removed
-            
+
         Examples:
             >>> # Example 1: Generate tags from technical content
             >>> ai_manager = AIEnhancementManager(
@@ -413,7 +406,7 @@ class AIEnhancementManager:
             ... )
             >>> content = '''
             ... # Machine Learning Basics
-            ... 
+            ...
             ... This note covers neural_networks and Deep Learning concepts.
             ... Key topics: supervised learning, unsupervised learning.
             ... '''
@@ -421,7 +414,7 @@ class AIEnhancementManager:
             >>> print(tags)
             ['machine-learning', 'neural-networks', 'deep-learning', 'supervised-learning', 'unsupervised-learning']
             >>> # Note: All converted to kebab-case automatically
-            
+
             >>> # Example 2: Kebab-case conversion in action
             >>> content = "Topics: AI Ethics, Machine_Learning, data science"
             >>> tags = ai_manager.generate_ai_tags(content)
@@ -432,7 +425,7 @@ class AIEnhancementManager:
             ...     assert '_' not in tag
             >>> print(tags)
             ['ai-ethics', 'machine-learning', 'data-science']
-            
+
             >>> # Example 3: Fallback when local LLM unavailable
             >>> ai_manager_no_llm = AIEnhancementManager(
             ...     base_dir=Path('knowledge'),
@@ -443,7 +436,7 @@ class AIEnhancementManager:
             >>> print(tags)
             ['ai-generated']
             >>> # Fallback provides generic tag when AI unavailable
-            
+
             >>> # Example 4: Integration with enhance_note
             >>> result = ai_manager.enhance_note('Inbox/note.md')
             >>> # Tags from enhance_note use this method
@@ -451,7 +444,7 @@ class AIEnhancementManager:
             >>> assert all('-' in tag or tag.isalpha() for tag in result['tags'])
             >>> print(f"Generated {len(result['tags'])} kebab-case tags")
             Generated 5 kebab-case tags
-            
+
             >>> # Example 5: Tag cleaning and normalization
             >>> # Input with problematic formatting
             >>> content = "Tags: Machine__Learning, AI---Ethics, ---data---science---"
@@ -462,73 +455,65 @@ class AIEnhancementManager:
             >>> # Multiple hyphens collapsed, leading/trailing hyphens removed
         """
         # Use local LLM if available
-        if self.local_llm and hasattr(self.local_llm, 'generate_tags'):
+        if self.local_llm and hasattr(self.local_llm, "generate_tags"):
             tags = self.local_llm.generate_tags(content)
             return self._enforce_kebab_case(tags)
-        
+
         # Fallback: extract simple tags from content
-        tags = ['ai-generated']
+        tags = ["ai-generated"]
         return self._enforce_kebab_case(tags)
-    
+
     def _enhance_with_local_llm(self, note_path: str) -> AIEnhancementResult:
         """Enhance using local Ollama LLM."""
         # Use local LLM if available
-        if self.local_llm and hasattr(self.local_llm, 'enhance'):
+        if self.local_llm and hasattr(self.local_llm, "enhance"):
             llm_result = self.local_llm.enhance(note_path)
             return {
-                'success': True,
-                'tags': llm_result.get('tags', []),
-                'summary': llm_result.get('summary', '')
+                "success": True,
+                "tags": llm_result.get("tags", []),
+                "summary": llm_result.get("summary", ""),
             }
-        
+
         # Fallback: Use existing AI services
         if self.ai_tagger and self.ai_summarizer:
             # Use existing AI services
             pass
-        
+
         # Last resort: Return empty result
-        return {
-            'success': True,
-            'tags': [],
-            'summary': ''
-        }
-    
+        return {"success": True, "tags": [], "summary": ""}
+
     def _enhance_with_external_api(self, note_path: str) -> AIEnhancementResult:
         """Enhance using external API as fallback."""
         # Use external API if available
-        if self.external_api and hasattr(self.external_api, 'enhance'):
+        if self.external_api and hasattr(self.external_api, "enhance"):
             api_result = self.external_api.enhance(note_path)
             return {
-                'success': True,
-                'tags': api_result.get('tags', []),
-                'summary': api_result.get('summary', '')
+                "success": True,
+                "tags": api_result.get("tags", []),
+                "summary": api_result.get("summary", ""),
             }
-        
+
         # Placeholder fallback
-        return {
-            'success': True,
-            'tags': [],
-            'summary': ''
-        }
-    
+        return {"success": True, "tags": [], "summary": ""}
+
     def _enforce_kebab_case(self, tags: List[str]) -> List[str]:
         """Convert all tags to kebab-case format."""
         import re
-        
+
         kebab_tags = []
         for tag in tags:
             # Convert to lowercase
             tag = tag.lower()
             # Replace spaces and underscores with hyphens
-            tag = re.sub(r'[\s_]+', '-', tag)
+            tag = re.sub(r"[\s_]+", "-", tag)
             # Remove non-alphanumeric characters except hyphens
-            tag = re.sub(r'[^a-z0-9-]', '', tag)
+            tag = re.sub(r"[^a-z0-9-]", "", tag)
             # Remove duplicate hyphens
-            tag = re.sub(r'-+', '-', tag)
+            tag = re.sub(r"-+", "-", tag)
             # Remove leading/trailing hyphens
-            tag = tag.strip('-')
-            
+            tag = tag.strip("-")
+
             if tag:  # Only add non-empty tags
                 kebab_tags.append(tag)
-        
+
         return kebab_tags

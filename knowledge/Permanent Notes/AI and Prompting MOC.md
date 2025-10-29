@@ -33,7 +33,7 @@ This is the central hub for notes related to AI, Large Language Models (LLMs), a
 - [[Reusable ChatGPT Prompt for Lovable Website MVPs]]
 - [[zettel-202507071534-prompt-brits-voxer-to-ticket]]
 - [[zettel-202507071934-prompt-content-seed-builder]]
-
+- [[lit-20250818-2201-prompt-tdd-new-chat 1]] - 🟢
 ## Cost & Tooling
 - [[Cost–Benefit of Using Claude via BYOK in WinDsurf for Large File Syntax Fixes]]
 

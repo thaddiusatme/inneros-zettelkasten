@@ -1,3 +1,7 @@
+---
+status: inbox
+type: literature
+---
 
 ---
 type: literature
