@@ -8,7 +8,7 @@
 
 ### Prerequisites
 1. ✅ Obsidian with Templater plugin installed
-2. ✅ Template at `knowledge/Templates/youtube-video.md`
+2. ✅ Template at `knowledge/Templates/youtube-video.md` (or use test fixture: `development/tests/fixtures/templates/youtube-video.md`)
 3. ✅ Background daemon running: `python3 development/src/automation/daemon.py`
 4. ✅ HTTP server listening on `http://localhost:8080`
 

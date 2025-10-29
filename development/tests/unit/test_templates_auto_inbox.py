@@ -1,10 +1,13 @@
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
-TEMPLATES_DIR = ROOT_DIR / "Templates"
+# Add development directory to path for fixtures import
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from tests.fixtures.template_loader import TEMPLATES_DIR
 
 
 def _has_tp_move(content: str) -> bool:
