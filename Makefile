@@ -2,7 +2,7 @@
 
 setup:
 	python3 -m pip install -r requirements.txt
-	python3 -m pip install ruff black pyright pytest pytest-cov
+	python3 -m pip install ruff black pyright pytest pytest-cov pytest-timeout
 
 lint:
 	python3 -m ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
@@ -12,7 +12,7 @@ type:
 	python3 -m pyright development/src || true
 
 unit:
-	PYTHONPATH=development python3 -m pytest -q development/tests/unit
+	PYTHONPATH=development python3 -m pytest -q --timeout=300 development/tests/unit
 
 integ:
 	PYTHONPATH=development python3 -m pytest -q development/tests/integration
