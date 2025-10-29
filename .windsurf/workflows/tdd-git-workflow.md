@@ -8,9 +8,10 @@ visibility: private
 
 # TDD & Git Workflow Rules: InnerOS Development Standards
 
-> **Version**: 3.0  
-> **Purpose**: Enforce TDD methodology with proper Git branching and commit practices  
-> **Integration**: Works with `inneros-manifest.md` and `windsurfrules.md`  
+> **Version**: 4.0  
+> **Purpose**: Enforce TDD methodology with proper Git branching, commit practices, and automated CI/CD  
+> **Integration**: Works with `inneros-manifest.md`, `windsurfrules.md`, and GitHub Actions  
+> **Updated**: 2025-10-28 - Added CI/CD automation, security scanning, and PR workflows  
 
 ## 🎯 TDD Philosophy & Standards
 
@@ -52,6 +53,55 @@ main ← develop ← feature/xyz ← local-dev
               ← hotfix/abc
 ```
 
+## 🤖 Automated CI/CD Pipeline
+
+### **GitHub Actions Workflows**
+
+#### **On Every PR Push**
+1. **CI-Lite** (~30 seconds)
+   - Fast linting (ruff, black)
+   - Type checking (pyright, optional)
+   - Quick feedback before full test suite
+
+2. **CI - Quality Gates** (~2-3 minutes)
+   - Full test suite (1872+ tests)
+   - Code coverage reporting
+   - Ubuntu runner (free tier optimized)
+
+3. **CodeQL Security Scanning** (~1 minute)
+   - Automated vulnerability detection
+   - Python security patterns
+   - Results in GitHub Security tab
+
+#### **Scheduled Workflows**
+- **Nightly Coverage** (07:23 UTC daily)
+  - Full coverage report generation
+  - 30-day HTML report retention
+  - 90-day summary retention
+  - Coverage trend tracking
+
+- **CodeQL Weekly Scan** (Mondays 10:00 UTC)
+  - Deep security analysis
+  - Dependency vulnerability check
+
+- **Dependabot** (Weekly on Mondays)
+  - Automated dependency updates
+  - Auto-labeled PRs
+  - Max 5 Python PRs, 3 Actions PRs
+
+### **PR Requirements**
+
+All PRs must pass:
+- ✅ CI-Lite (linting + formatting)
+- ✅ CI - Quality Gates (full tests)
+- ✅ CodeQL (security)
+- ✅ Code review approval
+
+**Merge blocked if**:
+- ❌ Any CI check fails
+- ❌ CodeQL finds critical issues
+- ❌ Coverage drops below threshold
+
 ## 📝 Commit Standards
 
 ### **Commit Message Format**
@@ -75,16 +125,43 @@ main ← develop ← feature/xyz ← local-dev
 ### **Commit Examples**
 ```bash
 # TDD Red phase
-feat(tdd): add failing test for orphaned note detection
+test(orphaned-notes): add failing test for orphaned note detection
 
 # TDD Green phase  
-feat(tdd): implement orphaned note detection with 100% coverage
+feat(orphaned-notes): implement orphaned note detection with 100% coverage
 
 # TDD Refactor phase
-refactor(tdd): extract link graph builder for better testability
+refactor(orphaned-notes): extract link graph builder for better testability
 
 # Bug fix with TDD
-fix(tdd): resolve weekly review edge case with empty collections
+fix(weekly-review): resolve edge case with empty collections
+
+# CI/CD updates
+feat(ci): add CodeQL security scanning workflow
+chore(deps): bump anthropic from 0.39.0 to 0.72.0
+```
+
+### **Commit Message Best Practices**
+- Use **conventional commits** format
+- Include **scope** for context (`feat(scope): message`)
+- Write **imperative mood** ("add" not "added")
+- Keep **subject line ≤ 50 chars**
+- Add **body** for complex changes
+- Reference **issues/PRs** in footer
+
+**Example with body**:
+```
+feat(ci): Switch from macOS to Ubuntu runners
+
+Problem:
+- macOS runners cost 10x more minutes
+- CI blocked by GitHub Actions billing limits
+
+Solution:
+- Switch to ubuntu-latest for 10x more free minutes
+- Tests run identically on Ubuntu
+
+Impact: Unblocks all Dependabot PRs
 ```
 
 ## 🧪 Test Structure Standards
@@ -232,37 +309,31 @@ def test_weekly_review_performance_100_notes():
     assert time.time() - start_time < 30
 ```
 
-## 🚦 Pre-commit Hooks
+## 🚦 Local Validation (Before Push)
 
-### **Test Validation**
+### **Quick Pre-Push Checks**
 ```bash
+# Run local checks (same as CI-Lite)
+make lint   # ruff + black
+make type   # pyright (optional)
+make unit   # fast unit tests
+
+# Full validation (same as CI - Quality Gates)
+make test   # lint + type + unit tests
+```
+
+### **Optional: Git Hooks**
+```bash
+# .git/hooks/pre-commit (optional - CI will catch issues anyway)
 #!/bin/bash
-# .git/hooks/pre-commit
-
-# Run tests
-python -m pytest tests/ -v
-
-# Check coverage
-python -m pytest tests/ --cov=src --cov-report=term-missing --cov-fail-under=90
-
-# Validate no failing tests
+make lint
 if [ $? -ne 0 ]; then
-    echo "❌ Tests failing. Commit blocked."
+    echo "❌ Lint failed. Fix with: make lint"
     exit 1
 fi
 ```
 
-### **Code Quality Checks**
-```bash
-# Format check
-black --check src/ tests/
-
-# Lint check
-flake8 src/ tests/
-
-# Type checking
-mypy src/
-```
+**Note**: Pre-commit hooks are **optional** since CI catches all issues automatically. Many developers prefer faster local commits with CI validation.
 
 ## 🏗️ Branch Workflow Examples
 
@@ -284,30 +355,65 @@ git push origin main
 ### **Feature Development**
 ```bash
 # Create feature branch
-git checkout develop
+git checkout main
+git pull origin main
 git checkout -b feature/tdd-enhanced-analytics
 
 # Complete TDD cycle
 # ... multiple commits following TDD pattern ...
 
-# Create PR
+# Push and create PR
 git push origin feature/tdd-enhanced-analytics
-# Create pull request for review
+gh pr create --title "feat: Enhanced analytics dashboard" \
+             --body-file .github/pull_request_template.md
+
+# Watch CI checks
+gh pr checks
+
+# After approval and green CI
+gh pr merge --squash
+```
+
+### **Working with Dependabot PRs**
+```bash
+# List Dependabot PRs
+gh pr list --label dependencies
+
+# Check status of specific PR
+gh pr checks 17
+
+# Auto-merge safe dependency updates
+gh pr merge 17 --auto --squash  # Merges when CI passes
+
+# Batch approve Dependabot PRs (if tests pass)
+gh pr list --label dependencies --json number --jq '.[].number' | \
+  xargs -I {} gh pr review {} --approve
 ```
 
 ## 📊 Progress Tracking
 
 ### **TDD Metrics**
-- **Test Count**: Track tests per feature
+- **Test Count**: Track tests per feature (target: 10-25 tests/feature)
 - **Coverage**: Maintain >90% for new code
 - **Red→Green Time**: Target <5 minutes per cycle
 - **Refactor Safety**: All refactors must maintain passing tests
 
+### **CI/CD Metrics** (Auto-tracked by GitHub Actions)
+- **CI Success Rate**: Target >95% (check GitHub Actions)
+- **Build Time**: CI-Lite <1 min, Full CI <5 min
+- **Coverage Trends**: Nightly reports track coverage over time
+- **Security Issues**: CodeQL reports in Security tab
+
 ### **Git Metrics**
 - **Commit Frequency**: Small, frequent commits
 - **Branch Lifetime**: Feature branches <1 week
-- **PR Review Time**: Target <24 hours
+- **PR Review Time**: Target <24 hours (automated checks help)
 - **Merge Conflicts**: Minimize through small changes
+
+### **Dependency Health** (Dependabot)
+- **Update Frequency**: Weekly automated PRs
+- **Security Patches**: Auto-flagged, prioritize merging
+- **Breaking Changes**: Review carefully before merging
 
 ## 🎯 Next TDD Targets
 
@@ -331,29 +437,63 @@ git push origin feature/tdd-enhanced-analytics
 
 ---
 
-## 🚀 Quick TDD Commands
+## 🚀 Quick Commands
 
+### **Local Development**
 ```bash
-# Run all tests
-python -m pytest tests/ -v
+# Run tests (uses Makefile - same as CI)
+make lint          # Linting only
+make type          # Type checking only  
+make unit          # Unit tests only
+make test          # Full test suite (lint + type + unit)
+make cov           # Tests with coverage report
 
 # Run specific test file
+cd development && source venv/bin/activate
 python -m pytest tests/unit/test_workflow_manager.py -v
-
-# Run with coverage
-python -m pytest tests/ --cov=src --cov-report=html
-
-# Run performance tests
-python -m pytest tests/performance/ -v
 
 # Run specific test
 python -m pytest tests/unit/test_workflow_manager.py::TestWorkflowManager::test_detect_orphaned_notes -v
 ```
 
+### **CI/CD Management**
+```bash
+# Check PR status
+gh pr checks        # Current PR
+gh pr checks 17     # Specific PR
+
+# View workflow runs
+gh run list --limit 5
+gh run view <run-id>
+
+# Trigger manual workflows
+gh workflow run nightly-coverage.yml
+
+# Monitor CI/CD
+gh pr list --json number,title,statusCheckRollup
+```
+
+### **Repository Info**
+```bash
+# View repo status
+gh repo view --json isPrivate,visibility
+
+# Check Actions usage (for billing)
+gh api /repos/thaddiusatme/inneros-zettelkasten/actions/cache/usage
+```
+
 ---
 
-> **TDD Mantra**: "If it's not tested, it's broken. If it's not committed, it's not done."
+> **TDD Mantra**: "If it's not tested, it's broken. If it's not committed, it's not done. If CI fails, it's not ready."
 
-**TDD Rules Version**: 3.0  
-**Last Updated**: 2025-08-04  
-**Next Review**: 2025-09-04
+## 📚 Additional Resources
+
+- **Contributing Guide**: See `CONTRIBUTING.md` for detailed contributor guidelines
+- **PR Template**: `.github/pull_request_template.md`
+- **Issue Templates**: `.github/ISSUE_TEMPLATE/`
+- **CI Workflows**: `.github/workflows/`
+- **ADR-004**: PR description standards
+
+**Workflow Version**: 4.0  
+**Last Updated**: 2025-10-28  
+**Next Review**: 2025-11-28
