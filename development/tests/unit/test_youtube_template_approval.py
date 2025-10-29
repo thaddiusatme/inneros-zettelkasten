@@ -1,35 +1,28 @@
 """
-TDD RED PHASE: YouTube Template Approval System Tests
+TDD GREEN PHASE: YouTube Template Approval System Tests
 
 Tests validate that the YouTube template includes:
 1. ready_for_processing: false in frontmatter
 2. status: draft (not inbox)
 3. Checkbox approval section
 4. User instructions banner
+
+Uses template_loader to load from fixtures directory for CI compatibility.
 """
 
 import re
 from pathlib import Path
 import pytest
+from tests.fixtures.template_loader import get_template_content
 
 
 class TestYouTubeTemplateApproval:
     """Test suite for YouTube template approval workflow integration."""
 
     @pytest.fixture
-    def template_path(self):
-        """Path to YouTube video template."""
-        return (
-            Path(__file__).parent.parent.parent.parent
-            / "knowledge"
-            / "Templates"
-            / "youtube-video.md"
-        )
-
-    @pytest.fixture
-    def template_content(self, template_path):
-        """Load template content."""
-        return template_path.read_text()
+    def template_content(self):
+        """Load template content from fixtures."""
+        return get_template_content("youtube-video.md")
 
     def test_template_has_ready_for_processing_field(self, template_content):
         """RED: Template should include ready_for_processing: false in frontmatter."""
