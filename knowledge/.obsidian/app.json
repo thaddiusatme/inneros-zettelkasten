@@ -1,8 +1,0 @@
-{
-  "alwaysUpdateLinks": true,
-  "mobilePullAction": "editor:download-attachments",
-  "newFileLocation": "folder",
-  "promptDelete": false,
-  "newFileFolderPath": "Inbox",
-  "attachmentFolderPath": "media"
-}
