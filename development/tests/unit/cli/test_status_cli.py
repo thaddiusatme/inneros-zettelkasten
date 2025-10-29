@@ -20,11 +20,13 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 from datetime import datetime, timedelta
+import pytest
 
 
 class TestDaemonDetection:
     """Test daemon process detection functionality."""
 
+    @pytest.mark.slow
     def test_detect_daemon_running(self):
         """Test detection when daemon process is running.
 

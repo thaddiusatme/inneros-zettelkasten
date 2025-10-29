@@ -12,6 +12,9 @@ type:
 	python3 -m pyright development/src || true
 
 unit:
+	PYTHONPATH=development python3 -m pytest -q --timeout=300 -m "not slow" development/tests/unit
+
+unit-all:
 	PYTHONPATH=development python3 -m pytest -q --timeout=300 development/tests/unit
 
 integ:

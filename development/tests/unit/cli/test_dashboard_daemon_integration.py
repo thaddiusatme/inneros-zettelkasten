@@ -33,6 +33,7 @@ from src.cli.dashboard_utils import (
 class TestDashboardDaemonStatusDetection:
     """Test daemon status detection before dashboard launch."""
 
+    @pytest.mark.slow
     def test_dashboard_detects_daemon_running(self):
         """Dashboard should detect when daemon is running."""
         # GREEN: Test actual behavior - integration should return status dict
@@ -50,6 +51,7 @@ class TestDashboardDaemonStatusDetection:
         else:
             assert "message" in status or not status["running"]
 
+    @pytest.mark.slow
     def test_dashboard_detects_daemon_stopped(self):
         """Dashboard should detect when daemon is not running."""
         # RED: NotImplementedError expected
@@ -67,6 +69,7 @@ class TestDashboardDaemonStatusDetection:
             assert status["running"] is False
             assert "message" in status
 
+    @pytest.mark.slow
     def test_dashboard_handles_missing_pid_file(self):
         """Dashboard should gracefully handle missing PID file."""
         # RED: NotImplementedError expected
