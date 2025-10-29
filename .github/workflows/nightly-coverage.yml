@@ -1,0 +1,68 @@
+name: Nightly Coverage
+
+on:
+  schedule:
+    # Run at 07:23 UTC daily (11:23 PM PST / 12:23 AM PDT)
+    - cron: '23 7 * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  coverage:
+    name: Coverage Report
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+          
+      - name: Create virtual environment
+        run: |
+          python3 -m venv development/venv
+          
+      - name: Install dependencies
+        run: |
+          source development/venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+          
+      - name: Run tests with coverage
+        run: |
+          source development/venv/bin/activate
+          make cov
+        env:
+          PYTHONPATH: development
+          
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_number }}
+          path: htmlcov/
+          retention-days: 30
+          
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          source development/venv/bin/activate
+          python3 -m pytest --cov=development/src --cov-report=term-missing development/tests/unit > coverage-summary.txt 2>&1 || true
+          
+      - name: Upload coverage summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary-${{ github.run_number }}
+          path: coverage-summary.txt
+          retention-days: 90
+          
+      - name: Comment on coverage trends
+        if: always()
+        run: |
+          echo "📊 Coverage report generated at $(date)"
+          echo "View full HTML report in artifacts"
+          echo "Retention: 30 days for HTML, 90 days for summary"
