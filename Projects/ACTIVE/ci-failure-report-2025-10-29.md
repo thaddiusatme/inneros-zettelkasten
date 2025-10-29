@@ -361,8 +361,32 @@ This is **expected and manageable** post-migration cleanup, not a fundamental ar
 - **Commit**: `a30703e`
 - **Lessons Learned**: `Projects/ACTIVE/template-fixtures-p1-2-1-lessons-learned.md`
 
-### Next Priority: P1-2.2 (metrics_collector PYTHONPATH)
-- **Impact**: Blocks 17+ tests with ImportError
-- **Strategy**: Update GitHub Actions workflow PYTHONPATH configuration
-- **Expected Fix**: Set PYTHONPATH=development in CI workflow
-- **Estimated Time**: 20-30 minutes
+### ✅ COMPLETED: P1-2.2 PYTHONPATH Investigation & CI Verification
+- **Impact**: Verified PYTHONPATH configuration, identified web UI import issue
+- **Finding**: PYTHONPATH already configured in ci.yml (lines 51-52)
+- **CI Run**: #18922388221 (10m 37s runtime)
+- **Test Results**:
+  - ✅ 1,287 passed (75% pass rate)
+  - ❌ 287 failed (17% logic failures)
+  - ⚠️ 65 errors (4% import errors - web UI related)
+  - ⏭️ 82 skipped (5%)
+- **Verification**:
+  - ✅ P0-1.2 fix working: No llama_vision_ocr ImportErrors
+  - ✅ P1-2.1 fix working: No template FileNotFoundErrors
+  - ✅ Diagnostic tests created: 12/12 passing locally
+  - ⚠️ Web UI imports still failing (65 errors)
+- **Error Reduction**: 361 → 352 total issues (2.5% reduction)
+- **Root Cause (New Issue)**: web_ui/app.py uses incorrect import paths
+  - Uses: `from monitoring.metrics_collector import MetricsCollector`
+  - Should use: `from src.monitoring.metrics_collector import MetricsCollector`
+  - Affects: All web UI tests (test_web_metrics_endpoint.py, test_weekly_review_route.py)
+- **Duration**: 40 minutes (investigation + verification)
+- **Commits**: `f22e5db` (docs), `2a99f3d` (black formatting)
+- **Lessons Learned**: PYTHONPATH configured but web UI has different import structure
+
+### Next Priority: P1-2.3 (Web UI Import Standardization)
+- **Impact**: Blocks 65 tests with ModuleNotFoundError for monitoring modules
+- **Root Cause**: web_ui/app.py uses wrong import paths (missing 'src.' prefix)
+- **Strategy**: Update imports in web_ui/app.py to use correct module paths
+- **Expected Fix**: Change monitoring imports to include src prefix
+- **Estimated Time**: 15-20 minutes
