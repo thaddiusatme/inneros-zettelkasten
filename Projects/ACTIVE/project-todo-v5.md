@@ -1,16 +1,16 @@
 ---
 type: project-manifest
 created: 2025-10-26 15:24
-updated: 2025-10-29 08:20
+updated: 2025-10-29 08:35
 status: active
-priority: P0
-tags: [project-tracking, priorities, workflow-automation, ci-cd, dual-repo, shipping]
+priority: P1
+tags: [project-tracking, priorities, workflow-automation, ci-cd, post-beta]
 ---
 
 # InnerOS Zettelkasten - Project Todo v5.0
 
-**Last Updated**: 2025-10-29 08:30 PDT
-**Status**: ✅ **CI/CD RESOLVED** - Repo now public, unlimited GitHub Actions minutes
+**Last Updated**: 2025-10-29 08:35 PDT
+**Status**: ✅ **v0.1.0-beta SHIPPED** - CI/CD resolved, repo public, unlimited minutes
 **Scope**: Entire InnerOS (Solopreneur Edition)
 **Previous Version**: `project-todo-v4.md` (619 lines archived)
 
@@ -45,22 +45,23 @@ tags: [project-tracking, priorities, workflow-automation, ci-cd, dual-repo, ship
 
 ## ✅ Recently Completed (Oct 26-29, 2025)
 
-### Oct 28-29: CI/CD Infrastructure & Dual-Repo Sync
+### Oct 28-29: CI/CD Resolution & v0.1.0-beta Ship
 
-**Duration**: ~3 hours across 2 sessions
+**Duration**: ~4 hours across 3 sessions
 
 **Deliverables**:
 
-- ✅ **Ubuntu CI Switch** (Oct 27): Switched from macOS to Ubuntu runners (conserve free tier: 10x cheaper)
-- ✅ **CI Quality Gates** (Oct 27): PR #7 merged - lint, format, type checking in `.github/workflows/ci.yml`
-- ✅ **Test Collection Fixes** (Oct 27): Fixed psutil import, 1872 tests now discoverable (was 1788)
-- ✅ **Dual-Repo Sync** (Oct 28): `scripts/sync-repos.sh` + git alias `sync-all`
-  - Private: `thaddiusatme/inneros-zettelkasten` (billing limits: 2000 min/month Ubuntu)
-  - Public: `thaddiusatme/inneros-zettelkasten-public` (unlimited CI/CD)
-- ✅ **TDD Workflow v4.0** (Oct 28): Updated `.windsurf/workflows/tdd-git-workflow.md` with CI/CD automation docs
-- ✅ **Markdown Linting** (Oct 28): Fixed 30+ MD022/MD032 violations across workflows
+- ✅ **Ubuntu CI Switch** (Oct 27): Switched from macOS to Ubuntu runners (10x cheaper)
+- ✅ **CI Quality Gates** (Oct 27): PR #7 merged - lint, format, type checking
+- ✅ **Test Collection Fixes** (Oct 27): Fixed psutil import, 1872 tests discoverable (was 1788)
+- ✅ **v0.1.0-beta Shipped** (Oct 28): PR #8 merged, tag pushed
+- ✅ **Dual-Repo Sync** (Oct 28): Created `scripts/sync-repos.sh` (superseded Oct 29)
+- ✅ **Repo Made Public** (Oct 29): Removed `knowledge/` (473 files), changed visibility to PUBLIC
+- ✅ **Unlimited CI/CD** (Oct 29): No more 2,000 min/month limit
 
-**Impact**: CI/CD infrastructure functional, dual-repo strategy in place, documentation updated
+**Impact**: v0.1.0-beta shipped, CI/CD unlimited, privacy protected, dual-repo strategy replaced by single public repo
+
+**Note**: Dual-repo strategy (Oct 28) was superseded <24h later by making main repo public.
 
 ### Oct 26: Repo Hygiene Bundle
 
@@ -111,19 +112,23 @@ tags: [project-tracking, priorities, workflow-automation, ci-cd, dual-repo, ship
 
 ---
 
-## 🔴 P0: Ship v0.1.0-beta (Unblocked!)
+## ✅ SHIPPED: v0.1.0-beta (Oct 28, 2025)
 
-**Prerequisites**: ✅ CI/CD resolved - repo now public
+**Status**: ✅ **COMPLETE** - Tag pushed before CI/CD resolution
 
-### Pre-Beta Checklist
+### What Shipped
 
-- [x] CI/CD strategy implemented (repo made public)
-- [ ] PR #8 CI checks passing (`chore/repo-hygiene-bundle-and-lifecycle-fixes`)
-- [ ] Merge PR #8 to main
-- [ ] Tag `v0.1.0-beta -m "Post-beta quality infrastructure + note lifecycle fixes"`
-- [ ] Push tag to public repo
+- ✅ PR #8 merged (Oct 28, 5:20pm PDT)
+- ✅ Tag `v0.1.0-beta` created and pushed (commit 6bb232f)
+- ✅ Test infrastructure: 1872 tests, 0 collection errors
+- ✅ Note lifecycle fixes included
+- ✅ CI quality gates enforced
 
-### Post-Beta Improvements
+**Subsequent improvement (Oct 29)**: CI/CD limits removed by making repo public
+
+---
+
+## 🔴 P0: Post-Beta Improvements (Nov 2025)
 
 - [ ] Nightly coverage job (GitHub Actions schedule → `make cov` at 07:23 UTC)
 - [ ] Enhanced CONTRIBUTING.md (CI/CD workflow, testing requirements)
