@@ -10,7 +10,7 @@ jobs:
   lint-and-test:
     name: Lint & Test (Ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Prevent infinite hangs
+    timeout-minutes: 20  # 1800+ tests need ~15min, was hitting 10min timeout
     
     steps:
       - name: Checkout code
