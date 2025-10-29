@@ -9,8 +9,8 @@ tags: [project-tracking, priorities, workflow-automation, ci-cd, dual-repo, ship
 
 # InnerOS Zettelkasten - Project Todo v5.0
 
-**Last Updated**: 2025-10-29 08:20 PDT
-**Status**: 🟡 **CI/CD INFRASTRUCTURE ISSUES** - Quality gates working, but billing/deployment strategy needs resolution
+**Last Updated**: 2025-10-29 08:30 PDT
+**Status**: ✅ **CI/CD RESOLVED** - Repo now public, unlimited GitHub Actions minutes
 **Scope**: Entire InnerOS (Solopreneur Edition)
 **Previous Version**: `project-todo-v4.md` (619 lines archived)
 
@@ -79,84 +79,49 @@ tags: [project-tracking, priorities, workflow-automation, ci-cd, dual-repo, ship
 
 ---
 
-## 🔴 P0: CI/CD Infrastructure Resolution (This Week)
+## ✅ RESOLVED: CI/CD Infrastructure (Oct 29, 2025)
 
-**Status**: 🟡 **BLOCKED** - Dual-repo strategy in place, but not yet operational
+**Status**: ✅ **COMPLETE** - Repo is now public with unlimited CI/CD
+
+### What We Did
+
+1. **Removed `knowledge/` from git** (473 personal files)
+   - Files still exist locally for personal use
+   - `.gitignore` prevents re-adding
+   - No personal/business content in public repo ✅
+
+2. **Made repo public** (Oct 29, 08:30 PDT)
+   - Changed `thaddiusatme/inneros-zettelkasten` visibility to PUBLIC
+   - Unlocked unlimited GitHub Actions minutes
+   - All existing CI workflows now run for free
+
+### Benefits Achieved
+
+- ✅ **Unlimited CI/CD**: No more 2,000 min/month limit
+- ✅ **Privacy Protected**: Personal knowledge folder removed
+- ✅ **Portfolio Ready**: Public repo showcases development practices
+- ✅ **Cost-Free**: All workflows (lint, test, coverage, security) run free
 
 ### Current State
 
-- ✅ Private repo: CI working with Ubuntu runners (2000 min/month limit)
-- ✅ Public repo: Synced via `scripts/sync-repos.sh`
-- ❌ Public repo: CI/CD **NOT configured** (no workflows pushed)
-- ❌ Deployment strategy: Unclear
-
-### Issues to Resolve
-
-**1. GitHub Actions Billing Constraints** 🔴
-
-- Private repo limited to 2,000 Ubuntu minutes/month
-- Already using Ubuntu (10x cheaper than macOS)
-- Risk: Hitting limits with PR-based development
-
-**2. Public Repo CI/CD Not Configured** 🟡
-
-- Public repo has unlimited CI/CD minutes
-- Workflows exist in private repo but not synced to public
-- Need to decide: Mirror all workflows? Subset?
-
-**3. Deployment Strategy Undefined** 🟡
-
-- Where should PRs be opened? Private? Public? Both?
-- Which repo should run expensive CI jobs (coverage, CodeQL)?
-- How to handle security scanning on public repo?
-
-### Options
-
-#### Option A: Primary Development on Public Repo (Recommended)
-
-- Move all development to public repo
-- Unlimited CI/CD minutes
-- Great for portfolio
-- Private repo becomes backup/personal notes
-- **Action**: Copy all workflows to public, update README, switch development
-
-#### Option B: Dual-PR Workflow
-
-- Open PRs on both repos
-- Light CI on private (lint/format only)
-- Full CI on public (tests, coverage, security)
-- **Action**: Configure public repo workflows, update CONTRIBUTING.md
-
-#### Option C: Stay Private + Add Payment
-
-- Add credit card to GitHub account
-- Set spending limit (e.g., $5/month)
-- Continue as-is
-- **Action**: Update billing settings
-
-### Immediate Tasks (Choose Option First)
-
-- [ ] **DECISION**: Choose Option A, B, or C
-- [ ] Update `.github/workflows/` in chosen repo(s)
-- [ ] Configure branch protection rules
-- [ ] Update CONTRIBUTING.md with CI/CD workflow
-- [ ] Test PR workflow end-to-end
-
-**Blocked Until**: CI/CD strategy decision made
+- **Repo**: `thaddiusatme/inneros-zettelkasten` → PUBLIC ✅
+- **CI Runners**: Ubuntu (all workflows)
+- **Monthly Limit**: Unlimited (public repo benefit)
+- **Personal Data**: Protected (knowledge/ removed from git)
 
 ---
 
-## 🟡 P1: Ship v0.1.0-beta (After CI/CD Resolution)
+## 🔴 P0: Ship v0.1.0-beta (Unblocked!)
 
-**Prerequisites**: P0 CI/CD strategy resolved
+**Prerequisites**: ✅ CI/CD resolved - repo now public
 
 ### Pre-Beta Checklist
 
-- [ ] CI/CD strategy implemented (Option A/B/C)
+- [x] CI/CD strategy implemented (repo made public)
 - [ ] PR #8 CI checks passing (`chore/repo-hygiene-bundle-and-lifecycle-fixes`)
 - [ ] Merge PR #8 to main
 - [ ] Tag `v0.1.0-beta -m "Post-beta quality infrastructure + note lifecycle fixes"`
-- [ ] Push tag to chosen repo(s)
+- [ ] Push tag to public repo
 
 ### Post-Beta Improvements
 
