@@ -533,8 +533,10 @@ User content here...
         assert result["success"] is True
         assert result["quotes_added"] == 3
 
-    def test_handle_logs_fallback_extraction(self, vault_path):
+    def test_handle_logs_fallback_extraction(self, vault_path, caplog):
         """Handler should log when video_id is extracted from body content"""
+        import logging
+        
         config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
@@ -555,10 +557,10 @@ video_id:
 User notes
 """
 
-        updated_content = """---
+        updated_content_after_status = """---
 source: youtube
-video_id: test123
-ai_processed: true
+video_id: 
+status: processing
 ---
 
 - **Video ID**: `test123`
@@ -580,18 +582,20 @@ User notes
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
-            mock_enhancer.update_frontmatter.return_value = updated_content
+            mock_enhancer.update_frontmatter.return_value = updated_content_after_status
 
-            # Capture logs
-            with patch.object(handler.logger, "info") as mock_log:
-                result = handler.handle(mock_event)
+            # Set log level to capture INFO messages
+            caplog.set_level(logging.INFO)
+            
+            # Run handler
+            result = handler.handle(mock_event)
 
-                # Verify fallback extraction was logged
-                log_calls = [str(call) for call in mock_log.call_args_list]
-                assert any(
-                    "body content" in str(call).lower() for call in log_calls
-                ), "Should log fallback extraction from body content"
-
+        # Verify fallback extraction was logged
+        assert any(
+            "body content" in record.message.lower() 
+            for record in caplog.records
+        ), "Should log fallback extraction from body content"
+        
         assert result["success"] is True
 
     def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(self, vault_path):
