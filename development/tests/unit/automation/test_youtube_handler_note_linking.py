@@ -337,15 +337,12 @@ Content here.
 """
         note_path.write_text(original_content)
 
-        # Mock dependencies - simulate error during frontmatter update
+        # Mock dependencies
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
             "src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"
-        ) as MockSaver, patch(
-            "src.utils.frontmatter.parse_frontmatter",
-            side_effect=Exception("Simulated parse error"),
-        ):
+        ) as MockSaver:
 
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
@@ -353,12 +350,15 @@ Content here.
             mock_result.success = True
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
             mock_saver.save_transcript.return_value = transcript_path
 
-            # Create handler and process
+            # Create handler
             handler = YouTubeFeatureHandler(
                 config={
                     "vault_path": self.vault_path,
@@ -366,12 +366,18 @@ Content here.
                 }
             )
 
-            # Should not raise exception
-            # Create mock event with src_path attribute
-            mock_event = Mock()
-            mock_event.src_path = str(note_path)
-            
-            result = handler.handle(mock_event)
+            # Mock link insertion to fail (simulating linking error after quotes succeeded)
+            with patch.object(
+                handler,
+                "_add_transcript_links_to_note",
+                return_value=False
+            ):
+                # Should not raise exception
+                # Create mock event with src_path attribute
+                mock_event = Mock()
+                mock_event.src_path = str(note_path)
+                
+                result = handler.handle(mock_event)
 
             # RED: Handler should still report success (quotes were added)
             self.assertTrue(result["success"])
