@@ -9,6 +9,16 @@ Tests for YouTubeFeatureHandler daemon integration:
 - Error handling and graceful degradation
 
 Following established patterns from ScreenshotEventHandler and SmartLinkEventHandler.
+
+IMPORTANT MOCK PATTERN (P2-3.3b):
+When mocking YouTubeNoteEnhancer, you MUST mock both methods:
+1. mock_enhancer.enhance_note.return_value = mock_result
+2. mock_enhancer.update_frontmatter.return_value = updated_content_string
+
+The handler calls update_frontmatter() internally, which must return a STRING,
+not a Mock object, otherwise you'll get "data must be str, not MagicMock" errors.
+
+Also add: patch("pathlib.Path.write_text") to prevent actual file writes.
 """
 
 import pytest
@@ -219,11 +229,20 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ) as mock_write, patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -231,12 +250,15 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
         assert result["success"] is True
         assert result["quotes_added"] == 5
         assert "processing_time" in result
+        # Verify write_text was called (multiple times for status updates + transcript + final note)
+        assert mock_write.called
 
     def test_handle_extracts_quotes_from_transcript(self, vault_path):
         """Handler should extract quotes using AI (integration with YouTubeNoteEnhancer)"""
@@ -256,11 +278,20 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 7
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -268,6 +299,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             handler.handle(mock_event)
 
@@ -292,11 +324,20 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -304,6 +345,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
@@ -328,11 +370,20 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -340,6 +391,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
@@ -364,11 +416,20 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 12
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -376,6 +437,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
@@ -424,11 +486,38 @@ channel: Test Channel
 User content here...
 """
 
+        updated_content = """---
+type: literature
+created: 2025-10-08 11:48
+status: inbox
+tags: [youtube, video-content]
+visibility: private
+source: youtube
+author: Test Channel
+video_id: IeVxir50Q2Q
+channel: Test Channel
+ai_processed: true
+---
+
+# The Must-Follow Roadmap for All Solo Developers
+
+## Metadata
+- **Video ID**: `IeVxir50Q2Q`
+- **Channel**: Test Channel
+- **URL**: https://www.youtube.com/watch?v=IeVxir50Q2Q
+
+## My Notes
+
+User content here...
+"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 3
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -436,6 +525,7 @@ User content here...
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
@@ -465,11 +555,24 @@ video_id:
 User notes
 """
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+---
+
+- **Video ID**: `test123`
+
+User notes
+"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 2
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -477,6 +580,7 @@ User notes
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             # Capture logs
             with patch.object(handler.logger, "info") as mock_log:
@@ -540,11 +644,21 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+status: processing
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = False
         mock_enhance_result.error_message = "Transcript not available for this video"
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -552,6 +666,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 
@@ -576,11 +691,21 @@ video_id: test123
 ---
 User notes"""
 
+        updated_content = """---
+source: youtube
+video_id: test123
+ai_processed: true
+status: processing
+---
+User notes"""
+
         mock_enhance_result = Mock()
         mock_enhance_result.success = False
         mock_enhance_result.error_message = "LLM service unavailable"
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
+            "pathlib.Path.write_text"
+        ), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
@@ -588,6 +713,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             result = handler.handle(mock_event)
 

@@ -151,6 +151,16 @@ class TestYouTubeHandlerTranscriptIntegration:
         mock_result.success = True
         mock_result.quote_count = 0
         mock_enhancer.enhance_note.return_value = mock_result
+        mock_enhancer.update_frontmatter.return_value = """---
+type: literature
+source: youtube
+video_id: dQw4w9WgXcQ
+created: 2025-10-17
+ai_processed: true
+---
+
+# Test Video Note
+"""
         mock_enhancer_class.return_value = mock_enhancer
 
         # Create test note
@@ -257,6 +267,14 @@ created: 2025-10-17
         mock_result.success = True
         mock_result.quote_count = 3
         mock_enhancer.enhance_note.return_value = mock_result
+        mock_enhancer.update_frontmatter.return_value = """---
+type: literature
+source: youtube
+video_id: abc123xyz
+created: 2025-10-17
+ai_processed: true
+---
+"""
         mock_enhancer_class.return_value = mock_enhancer
 
         # Create test note
@@ -347,6 +365,14 @@ created: 2025-10-17
         mock_result.success = True
         mock_result.quote_count = 0
         mock_enhancer.enhance_note.return_value = mock_result
+        mock_enhancer.update_frontmatter.return_value = """---
+type: literature
+source: youtube
+video_id: test_video_123
+created: 2025-10-17
+ai_processed: true
+---
+"""
         mock_enhancer_class.return_value = mock_enhancer
 
         # Create test note
@@ -354,7 +380,7 @@ created: 2025-10-17
         note_content = """---
 type: literature
 source: youtube
-video_id: test123
+video_id: test_video_123
 created: 2025-10-17
 ---
 
@@ -379,94 +405,102 @@ created: 2025-10-17
 
         # Verify wikilink format
         wikilink = result["transcript_wikilink"]
-        assert wikilink.startswith("[["), "Wikilink should start with '[[')"
+        assert wikilink.startswith("[["), "Wikilink should start with '[['"
         assert wikilink.endswith("]]"), "Wikilink should end with ']]'"
         assert (
-            "youtube-test123-" in wikilink
+            "youtube-test_video_123-" in wikilink
         ), "Wikilink should contain video_id in format 'youtube-{id}-'"
         assert "2025-10-17" in wikilink, "Wikilink should contain date"
 
-    # ==========================================
-    # TEST 5: Handler Handles Save Failures Gracefully
-    # ==========================================
-    @patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher")
-    @patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor")
-    @patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
-    def test_handler_handles_transcript_save_failure(
-        self,
-        mock_enhancer_class,
-        mock_extractor_class,
-        mock_fetcher_class,
-        handler_config,
-        temp_vault,
-        mock_transcript_result,
-    ):
-        """
-        TEST 5 (RED): Handler should handle transcript save failures gracefully
+# ==========================================
+# TEST 5: Handler Handles Save Failures Gracefully
+# ==========================================
+@patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher")
+@patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor")
+@patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
+def test_handler_handles_transcript_save_failure(
+    self,
+    mock_enhancer_class,
+    mock_extractor_class,
+    mock_fetcher_class,
+    handler_config,
+    temp_vault,
+    mock_transcript_result,
+):
+    """
+    TEST 5 (RED): Handler should handle transcript save failures gracefully
 
-        Expected Behavior:
-        - If save_transcript() raises exception, handler continues processing
-        - Quote extraction still happens (transcript save failure doesn't block workflow)
-        - Error is logged but doesn't crash handler
-        - Result indicates transcript save failed but processing succeeded
+    Expected Behavior:
+    - If save_transcript() raises exception, handler continues processing
+    - Quote extraction still happens (transcript save failure doesn't block workflow)
+    - Error is logged but doesn't crash handler
+    - Result indicates transcript save failed but processing succeeded
 
-        Current Status: EXPECTED TO FAIL - feature not yet implemented
-        """
-        # Setup mocks
-        mock_fetcher = Mock()
-        mock_fetcher.fetch_transcript.return_value = mock_transcript_result
-        mock_fetcher.format_for_llm.return_value = "formatted transcript"
-        mock_fetcher_class.return_value = mock_fetcher
+    Current Status: EXPECTED TO FAIL - feature not yet implemented
+    """
+    # Setup mocks
+    mock_fetcher = Mock()
+    mock_fetcher.fetch_transcript.return_value = mock_transcript_result
+    mock_fetcher.format_for_llm.return_value = "formatted transcript"
+    mock_fetcher_class.return_value = mock_fetcher
 
-        mock_extractor = Mock()
-        mock_extractor.extract_quotes.return_value = {
-            "quotes": [
-                {
-                    "text": "Test quote",
-                    "timestamp": "00:00",
-                    "context": "test",
-                    "relevance_score": 0.8,
-                }
-            ]
-        }
-        mock_extractor_class.return_value = mock_extractor
+    mock_extractor = Mock()
+    mock_extractor.extract_quotes.return_value = {
+        "quotes": [
+            {
+                "text": "Test quote",
+                "timestamp": "00:00",
+                "context": "test",
+                "relevance_score": 0.8,
+            }
+        ]
+    }
+    mock_extractor_class.return_value = mock_extractor
 
-        mock_enhancer = Mock()
-        mock_result = Mock()
-        mock_result.success = True
-        mock_result.quote_count = 1
-        mock_enhancer.enhance_note.return_value = mock_result
-        mock_enhancer_class.return_value = mock_enhancer
-
-        # Create test note
-        note_path = temp_vault / "test-youtube-note.md"
-        note_content = """---
+    mock_enhancer = Mock()
+    mock_result = Mock()
+    mock_result.success = True
+    mock_result.quote_count = 1
+    mock_enhancer.enhance_note.return_value = mock_result
+    mock_enhancer.update_frontmatter.return_value = """---
 type: literature
 source: youtube
-video_id: failtest
+video_id: fail_save_123
+created: 2025-10-17
+ai_processed: true
+---
+"""
+    mock_enhancer_class.return_value = mock_enhancer
+
+    # Create test note
+    note_path = temp_vault / "test-youtube-note.md"
+    note_content = """---
+type: literature
+source: youtube
+video_id: fail_save_123
 created: 2025-10-17
 ---
 
 # Test Failure Handling
 """
-        note_path.write_text(note_content, encoding="utf-8")
+    note_path.write_text(note_content, encoding="utf-8")
 
-        class MockEvent:
-            def __init__(self, path):
-                self.src_path = path
+    class MockEvent:
+        def __init__(self, path):
+            self.src_path = path
 
-        event = MockEvent(note_path)
+    event = MockEvent(note_path)
 
-        # Act
-        handler = YouTubeFeatureHandler(config=handler_config)
+    # Act
+    handler = YouTubeFeatureHandler(config=handler_config)
 
-        # Make save_transcript raise an exception
-        with patch.object(
-            handler.transcript_saver,
-            "save_transcript",
-            side_effect=Exception("Disk full"),
-        ):
-            result = handler.handle(event)
+    # Make save_transcript raise an exception
+    with patch.object(
+        handler.transcript_saver,
+        "save_transcript",
+        side_effect=Exception("Disk full"),
+    ):
+        result = handler.handle(event)
 
         # Assert - Processing should still succeed
         assert (
