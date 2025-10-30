@@ -9,11 +9,19 @@ import pytest
 
 
 class MockDaemon:
-    """Mock daemon for testing HTTP endpoints."""
+    """Mock daemon for testing HTTP endpoints.
+    
+    Attributes:
+        screenshot_handler: Mock screenshot handler for testing
+        smart_link_handler: Mock smart link handler for testing
+        youtube_handler: Mock YouTube handler for testing HTTP server endpoints
+        _running: Internal running state flag
+    """
 
     def __init__(self):
         self.screenshot_handler = None
         self.smart_link_handler = None
+        self.youtube_handler = None
         self._running = False
 
     def get_daemon_health(self) -> dict:
@@ -110,6 +118,9 @@ def test_health_endpoint_handles_daemon_error():
     from src.automation.http_server import create_app
 
     class FailingDaemon:
+        def __init__(self):
+            self.youtube_handler = None
+        
         def get_daemon_health(self):
             raise Exception("Daemon health check failed")
 
@@ -133,6 +144,9 @@ def test_metrics_endpoint_handles_daemon_error():
     from src.automation.http_server import create_app
 
     class FailingDaemon:
+        def __init__(self):
+            self.youtube_handler = None
+        
         def export_prometheus_metrics(self):
             raise Exception("Metrics export failed")
 
