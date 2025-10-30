@@ -139,6 +139,15 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
     # Register our custom representer for dicts to preserve ordering and inline tags
     _InlineTagsDumper.add_representer(dict, _represent_mapping_with_inline_tags)
 
+    # DEBUG: Check if transcript_file is already a list (indicates parsing issue)
+    if 'transcript_file' in ordered_metadata:
+        tf = ordered_metadata['transcript_file']
+        if isinstance(tf, list):
+            # If it's been parsed as a list (happens when reading back YAML with [[...]]),
+            # convert back to string
+            if len(tf) == 1 and isinstance(tf[0], list):
+                ordered_metadata['transcript_file'] = f"[[{tf[0][0]}]]"
+    
     yaml_stream = StringIO()
     yaml.dump(
         ordered_metadata,
@@ -152,6 +161,14 @@ def build_frontmatter(metadata: Dict[str, Any], body: str) -> str:
     )
 
     yaml_content = yaml_stream.getvalue()
+    
+    # Post-process: Remove quotes from wikilink syntax
+    # PyYAML quotes strings with [[]] because brackets are flow sequence indicators
+    # We need to unquote these for Obsidian/Zettelkasten compatibility
+    import re
+    # Match quoted wikilinks on their own line: "field: '[[content]]'" -> "field: [[content]]"
+    # Use word boundary to match complete field values only
+    yaml_content = re.sub(r": '(\[\[.*?\]\])'(\s|$)", r': \1\2', yaml_content)
 
     # Build complete content
     if yaml_content.strip():
