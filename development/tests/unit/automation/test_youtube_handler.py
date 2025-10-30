@@ -779,6 +779,8 @@ User notes"""
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
+        updated_content = note_content.replace("video_id: test123", "video_id: test123\nai_processed: true")
+        
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
@@ -787,6 +789,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             handler.handle(mock_event)
             metrics = handler.get_metrics()
@@ -848,6 +851,8 @@ User notes"""
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
+        updated_content = note_content.replace("video_id: test123", "video_id: test123\nai_processed: true")
+
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
@@ -856,6 +861,7 @@ User notes"""
 
             mock_enhancer = MockEnhancer.return_value
             mock_enhancer.enhance_note.return_value = mock_enhance_result
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             # Process multiple events successfully
             for i in range(10):
