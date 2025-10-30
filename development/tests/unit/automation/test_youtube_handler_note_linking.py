@@ -64,8 +64,9 @@ class TestYouTubeHandlerNoteLinking(unittest.TestCase):
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
+source: youtube
 tags: [youtube, test]
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+video_id: dQw4w9WgXcQ
 ---
 
 # Test YouTube Note
@@ -87,6 +88,9 @@ Original content here.
             mock_result.success = True
             mock_result.quote_count = 3
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
@@ -96,12 +100,17 @@ Original content here.
             from src.automation.feature_handlers import YouTubeFeatureHandler
 
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # Verify success
             self.assertTrue(result["success"])
@@ -129,7 +138,8 @@ Original content here.
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+source: youtube
+video_id: dQw4w9WgXcQ
 ---
 
 # Amazing Video Title
@@ -155,6 +165,9 @@ More content here.
             mock_result.success = True
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
@@ -164,12 +177,17 @@ More content here.
             from src.automation.feature_handlers import YouTubeFeatureHandler
 
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # Verify success
             self.assertTrue(result["success"])
@@ -214,7 +232,8 @@ More content here.
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+source: youtube
+video_id: dQw4w9WgXcQ
 ---
 
 # Test Video
@@ -245,6 +264,9 @@ These are my reflections.
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
@@ -254,24 +276,29 @@ These are my reflections.
             from src.automation.feature_handlers import YouTubeFeatureHandler
 
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # Verify success
             self.assertTrue(result["success"])
 
             # RED: Verify content preservation
-            updated_content = note_path.read_text()
-            self.assertIn("Important user notes here.", updated_content)
-            self.assertIn("## My Thoughts", updated_content)
-            self.assertIn("These are my reflections.", updated_content)
-            self.assertIn("## References", updated_content)
-            self.assertIn("- Link 1", updated_content)
-            self.assertIn("- Link 2", updated_content)
+            final_content = note_path.read_text()
+            self.assertIn("Important user notes here.", final_content)
+            self.assertIn("## My Thoughts", final_content)
+            self.assertIn("These are my reflections.", final_content)
+            self.assertIn("## References", final_content)
+            self.assertIn("- Link 1", final_content)
+            self.assertIn("- Link 2", final_content)
 
     def test_handler_handles_linking_failure_gracefully(self):
         """
@@ -289,7 +316,8 @@ These are my reflections.
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+source: youtube
+video_id: dQw4w9WgXcQ
 ---
 
 # Test Video
@@ -321,13 +349,18 @@ Content here.
 
             # Create handler and process
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
             # Should not raise exception
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # RED: Handler should still report success (quotes were added)
             self.assertTrue(result["success"])
@@ -351,7 +384,8 @@ Content here.
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+source: youtube
+video_id: dQw4w9WgXcQ
 ---
 
 # Test Video
@@ -389,6 +423,9 @@ Transcript content here.
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
             mock_saver.save_transcript.return_value = transcript_path
@@ -397,12 +434,17 @@ Transcript content here.
             from src.automation.feature_handlers import YouTubeFeatureHandler
 
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # Verify success
             self.assertTrue(result["success"])
@@ -439,7 +481,8 @@ Transcript content here.
 created: 2025-10-18 00:00
 type: fleeting
 status: inbox
-video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+source: youtube
+video_id: dQw4w9WgXcQ
 ---
 
 Just some content without a title heading.
@@ -459,6 +502,9 @@ Just some content without a title heading.
             mock_result.success = True
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
+            # Mock update_frontmatter to return updated content
+            mock_updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            mock_enhancer.update_frontmatter.return_value = mock_updated_content
 
             mock_saver = MockSaver.return_value
             transcript_path = self.transcripts_dir / "youtube-dQw4w9WgXcQ-2025-10-18.md"
@@ -468,25 +514,30 @@ Just some content without a title heading.
             from src.automation.feature_handlers import YouTubeFeatureHandler
 
             handler = YouTubeFeatureHandler(
-                vault_path=self.vault_path,
-                processing_timeout=30,
-                metrics_tracker=Mock(),
+                config={
+                    "vault_path": self.vault_path,
+                    "processing_timeout": 30,
+                }
             )
 
-            result = handler.handle(note_path)
+            # Create mock event with src_path attribute
+            mock_event = Mock()
+            mock_event.src_path = str(note_path)
+            
+            result = handler.handle(mock_event)
 
             # Verify success
             self.assertTrue(result["success"])
 
             # RED: Should still add transcript link (at start of body if no title)
-            updated_content = note_path.read_text()
+            final_content = note_path.read_text()
             self.assertIn(
                 "**Full Transcript**: [[youtube-dQw4w9WgXcQ-2025-10-18]]",
-                updated_content,
+                final_content,
             )
 
             # Should preserve original content
-            self.assertIn("Just some content without a title heading.", updated_content)
+            self.assertIn("Just some content without a title heading.", final_content)
 
 
 if __name__ == "__main__":
