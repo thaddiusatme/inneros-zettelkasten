@@ -244,7 +244,9 @@ User notes"""
             "pathlib.Path.write_text"
         ) as mock_write, patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
+        ), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
+        ), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -262,7 +264,11 @@ User notes"""
 
     def test_handle_extracts_quotes_from_transcript(self, vault_path):
         """Handler should extract quotes using AI (integration with YouTubeNoteEnhancer)"""
-        config_dict = {"vault_path": str(vault_path), "max_quotes": 7, "min_quality": 0.7}
+        config_dict = {
+            "vault_path": str(vault_path),
+            "max_quotes": 7,
+            "min_quality": 0.7,
+        }
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -291,9 +297,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -337,9 +343,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -383,9 +389,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -429,9 +435,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -517,9 +523,9 @@ User content here...
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -536,7 +542,7 @@ User content here...
     def test_handle_logs_fallback_extraction(self, vault_path, caplog):
         """Handler should log when video_id is extracted from body content"""
         import logging
-        
+
         config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
@@ -574,9 +580,9 @@ User notes
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -586,19 +592,20 @@ User notes
 
             # Set log level to capture INFO messages
             caplog.set_level(logging.INFO)
-            
+
             # Run handler
             result = handler.handle(mock_event)
 
         # Verify fallback extraction was logged
         assert any(
-            "body content" in record.message.lower() 
-            for record in caplog.records
+            "body content" in record.message.lower() for record in caplog.records
         ), "Should log fallback extraction from body content"
-        
+
         assert result["success"] is True
 
-    def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(self, vault_path):
+    def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(
+        self, vault_path
+    ):
         """Handler should fail gracefully when video_id is missing from both sources"""
         config_dict = {"vault_path": str(vault_path)}
 
@@ -662,9 +669,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -709,9 +716,9 @@ User notes"""
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "pathlib.Path.write_text"
+        ), patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"), patch(
+            "src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"
         ), patch(
-            "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
-        ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
@@ -783,8 +790,10 @@ User notes"""
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
-        updated_content = note_content.replace("video_id: test123", "video_id: test123\nai_processed: true")
-        
+        updated_content = note_content.replace(
+            "video_id: test123", "video_id: test123\nai_processed: true"
+        )
+
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"
         ), patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor"), patch(
@@ -855,7 +864,9 @@ User notes"""
         mock_enhance_result.success = True
         mock_enhance_result.quote_count = 5
 
-        updated_content = note_content.replace("video_id: test123", "video_id: test123\nai_processed: true")
+        updated_content = note_content.replace(
+            "video_id: test123", "video_id: test123\nai_processed: true"
+        )
 
         with patch("pathlib.Path.read_text", return_value=note_content), patch(
             "src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher"

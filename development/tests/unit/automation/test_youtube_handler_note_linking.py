@@ -79,7 +79,7 @@ Original content here.
         # Mock dependencies
         mock_datetime = Mock()
         mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
-        
+
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
@@ -95,7 +95,9 @@ Original content here.
             mock_result.quote_count = 3
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            updated_content = (
+                original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            )
             mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
@@ -115,7 +117,7 @@ Original content here.
             # Create mock event with src_path attribute
             mock_event = Mock()
             mock_event.src_path = str(note_path)
-            
+
             result = handler.handle(mock_event)
 
             # Verify success
@@ -161,7 +163,7 @@ More content here.
         # Mock dependencies
         mock_datetime = Mock()
         mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
-        
+
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
@@ -177,7 +179,10 @@ More content here.
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            updated_content = (
+                original_content
+                + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            )
             mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
@@ -197,7 +202,7 @@ More content here.
             # Create mock event with src_path attribute
             mock_event = Mock()
             mock_event.src_path = str(note_path)
-            
+
             result = handler.handle(mock_event)
 
             # Verify success
@@ -276,7 +281,9 @@ These are my reflections.
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            updated_content = (
+                original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            )
             mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
@@ -296,7 +303,7 @@ These are my reflections.
             # Create mock event with src_path attribute
             mock_event = Mock()
             mock_event.src_path = str(note_path)
-            
+
             result = handler.handle(mock_event)
 
             # Verify success
@@ -351,7 +358,10 @@ Content here.
             mock_result.quote_count = 2
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            updated_content = (
+                original_content
+                + "\n\n## AI Generated Quotes\n\n> Quote 1\n> Quote 2\n"
+            )
             mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
@@ -368,15 +378,13 @@ Content here.
 
             # Mock link insertion to fail (simulating linking error after quotes succeeded)
             with patch.object(
-                handler,
-                "_add_transcript_links_to_note",
-                return_value=False
+                handler, "_add_transcript_links_to_note", return_value=False
             ):
                 # Should not raise exception
                 # Create mock event with src_path attribute
                 mock_event = Mock()
                 mock_event.src_path = str(note_path)
-                
+
                 result = handler.handle(mock_event)
 
             # RED: Handler should still report success (quotes were added)
@@ -430,7 +438,7 @@ Transcript content here.
         # Mock dependencies
         mock_datetime = Mock()
         mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
-        
+
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
@@ -446,7 +454,9 @@ Transcript content here.
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            updated_content = (
+                original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            )
             mock_enhancer.update_frontmatter.return_value = updated_content
 
             mock_saver = MockSaver.return_value
@@ -465,7 +475,7 @@ Transcript content here.
             # Create mock event with src_path attribute
             mock_event = Mock()
             mock_event.src_path = str(note_path)
-            
+
             result = handler.handle(mock_event)
 
             # Verify success
@@ -514,7 +524,7 @@ Just some content without a title heading.
         # Mock dependencies
         mock_datetime = Mock()
         mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
-        
+
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
@@ -530,7 +540,9 @@ Just some content without a title heading.
             mock_result.quote_count = 1
             mock_enhancer.enhance_note.return_value = mock_result
             # Mock update_frontmatter to return updated content
-            mock_updated_content = original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            mock_updated_content = (
+                original_content + "\n\n## AI Generated Quotes\n\n> Quote 1\n"
+            )
             mock_enhancer.update_frontmatter.return_value = mock_updated_content
 
             mock_saver = MockSaver.return_value
@@ -550,7 +562,7 @@ Just some content without a title heading.
             # Create mock event with src_path attribute
             mock_event = Mock()
             mock_event.src_path = str(note_path)
-            
+
             result = handler.handle(mock_event)
 
             # Verify success

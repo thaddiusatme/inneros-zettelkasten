@@ -356,7 +356,7 @@ created: 2025-10-17
         mock_now = Mock()
         mock_now.strftime.return_value = "2025-10-17"
         mock_datetime.now.return_value = mock_now
-        
+
         # Setup mocks
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result

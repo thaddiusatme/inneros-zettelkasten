@@ -378,7 +378,9 @@ class TestYouTubeRateLimitHandlerIntegration:
         # Test that transcript fetching uses rate limit handler
         # Force cache miss to test rate limit integration
         with patch.object(handler.transcript_cache, "get", return_value=None):
-            with patch.object(handler.rate_limit_handler, "fetch_with_retry") as mock_retry:
+            with patch.object(
+                handler.rate_limit_handler, "fetch_with_retry"
+            ) as mock_retry:
                 mock_retry.return_value = [{"text": "transcript"}]
 
                 result = handler._fetch_transcript("video123")
