@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 import tempfile
 import shutil
 import sys
+from datetime import datetime
 
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -76,11 +77,16 @@ Original content here.
         note_path.write_text(original_content)
 
         # Mock dependencies
+        mock_datetime = Mock()
+        mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
+        
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
             "src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"
-        ) as MockSaver:
+        ) as MockSaver, patch(
+            "datetime.datetime", mock_datetime
+        ):
 
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
@@ -153,11 +159,16 @@ More content here.
         note_path.write_text(original_content)
 
         # Mock dependencies
+        mock_datetime = Mock()
+        mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
+        
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
             "src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"
-        ) as MockSaver:
+        ) as MockSaver, patch(
+            "datetime.datetime", mock_datetime
+        ):
 
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
@@ -411,11 +422,16 @@ Transcript content here.
         transcript_path.write_text(transcript_content)
 
         # Mock dependencies
+        mock_datetime = Mock()
+        mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
+        
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
             "src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"
-        ) as MockSaver:
+        ) as MockSaver, patch(
+            "datetime.datetime", mock_datetime
+        ):
 
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
@@ -490,11 +506,16 @@ Just some content without a title heading.
         note_path.write_text(original_content)
 
         # Mock dependencies
+        mock_datetime = Mock()
+        mock_datetime.now.return_value.strftime.return_value = "2025-10-18"
+        
         with patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer, patch(
             "src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"
-        ) as MockSaver:
+        ) as MockSaver, patch(
+            "datetime.datetime", mock_datetime
+        ):
 
             # Setup mocks
             mock_enhancer = MockEnhancer.return_value
