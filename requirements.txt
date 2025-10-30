@@ -5,7 +5,7 @@ anthropic==0.39.0
 openai==1.57.4
 
 # YouTube transcript fetching
-youtube-transcript-api==0.6.2
+youtube-transcript-api>=1.2.3
 
 # YouTube Data API v3 (Official API)
 google-api-python-client==2.108.0
