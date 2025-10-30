@@ -53,7 +53,13 @@ class TestAdvancedTagEnhancementCLI(unittest.TestCase):
 
     def create_mock_vault_with_problematic_tags(self):
         """Create realistic vault structure with 698+ problematic tags as identified in user data"""
-        # Create knowledge directory structure
+        # Create root-level workflow directories (required by WorkflowManager)
+        (self.vault_path / "Inbox").mkdir(exist_ok=True)
+        (self.vault_path / "Fleeting Notes").mkdir(exist_ok=True)
+        (self.vault_path / "Literature Notes").mkdir(exist_ok=True)
+        (self.vault_path / "Permanent Notes").mkdir(exist_ok=True)
+        
+        # Create knowledge directory structure for test notes
         (self.vault_path / "knowledge" / "Inbox").mkdir(parents=True)
         (self.vault_path / "knowledge" / "Fleeting Notes").mkdir(parents=True)
         (self.vault_path / "knowledge" / "Permanent Notes").mkdir(parents=True)
