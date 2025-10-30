@@ -20,14 +20,26 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 
+@pytest.fixture
+def vault_path(tmp_path):
+    """Create temporary vault structure for testing"""
+    # Create required directories
+    (tmp_path / "Inbox").mkdir()
+    (tmp_path / "Inbox" / "YouTube").mkdir()
+    (tmp_path / "Media").mkdir()
+    (tmp_path / "Media" / "Transcripts").mkdir()
+    (tmp_path / "Permanent Notes").mkdir()
+    return tmp_path
+
+
 class TestYouTubeHandlerInitialization:
     """Test YouTubeFeatureHandler initialization"""
 
-    def test_handler_initializes_with_valid_config(self):
+    def test_handler_initializes_with_valid_config(self, vault_path):
         """Handler should initialize with valid YouTubeHandlerConfig"""
         config_dict = {
             "enabled": True,
-            "vault_path": "/test/vault",
+            "vault_path": str(vault_path),
             "max_quotes": 7,
             "min_quality": 0.7,
             "processing_timeout": 300,
@@ -37,7 +49,7 @@ class TestYouTubeHandlerInitialization:
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        assert handler.vault_path == Path("/test/vault")
+        assert handler.vault_path == vault_path
         assert handler.max_quotes == 7
         assert handler.min_quality == 0.7
         assert handler.processing_timeout == 300
@@ -51,15 +63,15 @@ class TestYouTubeHandlerInitialization:
         with pytest.raises(ValueError, match="vault_path.*required"):
             _ = YouTubeFeatureHandler(config=config_dict)
 
-    def test_handler_uses_defaults_for_optional_config(self):
+    def test_handler_uses_defaults_for_optional_config(self, vault_path):
         """Handler should use sensible defaults when optional keys missing"""
-        config_dict = {"vault_path": "/test/vault"}  # Minimal config
+        config_dict = {"vault_path": str(vault_path)}  # Minimal config
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        assert handler.vault_path == Path("/test/vault")
+        assert handler.vault_path == vault_path
         assert handler.max_quotes == 7  # Default
         assert handler.min_quality == 0.7  # Default
         assert handler.processing_timeout == 300  # 5 minutes default
@@ -68,9 +80,9 @@ class TestYouTubeHandlerInitialization:
 class TestYouTubeEventDetection:
     """Test YouTubeFeatureHandler event detection (can_handle)"""
 
-    def test_can_handle_returns_true_for_youtube_notes(self):
+    def test_can_handle_returns_true_for_youtube_notes(self, vault_path):
         """Handler should detect notes with source: youtube in frontmatter"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -88,7 +100,7 @@ ready_for_processing: true
 User notes here...
 """
         mock_event = Mock()
-        mock_event.src_path = "/test/vault/Inbox/youtube-note.md"
+        mock_event.src_path = str(vault_path / "Inbox" / "youtube-note.md")
 
         with patch("src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"), patch(
             "pathlib.Path.exists", return_value=True
@@ -98,9 +110,9 @@ User notes here...
 
         assert result is True
 
-    def test_can_handle_returns_false_for_non_youtube_notes(self):
+    def test_can_handle_returns_false_for_non_youtube_notes(self, vault_path):
         """Handler should ignore notes without source: youtube"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -115,7 +127,7 @@ status: active
 Some content
 """
         mock_event = Mock()
-        mock_event.src_path = "/test/vault/Permanent Notes/regular-note.md"
+        mock_event.src_path = str(vault_path / "Permanent Notes" / "regular-note.md")
 
         with patch("src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"), patch(
             "pathlib.Path.exists", return_value=True
@@ -125,9 +137,9 @@ Some content
 
         assert result is False
 
-    def test_can_handle_returns_false_for_already_processed_notes(self):
+    def test_can_handle_returns_false_for_already_processed_notes(self, vault_path):
         """Handler should skip notes with ai_processed: true"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -148,7 +160,7 @@ processed_at: 2025-10-08 10:00
 Already enhanced...
 """
         mock_event = Mock()
-        mock_event.src_path = "/test/vault/Inbox/youtube-note.md"
+        mock_event.src_path = str(vault_path / "Inbox" / "youtube-note.md")
 
         with patch("src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"), patch(
             "pathlib.Path.exists", return_value=True
@@ -158,9 +170,9 @@ Already enhanced...
 
         assert result is False
 
-    def test_can_handle_validates_frontmatter_structure(self):
+    def test_can_handle_validates_frontmatter_structure(self, vault_path):
         """Handler should handle malformed frontmatter gracefully"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -173,7 +185,7 @@ broken yaml here
 Content
 """
         mock_event = Mock()
-        mock_event.src_path = "/test/vault/Inbox/malformed.md"
+        mock_event.src_path = str(vault_path / "Inbox" / "malformed.md")
 
         with patch("src.ai.youtube_transcript_saver.YouTubeTranscriptSaver"), patch(
             "pathlib.Path.exists", return_value=True
@@ -188,15 +200,15 @@ Content
 class TestYouTubeProcessing:
     """Test YouTubeFeatureHandler processing (handle method)"""
 
-    def test_handle_processes_valid_youtube_note(self):
+    def test_handle_processes_valid_youtube_note(self, vault_path):
         """Handler should successfully process valid YouTube note"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -226,15 +238,15 @@ User notes"""
         assert result["quotes_added"] == 5
         assert "processing_time" in result
 
-    def test_handle_extracts_quotes_from_transcript(self):
+    def test_handle_extracts_quotes_from_transcript(self, vault_path):
         """Handler should extract quotes using AI (integration with YouTubeNoteEnhancer)"""
-        config_dict = {"vault_path": "/test/vault", "max_quotes": 7, "min_quality": 0.7}
+        config_dict = {"vault_path": str(vault_path), "max_quotes": 7, "min_quality": 0.7}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -262,15 +274,15 @@ User notes"""
             # Verify enhancement was called
             mock_enhancer.enhance_note.assert_called_once()
 
-    def test_handle_updates_note_with_quotes_preserving_user_content(self):
+    def test_handle_updates_note_with_quotes_preserving_user_content(self, vault_path):
         """Handler should insert quotes section without overwriting user notes"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -298,15 +310,15 @@ User notes"""
         # Should succeed and preserve user content (tested by enhancer)
         assert result["success"] is True
 
-    def test_handle_sets_ai_processed_flag_in_frontmatter(self):
+    def test_handle_sets_ai_processed_flag_in_frontmatter(self, vault_path):
         """Handler should update frontmatter with ai_processed: true"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -334,15 +346,15 @@ User notes"""
         # Enhancement includes setting ai_processed flag
         assert result["success"] is True
 
-    def test_handle_returns_success_result_with_quote_count(self):
+    def test_handle_returns_success_result_with_quote_count(self, vault_path):
         """Handler should return result dict with quotes_added count"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -375,15 +387,15 @@ User notes"""
 class TestYouTubeFallbackParser:
     """Test YouTubeFeatureHandler fallback parser for empty frontmatter"""
 
-    def test_handle_with_empty_frontmatter_extracts_from_body(self):
+    def test_handle_with_empty_frontmatter_extracts_from_body(self, vault_path):
         """Handler should extract video_id from body content when frontmatter is empty"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/YouTube/youtube-note.md")
+        note_path = vault_path / "Inbox" / "YouTube" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -431,15 +443,15 @@ User content here...
         assert result["success"] is True
         assert result["quotes_added"] == 3
 
-    def test_handle_logs_fallback_extraction(self):
+    def test_handle_logs_fallback_extraction(self, vault_path):
         """Handler should log when video_id is extracted from body content"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/YouTube/youtube-note.md")
+        note_path = vault_path / "Inbox" / "YouTube" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -478,15 +490,15 @@ User notes
 
         assert result["success"] is True
 
-    def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(self):
+    def test_handle_fails_when_video_id_missing_from_both_frontmatter_and_body(self, vault_path):
         """Handler should fail gracefully when video_id is missing from both sources"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/YouTube/youtube-note.md")
+        note_path = vault_path / "Inbox" / "YouTube" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -510,15 +522,15 @@ User notes without video ID metadata
 class TestYouTubeErrorHandling:
     """Test YouTubeFeatureHandler error handling"""
 
-    def test_handles_missing_transcript_gracefully(self):
+    def test_handles_missing_transcript_gracefully(self, vault_path):
         """Handler should handle missing transcript without crashing daemon"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -546,15 +558,15 @@ User notes"""
         assert result["success"] is False
         assert "transcript" in result.get("error", "").lower()
 
-    def test_handles_llm_timeout_gracefully(self):
+    def test_handles_llm_timeout_gracefully(self, vault_path):
         """Handler should handle LLM timeout without crashing daemon"""
-        config_dict = {"vault_path": "/test/vault", "processing_timeout": 300}
+        config_dict = {"vault_path": str(vault_path), "processing_timeout": 300}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -582,15 +594,15 @@ User notes"""
         assert result["success"] is False
         assert "error" in result
 
-    def test_handles_malformed_note_structure_without_daemon_crash(self):
+    def test_handles_malformed_note_structure_without_daemon_crash(self, vault_path):
         """Handler should handle malformed notes without crashing daemon"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/malformed.md")
+        note_path = vault_path / "Inbox" / "malformed.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -619,15 +631,15 @@ User notes"""
 class TestYouTubeMetricsAndHealth:
     """Test YouTubeFeatureHandler metrics and health monitoring"""
 
-    def test_tracks_processing_time_and_increments_success_counter(self):
+    def test_tracks_processing_time_and_increments_success_counter(self, vault_path):
         """Handler should track processing time and success count"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -656,15 +668,15 @@ User notes"""
         assert metrics["events_processed"] > 0
         assert "total_processing_time" in metrics or "processing_times" in metrics
 
-    def test_increments_failure_counter_on_error(self):
+    def test_increments_failure_counter_on_error(self, vault_path):
         """Handler should increment failure counter when processing fails"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
         handler = YouTubeFeatureHandler(config=config_dict)
 
-        note_path = Path("/test/vault/Inbox/youtube-note.md")
+        note_path = vault_path / "Inbox" / "youtube-note.md"
         mock_event = Mock()
         mock_event.src_path = str(note_path)
 
@@ -692,9 +704,9 @@ User notes"""
 
         assert metrics["events_failed"] > 0
 
-    def test_get_health_returns_healthy_with_good_success_rate(self):
+    def test_get_health_returns_healthy_with_good_success_rate(self, vault_path):
         """Handler should report healthy status with >90% success rate"""
-        config_dict = {"vault_path": "/test/vault"}
+        config_dict = {"vault_path": str(vault_path)}
 
         from src.automation.feature_handlers import YouTubeFeatureHandler
 
@@ -722,7 +734,7 @@ User notes"""
             # Process multiple events successfully
             for i in range(10):
                 mock_event = Mock()
-                mock_event.src_path = f"/test/vault/Inbox/youtube-{i}.md"
+                mock_event.src_path = str(vault_path / f"Inbox/youtube-{i}.md")
                 handler.handle(mock_event)
 
             health = handler.get_health()
