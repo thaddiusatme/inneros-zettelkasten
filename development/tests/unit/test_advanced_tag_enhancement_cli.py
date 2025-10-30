@@ -58,7 +58,7 @@ class TestAdvancedTagEnhancementCLI(unittest.TestCase):
         (self.vault_path / "Fleeting Notes").mkdir(exist_ok=True)
         (self.vault_path / "Literature Notes").mkdir(exist_ok=True)
         (self.vault_path / "Permanent Notes").mkdir(exist_ok=True)
-        
+
         # Create knowledge directory structure for test notes
         (self.vault_path / "knowledge" / "Inbox").mkdir(parents=True)
         (self.vault_path / "knowledge" / "Fleeting Notes").mkdir(parents=True)

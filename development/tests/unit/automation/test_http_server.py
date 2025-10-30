@@ -10,7 +10,7 @@ import pytest
 
 class MockDaemon:
     """Mock daemon for testing HTTP endpoints.
-    
+
     Attributes:
         screenshot_handler: Mock screenshot handler for testing
         smart_link_handler: Mock smart link handler for testing
@@ -120,7 +120,7 @@ def test_health_endpoint_handles_daemon_error():
     class FailingDaemon:
         def __init__(self):
             self.youtube_handler = None
-        
+
         def get_daemon_health(self):
             raise Exception("Daemon health check failed")
 
@@ -146,7 +146,7 @@ def test_metrics_endpoint_handles_daemon_error():
     class FailingDaemon:
         def __init__(self):
             self.youtube_handler = None
-        
+
         def export_prometheus_metrics(self):
             raise Exception("Metrics export failed")
 
