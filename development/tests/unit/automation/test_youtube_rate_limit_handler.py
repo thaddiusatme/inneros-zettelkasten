@@ -376,13 +376,15 @@ class TestYouTubeRateLimitHandlerIntegration:
         assert isinstance(handler.rate_limit_handler, YouTubeRateLimitHandler)
 
         # Test that transcript fetching uses rate limit handler
-        with patch.object(handler.rate_limit_handler, "fetch_with_retry") as mock_retry:
-            mock_retry.return_value = [{"text": "transcript"}]
+        # Force cache miss to test rate limit integration
+        with patch.object(handler.transcript_cache, "get", return_value=None):
+            with patch.object(handler.rate_limit_handler, "fetch_with_retry") as mock_retry:
+                mock_retry.return_value = [{"text": "transcript"}]
 
-            result = handler._fetch_transcript("video123")
+                result = handler._fetch_transcript("video123")
 
-            mock_retry.assert_called_once()
-            assert result == [{"text": "transcript"}]
+                mock_retry.assert_called_once()
+                assert result == [{"text": "transcript"}]
 
     def test_graceful_degradation_on_total_failure(self):
         """Test that daemon remains stable when all retries fail."""
