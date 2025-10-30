@@ -328,6 +328,7 @@ created: 2025-10-17
     # ==========================================
     # TEST 4: Handler Generates Transcript Wikilink
     # ==========================================
+    @patch("datetime.datetime")
     @patch("src.ai.youtube_transcript_fetcher.YouTubeTranscriptFetcher")
     @patch("src.ai.youtube_quote_extractor.ContextAwareQuoteExtractor")
     @patch("src.ai.youtube_note_enhancer.YouTubeNoteEnhancer")
@@ -336,6 +337,7 @@ created: 2025-10-17
         mock_enhancer_class,
         mock_extractor_class,
         mock_fetcher_class,
+        mock_datetime,
         handler_config,
         temp_vault,
         mock_transcript_result,
@@ -350,6 +352,11 @@ created: 2025-10-17
 
         Current Status: EXPECTED TO FAIL - feature not yet implemented
         """
+        # Setup date mock (pattern from P2-3.6)
+        mock_now = Mock()
+        mock_now.strftime.return_value = "2025-10-17"
+        mock_datetime.now.return_value = mock_now
+        
         # Setup mocks
         mock_fetcher = Mock()
         mock_fetcher.fetch_transcript.return_value = mock_transcript_result
