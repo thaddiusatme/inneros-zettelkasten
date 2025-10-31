@@ -157,7 +157,7 @@ def create_youtube_blueprint(handler: "YouTubeFeatureHandler") -> Blueprint:
     bp = Blueprint("youtube_api", __name__)
 
     # Initialize global rate limiter
-    vault_path = handler.vault_path if hasattr(handler, 'vault_path') else "."
+    vault_path = handler.vault_path if hasattr(handler, "vault_path") else "."
     cache_dir = Path(vault_path).parent / ".automation" / "cache"
     bp.rate_limiter = YouTubeGlobalRateLimiter(cache_dir, cooldown_seconds=60)
 
