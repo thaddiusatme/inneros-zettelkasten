@@ -87,14 +87,20 @@ My notes here.
 
 
 @pytest.fixture
-def mock_handler():
+def mock_handler(tmp_path, request):
     """Mock YouTubeFeatureHandler for testing."""
+    # Create unique cache directory per test to avoid rate limit interference
+    test_cache_dir = tmp_path / f"test_{request.node.name}"
+    test_cache_dir.mkdir(parents=True, exist_ok=True)
+
     handler = Mock()
     handler.handle = Mock(
         return_value={"success": True, "quotes_added": 3, "processing_time": 2.5}
     )
     handler.cooldown_seconds = 60
     handler.last_processed_time = {}
+    handler._last_processed = {}  # Add for per-note cooldown tracking
+    handler.vault_path = str(test_cache_dir)  # Unique path per test for rate limiter
     return handler
 
 
@@ -245,7 +251,7 @@ type: youtube
         # Simulate recent processing
         import time
 
-        mock_handler.last_processed_time[str(temp_note)] = (
+        mock_handler._last_processed[str(temp_note)] = (
             time.time() - 15
         )  # 15 seconds ago
 
