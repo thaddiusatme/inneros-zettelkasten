@@ -92,7 +92,7 @@ def mock_handler(tmp_path, request):
     # Create unique cache directory per test to avoid rate limit interference
     test_cache_dir = tmp_path / f"test_{request.node.name}"
     test_cache_dir.mkdir(parents=True, exist_ok=True)
-    
+
     handler = Mock()
     handler.handle = Mock(
         return_value={"success": True, "quotes_added": 3, "processing_time": 2.5}
