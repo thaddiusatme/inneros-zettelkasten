@@ -7,15 +7,32 @@ to prevent API quota exhaustion and file watching loop bugs.
 This is GLOBAL rate limiting (all requests), distinct from per-note cooldown.
 
 Usage:
-    rate_limiter = YouTubeGlobalRateLimiter(cache_dir)
+    from automation.youtube_global_rate_limiter import YouTubeGlobalRateLimiter
+    
+    # Initialize with cache directory
+    cache_dir = Path(".automation/cache")
+    rate_limiter = YouTubeGlobalRateLimiter(cache_dir, cooldown_seconds=60)
+    
+    # Check before API call
     if rate_limiter.can_proceed():
         # Make API call
+        response = make_youtube_request()
         rate_limiter.record_request()
     else:
         wait_time = rate_limiter.seconds_until_next_allowed()
-        # Handle rate limit
+        print(f"Rate limit active. Wait {wait_time}s")
+    
+    # Handle 429 errors
+    if response.status_code == 429:
+        rate_limiter.handle_429_error(attempt=1)
 
-Size: ~150 LOC (ADR-001 compliant)
+Architecture:
+    - File-based persistence for process restart resilience
+    - Thread-safe (single global lock via filesystem)
+    - Exponential backoff support (60s → 120s → 240s)
+    - Graceful degradation on errors
+
+Size: ~180 LOC (ADR-001 compliant: <500 LOC)
 """
 
 import logging
@@ -24,6 +41,11 @@ from pathlib import Path
 from typing import Optional
 
 
+# Configuration constants
+DEFAULT_COOLDOWN_SECONDS = 60
+MAX_BACKOFF_SECONDS = 240
+TIMESTAMP_SANITY_CHECK_HOURS = 1  # Max hours into future for valid timestamp
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,29 +53,63 @@ class YouTubeGlobalRateLimiter:
     """
     Global rate limiter for YouTube API requests.
     
-    Enforces 60-second cooldown between ANY YouTube API requests,
+    Enforces configurable cooldown between ANY YouTube API requests,
     regardless of video ID or note path.
     
-    Thread-safe for concurrent request handling.
-    Persists state to filesystem for process restart resilience.
+    Features:
+        - File-based persistence (survives process restarts)
+        - Thread-safe via filesystem atomicity
+        - Exponential backoff for 429 errors
+        - Graceful error handling
+        - Detailed logging
+    
+    Attributes:
+        cache_dir: Directory containing tracking file
+        cooldown_seconds: Minimum seconds between requests
+        tracking_file: Path to timestamp file
+    
+    Example:
+        >>> limiter = YouTubeGlobalRateLimiter(Path(".automation/cache"))
+        >>> if limiter.can_proceed():
+        ...     # Make API call
+        ...     limiter.record_request()
     """
     
-    def __init__(self, cache_dir: Path, cooldown_seconds: int = 60):
+    def __init__(
+        self, 
+        cache_dir: Path, 
+        cooldown_seconds: int = DEFAULT_COOLDOWN_SECONDS
+    ) -> None:
         """
         Initialize global rate limiter.
         
         Args:
             cache_dir: Directory for rate limit tracking file
             cooldown_seconds: Minimum seconds between requests (default: 60)
+        
+        Raises:
+            OSError: If cache directory cannot be created
         """
         self.cache_dir = Path(cache_dir)
         self.cooldown_seconds = cooldown_seconds
         self.tracking_file = self.cache_dir / "youtube_last_request.txt"
         
         # Ensure cache directory exists
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_cache_directory()
         
-        logger.info(f"YouTubeGlobalRateLimiter initialized: {self.cooldown_seconds}s cooldown")
+        logger.info(
+            f"YouTubeGlobalRateLimiter initialized: "
+            f"{self.cooldown_seconds}s cooldown, "
+            f"tracking_file={self.tracking_file}"
+        )
+    
+    def _ensure_cache_directory(self) -> None:
+        """Create cache directory if it doesn't exist."""
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.error(f"Failed to create cache directory {self.cache_dir}: {e}")
+            raise
     
     def can_proceed(self) -> bool:
         """
@@ -137,6 +193,10 @@ class YouTubeGlobalRateLimiter:
         
         Returns:
             Timestamp as float, or None if no previous request or error
+        
+        Note:
+            Returns None on any error to fail open (allow request) rather
+            than fail closed (block legitimate requests).
         """
         if not self.tracking_file.exists():
             return None
@@ -146,9 +206,11 @@ class YouTubeGlobalRateLimiter:
             timestamp = int(timestamp_str)
             
             # Sanity check: timestamp should be reasonable
-            current_time = time.time()
-            if timestamp < 0 or timestamp > current_time + 3600:
-                logger.warning(f"Invalid timestamp in tracking file: {timestamp}")
+            if not self._is_valid_timestamp(timestamp):
+                logger.warning(
+                    f"Invalid timestamp in tracking file: {timestamp}, "
+                    f"current_time={int(time.time())}"
+                )
                 return None
             
             return float(timestamp)
@@ -159,3 +221,18 @@ class YouTubeGlobalRateLimiter:
                 "treating as no previous request"
             )
             return None
+    
+    def _is_valid_timestamp(self, timestamp: int) -> bool:
+        """
+        Validate timestamp is within reasonable bounds.
+        
+        Args:
+            timestamp: Unix timestamp to validate
+        
+        Returns:
+            True if timestamp is valid, False otherwise
+        """
+        current_time = time.time()
+        max_future = current_time + (TIMESTAMP_SANITY_CHECK_HOURS * 3600)
+        
+        return 0 <= timestamp <= max_future
