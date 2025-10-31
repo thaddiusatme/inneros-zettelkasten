@@ -28,6 +28,7 @@ import logging
 if TYPE_CHECKING:
     from .feature_handlers import YouTubeFeatureHandler
 
+from .youtube_global_rate_limiter import YouTubeGlobalRateLimiter
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -155,6 +156,11 @@ def create_youtube_blueprint(handler: "YouTubeFeatureHandler") -> Blueprint:
     """
     bp = Blueprint("youtube_api", __name__)
 
+    # Initialize global rate limiter
+    vault_path = handler.vault_path if hasattr(handler, 'vault_path') else "."
+    cache_dir = Path(vault_path).parent / ".automation" / "cache"
+    bp.rate_limiter = YouTubeGlobalRateLimiter(cache_dir, cooldown_seconds=60)
+
     # Start background worker thread
     worker_thread = threading.Thread(
         target=_process_queue_worker, args=(handler,), daemon=True
@@ -209,6 +215,21 @@ def create_youtube_blueprint(handler: "YouTubeFeatureHandler") -> Blueprint:
 
         logger.info(f"Processing request for note: {note_path} (force={force})")
 
+        # Check global rate limit (unless force=true)
+        if not force and not bp.rate_limiter.can_proceed():
+            wait_time = bp.rate_limiter.seconds_until_next_allowed()
+            logger.warning(f"Global rate limit active: {wait_time}s remaining")
+            return (
+                jsonify(
+                    {
+                        "error": "rate_limit",
+                        "message": f"Global rate limit active. Wait {wait_time} seconds.",
+                        "retry_after": wait_time,
+                    }
+                ),
+                429,
+            )
+
         # Run validation checks
         if error := validate_note_file(note_path):
             logger.warning(f"Note file not found: {note_path}")
@@ -242,6 +263,9 @@ def create_youtube_blueprint(handler: "YouTubeFeatureHandler") -> Blueprint:
                 ),
                 400,
             )
+
+        # Record this request in global rate limiter
+        bp.rate_limiter.record_request()
 
         # Create job and add to queue
         job_id = str(uuid.uuid4())

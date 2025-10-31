@@ -1,120 +1,101 @@
 ---
-trigger: manual
+trigger: model_decision
+description: Load at session start. Current project status, recent completions, priorities (GitHub Issues), architecture health, development guides, key file locations. AI orientation context.
 ---
 
 ---
 type: context
-updated: 2025-10-23
+updated: 2025-10-30
 priority: critical
 tags: [session-context, project-status, current-state]
 ---
 
 # Session Context - InnerOS Zettelkasten
 
-> **Last Updated**: 2025-10-23 12:55 PDT  
-> **Current Branch**: feat/auto-promotion-subdirectory-support  
-> **Last Commit**: e1cac17 (Meta: .windsurf configuration fixes)
+> **Last Updated**: 2025-10-30 17:08 PDT  
+> **Current Branch**: main  
+> **Status**: v0.1.0-beta SHIPPED ✅
 
 ---
 
 ## 🎯 Current Project State
 
-**Status**: ✅ **Production Ready** - All October 2025 milestones complete  
+**Status**: ✅ **v0.1.0-beta SHIPPED** - CI/CD resolved, repo public  
 **Architecture**: Healthy (ADR-002 complete, WorkflowManager 812 LOC)  
-**Test Suite**: 100% passing (72+ tests across all systems)  
-**Technical Debt**: Low (only 1 architectural exception documented)
+**Test Suite**: 1,384 passing, 178/178 automation suite (100%)  
+**Technical Debt**: Tracked in GitHub Issues (11 active issues)
+
+---
+
+## 📋 Active Priorities - **SEE GITHUB ISSUES**
+
+**Primary Source**: [GitHub Issues](https://github.com/thaddiusatme/inneros-zettelkasten/issues)  
+**Sprint Planning**: [.windsurf/PROJECT-PRIORITIES.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/PROJECT-PRIORITIES.md:0:0-0:0) (lightweight snapshot)
+
+### Quick Links
+- **P0**: [#21 Web UI Feature Flags](https://github.com/thaddiusatme/inneros-zettelkasten/issues/21)
+- **P1**: [#19 WorkflowManager Decomposition](https://github.com/thaddiusatme/inneros-zettelkasten/issues/19), [#20 Automation Visibility](https://github.com/thaddiusatme/inneros-zettelkasten/issues/20)
+- **P2**: [#18 YouTube Integration](https://github.com/thaddiusatme/inneros-zettelkasten/issues/18) (255 test failures)
+
+**Total Active Issues**: 11 (1 P0, 6 P1, 4 P2)
+
+### Sync Instructions for AI
+At session start:
+1. Check [.windsurf/PROJECT-PRIORITIES.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/PROJECT-PRIORITIES.md:0:0-0:0) for current sprint
+2. Run `gh issue list --limit 10` to see latest updates
+3. Ask if priorities file needs sync after major changes
 
 ---
 
 ## ✅ Recently Completed (October 2025)
 
-### Week of Oct 21-23, 2025
+### Week of Oct 28-30, 2025
+
+**P2-4 Automation Test Suite** (Oct 30) ✅
+- 178/178 automation tests passing (100%)
+- Pattern library: 6 patterns documented ([.windsurf/guides/automation-test-patterns.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/guides/automation-test-patterns.md:0:0-0:0))
+- 11 P2-4 files archived to COMPLETED-2025-10
+- CI improvement: 296 → 255 failures (14% reduction)
+- **Result**: Production-ready automation suite
+
+**GitHub Issues Migration** (Oct 30) ✅
+- Created 11 GitHub Issues from project-todo-v4/v5/v6
+- Enhanced bug report template with automation context
+- Established GitHub as single source of truth
+- Created PROJECT-PRIORITIES.md for AI context
+- **Result**: Centralized task tracking, no duplicate docs
+
+**CI/CD Resolution & v0.1.0-beta** (Oct 28-29) ✅
+- Repository made public (unlimited CI/CD minutes)
+- CI timeout fixed (11m26s, within 20min limit)
+- Ubuntu runners (10x cheaper than macOS)
+- Test collection: 1,872 tests discoverable
+- **Result**: v0.1.0-beta shipped, CI unlimited
+
+### Week of Oct 21-27, 2025
+
+**CI Quality Gates** (Oct 27) ✅
+- PR #7 merged - lint, format, type checking
+- Fixed 13 lint errors, formatted 307 files
+- CI badge added to README
+- **Result**: Automated quality enforcement
 
 **Lessons Learned Consolidation** (Oct 23) ✅
-- Consolidated 34+ lessons-learned into domain-specific guides
+- 34+ lessons-learned → domain-specific guides
 - TDD Methodology Patterns (12.4KB) - 34 iterations
 - AI Integration Patterns (16.9KB) - 15 iterations
 - 85% content reduction, 50-70% faster context loading
-- **Result**: Single source of truth for development patterns
+- **Result**: `.windsurf/guides/` single source of truth
 
-**.windsurf Configuration Review** (Oct 23) ✅
-- Gap analysis and cleanup (4 commits)
-- Archived 10 session planning files
-- Updated file size tracking
-- **Result**: Cleaner configuration structure
+### Earlier October Completions
+- ✅ Automation Visibility CLI (Oct 26)
+- ✅ Note Lifecycle P0 (Oct 26) - 12/13 orphaned notes fixed
+- ✅ Cleanup Workflow System (Oct 22)
+- ✅ YouTube Automation (Oct 18-21)
+- ✅ Auto-Promotion System (Oct 15)
+- ✅ ADR-004 CLI Extraction (Oct 10-11)
 
-### Week of Oct 14-17, 2025
-
-**Phase 3.2 P1: Dashboard + Analytics + Weekly Review** (Oct 16) ✅
-- Dashboard metrics cards (18 tests, real-time auto-refresh)
-- Analytics route fixes (16 tests, type safety)
-- Weekly review optimization (19 tests, 30x performance improvement)
-- **Result**: Complete web UI with metrics visualization
-
-**Auto-Promotion System** (Oct 15) ✅
-- PromotionEngine.auto_promote_ready_notes() (34 tests)
-- CLI integration: `inneros auto-promote --dry-run --quality-threshold 0.7`
-- Production validated: 8 notes promoted, 0 errors
-- **Result**: True workflow automation enabled
-
-**Inbox Metadata Repair** (Oct 15) ✅
-- MetadataRepairEngine (14 tests)
-- CLI integration: `inneros repair-metadata`
-- Fixed 8 notes missing type field
-- **Result**: Unblocked auto-promotion for all inbox notes
-
-**System Status CLI** (Oct 15) ✅
-- `inneros status` command (8 tests)
-- Real-time daemon/cron/activity detection
-- <5 second performance
-- **Result**: Complete system observability
-
-**Flask Web Dashboard** ✅
-- web_ui/app.py (251 lines) - Production ready
-- Routes: /dashboard, /analytics, /weekly-review, /api/metrics
-- Dashboard CLI launcher (218 lines) - `inneros dashboard`
-- **Result**: Beautiful web UI for system monitoring
-
-### Week of Oct 7-11, 2025
-
-**ADR-004 CLI Layer Extraction** (Oct 10-11) ✅
-- 10 dedicated CLIs extracted from monolith
-- 2,074 LOC eliminated (workflow_demo.py deprecated)
-- 4.7x faster than estimated (8.5h vs 40h)
-- **Result**: Clean CLI architecture
-
-**Testing Infrastructure Revamp** (Oct 12-16) ✅
-- 300x faster integration tests (5-10min → 1.35s)
-- 88 tests, production-safe smoke test infrastructure
-- **Result**: Fast, reliable test suite
-
----
-
-## 📋 Active Priorities (Next Work)
-
-### Priority 1: YouTube Integration (5-7 hours)
-**File**: [Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/youtube-auto-promotion-integration-manifest.md:0:0-0:0)
-- User approval workflow for YouTube notes
-- AI processing integration
-- Auto-promotion to Literature Notes/YouTube/
-- Migration for 37 existing YouTube notes
-
-### Priority 2: Git Branch Cleanup (2-3 hours)
-**Status**: 🔴 **CRITICAL TECHNICAL DEBT**
-- 70+ unmerged feature branches
-- Reduce cognitive overhead and repo complexity
-- Clear completion/merge status
-
-### Priority 3: Source Code Reorganization (Gradual, 4-6 weeks)
-**File**: [Projects/ACTIVE/source-code-reorganization-manifest.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/source-code-reorganization-manifest.md:0:0-0:0)
-- Split ai/ directory (56 files → 7 domains)
-- Split cli/ directory (44 files → 7 features)
-- Improve code discovery time 90% (20min → 2min)
-
-### Priority 4: Quality Audit Bug Fixes (2-3 hours)
-- 5 known bugs from October audit
-- Connection Discovery import error (5 min fix)
-- Quick wins, low effort
+**See**: `Projects/COMPLETED-2025-10/` (180+ documents)
 
 ---
 
@@ -138,10 +119,11 @@ tags: [session-context, project-status, current-state]
 ## 🧪 Test Infrastructure
 
 **Status**: Excellent
-- Fast test suite: 1.56s (200-400x faster than legacy)
-- Integration tests: 1.35s (300x improvement)
-- Total coverage: 72+ tests passing
-- TDD methodology: Proven across 14+ major iterations
+- Automation suite: 178/178 (100%) ✅
+- Integration tests: 1.35s (300x faster)
+- Total passing: 1,384 tests
+- TDD methodology: Proven across 34+ iterations
+- Pattern library: 6 documented patterns
 
 ---
 
@@ -166,29 +148,12 @@ tags: [session-context, project-status, current-state]
 
 ---
 
-## 🚫 NOT Next (Already Complete)
-
-These are DONE - don't suggest them again:
-- ❌ Lessons-learned consolidation → Complete Oct 23
-- ❌ .windsurf configuration review → Complete Oct 23
-- ❌ Auto-promotion system → Complete Oct 15
-- ❌ Dashboard metrics cards → Complete Oct 16
-- ❌ Inbox metadata repair → Complete Oct 15
-- ❌ System status CLI → Complete Oct 15
-- ❌ Flask web dashboard → Complete
-- ❌ Dashboard CLI launcher → Complete
-- ❌ Note lifecycle status management → Complete Oct 14-15
-- ❌ ADR-002 extraction → Complete
-- ❌ ADR-004 CLI extraction → Complete Oct 10-11
-
----
-
 ## 🔧 Technology Stack
 
 **Core**:
-- Python 3.11+ (currently using 3.14.0)
+- Python 3.11+ (currently using 3.13.0)
 - Markdown, YAML frontmatter
-- Virtual environment: .venv (Flask 3.1.2 installed)
+- Virtual environment: development/venv
 
 **AI** (Optional):
 - Ollama with llama3:latest
@@ -197,22 +162,23 @@ These are DONE - don't suggest them again:
 **Testing**:
 - pytest (TDD methodology)
 - 1.35s integration test suite
+- 178/178 automation suite
 
 **Web**:
 - Flask 3.1.2 (web_ui/)
 - JavaScript fetch API
 - Bootstrap + custom CSS
 
-**CLI**:
-- Rich terminal output
-- Emoji indicators (🟢/🔴/⚠️)
-- JSON output support for automation
+**CI/CD**:
+- GitHub Actions (Ubuntu runners)
+- Unlimited minutes (public repo)
+- Quality gates: ruff, black, pyright, pytest
 
 ---
 
 ## 📚 Consolidated Development Guides
 
-**New Location**: `.windsurf/guides/` (Created 2025-10-23)
+**Location**: `.windsurf/guides/` (Created 2025-10-23)
 
 ### Quick Reference
 
@@ -221,29 +187,23 @@ These are DONE - don't suggest them again:
 - RED → GREEN → REFACTOR patterns
 - Test coverage (10-25 tests per feature)
 - Minimal implementation strategy
-- Utility extraction (3-5 classes)
-- Time management (30-90 min)
 
 **AI Integration Starting?**
 → `.windsurf/guides/ai-integration-patterns.md`
 - Mock-first development (4 stages)
-- Graceful degradation patterns
 - File hash-based caching (85-95% hit rate)
 - Quality gates (82% bad output reduction)
-- Batch processing with progress
+
+**Automation Test Fixing?**
+→ [.windsurf/guides/automation-test-patterns.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/guides/automation-test-patterns.md:0:0-0:0)
+- 6 proven patterns (14.3 min avg per test)
+- YAML wikilink preservation, date mocking, logging assertions
+- Real examples from P2-4 series
 
 **Session Startup?**
 → `.windsurf/guides/SESSION-STARTUP-GUIDE.md`
 - Pattern quick reference
 - Common scenarios & solutions
-- Anti-patterns to avoid
-
-### Guide Benefits
-
-**Speed**: 50-70% faster context loading (15-30min → 5-10min)
-**Discovery**: 10x faster pattern lookup (CMD+F vs reading 34 docs)
-**Quality**: Patterns validated across 34+ TDD iterations, 15+ AI integrations
-**Consistency**: Single source of truth per domain
 
 ### When to Use
 
@@ -251,9 +211,8 @@ These are DONE - don't suggest them again:
 |-----------|-----------|--------------|
 | TDD Iteration | tdd-methodology-patterns.md | RED/GREEN/REFACTOR |
 | AI Integration | ai-integration-patterns.md | Mock-first, caching, quality gates |
-| CLI Development | Both TDD + AI guides | Test strategies + error handling |
+| Test Fixing | automation-test-patterns.md | Fixture config, date mocking |
 | Bug Fix | tdd-methodology-patterns.md | Minimal implementation |
-| Performance | ai-integration-patterns.md | Caching, batch processing |
 
 **Full Index**: `.windsurf/guides/README.md`
 
@@ -262,52 +221,54 @@ These are DONE - don't suggest them again:
 ## 📊 Success Metrics
 
 **Development Velocity**:
-- ADR-004: 4.7x faster than estimated
-- TDD iterations: 45-120 minutes per feature
+- P2-4 automation: 6 tests fixed in ~4 hours
+- Pattern library: 6 patterns, 14.3 min avg
+- GitHub migration: 11 issues created, 3 files archived
 - Zero regressions maintained
 
 **System Performance**:
 - Status command: <5s target ✅
 - Integration tests: <2s ✅
-- AI processing: <10s for inbox notes ✅
-- Dashboard auto-refresh: 2s interval ✅
+- Automation suite: 178/178 (100%) ✅
+- CI runtime: 11m26s (within 20min limit) ✅
 
 **Code Quality**:
 - Test coverage: 100% for new features
 - Architectural limits: 1 exception only
 - CLI commands: All under 500 LOC
-- Fast test suite: 1.35s for integration
+- GitHub Issues: Single source of truth
 
 ---
 
 ## 🗂️ Key File Locations
 
-**Project Documentation**:
-- [Projects/ACTIVE/project-todo-v3.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/project-todo-v3.md:0:0-0:0) - Main project manifest
-- [Projects/ACTIVE/NEXT-EPIC-PLANNING-2025-10-15.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/NEXT-EPIC-PLANNING-2025-10-15.md:0:0-0:0) - Next work options
-- `Projects/COMPLETED-2025-10/` - Archived completed work (140+ files)
+**Project Tracking** (NEW):
+- [.windsurf/PROJECT-PRIORITIES.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/PROJECT-PRIORITIES.md:0:0-0:0) - Current sprint snapshot
+- [GitHub Issues](https://github.com/thaddiusatme/inneros-zettelkasten/issues) - Primary task tracking
+- `Projects/COMPLETED-2025-10/` - Archived work (180+ files)
 
-**Architecture Decisions**:
-- [Projects/ACTIVE/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/ADR-003-WORKFLOW-MANAGER-SIZE-EXCEPTION.md:0:0-0:0)
-- [Projects/ACTIVE/adr-003-distribution-architecture.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/Projects/ACTIVE/adr-003-distribution-architecture.md:0:0-0:0)
+**Development Guides**:
+- `.windsurf/guides/tdd-methodology-patterns.md` - TDD best practices
+- `.windsurf/guides/ai-integration-patterns.md` - AI integration patterns
+- [.windsurf/guides/automation-test-patterns.md](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/.windsurf/guides/automation-test-patterns.md:0:0-0:0) - Test fixing patterns
 
 **Core Systems**:
-- [development/src/ai/workflow_manager.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/ai/workflow_manager.py:0:0-0:0) (812 LOC)
-- [development/src/ai/promotion_engine.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/ai/promotion_engine.py:0:0-0:0) (626 LOC)
-- [development/src/cli/core_workflow_cli.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/development/src/cli/core_workflow_cli.py:0:0-0:0) (722 LOC)
-- [web_ui/app.py](cci:7://file:///Users/thaddius/repos/inneros-zettelkasten/web_ui/app.py:0:0-0:0) (251 LOC)
+- `development/src/ai/workflow_manager.py` (812 LOC)
+- `development/src/ai/promotion_engine.py` (626 LOC)
+- `development/src/cli/core_workflow_cli.py` (722 LOC)
+- `web_ui/app.py` (251 LOC)
 
 ---
 
 ## ⚠️ Important Notes
 
-1. **Always check COMPLETED-2025-10/** before planning new work
-2. **Virtual environment required**: `source .venv/bin/activate`
-3. **Flask is installed**: Flask 3.1.2 in .venv
-4. **Current branch**: feat/auto-promotion-subdirectory-support
-5. **Next work**: Git branch cleanup or YouTube integration
+1. **GitHub Issues = Primary Source**: Always check issues for current priorities
+2. **PROJECT-PRIORITIES.md**: Lightweight sprint snapshot for AI context
+3. **Virtual environment**: `source development/venv/bin/activate`
+4. **CI/CD**: Unlimited minutes (public repo)
+5. **Pattern library**: Use `.windsurf/guides/` for proven solutions
 
 ---
 
-**Context Last Validated**: 2025-10-23 12:55 PDT  
-**Next Review Due**: When starting new epic or after major milestone
+**Context Last Validated**: 2025-10-30 17:08 PDT  
+**Next Review Due**: Weekly sprint planning or after major milestone

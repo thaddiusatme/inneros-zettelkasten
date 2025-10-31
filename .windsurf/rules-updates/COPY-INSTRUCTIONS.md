@@ -9,7 +9,8 @@
 
 ```bash
 # From project root:
-cd /Users/thaddius/repos/inneros-zettelkasten
+
+cd "$(git rev-parse --show-toplevel)"
 
 # Copy updated files:
 cp .windsurf/rules-updates/README.md .windsurf/rules/README.md
