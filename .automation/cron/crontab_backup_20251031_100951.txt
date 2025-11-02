@@ -1,0 +1,18 @@
+# InnerOS Zettelkasten Automated Workflows
+# Generated on Sat Sep 27 21:27:24 PDT 2025
+
+# Daily screenshot import at 11:30 PM (when screenshots likely synced)
+#DISABLED# 30 23 * * * cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/automated_screenshot_import.sh >/dev/null 2>&1
+
+# Supervised inbox processing: Monday, Wednesday, Friday at 6:00 AM
+#DISABLED# 0 6 * * 1,3,5 cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/supervised_inbox_processing.sh >/dev/null 2>&1
+
+# Weekly deep analysis: Sunday at 9:00 AM  
+#DISABLED# 0 9 * * 0 cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/weekly_deep_analysis.sh >/dev/null 2>&1
+
+# Daily log cleanup (keep last 30 days)
+#DISABLED# 0 2 * * * find "/Users/thaddius/repos/inneros-zettelkasten/.automation/logs" -name "*.log" -mtime +30 -delete >/dev/null 2>&1
+
+# System health monitoring: Every 4 hours during wake hours (6 AM - 10 PM)
+#DISABLED# 0 6,10,14,18,22 * * * cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/health_monitor.sh >/dev/null 2>&1
+

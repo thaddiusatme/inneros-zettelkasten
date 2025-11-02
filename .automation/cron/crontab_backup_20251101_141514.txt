@@ -1,0 +1,13 @@
+# InnerOS Automation - Phase 1 (Screenshot Import Only)
+# Enabled: Fri Oct 31 10:09:51 PDT 2025
+# Observation Period: 24 hours
+
+# Daily screenshot import at 11:30 PM
+30 23 * * * cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/automated_screenshot_import.sh >/dev/null 2>&1
+
+# Health monitoring: Every 4 hours
+0 6,10,14,18,22 * * * cd "/Users/thaddius/repos/inneros-zettelkasten" && ./.automation/scripts/health_monitor.sh >/dev/null 2>&1
+
+# Automation health check (for monitoring)
+*/30 * * * * cd "/Users/thaddius/repos/inneros-zettelkasten" && python3 .automation/scripts/check_automation_health.py --export .automation/logs/automation_status.json --json >/dev/null 2>&1
+

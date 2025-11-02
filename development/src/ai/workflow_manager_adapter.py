@@ -20,13 +20,17 @@ Week 4 P0.2: Simple Delegations (5 methods)
 """
 
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
+import logging
+import yaml
 
 from src.ai.core_workflow_manager import CoreWorkflowManager
 from src.ai.analytics_manager import AnalyticsManager
 from src.ai.ai_enhancement_manager import AIEnhancementManager
 from src.ai.connection_manager import ConnectionManager
 from src.utils.vault_path import get_default_vault_path
+
+logger = logging.getLogger(__name__)
 
 
 class LegacyWorkflowManagerAdapter:
@@ -853,6 +857,106 @@ class LegacyWorkflowManagerAdapter:
             "failed": failed,
             "results": results,
         }
+
+    # =========================================================================
+    # YouTube Integration (Feature-specific methods)
+    # =========================================================================
+
+    def scan_youtube_notes(self) -> List[Tuple[Path, Dict[str, Any]]]:
+        """
+        Scan Inbox directory for YouTube notes (source: youtube).
+
+        Returns list of (Path, metadata_dict) tuples for unprocessed YouTube notes.
+        Excludes backup files (_backup_ in filename).
+
+        Returns:
+            List of tuples: [(Path, metadata), ...]
+            Empty list if Inbox doesn't exist or no YouTube notes found
+
+        Example:
+            >>> adapter = LegacyWorkflowManagerAdapter(base_directory="/vault")
+            >>> youtube_notes = adapter.scan_youtube_notes()
+            >>> for path, metadata in youtube_notes:
+            ...     print(f"Found: {path.name}, video: {metadata.get('video_id')}")
+        """
+        results = []
+
+        # Check if Inbox exists
+        if not self.inbox_dir.exists():
+            logger.debug(f"Inbox directory not found: {self.inbox_dir}")
+            return results
+
+        # Scan all .md files in Inbox
+        total_files = 0
+        for note_path in self.inbox_dir.glob("*.md"):
+            total_files += 1
+
+            # Skip backup files
+            if "_backup_" in note_path.name:
+                logger.debug(f"Skipping backup file: {note_path.name}")
+                continue
+
+            # Try to parse and check if it's a YouTube note
+            metadata = self._parse_youtube_note_frontmatter(note_path)
+            if metadata:
+                results.append((note_path, metadata))
+                logger.debug(
+                    f"Found YouTube note: {note_path.name}, "
+                    f"video_id: {metadata.get('video_id', 'N/A')}"
+                )
+
+        logger.info(
+            f"Scanned {total_files} files in Inbox, "
+            f"found {len(results)} YouTube notes"
+        )
+        return results
+
+    def _parse_youtube_note_frontmatter(
+        self, note_path: Path
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Parse note frontmatter and check if it's a YouTube note.
+
+        Args:
+            note_path: Path to note file
+
+        Returns:
+            Parsed metadata dict if note has 'source: youtube', None otherwise
+
+        Handles:
+            - Missing frontmatter
+            - Malformed YAML
+            - Non-YouTube notes
+        """
+        try:
+            content = note_path.read_text()
+
+            # Check for YAML frontmatter
+            if not content.startswith("---"):
+                return None
+
+            # Extract frontmatter
+            parts = content.split("---", 2)
+            if len(parts) < 3:
+                return None
+
+            # Parse YAML
+            metadata = yaml.safe_load(parts[1])
+            if not metadata:
+                return None
+
+            # Check for source: youtube
+            if metadata.get("source") == "youtube":
+                return metadata
+
+            return None
+
+        except yaml.YAMLError as e:
+            logger.debug(f"YAML parse error in {note_path.name}: {e}")
+            return None
+        except Exception as e:
+            logger.debug(f"Error parsing {note_path.name}: {e}")
+            return None
 
     # =========================================================================
     # Session Management (Stubs for now - low priority)
