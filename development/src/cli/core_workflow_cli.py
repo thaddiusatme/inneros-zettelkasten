@@ -109,20 +109,17 @@ class CoreWorkflowCLI:
         # Show skipped notes
         if results.get("skipped_notes"):
             self._print_section("SKIPPED NOTES")
-            for skip in results["skipped_notes"][:5]:  # Show first 5
-                note_path = skip.get("path", "Unknown")
-                quality = skip.get("quality", 0.0)
-                note_type = skip.get("type", "Unknown")
-                print(f"   📄 {note_path}")
-                print(f"      Type: {note_type}, Quality: {quality:.2f}")
+            # skipped_notes is dict: {filename: reason}
+            for filename, reason in list(results["skipped_notes"].items())[:5]:  # Show first 5
+                print(f"   📄 {filename}")
+                print(f"      Reason: {reason}")
 
         # Show errors
         if results.get("errors"):
             self._print_section("ERRORS")
-            for error in results["errors"]:
-                note = error.get("note", "Unknown")
-                error_msg = error.get("error", "Unknown error")
-                print(f"   🚨 {note}: {error_msg}")
+            # errors is dict: {filename: error_message}
+            for filename, error_msg in results["errors"].items():
+                print(f"   🚨 {filename}: {error_msg}")
 
     def status(self, output_format: str = "normal") -> int:
         """

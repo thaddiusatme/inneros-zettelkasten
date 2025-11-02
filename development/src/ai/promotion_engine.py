@@ -144,10 +144,16 @@ class PromotionEngine:
                     "has_summary": has_summary,
                 }
             else:
-                return {"error": result.get("error", "Promotion failed")}
+                return {
+                    "success": False,
+                    "error": result.get("error", "Promotion failed")
+                }
 
         except Exception as e:
-            return {"error": f"Failed to promote note: {e}"}
+            return {
+                "success": False,
+                "error": f"Failed to promote note: {e}"
+            }
 
     def _validate_note_for_promotion(
         self, note_path: Path, frontmatter: Dict, quality_threshold: float
@@ -286,9 +292,9 @@ class PromotionEngine:
             "skipped_notes": {},  # Dict with filename as key, reason as value
             "errors": {},  # Dict with filename as key, error message as value
             "by_type": {
-                "fleeting": 0,  # Promoted count (int)
-                "literature": 0,  # Promoted count (int)
-                "permanent": 0,  # Promoted count (int)
+                "fleeting": {"promoted": 0, "skipped": 0},
+                "literature": {"promoted": 0, "skipped": 0},
+                "permanent": {"promoted": 0, "skipped": 0},
             },
             "dry_run": dry_run,
         }
@@ -329,12 +335,13 @@ class PromotionEngine:
                     )
                     continue
 
-                # Only process notes with status='promoted' 
-                # (manual promotion happened, now auto-promoting to type-specific dir)
+                # Process notes with status='inbox' or 'promoted'
+                # Supports both direct auto-promotion and two-stage workflows
                 status = frontmatter.get("status", "inbox")
-                if status != self.AUTO_PROMOTION_STATUS:
+                valid_statuses = ["inbox", self.AUTO_PROMOTION_STATUS]
+                if status not in valid_statuses:
                     logger.debug(
-                        f"Skipping {note_path.name}: Status '{status}' != required '{self.AUTO_PROMOTION_STATUS}'"
+                        f"Skipping {note_path.name}: Status '{status}' not in {valid_statuses}"
                     )
                     continue
 
@@ -353,6 +360,10 @@ class PromotionEngine:
                     results["skipped_count"] += 1
                     # Store filename as key, reason as value
                     results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
+                    
+                    # Track skipped by type if we have note_type
+                    if note_type and note_type in results["by_type"]:
+                        results["by_type"][note_type]["skipped"] += 1
                     
                     # Track errors separately if related to missing type field
                     if error_msg and "type" in error_msg.lower():
@@ -394,7 +405,7 @@ class PromotionEngine:
 
                 if success:
                     results["promoted_count"] += 1
-                    results["by_type"][note_type] += 1
+                    results["by_type"][note_type]["promoted"] += 1
                     quality = frontmatter.get("quality_score", 0.0)
                     results["promoted"].append(
                         {
@@ -434,9 +445,9 @@ class PromotionEngine:
 
         # Summary logging with breakdown by type
         by_type_summary = ", ".join(
-            f"{type_name}: {count}" 
-            for type_name, count in results["by_type"].items() 
-            if count > 0
+            f"{type_name}: {counts['promoted']}" 
+            for type_name, counts in results["by_type"].items() 
+            if counts["promoted"] > 0
         )
         logger.info(
             f"Auto-promotion complete: {results['promoted_count']}/{results['total_candidates']} promoted "

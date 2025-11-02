@@ -101,7 +101,8 @@ This is a test note ready for promotion.
         note_path = inbox_dir / "test-note.md"
         note_path.write_text(note_content)
 
-        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        # Use real NoteLifecycleManager for actual file operations
+        lifecycle_manager = NoteLifecycleManager(base_dir)
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
@@ -141,7 +142,8 @@ Content from external source.
         note_path = inbox_dir / "lit-note.md"
         note_path.write_text(note_content)
 
-        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        # Use real NoteLifecycleManager for actual file operations
+        lifecycle_manager = NoteLifecycleManager(base_dir)
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
@@ -299,7 +301,8 @@ quality_score: {quality}
 """
             (inbox_dir / filename).write_text(content)
 
-        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        # Use real NoteLifecycleManager for actual file operations
+        lifecycle_manager = NoteLifecycleManager(base_dir)
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
@@ -365,7 +368,8 @@ quality_score: {quality}
 """
             (inbox_dir / filename).write_text(content)
 
-        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        # Use real NoteLifecycleManager for actual file operations
+        lifecycle_manager = NoteLifecycleManager(base_dir)
         engine = PromotionEngine(base_dir, lifecycle_manager)
 
         # Act
