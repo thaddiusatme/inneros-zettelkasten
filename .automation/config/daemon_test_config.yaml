@@ -1,0 +1,47 @@
+# Daemon Test Configuration - Issue #34 Phase 2
+# Enables screenshot and inbox processing for concurrent execution validation
+# 
+# Usage: python3 -m src.automation.daemon --config .automation/config/daemon_test_config.yaml
+
+daemon:
+  check_interval: 60
+  log_level: INFO
+
+# File watching with debounce
+file_watching:
+  enabled: true
+  watch_path: "/Users/thaddius/repos/inneros-zettelkasten/knowledge"
+  patterns:
+    - "*.md"
+  ignore_patterns:
+    - ".git/*"
+    - "*.tmp"
+    - ".DS_Store"
+  debounce_seconds: 2.0
+
+# Screenshot handler (OneDrive integration)
+screenshot_handler:
+  enabled: true
+  onedrive_path: "/Users/thaddius/OneDrive/Screenshots"
+  knowledge_path: "/Users/thaddius/repos/inneros-zettelkasten/knowledge"
+  ocr_enabled: true
+  processing_timeout: 600
+
+# Smart link handler (disabled for initial testing)
+smart_link_handler:
+  enabled: false
+  vault_path: "/Users/thaddius/repos/inneros-zettelkasten/knowledge"
+  similarity_threshold: 0.75
+  max_suggestions: 5
+  auto_insert: false
+
+# YouTube handler (disabled for initial testing - rate limiting concerns)
+youtube_handler:
+  enabled: false
+  vault_path: "/Users/thaddius/repos/inneros-zettelkasten/knowledge"
+  max_quotes: 7
+  min_quality: 0.7
+  processing_timeout: 300
+
+# Scheduled jobs (disabled for manual testing)
+jobs: []

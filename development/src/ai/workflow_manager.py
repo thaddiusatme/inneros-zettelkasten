@@ -78,7 +78,7 @@ class WorkflowManager:
         self.analytics = NoteAnalytics(str(self.base_dir))
 
         # ADR-002 Phase 1: Lifecycle manager extraction
-        self.lifecycle_manager = NoteLifecycleManager()
+        self.lifecycle_manager = NoteLifecycleManager(base_dir=self.base_dir)
 
         # ADR-002 Phase 2: Connection coordinator extraction
         self.connection_coordinator = ConnectionCoordinator(
@@ -246,14 +246,68 @@ class WorkflowManager:
         elapsed_ms = (time.time() - start_time) * 1000
         self.metrics_coordinator.record_note_processing(elapsed_ms, success=True)
 
-        # ADR-002 Phase 6 Note: Automatic status updates removed during extraction
-        # The original code updated status via lifecycle_manager here, but it was tightly
-        # coupled to ai_processing_errors tracking which is now internal to NoteProcessingCoordinator.
-        # Status updates should be handled explicitly by calling code (e.g., ReviewTriageCoordinator)
-        # rather than automatically in process_inbox_note.
-        # TODO: Investigate if automatic status updates are needed and implement properly if so.
+        # P0-1.3: Update status to 'promoted' after successful AI processing
+        # Only update status when:
+        # - Not in dry-run mode (no file modifications)
+        # - Not in fast mode (fast mode skips AI processing, just provides preview)
+        # - File was actually updated (processing succeeded)
+        # - No AI processing errors occurred
+        has_processing_errors = self._has_ai_processing_errors(results)
+        should_update_status = (
+            not dry_run 
+            and not fast 
+            and results.get("file_updated") 
+            and not has_processing_errors
+        )
+        
+        if should_update_status:
+            try:
+                note_path_obj = Path(note_path)
+                status_result = self.lifecycle_manager.update_status(
+                    note_path_obj,
+                    new_status="promoted",
+                    reason="AI processing completed successfully"
+                )
+                
+                # Add status_updated field to results if successful
+                if status_result.get("validation_passed"):
+                    results["status_updated"] = status_result.get("status_updated", "promoted")
+                else:
+                    # Log validation failure but don't fail the whole operation
+                    if "warnings" not in results:
+                        results["warnings"] = []
+                    error_msg = status_result.get("error", "Unknown validation error")
+                    results["warnings"].append(f"Status update validation failed: {error_msg}")
+                    
+            except Exception as e:
+                # Graceful degradation - don't fail processing if status update fails
+                if "warnings" not in results:
+                    results["warnings"] = []
+                results["warnings"].append(f"Status update failed: {str(e)}")
 
         return results
+
+    def _has_ai_processing_errors(self, results: Dict) -> bool:
+        """
+        Check if AI processing encountered any errors.
+        
+        Args:
+            results: Processing results dict from NoteProcessingCoordinator
+            
+        Returns:
+            True if any AI processing errors were detected
+        """
+        processing = results.get("processing", {})
+        
+        # Check each AI processing component for errors
+        for component in ["tags", "quality", "connections"]:
+            if component in processing:
+                component_result = processing[component]
+                # Error is indicated by presence of "error" key
+                if isinstance(component_result, dict) and "error" in component_result:
+                    return True
+        
+        return False
 
     # ADR-002 Phase 6: Template processing methods removed - delegated to NoteProcessingCoordinator
     # These methods are now internal to NoteProcessingCoordinator:

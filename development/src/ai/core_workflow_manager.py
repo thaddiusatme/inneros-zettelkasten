@@ -300,6 +300,30 @@ class CoreWorkflowManager:
         # Validate and apply sensible defaults
         result = ResultValidator.validate_workflow_result(result)
 
+        # Update note status to 'promoted' if processing succeeded and not in dry_run mode
+        if result["success"] and not dry_run:
+            try:
+                from pathlib import Path
+                from src.ai.note_lifecycle_manager import NoteLifecycleManager
+                
+                lifecycle = NoteLifecycleManager(base_dir=self.base_dir)
+                note_path_obj = Path(note_path) if not Path(note_path).is_absolute() else Path(note_path)
+                if not note_path_obj.is_absolute():
+                    note_path_obj = self.base_dir / note_path_obj
+                
+                status_result = lifecycle.update_status(
+                    note_path_obj,
+                    new_status="promoted",
+                    reason="AI processing completed successfully"
+                )
+                
+                if status_result.get("validation_passed"):
+                    result["status_updated"] = status_result.get("status_updated", "promoted")
+                else:
+                    result["warnings"].append(f"Status update failed: {status_result.get('error', 'Unknown error')}")
+            except Exception as e:
+                result["warnings"].append(f"Status update failed: {str(e)}")
+
         # Check for total workflow failure (multiple errors)
         if len(result["errors"]) >= 3:
             result["warnings"].append(

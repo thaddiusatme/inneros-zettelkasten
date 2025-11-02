@@ -75,14 +75,27 @@ Interesting AI content
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
         ) as MockEnhancer:
 
-            # Setup mocks
+            # Setup mocks - fetch_transcript returns dict with 'transcript' key
             mock_processor_instance = MockProcessor.return_value
-            mock_processor_instance.fetcher.fetch_transcript.return_value = (
-                "Test transcript"
+            mock_processor_instance.extract_video_id.return_value = "test123"
+            mock_processor_instance.fetcher.fetch_transcript.return_value = {
+                "transcript": [
+                    {"text": "Test segment 1", "start": 0.0, "duration": 2.0},
+                    {"text": "Test segment 2", "start": 2.0, "duration": 2.0},
+                ]
+            }
+            mock_processor_instance.fetcher.format_for_llm.return_value = (
+                "Test transcript formatted for LLM"
             )
             mock_processor_instance.extractor.extract_quotes.return_value = {
-                "key_insights": [
-                    {"quote": "Test quote", "timestamp": "0:00", "context": "Test"}
+                "quotes": [
+                    {
+                        "text": "Test quote",
+                        "timestamp": "0:00",
+                        "context": "Test",
+                        "category": "key-insight",
+                        "relevance_score": 0.9,
+                    }
                 ]
             }
 
@@ -166,47 +179,62 @@ This is not a YouTube note
         assert stats.skipped == 0
 
     def test_cli_processor_integration(self, tmp_path):
-        """Test complete integration with YouTubeProcessor and YouTubeNoteEnhancer"""
+        """Test complete workflow: validation -> fetch -> extract -> enhance"""
         # RED Phase: This test will fail because processor not implemented
 
-        # Setup: Create valid YouTube note
-        inbox = tmp_path / "Inbox"
-        inbox.mkdir()
-        note_path = inbox / "youtube-note.md"
+        # Setup: Create test vault structure and note
+        inbox_dir = tmp_path / "Inbox"
+        inbox_dir.mkdir()
+        note_path = inbox_dir / "youtube-note.md"
         note_path.write_text(
             """---
 type: literature
 source: youtube
 url: https://www.youtube.com/watch?v=test123
-created: 2025-10-06 19:00
-ai_processed: false
+video_id: test123
 ---
 
-# Test Video
+# Test YouTube Note
 
-## Why I'm Saving This
-Test content
+User content here.
 """
         )
 
-        # Mock YouTubeProcessor and YouTubeNoteEnhancer at their source modules
+        # Mock YouTube components
         with patch(
             "src.cli.youtube_processor.YouTubeProcessor"
-        ) as mock_processor, patch(
+        ) as MockProcessor, patch(
             "src.ai.youtube_note_enhancer.YouTubeNoteEnhancer"
-        ) as mock_enhancer:
+        ) as MockEnhancer:
 
-            # Setup mocks
-            mock_processor.return_value.fetcher.fetch_transcript.return_value = (
-                "Test transcript"
-            )
-            mock_processor.return_value.extractor.extract_quotes.return_value = {
-                "key_insights": [
-                    {"quote": "Test quote", "timestamp": "0:00", "context": "Test"}
+            # Setup mocks - match expected data structures
+            mock_processor_instance = MockProcessor.return_value
+            mock_processor_instance.extract_video_id.return_value = "test123"
+            mock_processor_instance.fetcher.fetch_transcript.return_value = {
+                "transcript": [
+                    {"text": "Test segment 1", "start": 0.0, "duration": 2.0},
+                    {"text": "Test segment 2", "start": 2.0, "duration": 2.0},
                 ]
             }
-            mock_enhancer.return_value.enhance_note.return_value = Mock(
-                success=True, backup_path=tmp_path / "backup.md"
+            mock_processor_instance.fetcher.format_for_llm.return_value = (
+                "Test transcript formatted for LLM"
+            )
+            mock_processor_instance.extractor.extract_quotes.return_value = {
+                "quotes": [
+                    {
+                        "text": "Test quote",
+                        "timestamp": "0:00",
+                        "context": "Test",
+                        "category": "key-insight",
+                        "relevance_score": 0.9,
+                    }
+                ]
+            }
+            mock_enhancer_return_value = Mock(
+                success=True, backup_path=tmp_path / "backup.md", error_message=None
+            )
+            MockEnhancer.return_value.enhance_note.return_value = (
+                mock_enhancer_return_value
             )
 
             # Execute: Process with integration
@@ -215,8 +243,8 @@ Test content
 
             # Assert: Integration working
             assert result.success is True
-            mock_processor.return_value.fetcher.fetch_transcript.assert_called_once()
-            mock_enhancer.return_value.enhance_note.assert_called_once()
+            MockProcessor.return_value.fetcher.fetch_transcript.assert_called_once()
+            MockEnhancer.return_value.enhance_note.assert_called_once()
 
 
 # ============================================================================

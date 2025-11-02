@@ -34,6 +34,12 @@ class PromotionEngine:
     - Validation of promotion eligibility
     - Integration with DirectoryOrganizer for safe operations
     """
+    
+    # Constants for auto-promotion configuration
+    DEFAULT_QUALITY_THRESHOLD = 0.7
+    VALID_NOTE_TYPES = ["fleeting", "literature", "permanent"]
+    AUTO_PROMOTION_STATUS = "promoted"  # Notes must have this status to be auto-promoted
+    AUTO_PROMOTION_TARGET_STATUS = "published"  # Final status after auto-promotion
 
     def __init__(
         self,
@@ -64,7 +70,10 @@ class PromotionEngine:
         self.literature_dir.mkdir(exist_ok=True)
         self.fleeting_dir.mkdir(exist_ok=True)
 
-        logger.info(f"PromotionEngine initialized with base_dir: {base_dir}")
+        logger.info(
+            f"PromotionEngine initialized with base_dir: {base_dir}, "
+            f"quality_threshold: {self.DEFAULT_QUALITY_THRESHOLD}"
+        )
 
     def promote_note(self, note_path: str, target_type: str = "permanent") -> Dict:
         """
@@ -116,13 +125,23 @@ class PromotionEngine:
             result = self.lifecycle_manager.promote_note(source_file)
 
             if result.get("promoted"):
+                # Check if promoted note has AI summary
+                has_summary = False
+                try:
+                    promoted_path = Path(result["destination_path"])
+                    if promoted_path.exists():
+                        promoted_content = promoted_path.read_text()
+                        has_summary = "ai_summary:" in promoted_content
+                except Exception:
+                    pass  # Default to False if can't read
+
                 # Transform result to match expected format
                 return {
                     "success": True,
                     "source": str(source_file),
                     "target": result["destination_path"],
                     "type": result["note_type"],
-                    "has_summary": False,  # Legacy field for compatibility
+                    "has_summary": has_summary,
                 }
             else:
                 return {"error": result.get("error", "Promotion failed")}
@@ -188,8 +207,25 @@ class PromotionEngine:
             if "error" in result:
                 return False, result["error"]
 
-            # Status update and file move are now handled by promote_note() delegation
-            # No need for separate status update - NoteLifecycleManager handles it atomically
+            # Auto-promotion requires additional status update from 'promoted' → 'published'
+            # This is distinct from manual promotion which stops at 'promoted'
+            if result.get("success") and result.get("target"):
+                promoted_path = Path(result["target"])
+                try:
+                    status_result = self.lifecycle_manager.update_status(
+                        promoted_path,
+                        new_status=self.AUTO_PROMOTION_TARGET_STATUS,
+                        reason="Auto-promotion completed successfully"
+                    )
+                    if not status_result.get("validation_passed"):
+                        logger.warning(
+                            f"Status update to '{self.AUTO_PROMOTION_TARGET_STATUS}' failed for {promoted_path.name}: "
+                            f"{status_result.get('error', 'Unknown error')}"
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"Could not update status to '{self.AUTO_PROMOTION_TARGET_STATUS}' for {promoted_path.name}: {e}"
+                    )
 
             return True, None
 
@@ -197,6 +233,33 @@ class PromotionEngine:
             error_msg = f"Promotion execution failed: {e}"
             logger.exception(error_msg)
             return False, error_msg
+
+    def _get_target_directory(self, note_type: str) -> Path:
+        """
+        Get target directory path for a given note type.
+        
+        Args:
+            note_type: Note type ('fleeting', 'literature', or 'permanent')
+            
+        Returns:
+            Path to target directory
+            
+        Raises:
+            ValueError: If note_type is invalid
+        """
+        if note_type not in self.VALID_NOTE_TYPES:
+            raise ValueError(
+                f"Invalid note type: '{note_type}'. "
+                f"Must be one of: {', '.join(self.VALID_NOTE_TYPES)}"
+            )
+        
+        type_to_dir = {
+            "fleeting": self.fleeting_dir,
+            "literature": self.literature_dir,
+            "permanent": self.permanent_dir,
+        }
+        
+        return type_to_dir[note_type]
 
     def auto_promote_ready_notes(
         self, dry_run: bool = False, quality_threshold: float = 0.7
@@ -220,12 +283,12 @@ class PromotionEngine:
             "skipped_count": 0,
             "error_count": 0,
             "promoted": [],
-            "skipped_notes": [],
-            "errors": [],
+            "skipped_notes": {},  # Dict with filename as key, reason as value
+            "errors": {},  # Dict with filename as key, error message as value
             "by_type": {
-                "fleeting": {"promoted": 0, "skipped": 0},
-                "literature": {"promoted": 0, "skipped": 0},
-                "permanent": {"promoted": 0, "skipped": 0},
+                "fleeting": 0,  # Promoted count (int)
+                "literature": 0,  # Promoted count (int)
+                "permanent": 0,  # Promoted count (int)
             },
             "dry_run": dry_run,
         }
@@ -234,17 +297,22 @@ class PromotionEngine:
             results["would_promote_count"] = 0
             results["preview"] = []
             logger.info(
-                "Auto-promotion running in DRY-RUN mode (no changes will be made)"
+                f"Auto-promotion running in DRY-RUN mode (no changes will be made) "
+                f"with quality_threshold={quality_threshold}"
             )
 
         # Scan inbox for candidate notes (including subdirectories)
         if not self.inbox_dir.exists():
-            logger.warning(f"Inbox directory does not exist: {self.inbox_dir}")
+            logger.warning(
+                f"Inbox directory does not exist: {self.inbox_dir}. "
+                f"Auto-promotion cannot proceed."
+            )
             return results
 
         inbox_files = list(self.inbox_dir.rglob("*.md"))
         logger.info(
-            f"Scanning {len(inbox_files)} notes in Inbox/ (including subdirectories) for auto-promotion candidates"
+            f"Auto-promotion scan starting: {len(inbox_files)} notes in Inbox/ "
+            f"(quality_threshold={quality_threshold}, dry_run={dry_run})"
         )
 
         for note_path in inbox_files:
@@ -256,16 +324,24 @@ class PromotionEngine:
                 # Skip notes without quality scores
                 quality_score = frontmatter.get("quality_score")
                 if quality_score is None:
+                    logger.debug(
+                        f"Skipping {note_path.name}: No quality_score field in frontmatter"
+                    )
                     continue
 
-                # Skip notes that don't have inbox status
+                # Only process notes with status='promoted' 
+                # (manual promotion happened, now auto-promoting to type-specific dir)
                 status = frontmatter.get("status", "inbox")
-                if status not in ["inbox", "promoted"]:
+                if status != self.AUTO_PROMOTION_STATUS:
+                    logger.debug(
+                        f"Skipping {note_path.name}: Status '{status}' != required '{self.AUTO_PROMOTION_STATUS}'"
+                    )
                     continue
 
                 results["total_candidates"] += 1
-                logger.debug(
-                    f"Evaluating candidate: {note_path.name} (quality: {quality_score})"
+                logger.info(
+                    f"Evaluating candidate {results['total_candidates']}: {note_path.name} "
+                    f"(quality: {quality_score:.2f}, threshold: {quality_threshold})"
                 )
 
                 # Validate note eligibility
@@ -275,24 +351,20 @@ class PromotionEngine:
 
                 if not is_valid:
                     results["skipped_count"] += 1
-                    results["skipped_notes"].append(
-                        {
-                            "path": note_path.name,
-                            "quality": frontmatter.get("quality_score", 0.0),
-                            "type": frontmatter.get("type", "unknown"),
-                            "reason": error_msg or "Validation failed",
-                        }
-                    )
-                    # Track by type for skipped notes
-                    note_type_for_skip = frontmatter.get("type", "permanent")
-                    if note_type_for_skip in results["by_type"]:
-                        results["by_type"][note_type_for_skip]["skipped"] += 1
+                    # Store filename as key, reason as value
+                    results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
+                    
+                    # Track errors separately if related to missing type field
                     if error_msg and "type" in error_msg.lower():
                         results["error_count"] += 1
-                        results["errors"].append(
-                            {"note": note_path.name, "error": error_msg}
+                        results["errors"][note_path.name] = error_msg
+                        logger.error(
+                            f"Validation error for {note_path.name}: {error_msg}"
                         )
-                    logger.debug(f"Skipped {note_path.name}: {error_msg}")
+                    else:
+                        logger.info(
+                            f"Skipped {note_path.name}: {error_msg} (quality: {quality_score:.2f})"
+                        )
                     continue
 
                 # At this point, note_type is guaranteed to be a string
@@ -322,29 +394,35 @@ class PromotionEngine:
 
                 if success:
                     results["promoted_count"] += 1
-                    results["by_type"][note_type]["promoted"] += 1
+                    results["by_type"][note_type] += 1
+                    quality = frontmatter.get("quality_score", 0.0)
                     results["promoted"].append(
                         {
                             "title": note_path.name,
                             "type": note_type,
-                            "quality": frontmatter.get("quality_score", 0.0),
+                            "quality": quality,
                             "target": f"{note_type.title()} Notes/",
                         }
                     )
                     logger.info(
-                        f"Promoted: {note_path.name} → {note_type.title()} Notes/"
+                        f"✓ Auto-promoted [{results['promoted_count']}/{results['total_candidates']}]: "
+                        f"{note_path.name} → {note_type.title()} Notes/ "
+                        f"(quality: {quality:.2f}, status: {self.AUTO_PROMOTION_STATUS}→{self.AUTO_PROMOTION_TARGET_STATUS})"
                     )
                 else:
                     results["error_count"] += 1
-                    results["errors"].append(
-                        {"note": note_path.name, "error": error_msg}
+                    results["errors"][note_path.name] = error_msg
+                    logger.error(
+                        f"✗ Promotion failed for {note_path.name}: {error_msg} "
+                        f"(candidate {results['total_candidates']}, type: {note_type})"
                     )
-                    logger.error(f"Promotion failed for {note_path.name}: {error_msg}")
 
             except Exception as e:
                 results["error_count"] += 1
-                results["errors"].append({"note": note_path.name, "error": str(e)})
-                logger.exception(f"Error processing {note_path.name}: {e}")
+                results["errors"][note_path.name] = str(e)
+                logger.exception(
+                    f"✗ Exception processing {note_path.name} during auto-promotion: {e}"
+                )
 
         # Add summary section
         results["summary"] = {
@@ -354,10 +432,15 @@ class PromotionEngine:
             "error_count": results["error_count"],
         }
 
-        # Summary logging
+        # Summary logging with breakdown by type
+        by_type_summary = ", ".join(
+            f"{type_name}: {count}" 
+            for type_name, count in results["by_type"].items() 
+            if count > 0
+        )
         logger.info(
-            f"Auto-promotion complete: {results['promoted_count']} promoted, "
-            f"{results['skipped_count']} skipped, {results['error_count']} errors"
+            f"Auto-promotion complete: {results['promoted_count']}/{results['total_candidates']} promoted "
+            f"({by_type_summary}), {results['skipped_count']} skipped, {results['error_count']} errors"
         )
 
         return results
