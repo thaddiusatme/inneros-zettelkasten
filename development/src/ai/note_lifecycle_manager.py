@@ -288,7 +288,7 @@ class NoteLifecycleManager:
             if not destination_dir:
                 return {"promoted": False, "error": f"Unknown note type: {note_type}"}
 
-            # Update status to promoted
+            # Update status to promoted (adds processed_date automatically)
             status_result = self.update_status(
                 note_path,
                 new_status="promoted",
@@ -300,6 +300,20 @@ class NoteLifecycleManager:
                     "promoted": False,
                     "error": status_result.get("error", "Failed to update status"),
                 }
+
+            # Also add promoted_date for explicit promotion tracking
+            try:
+                with open(note_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                frontmatter, body = parse_frontmatter(content)
+                if "promoted_date" not in frontmatter:
+                    frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    updated_content = build_frontmatter(frontmatter, body)
+                    with open(note_path, "w", encoding="utf-8") as f:
+                        f.write(updated_content)
+            except Exception as e:
+                # Continue even if timestamp addition fails
+                pass
 
             # Move file to destination directory
             destination_path = destination_dir / note_path.name

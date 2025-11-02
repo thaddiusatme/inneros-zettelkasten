@@ -78,7 +78,7 @@ class WorkflowManager:
         self.analytics = NoteAnalytics(str(self.base_dir))
 
         # ADR-002 Phase 1: Lifecycle manager extraction
-        self.lifecycle_manager = NoteLifecycleManager()
+        self.lifecycle_manager = NoteLifecycleManager(base_dir=self.base_dir)
 
         # ADR-002 Phase 2: Connection coordinator extraction
         self.connection_coordinator = ConnectionCoordinator(

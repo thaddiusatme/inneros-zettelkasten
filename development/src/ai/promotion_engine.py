@@ -116,13 +116,23 @@ class PromotionEngine:
             result = self.lifecycle_manager.promote_note(source_file)
 
             if result.get("promoted"):
+                # Check if promoted note has AI summary
+                has_summary = False
+                try:
+                    promoted_path = Path(result["destination_path"])
+                    if promoted_path.exists():
+                        promoted_content = promoted_path.read_text()
+                        has_summary = "ai_summary:" in promoted_content
+                except Exception:
+                    pass  # Default to False if can't read
+
                 # Transform result to match expected format
                 return {
                     "success": True,
                     "source": str(source_file),
                     "target": result["destination_path"],
                     "type": result["note_type"],
-                    "has_summary": False,  # Legacy field for compatibility
+                    "has_summary": has_summary,
                 }
             else:
                 return {"error": result.get("error", "Promotion failed")}

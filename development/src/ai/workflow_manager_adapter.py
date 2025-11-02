@@ -28,6 +28,7 @@ from src.ai.core_workflow_manager import CoreWorkflowManager
 from src.ai.analytics_manager import AnalyticsManager
 from src.ai.ai_enhancement_manager import AIEnhancementManager
 from src.ai.connection_manager import ConnectionManager
+from src.ai.note_lifecycle_manager import NoteLifecycleManager
 from src.utils.vault_path import get_default_vault_path
 
 logger = logging.getLogger(__name__)
@@ -101,6 +102,9 @@ class LegacyWorkflowManagerAdapter:
             ai_enhancement_manager=self.ai_enhancement,
             connection_manager=self.connections,
         )
+
+        # Initialize NoteLifecycleManager for promotion operations
+        self.lifecycle = NoteLifecycleManager(base_dir=self.base_dir)
 
     def _load_config(self) -> Dict[str, Any]:
         """
@@ -569,44 +573,68 @@ class LegacyWorkflowManagerAdapter:
 
         Args:
             note_path: Path to the note to promote
-            target_type: Target type (permanent|literature)
+            target_type: Target type (permanent|literature|fleeting)
 
         Returns:
             Promotion result:
             {
                 'success': bool,
+                'type': str,
+                'has_summary': bool,
                 'source': str,
-                'destination': str,
-                'target_type': str
+                'destination': str
             }
 
         Raises:
             ValueError: If target_type is invalid
         """
         # Validate target type
-        valid_types = ["permanent", "literature"]
+        valid_types = ["permanent", "literature", "fleeting"]
         if target_type not in valid_types:
-            raise ValueError(
-                f"Invalid target_type: {target_type}. " f"Must be one of: {valid_types}"
-            )
-
-        # Determine target directory
-        if target_type == "permanent":
-            target_dir = self.permanent_dir
-        else:  # literature
-            target_dir = self.base_dir / "Literature Notes"
+            return {
+                "success": False,
+                "error": f"Invalid target_type: {target_type}. Must be one of: {valid_types}",
+            }
 
         note_path_obj = Path(note_path)
-        target_path = target_dir / note_path_obj.name
 
-        # For now, return plan (actual file move requires DirectoryOrganizer)
-        return {
-            "success": True,
-            "source": str(note_path),
-            "destination": str(target_path),
-            "target_type": target_type,
-            "note": "File move not yet implemented - requires DirectoryOrganizer integration",
-        }
+        # Update the note's type field before promotion
+        try:
+            content = note_path_obj.read_text()
+            if content.startswith("---"):
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    frontmatter = yaml.safe_load(parts[1]) or {}
+                    frontmatter["type"] = target_type
+                    updated_content = (
+                        "---\n" + yaml.dump(frontmatter, sort_keys=False) + "---" + parts[2]
+                    )
+                    note_path_obj.write_text(updated_content)
+        except Exception as e:
+            return {"success": False, "error": f"Failed to update note type: {str(e)}"}
+
+        # Delegate to NoteLifecycleManager for actual promotion
+        result = self.lifecycle.promote_note(note_path_obj)
+
+        # Transform result to match expected format
+        if result.get("promoted"):
+            # Check if note has AI summary
+            has_summary = False
+            try:
+                promoted_content = Path(result["destination_path"]).read_text()
+                has_summary = "ai_summary:" in promoted_content
+            except Exception:
+                pass
+
+            return {
+                "success": True,
+                "type": result.get("note_type", target_type),
+                "has_summary": has_summary,
+                "source": str(note_path),
+                "destination": result.get("destination_path", ""),
+            }
+        else:
+            return {"success": False, "error": result.get("error", "Promotion failed")}
 
     def promote_fleeting_note(
         self,
@@ -651,18 +679,17 @@ class LegacyWorkflowManagerAdapter:
             except Exception:
                 target_type = "permanent"
 
-        # Generate plan
-        plan = {
-            "source": str(note_path),
-            "target_type": target_type,
-            "note": "Detected from YAML" if target_type else "Using default",
-        }
-
+        # Preview mode returns plan without executing
         if preview_mode:
+            plan = {
+                "source": str(note_path),
+                "target_type": target_type,
+                "note": "Preview mode - will be promoted to " + target_type,
+            }
             return {"preview": plan}
 
-        # Would execute promotion here
-        return {"success": True, **plan, "note": "File move not yet implemented"}
+        # Execute promotion by delegating to promote_note()
+        return self.promote_note(note_path, target_type=target_type)
 
     def promote_fleeting_notes_batch(
         self,
