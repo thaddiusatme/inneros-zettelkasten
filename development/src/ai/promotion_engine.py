@@ -66,9 +66,9 @@ class PromotionEngine:
         self.fleeting_dir = self.base_dir / "Fleeting Notes"
 
         # Ensure target directories exist
-        self.permanent_dir.mkdir(exist_ok=True)
-        self.literature_dir.mkdir(exist_ok=True)
-        self.fleeting_dir.mkdir(exist_ok=True)
+        self.permanent_dir.mkdir(parents=True, exist_ok=True)
+        self.literature_dir.mkdir(parents=True, exist_ok=True)
+        self.fleeting_dir.mkdir(parents=True, exist_ok=True)
 
         logger.info(
             f"PromotionEngine initialized with base_dir: {base_dir}, "

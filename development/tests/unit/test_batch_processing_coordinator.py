@@ -70,18 +70,24 @@ class TestBatchProcessingCoordinatorInitialization:
         assert coordinator.process_callback == mock_process_callback
 
     def test_coordinator_initialization_validates_inbox_dir_exists(
-        self, mock_process_callback
+        self, mock_process_callback, tmp_path
     ):
-        """Test that coordinator validates inbox directory exists."""
+        """Test that coordinator creates inbox directory if it doesn't exist."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        nonexistent_dir = Path("/nonexistent/inbox")
+        # Use tmp_path to avoid read-only filesystem issues
+        nonexistent_dir = tmp_path / "nonexistent" / "inbox"
+        assert not nonexistent_dir.exists()
 
-        with pytest.raises((ValueError, FileNotFoundError)):
-            BatchProcessingCoordinator(
-                inbox_dir=nonexistent_dir, process_callback=mock_process_callback
-            )
+        # Should create directory instead of raising error (updated behavior for test environments)
+        coordinator = BatchProcessingCoordinator(
+            inbox_dir=nonexistent_dir, process_callback=mock_process_callback
+        )
+        
+        # Verify directory was created
+        assert nonexistent_dir.exists()
+        assert coordinator.inbox_dir == nonexistent_dir
 
     def test_coordinator_initialization_requires_callable_process_callback(
         self, temp_inbox

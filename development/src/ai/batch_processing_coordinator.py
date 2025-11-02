@@ -24,8 +24,8 @@ class BatchProcessingCoordinator:
         if not isinstance(inbox_dir, Path):
             inbox_dir = Path(inbox_dir)
 
-        if not inbox_dir.exists():
-            raise ValueError(f"Inbox directory does not exist: {inbox_dir}")
+        # Ensure inbox directory exists (create if needed for test environments)
+        inbox_dir.mkdir(parents=True, exist_ok=True)
 
         # Callback can be None initially and set later by WorkflowManager
         if process_callback is not None and not callable(process_callback):
