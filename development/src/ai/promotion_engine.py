@@ -198,8 +198,25 @@ class PromotionEngine:
             if "error" in result:
                 return False, result["error"]
 
-            # Status update and file move are now handled by promote_note() delegation
-            # No need for separate status update - NoteLifecycleManager handles it atomically
+            # Auto-promotion requires additional status update from 'promoted' → 'published'
+            # This is distinct from manual promotion which stops at 'promoted'
+            if result.get("success") and result.get("target"):
+                promoted_path = Path(result["target"])
+                try:
+                    status_result = self.lifecycle_manager.update_status(
+                        promoted_path,
+                        new_status="published",
+                        reason="Auto-promotion completed successfully"
+                    )
+                    if not status_result.get("validation_passed"):
+                        logger.warning(
+                            f"Status update to 'published' failed for {promoted_path.name}: "
+                            f"{status_result.get('error', 'Unknown error')}"
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"Could not update status to 'published' for {promoted_path.name}: {e}"
+                    )
 
             return True, None
 
@@ -230,12 +247,12 @@ class PromotionEngine:
             "skipped_count": 0,
             "error_count": 0,
             "promoted": [],
-            "skipped_notes": [],
-            "errors": [],
+            "skipped_notes": {},  # Dict with filename as key, reason as value
+            "errors": {},  # Dict with filename as key, error message as value
             "by_type": {
-                "fleeting": {"promoted": 0, "skipped": 0},
-                "literature": {"promoted": 0, "skipped": 0},
-                "permanent": {"promoted": 0, "skipped": 0},
+                "fleeting": 0,  # Promoted count (int)
+                "literature": 0,  # Promoted count (int)
+                "permanent": 0,  # Promoted count (int)
             },
             "dry_run": dry_run,
         }
@@ -268,9 +285,10 @@ class PromotionEngine:
                 if quality_score is None:
                     continue
 
-                # Skip notes that don't have inbox status
+                # Only process notes with status='promoted' 
+                # (manual promotion happened, now auto-promoting to type-specific dir)
                 status = frontmatter.get("status", "inbox")
-                if status not in ["inbox", "promoted"]:
+                if status != "promoted":
                     continue
 
                 results["total_candidates"] += 1
@@ -285,23 +303,14 @@ class PromotionEngine:
 
                 if not is_valid:
                     results["skipped_count"] += 1
-                    results["skipped_notes"].append(
-                        {
-                            "path": note_path.name,
-                            "quality": frontmatter.get("quality_score", 0.0),
-                            "type": frontmatter.get("type", "unknown"),
-                            "reason": error_msg or "Validation failed",
-                        }
-                    )
-                    # Track by type for skipped notes
-                    note_type_for_skip = frontmatter.get("type", "permanent")
-                    if note_type_for_skip in results["by_type"]:
-                        results["by_type"][note_type_for_skip]["skipped"] += 1
+                    # Store filename as key, reason as value
+                    results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
+                    
+                    # Track errors separately if related to missing type field
                     if error_msg and "type" in error_msg.lower():
                         results["error_count"] += 1
-                        results["errors"].append(
-                            {"note": note_path.name, "error": error_msg}
-                        )
+                        results["errors"][note_path.name] = error_msg
+                    
                     logger.debug(f"Skipped {note_path.name}: {error_msg}")
                     continue
 
@@ -332,7 +341,7 @@ class PromotionEngine:
 
                 if success:
                     results["promoted_count"] += 1
-                    results["by_type"][note_type]["promoted"] += 1
+                    results["by_type"][note_type] += 1
                     results["promoted"].append(
                         {
                             "title": note_path.name,
@@ -346,14 +355,12 @@ class PromotionEngine:
                     )
                 else:
                     results["error_count"] += 1
-                    results["errors"].append(
-                        {"note": note_path.name, "error": error_msg}
-                    )
+                    results["errors"][note_path.name] = error_msg
                     logger.error(f"Promotion failed for {note_path.name}: {error_msg}")
 
             except Exception as e:
                 results["error_count"] += 1
-                results["errors"].append({"note": note_path.name, "error": str(e)})
+                results["errors"][note_path.name] = str(e)
                 logger.exception(f"Error processing {note_path.name}: {e}")
 
         # Add summary section
