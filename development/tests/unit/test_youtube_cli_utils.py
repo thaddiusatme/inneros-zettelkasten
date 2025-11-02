@@ -84,10 +84,18 @@ Interesting AI content
                     {"text": "Test segment 2", "start": 2.0, "duration": 2.0},
                 ]
             }
-            mock_processor_instance.fetcher.format_for_llm.return_value = "Test transcript formatted for LLM"
+            mock_processor_instance.fetcher.format_for_llm.return_value = (
+                "Test transcript formatted for LLM"
+            )
             mock_processor_instance.extractor.extract_quotes.return_value = {
                 "quotes": [
-                    {"text": "Test quote", "timestamp": "0:00", "context": "Test", "category": "key-insight", "relevance_score": 0.9}
+                    {
+                        "text": "Test quote",
+                        "timestamp": "0:00",
+                        "context": "Test",
+                        "category": "key-insight",
+                        "relevance_score": 0.9,
+                    }
                 ]
             }
 
@@ -208,16 +216,26 @@ User content here.
                     {"text": "Test segment 2", "start": 2.0, "duration": 2.0},
                 ]
             }
-            mock_processor_instance.fetcher.format_for_llm.return_value = "Test transcript formatted for LLM"
+            mock_processor_instance.fetcher.format_for_llm.return_value = (
+                "Test transcript formatted for LLM"
+            )
             mock_processor_instance.extractor.extract_quotes.return_value = {
                 "quotes": [
-                    {"text": "Test quote", "timestamp": "0:00", "context": "Test", "category": "key-insight", "relevance_score": 0.9}
+                    {
+                        "text": "Test quote",
+                        "timestamp": "0:00",
+                        "context": "Test",
+                        "category": "key-insight",
+                        "relevance_score": 0.9,
+                    }
                 ]
             }
             mock_enhancer_return_value = Mock(
                 success=True, backup_path=tmp_path / "backup.md", error_message=None
             )
-            MockEnhancer.return_value.enhance_note.return_value = mock_enhancer_return_value
+            MockEnhancer.return_value.enhance_note.return_value = (
+                mock_enhancer_return_value
+            )
 
             # Execute: Process with integration
             processor = YouTubeCLIProcessor(str(tmp_path))
