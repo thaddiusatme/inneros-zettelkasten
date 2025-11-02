@@ -201,7 +201,7 @@ quality_score: 0.85
         high_quality.write_text(
             """---
 type: permanent
-status: inbox
+status: promoted
 quality_score: 0.85
 ---
 # High
@@ -212,7 +212,7 @@ quality_score: 0.85
         medium_quality.write_text(
             """---
 type: permanent
-status: inbox
+status: promoted
 quality_score: 0.75
 ---
 # Medium

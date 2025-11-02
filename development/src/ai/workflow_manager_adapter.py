@@ -591,10 +591,9 @@ class LegacyWorkflowManagerAdapter:
         # Validate target type
         valid_types = ["permanent", "literature", "fleeting"]
         if target_type not in valid_types:
-            return {
-                "success": False,
-                "error": f"Invalid target_type: {target_type}. Must be one of: {valid_types}",
-            }
+            raise ValueError(
+                f"Invalid target_type: {target_type}. Must be one of: {valid_types}"
+            )
 
         note_path_obj = Path(note_path)
 
