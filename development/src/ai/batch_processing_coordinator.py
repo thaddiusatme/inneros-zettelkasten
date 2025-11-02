@@ -7,6 +7,9 @@ Extracts batch processing logic from WorkflowManager to reduce god class size.
 from pathlib import Path
 from typing import Dict, Callable, Optional
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BatchProcessingCoordinator:
@@ -25,19 +28,36 @@ class BatchProcessingCoordinator:
             inbox_dir = Path(inbox_dir)
 
         # Ensure inbox directory exists (create if needed for test environments)
+        created = not inbox_dir.exists()
         inbox_dir.mkdir(parents=True, exist_ok=True)
+        
+        if created:
+            logger.info(f"Created inbox directory for test environment: {inbox_dir}")
+        else:
+            logger.debug(f"Using existing inbox directory: {inbox_dir}")
 
         # Callback can be None initially and set later by WorkflowManager
         if process_callback is not None and not callable(process_callback):
+            logger.error(f"Invalid process_callback type: {type(process_callback)}")
             raise TypeError("process_callback must be a callable function")
 
         self.inbox_dir = inbox_dir
         self.process_callback = process_callback
+        
+        logger.info(
+            f"BatchProcessingCoordinator initialized: inbox_dir={inbox_dir}, "
+            f"has_callback={process_callback is not None}"
+        )
 
     def batch_process_inbox(self, show_progress: bool = True) -> Dict:
         """Process all notes in the inbox with progress tracking."""
         inbox_files = list(self.inbox_dir.glob("*.md"))
         total = len(inbox_files)
+        
+        logger.info(
+            f"Starting batch processing: {total} files in {self.inbox_dir}, "
+            f"show_progress={show_progress}"
+        )
 
         results = {
             "total_files": total,
@@ -60,11 +80,14 @@ class BatchProcessingCoordinator:
                 sys.stderr.write(f"\r[{idx}/{total}] {progress_pct}% - {filename}...")
                 sys.stderr.flush()
 
+            logger.debug(f"Processing note [{idx}/{total}]: {note_file.name}")
+
             try:
                 result = self.process_callback(str(note_file))
 
                 if "error" not in result:
                     results["processed"] += 1
+                    logger.debug(f"Successfully processed: {note_file.name}")
 
                     for rec in result.get("recommendations", []):
                         action = rec.get("action", "")
@@ -76,11 +99,18 @@ class BatchProcessingCoordinator:
                             results["summary"]["needs_improvement"] += 1
                 else:
                     results["failed"] += 1
+                    logger.warning(
+                        f"Processing failed for {note_file.name}: {result.get('error', 'Unknown error')}"
+                    )
 
                 results["results"].append(result)
 
             except Exception as e:
                 results["failed"] += 1
+                logger.error(
+                    f"Exception processing {note_file.name}: {type(e).__name__}: {e}",
+                    exc_info=True
+                )
                 results["results"].append(
                     {"original_file": str(note_file), "error": str(e)}
                 )
@@ -88,5 +118,13 @@ class BatchProcessingCoordinator:
         if show_progress and total > 0:
             sys.stderr.write("\r" + " " * 80 + "\r")
             sys.stderr.flush()
+
+        logger.info(
+            f"Batch processing complete: {results['processed']}/{total} successful, "
+            f"{results['failed']} failed | "
+            f"Summary: {results['summary']['promote_to_permanent']} promote, "
+            f"{results['summary']['move_to_fleeting']} fleeting, "
+            f"{results['summary']['needs_improvement']} needs improvement"
+        )
 
         return results

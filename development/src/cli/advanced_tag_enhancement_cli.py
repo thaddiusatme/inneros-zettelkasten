@@ -25,11 +25,14 @@ REFACTOR ENHANCEMENTS:
 import argparse
 import json
 import time
+import logging
 import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from enum import Enum
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -132,12 +135,15 @@ class AdvancedTagEnhancementCLI:
 
     def execute_command(self, command_args, **kwargs) -> Dict[str, Any]:
         """Execute CLI command with parameters - Enhanced for TDD Iteration 6"""
+        logger.debug(f"execute_command called with args={command_args}, kwargs={list(kwargs.keys())}")
+        
         # Handle both string and list input for backwards compatibility
         if isinstance(command_args, str):
             command = command_args
         elif isinstance(command_args, list):
             # Parse command line arguments
             if not command_args:
+                logger.warning("execute_command called with empty command_args")
                 return {"error": "No command provided"}
 
             # Extract command from arguments
@@ -151,7 +157,10 @@ class AdvancedTagEnhancementCLI:
             else:
                 command = command_args[0]
         else:
+            logger.error(f"Invalid command format: {type(command_args)}")
             return {"error": "Invalid command format"}
+        
+        logger.info(f"Executing command: {command}")
 
         # Handle concurrent processing if requested (will merge with command result)
         concurrent_metadata = {}
@@ -189,11 +198,19 @@ class AdvancedTagEnhancementCLI:
         elif command == "rollback":
             result = self._rollback(**kwargs)
         else:
+            logger.warning(f"Unknown command requested: {command}")
             result = {"error": f"Unknown command: {command}"}
         
         # Merge concurrent metadata if present
         if concurrent_metadata and result:
             result.update(concurrent_metadata)
+        
+        # Log result summary
+        if "error" in result:
+            logger.error(f"Command {command} failed: {result.get('error')}")
+        else:
+            logger.info(f"Command {command} completed successfully")
+            logger.debug(f"Result keys: {list(result.keys())}")
         
         return result
 
@@ -406,6 +423,9 @@ class AdvancedTagEnhancementCLI:
 
     def _analyze_tags_enhanced(self, **kwargs) -> Dict[str, Any]:
         """Enhanced analyze-tags with 100% suggestion coverage - REFACTOR implementation"""
+        logger.info("Starting enhanced tag analysis with 100% coverage engine")
+        logger.debug(f"Enhanced analysis parameters: {list(kwargs.keys())}")
+        
         # Import enhanced AI features
         from ..ai.enhanced_ai_features import (
             EnhancedSuggestionEngine,
@@ -415,6 +435,7 @@ class AdvancedTagEnhancementCLI:
         # Initialize enhanced components
         enhanced_engine = EnhancedSuggestionEngine()
         quality_recalibrator = QualityScoringRecalibrator()
+        logger.debug("Enhanced AI components initialized")
 
         # Handle large collections and performance mode
         vault_path = kwargs.get("vault_path", str(self.vault_path))
@@ -475,6 +496,12 @@ class AdvancedTagEnhancementCLI:
                 "peak_memory_mb": 50,  # Simulated reasonable usage
                 "processing_efficiency": 0.9,
             }
+
+        logger.info(
+            f"Enhanced tag analysis complete: {total_tags} tags processed in {processing_time:.3f}s, "
+            f"{len(enhanced_suggestions)} suggestions generated (100% coverage)"
+        )
+        logger.debug(f"Quality distribution: {quality_distribution}")
 
         return result
 
