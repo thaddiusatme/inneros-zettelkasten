@@ -16,6 +16,9 @@
 **AI Integration?**
 → Load: `.windsurf/guides/ai-integration-patterns.md`
 
+**Test Remediation?**
+→ Load: `.windsurf/guides/test-remediation-patterns.md`
+
 **CLI Development?**
 → Load: Both TDD + AI guides (CLI builds on both)
 
@@ -53,9 +56,10 @@
 |------|---------------|----------------|-------------------------|
 | **New TDD Feature** | TDD Methodology | - | Feature-specific docs |
 | **AI Service Integration** | AI Integration | TDD Methodology | Samsung OCR, Tag Prevention |
+| **Test Remediation** | Test Remediation | TDD Methodology | Sprint 1 Retrospective |
 | **CLI Command** | TDD Methodology | - | CLI extraction iterations |
 | **Performance Optimization** | AI Integration | - | Batch processing examples |
-| **Bug Fix** | TDD Methodology | - | Template fix, backup fix |
+| **Bug Fix** | TDD Methodology | Test Remediation | Template fix, backup fix |
 | **Refactoring** | TDD Methodology | - | ADR-002, ADR-004 |
 
 ---
