@@ -1,0 +1,172 @@
+/Users/thaddius/repos/inneros-zettelkasten/development/venv/lib/python3.13/site-packages/pytest_asyncio/plugin.py:252: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-8.3.3, pluggy-1.6.0 -- /Users/thaddius/repos/inneros-zettelkasten/development/venv/bin/python3.13
+cachedir: .pytest_cache
+Test order randomisation NOT enabled. Enable with --random-order or --random-order-bucket=<bucket_type>
+rootdir: /Users/thaddius/repos/inneros-zettelkasten/development
+configfile: pytest.ini
+plugins: cov-6.0.0, mock-3.15.1, asyncio-1.2.0, anyio-4.11.0, random-order-1.2.0, Faker-37.11.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 120 items
+
+tests/unit/test_workflow_manager_adapter.py::TestAdapterInitialization::test_adapter_initializes_with_base_directory PASSED [  0%]
+tests/unit/test_workflow_manager_adapter.py::TestAdapterInitialization::test_adapter_initializes_with_none_resolves_vault_path PASSED [  1%]
+tests/unit/test_workflow_manager_adapter.py::TestAdapterInitialization::test_adapter_exposes_legacy_attributes PASSED [  2%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_detect_orphaned_notes_delegates_to_analytics PASSED [  3%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_detect_stale_notes_delegates_to_analytics PASSED [  4%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_detect_stale_notes_handles_default_threshold PASSED [  5%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_generate_workflow_report_delegates_to_analytics PASSED [  5%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_scan_review_candidates_delegates_to_analytics PASSED [  6%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_process_inbox_note_delegates_to_core PASSED [  7%]
+tests/unit/test_workflow_manager_adapter.py::TestSimpleDelegations::test_process_inbox_note_handles_fast_parameter PASSED [  8%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_generate_weekly_recommendations_coordinates_managers PASSED [  9%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_generate_enhanced_metrics_aggregates_multiple_sources PASSED [ 10%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_analyze_fleeting_notes_delegates_to_analytics PASSED [ 10%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_generate_fleeting_health_report_formats_analysis PASSED [ 11%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_generate_fleeting_triage_report_coordinates_quality_scoring PASSED [ 12%]
+tests/unit/test_workflow_manager_adapter.py::TestMultiManagerCoordination::test_generate_fleeting_triage_report_drops_fast_parameter PASSED [ 13%]
+tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_note_moves_to_correct_directory PASSED [ 14%]
+tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_note_validates_target_type FAILED [ 15%]
+tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_fleeting_note_preview_mode_no_file_changes PASSED [ 15%]
+tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_fleeting_note_detects_target_type_from_yaml PASSED [ 16%]
+tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_fleeting_notes_batch_handles_partial_failures PASSED [ 17%]
+tests/unit/test_workflow_manager_adapter.py::TestAdditionalMethods::test_batch_process_inbox_loops_over_notes PASSED [ 18%]
+tests/unit/test_workflow_manager_adapter.py::TestSessionManagement::test_start_safe_processing_session_initializes SKIPPED [ 19%]
+tests/unit/test_workflow_manager_adapter.py::TestSessionManagement::test_process_inbox_note_safe_wraps_with_session SKIPPED [ 20%]
+tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_workflow_manager_has_auto_promote_method PASSED [ 20%]
+tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_auto_promote_delegates_to_promotion_engine PASSED [ 21%]
+tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_auto_promote_passes_parameters_correctly PASSED [ 22%]
+tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_auto_promote_dry_run_delegation PASSED [ 23%]
+tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_auto_promote_quality_threshold_delegation FAILED [ 24%]
+tests/unit/test_workflow_manager_auto_promote.py::TestAutoPromoteIntegrationPattern::test_auto_promote_follows_adr002_delegation_pattern PASSED [ 25%]
+tests/unit/test_workflow_manager_auto_promote.py::TestAutoPromoteIntegrationPattern::test_auto_promote_consistency_with_existing_delegations PASSED [ 25%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_filters_by_quality_threshold PASSED [ 26%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_routes_by_type_fleeting PASSED [ 27%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_routes_by_type_literature PASSED [ 28%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_routes_by_type_permanent PASSED [ 29%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_updates_status_to_published PASSED [ 30%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_adds_promoted_date_timestamp PASSED [ 30%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_dry_run_no_changes PASSED [ 31%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_custom_quality_threshold PASSED [ 32%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_batch_processing_multiple_notes PASSED [ 33%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_handles_missing_type_field PASSED [ 34%]
+tests/unit/test_workflow_manager_auto_promotion.py::TestAutoPromotionSystem::test_auto_promote_skips_non_promoted_status PASSED [ 35%]
+tests/unit/test_workflow_manager_default_path.py::test_workflow_manager_uses_default_path PASSED [ 35%]
+tests/unit/test_workflow_manager_default_path.py::test_workflow_manager_raises_when_no_path PASSED [ 36%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_safe_workflow_manager_initialization_works PASSED [ 37%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_safe_process_inbox_note_works PASSED [ 38%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_atomic_inbox_processing_works PASSED [ 39%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_safe_batch_processing_works PASSED [ 40%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_workflow_with_image_monitoring_works PASSED [ 40%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_ai_processing_with_backup_rollback_works PASSED [ 41%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_performance_monitoring_integration_works PASSED [ 42%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_concurrent_safe_processing_works PASSED [ 43%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_workflow_safety_manager_integration_fails PASSED [ 44%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_enhanced_ai_processing_with_safety_fails PASSED [ 45%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_workflow_integration_cli_safety_fails PASSED [ 45%]
+tests/unit/test_workflow_manager_integration.py::TestWorkflowManagerImageIntegration::test_comprehensive_error_recovery_fails PASSED [ 46%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_updates_status_to_promoted PASSED [ 47%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_adds_processed_date PASSED [ 48%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_idempotent_status_update PASSED [ 49%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_status_not_updated_on_error PASSED [ 50%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_status_update_preserves_other_metadata PASSED [ 50%]
+tests/unit/test_workflow_manager_status_update.py::TestWorkflowManagerStatusUpdate::test_process_inbox_note_fast_mode_skips_status_update PASSED [ 51%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_initialization PASSED [ 52%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_load_config_default PASSED [ 53%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_load_config_custom PASSED [ 54%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_extract_frontmatter PASSED [ 55%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_merge_tags PASSED [ 55%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_rebuild_content PASSED [ 56%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_success PASSED [ 57%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_file_not_found PASSED [ 58%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_fixes_created_placeholder_fast_path PASSED [ 59%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_dry_run_does_not_write_when_template_fixed_fast_path PASSED [ 60%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_dry_run_does_not_write_when_template_fixed_ai_path PASSED [ 60%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_preprocess_created_placeholder_preserves_other_frontmatter_fields PASSED [ 61%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_adds_missing_created_fast_path PASSED [ 62%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_fixes_created_curly_braces_no_format_fast_path PASSED [ 63%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_fixes_created_ejs_tp_date_fast_path PASSED [ 64%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_process_inbox_note_fixes_created_ejs_tp_file_creation_date_fast_path PASSED [ 65%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_promote_note_to_permanent PASSED [ 65%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_promote_note_to_fleeting PASSED [ 66%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_promote_note_invalid_type PASSED [ 67%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_batch_process_inbox PASSED [ 68%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_load_notes_corpus PASSED [ 69%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_load_notes_corpus_empty_directory PASSED [ 70%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_load_notes_corpus_nonexistent_directory PASSED [ 70%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_workflow_report PASSED [ 71%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_analyze_ai_usage PASSED [ 72%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_workflow_recommendations PASSED [ 73%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_inbox_only PASSED [ 74%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_fleeting_inbox_status PASSED [ 75%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_combined PASSED [ 75%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_handles_missing_yaml PASSED [ 76%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_empty_directories PASSED [ 77%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_scan_review_candidates_non_markdown_files PASSED [ 78%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_empty_candidates PASSED [ 79%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_high_quality_note PASSED [ 80%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_medium_quality_note PASSED [ 80%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_low_quality_note PASSED [ 81%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_mixed_quality PASSED [ 82%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_handles_processing_errors PASSED [ 83%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_weekly_recommendations_result_structure PASSED [ 84%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_detect_orphaned_notes_empty_collection PASSED [ 85%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_detect_stale_notes_empty_collection PASSED [ 85%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_enhanced_metrics_empty_collection PASSED [ 86%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_detect_orphaned_notes_with_linked_notes PASSED [ 87%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_detect_stale_notes_with_old_notes PASSED [ 88%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_generate_enhanced_metrics_with_notes PASSED [ 89%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_in_created_field PASSED [ 90%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_missing_created_field PASSED [ 90%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_uses_file_timestamps PASSED [ 91%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_dry_run_mode PASSED [ 92%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_preserves_other_frontmatter FAILED [ 93%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_handles_malformed_templates PASSED [ 94%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_templater_created_placeholder_detection PASSED [ 95%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_templater_ejs_pattern_detection PASSED [ 95%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_bulk_templater_placeholder_repair PASSED [ 96%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_templater_placeholder_preserves_other_metadata FAILED [ 97%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_repair_inbox_metadata_delegates_to_engine PASSED [ 98%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_repair_inbox_metadata_execute_mode PASSED [ 99%]
+tests/unit/test_workflow_manager.py::TestWorkflowManager::test_repair_inbox_metadata_handles_errors_gracefully PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ TestFileOperations.test_promote_note_validates_target_type __________
+tests/unit/test_workflow_manager_adapter.py:464: in test_promote_note_validates_target_type
+    with pytest.raises(ValueError, match="Invalid target_type"):
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_ TestWorkflowManagerAutoPromotionDelegation.test_auto_promote_quality_threshold_delegation _
+tests/unit/test_workflow_manager_auto_promote.py:229: in test_auto_promote_quality_threshold_delegation
+    assert (
+E   AssertionError: Should only promote notes meeting custom threshold (0.8)
+E   assert 0 == 1
+_ TestWorkflowManager.test_fix_template_placeholders_preserves_other_frontmatter _
+tests/unit/test_workflow_manager.py:1476: in test_fix_template_placeholders_preserves_other_frontmatter
+    assert frontmatter["status"] == "inbox"
+E   AssertionError: assert 'promoted' == 'inbox'
+E     
+E     - inbox
+E     + promoted
+___ TestWorkflowManager.test_templater_placeholder_preserves_other_metadata ____
+tests/unit/test_workflow_manager.py:1666: in test_templater_placeholder_preserves_other_metadata
+    assert frontmatter.get("status") == "inbox"
+E   AssertionError: assert 'promoted' == 'inbox'
+E     
+E     - inbox
+E     + promoted
+=========================== short test summary info ============================
+FAILED tests/unit/test_workflow_manager_adapter.py::TestFileOperations::test_promote_note_validates_target_type - Failed: DID NOT RAISE <class 'ValueError'>
+FAILED tests/unit/test_workflow_manager_auto_promote.py::TestWorkflowManagerAutoPromotionDelegation::test_auto_promote_quality_threshold_delegation - AssertionError: Should only promote notes meeting custom threshold (0.8)
+assert 0 == 1
+FAILED tests/unit/test_workflow_manager.py::TestWorkflowManager::test_fix_template_placeholders_preserves_other_frontmatter - AssertionError: assert 'promoted' == 'inbox'
+  
+  - inbox
+  + promoted
+FAILED tests/unit/test_workflow_manager.py::TestWorkflowManager::test_templater_placeholder_preserves_other_metadata - AssertionError: assert 'promoted' == 'inbox'
+  
+  - inbox
+  + promoted
+============= 4 failed, 114 passed, 2 skipped in 192.46s (0:03:12) =============
