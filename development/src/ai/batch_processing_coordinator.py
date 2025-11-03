@@ -2,12 +2,19 @@
 Batch Processing Coordinator (ADR-002 Phase 11).
 
 Extracts batch processing logic from WorkflowManager to reduce god class size.
+
+GitHub Issue #45 Phase 2 Priority 3 (P1-VAULT-10):
+- Migrated to use centralized vault configuration
+- Constructor now accepts base_dir and workflow_manager
+- Loads inbox_dir from vault config internally
 """
 
 from pathlib import Path
 from typing import Dict, Callable, Optional
 import sys
 import logging
+
+from src.config.vault_config_loader import get_vault_config
 
 logger = logging.getLogger(__name__)
 
@@ -16,37 +23,45 @@ class BatchProcessingCoordinator:
     """Coordinates batch processing of inbox notes with progress tracking."""
 
     def __init__(
-        self, inbox_dir: Path, process_callback: Optional[Callable[[str], Dict]] = None
+        self,
+        base_dir: Path,
+        workflow_manager,
+        process_callback: Optional[Callable[[str], Dict]] = None,
     ):
         """Initialize the batch processing coordinator.
 
         Args:
-            inbox_dir: Path to inbox directory
+            base_dir: Path to vault root directory
+            workflow_manager: WorkflowManager instance for delegation pattern
             process_callback: Optional callback for processing notes (can be set later)
         """
-        if not isinstance(inbox_dir, Path):
-            inbox_dir = Path(inbox_dir)
+        # Store base directory and workflow manager
+        self.base_dir = Path(base_dir)
+        self.workflow_manager = workflow_manager
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
 
         # Ensure inbox directory exists (create if needed for test environments)
-        created = not inbox_dir.exists()
-        inbox_dir.mkdir(parents=True, exist_ok=True)
+        created = not self.inbox_dir.exists()
+        self.inbox_dir.mkdir(parents=True, exist_ok=True)
         
         if created:
-            logger.info(f"Created inbox directory for test environment: {inbox_dir}")
+            logger.info(f"Created inbox directory for test environment: {self.inbox_dir}")
         else:
-            logger.debug(f"Using existing inbox directory: {inbox_dir}")
+            logger.debug(f"Using existing inbox directory: {self.inbox_dir}")
 
         # Callback can be None initially and set later by WorkflowManager
         if process_callback is not None and not callable(process_callback):
             logger.error(f"Invalid process_callback type: {type(process_callback)}")
             raise TypeError("process_callback must be a callable function")
 
-        self.inbox_dir = inbox_dir
         self.process_callback = process_callback
         
         logger.info(
-            f"BatchProcessingCoordinator initialized: inbox_dir={inbox_dir}, "
-            f"has_callback={process_callback is not None}"
+            f"BatchProcessingCoordinator initialized: base_dir={self.base_dir}, "
+            f"inbox_dir={self.inbox_dir}, has_callback={process_callback is not None}"
         )
 
     def batch_process_inbox(self, show_progress: bool = True) -> Dict:

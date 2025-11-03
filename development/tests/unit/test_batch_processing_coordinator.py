@@ -5,6 +5,10 @@ This module extracts batch processing logic from WorkflowManager
 to reduce its size toward the <500 LOC target.
 
 RED Phase: All tests should fail initially until GREEN phase implementation.
+
+GitHub Issue #45 Phase 2 Priority 3 (P1-VAULT-10):
+- Vault config integration tests added
+- Tests updated to use vault_with_config fixture
 """
 
 import pytest
@@ -13,12 +17,46 @@ from unittest.mock import Mock, patch
 import tempfile
 import shutil
 
+from src.config.vault_config_loader import get_vault_config
+
 
 # Import will fail until GREEN phase creates the module
 try:
     from src.ai.batch_processing_coordinator import BatchProcessingCoordinator
 except ImportError:
     BatchProcessingCoordinator = None
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+    
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+    
+    Copied pattern from test_safe_image_processing_coordinator.py for consistency.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+    
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+    
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
 
 
 @pytest.fixture
@@ -50,6 +88,39 @@ def mock_process_callback():
         ],
     }
     return mock
+
+
+class TestBatchProcessingCoordinatorVaultConfigIntegration:
+    """Test vault configuration integration (GitHub Issue #45 P1-VAULT-10)."""
+
+    def test_coordinator_uses_vault_config_for_inbox_directory(self, vault_with_config):
+        """
+        Test that BatchProcessingCoordinator loads inbox path from vault config.
+        
+        Expected RED failure: TypeError about unexpected keyword arguments 'base_dir' 
+        and 'workflow_manager' because current constructor expects inbox_dir parameter.
+        
+        Target GREEN signature includes:
+        - base_dir parameter for vault root
+        - workflow_manager parameter for delegation pattern
+        - Internal vault config loading for inbox_dir
+        """
+        if BatchProcessingCoordinator is None:
+            pytest.skip("BatchProcessingCoordinator not yet implemented")
+
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+        
+        # Create coordinator with vault config pattern (will fail in RED phase)
+        coordinator = BatchProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
+            process_callback=Mock(),
+        )
+        
+        # Verify coordinator uses vault config path for inbox
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.base_dir == vault
 
 
 class TestBatchProcessingCoordinatorInitialization:
