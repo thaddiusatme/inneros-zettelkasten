@@ -9,6 +9,12 @@ This coordinator handles:
 - AI-powered recommendation generation for weekly review
 - Fleeting note triage with quality assessment
 - Quality-based categorization and filtering
+
+Vault Configuration Integration (GitHub Issue #45):
+- Uses centralized vault_config.yaml for directory paths
+- Replaced hardcoded Inbox/ and Fleeting Notes/ paths
+- Enables knowledge/ subdirectory organization
+- Part of Phase 2 Priority 1 core workflow migration
 """
 
 from pathlib import Path
@@ -18,6 +24,7 @@ import time
 
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.tags import sanitize_tags
+from src.config.vault_config_loader import get_vault_config
 
 
 class ReviewTriageCoordinator:
@@ -34,8 +41,13 @@ class ReviewTriageCoordinator:
 
     Integration:
     - Uses WorkflowManager.process_inbox_note() for AI quality assessment
+    - Uses vault_config.yaml for directory paths (GitHub Issue #45)
     - Consumed by CLI layer (workflow_demo.py)
     - Independent of other coordinators (Lifecycle, Connection, Analytics, Promotion)
+    
+    Configuration:
+    - Directory paths from vault_config.inbox_dir and vault_config.fleeting_dir
+    - Supports knowledge/ subdirectory organization
     """
 
     def __init__(self, base_dir: Path, workflow_manager):
@@ -48,8 +60,11 @@ class ReviewTriageCoordinator:
         """
         self.base_dir = Path(base_dir)
         self.workflow_manager = workflow_manager
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
 
     def scan_review_candidates(self) -> List[Dict]:
         """

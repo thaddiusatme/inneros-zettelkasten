@@ -20,16 +20,18 @@ class TestReviewTriageCoordinatorInitialization:
     def test_coordinator_initialization_with_required_dependencies(self):
         """Test coordinator initializes with base_dir and workflow_manager."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         base_dir = Path("/tmp/test_vault")
         workflow_manager = Mock()
+        config = get_vault_config(str(base_dir))
 
         coordinator = ReviewTriageCoordinator(base_dir, workflow_manager)
 
         assert coordinator.base_dir == base_dir
         assert coordinator.workflow_manager == workflow_manager
-        assert coordinator.inbox_dir == base_dir / "Inbox"
-        assert coordinator.fleeting_dir == base_dir / "Fleeting Notes"
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.fleeting_dir == config.fleeting_dir
 
     def test_coordinator_validates_base_directory_exists(self):
         """Test coordinator validates base directory exists."""
@@ -51,15 +53,16 @@ class TestReviewCandidateScanning:
     def test_scan_review_candidates_finds_inbox_notes(self):
         """Test scanning finds all .md files in Inbox/ directory."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            # Create test notes
-            (inbox / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
-            (inbox / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
+            # Create test notes in vault config inbox
+            (config.inbox_dir / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
+            (config.inbox_dir / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
 
             workflow_manager = Mock()
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -72,18 +75,19 @@ class TestReviewCandidateScanning:
     def test_scan_review_candidates_finds_fleeting_notes_with_inbox_status(self):
         """Test scanning finds fleeting notes with status: inbox."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            fleeting = vault / "Fleeting Notes"
-            fleeting.mkdir()
+            config = get_vault_config(str(vault))
+            config.fleeting_dir.mkdir(parents=True, exist_ok=True)
 
             # Note with status: inbox should be included
-            (fleeting / "fleeting1.md").write_text(
+            (config.fleeting_dir / "fleeting1.md").write_text(
                 "---\ntitle: Fleeting 1\nstatus: inbox\n---\nContent"
             )
             # Note without status: inbox should be excluded
-            (fleeting / "fleeting2.md").write_text(
+            (config.fleeting_dir / "fleeting2.md").write_text(
                 "---\ntitle: Fleeting 2\n---\nContent"
             )
 
@@ -99,16 +103,17 @@ class TestReviewCandidateScanning:
     def test_scan_handles_malformed_frontmatter_gracefully(self):
         """Test scanning handles notes with malformed YAML frontmatter."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
             # Malformed YAML
-            (inbox / "broken.md").write_text("---\ninvalid yaml: {{\n---\nContent")
+            (config.inbox_dir / "broken.md").write_text("---\ninvalid yaml: {{\n---\nContent")
             # Valid note
-            (inbox / "valid.md").write_text("---\ntitle: Valid\n---\nContent")
+            (config.inbox_dir / "valid.md").write_text("---\ntitle: Valid\n---\nContent")
 
             workflow_manager = Mock()
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -125,14 +130,15 @@ class TestWeeklyRecommendations:
     def test_generate_weekly_recommendations_processes_all_candidates(self):
         """Test generates recommendations for all candidates."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            (inbox / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
-            (inbox / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
+            (config.inbox_dir / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
+            (config.inbox_dir / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
 
             # Mock workflow_manager.process_inbox_note
             workflow_manager = Mock()
@@ -160,13 +166,14 @@ class TestWeeklyRecommendations:
     def test_generate_recommendations_respects_dry_run_mode(self):
         """Test dry_run mode passes fast=True to avoid AI calls."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            (inbox / "note.md").write_text("---\ntitle: Note\n---\nContent")
+            (config.inbox_dir / "note.md").write_text("---\ntitle: Note\n---\nContent")
 
             workflow_manager = Mock()
             workflow_manager.process_inbox_note.return_value = {
@@ -194,13 +201,14 @@ class TestWeeklyRecommendations:
     def test_generate_recommendations_handles_processing_errors(self):
         """Test gracefully handles errors during note processing."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            (inbox / "note.md").write_text("---\ntitle: Note\n---\nContent")
+            (config.inbox_dir / "note.md").write_text("---\ntitle: Note\n---\nContent")
 
             workflow_manager = Mock()
             workflow_manager.process_inbox_note.side_effect = Exception(
@@ -383,13 +391,14 @@ class TestCoordinatorIntegration:
     def test_coordinator_integrates_with_workflow_manager_delegation(self):
         """Test WorkflowManager correctly delegates to coordinator."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            (inbox / "note.md").write_text("---\ntitle: Note\n---\nContent")
+            (config.inbox_dir / "note.md").write_text("---\ntitle: Note\n---\nContent")
 
             # Mock workflow manager that will be injected
             workflow_manager = Mock()
@@ -414,14 +423,15 @@ class TestCoordinatorIntegration:
     def test_coordinator_sanitizes_tags_in_recommendations(self):
         """Test coordinator sanitizes metadata tags for clean display."""
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        from src.config.vault_config_loader import get_vault_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             vault = Path(tmpdir)
-            inbox = vault / "Inbox"
-            inbox.mkdir()
+            config = get_vault_config(str(vault))
+            config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
             # Note with problematic tags
-            (inbox / "note.md").write_text(
+            (config.inbox_dir / "note.md").write_text(
                 "---\ntitle: Note\ntags: [valid-tag, '!!!', '', '123']\n---\nContent"
             )
 
@@ -446,7 +456,42 @@ class TestCoordinatorIntegration:
                 assert "" not in rec_metadata["tags"]
 
 
+class TestVaultConfigIntegration:
+    """Test ReviewTriageCoordinator integration with vault configuration."""
+
+    def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
+        """
+        RED PHASE: Verify coordinator uses vault config for directory paths.
+        
+        This test validates that ReviewTriageCoordinator uses centralized vault
+        configuration instead of hardcoded paths. Expected to FAIL until GREEN
+        phase replaces hardcoded directory initialization with config properties.
+        
+        Part of GitHub Issue #45 Phase 2 Priority 1 (P0-VAULT-3).
+        """
+        from src.config.vault_config_loader import get_vault_config
+        from src.ai.review_triage_coordinator import ReviewTriageCoordinator
+        
+        # Get vault config (creates knowledge/ subdirectory structure)
+        config = get_vault_config(str(tmp_path))
+        
+        # Mock workflow_manager (required dependency)
+        workflow_manager = Mock()
+        
+        # Create coordinator with root path (config adds knowledge/)
+        coordinator = ReviewTriageCoordinator(tmp_path, workflow_manager)
+        
+        # Should use knowledge/Inbox and knowledge/Fleeting Notes from config
+        assert "knowledge" in str(coordinator.inbox_dir), \
+            f"Expected inbox_dir to use knowledge/ subdirectory, got: {coordinator.inbox_dir}"
+        assert coordinator.inbox_dir == config.inbox_dir, \
+            f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
+        assert coordinator.fleeting_dir == config.fleeting_dir, \
+            f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
+
+
 # RED Phase Expected Results:
-# - All 18 tests should FAIL (ReviewTriageCoordinator doesn't exist yet)
+# - All 19 tests should FAIL initially (18 existing + 1 new vault config test)
+# - New test fails because hardcoded paths don't include knowledge/ subdirectory
 # - Tests define the complete API contract for the coordinator
-# - Tests cover: initialization, scanning, recommendations, triage, integration, edge cases
+# - Tests cover: initialization, scanning, recommendations, triage, integration, vault config, edge cases
