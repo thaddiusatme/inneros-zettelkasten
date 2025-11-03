@@ -10,6 +10,12 @@ Responsibilities:
 - Create backups before modifications
 - Support dry-run and checklist modes
 - Handle wiki-link detection and section appending
+
+Vault Configuration Integration (GitHub Issue #45 Phase 2 Priority 3):
+- Uses centralized vault_config.yaml for directory paths
+- Replaced hardcoded Permanent Notes/ and Fleeting Notes/ paths
+- Enables knowledge/ subdirectory organization
+- Part of P1-VAULT-11 coordinator migration
 """
 
 import re
@@ -19,6 +25,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from src.utils.io import safe_write
+from src.config.vault_config_loader import get_vault_config
 
 
 class OrphanRemediationCoordinator:
@@ -28,16 +35,21 @@ class OrphanRemediationCoordinator:
     Follows composition pattern established in ADR-002 phases 1-7.
     """
 
-    def __init__(self, base_dir: str, analytics_coordinator):
+    def __init__(self, base_dir, analytics_coordinator):
         """
         Initialize coordinator with required dependencies.
 
         Args:
-            base_dir: Base directory of the Zettelkasten vault
+            base_dir: Base directory of the Zettelkasten vault (Path or str)
             analytics_coordinator: AnalyticsCoordinator for orphan detection
         """
-        self.base_dir = base_dir
+        self.base_dir = str(base_dir)  # Convert Path to str if needed
         self.analytics_coordinator = analytics_coordinator
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(self.base_dir)
+        self.permanent_dir = vault_config.permanent_dir
+        self.fleeting_dir = vault_config.fleeting_dir
 
     def remediate_orphaned_notes(
         self,
@@ -161,31 +173,29 @@ class OrphanRemediationCoordinator:
         """
         # Use comprehensive detector to be robust to vault layouts
         all_orphans = self.analytics_coordinator.detect_orphaned_notes_comprehensive()
-        root = self._vault_root()
 
-        def in_dir(p: str, name: str) -> bool:
+        def in_dir(p: str, dir_path: Path) -> bool:
+            """Check if path p is within directory dir_path."""
             try:
-                return (root / name) in Path(p).parents or Path(p).parent == (
-                    root / name
-                )
+                return dir_path in Path(p).parents or Path(p).parent == dir_path
             except Exception:
                 return False
 
         if scope == "permanent":
-            filtered = [o for o in all_orphans if in_dir(o["path"], "Permanent Notes")]
+            filtered = [o for o in all_orphans if in_dir(o["path"], self.permanent_dir)]
         elif scope == "fleeting":
-            filtered = [o for o in all_orphans if in_dir(o["path"], "Fleeting Notes")]
+            filtered = [o for o in all_orphans if in_dir(o["path"], self.fleeting_dir)]
         else:
             filtered = [
                 o
                 for o in all_orphans
-                if in_dir(o["path"], "Permanent Notes")
-                or in_dir(o["path"], "Fleeting Notes")
+                if in_dir(o["path"], self.permanent_dir)
+                or in_dir(o["path"], self.fleeting_dir)
             ]
 
         # Sort: Permanent first, then by title
         def sort_key(o: Dict):
-            dir_weight = 0 if in_dir(o["path"], "Permanent Notes") else 1
+            dir_weight = 0 if in_dir(o["path"], self.permanent_dir) else 1
             return (dir_weight, o.get("title", ""))
 
         return sorted(filtered, key=sort_key)
@@ -335,13 +345,20 @@ class OrphanRemediationCoordinator:
 
     def _find_default_link_target(self) -> Optional[Path]:
         """Pick a sensible default target note (Home Note or an MOC)."""
+        base = Path(self.base_dir)
         root = self._vault_root()
-        # 1) Home Note.md
-        home = root / "Home Note.md"
+        
+        # 1) Home Note.md - check at vault base first (standard location)
+        home = base / "Home Note.md"
         if home.exists():
             return home
-        # 2) Zettelkasten MOC in Permanent Notes
-        z_moc = root / "Permanent Notes" / "Zettelkasten MOC.md"
+        # Also check in vault root (knowledge/ if it exists)
+        if root != base:
+            home_in_root = root / "Home Note.md"
+            if home_in_root.exists():
+                return home_in_root
+        # 2) Zettelkasten MOC in Permanent Notes (using vault config)
+        z_moc = self.permanent_dir / "Zettelkasten MOC.md"
         if z_moc.exists():
             return z_moc
         # 3) any MOC file under vault

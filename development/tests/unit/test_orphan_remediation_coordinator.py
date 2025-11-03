@@ -21,27 +21,36 @@ from unittest.mock import Mock
 import tempfile
 import shutil
 
+from src.config.vault_config_loader import get_vault_config
+
 
 class TestOrphanRemediationCoordinator:
     """Test suite for OrphanRemediationCoordinator extraction."""
 
     @pytest.fixture
     def temp_vault(self):
-        """Create temporary vault structure for testing."""
+        """
+        Create temporary vault structure for testing with vault config.
+        
+        Updated for GitHub Issue #45 to use vault config paths (knowledge/ subdirectories).
+        """
         temp_dir = tempfile.mkdtemp()
         vault_path = Path(temp_dir)
 
-        # Create directory structure
-        (vault_path / "Permanent Notes").mkdir()
-        (vault_path / "Fleeting Notes").mkdir()
-        (vault_path / "Inbox").mkdir()
+        # Get vault config to create proper directory structure
+        config = get_vault_config(str(vault_path))
+        
+        # Create vault config directories
+        config.permanent_dir.mkdir(parents=True, exist_ok=True)
+        config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+        config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create test files
+        # Create test files using vault config paths
         (vault_path / "Home Note.md").write_text("# Home Note\n\n## Linked Notes\n")
-        (vault_path / "Permanent Notes" / "test-permanent.md").write_text(
+        (config.permanent_dir / "test-permanent.md").write_text(
             "---\ntitle: Test Permanent\ntype: permanent\n---\n\nContent"
         )
-        (vault_path / "Fleeting Notes" / "test-fleeting.md").write_text(
+        (config.fleeting_dir / "test-fleeting.md").write_text(
             "---\ntitle: Test Fleeting\ntype: fleeting\n---\n\nContent"
         )
 
@@ -52,21 +61,28 @@ class TestOrphanRemediationCoordinator:
 
     @pytest.fixture
     def mock_analytics_coordinator(self, temp_vault):
-        """Mock AnalyticsCoordinator for orphan detection."""
+        """
+        Mock AnalyticsCoordinator for orphan detection.
+        
+        Updated for GitHub Issue #45 to return vault config paths.
+        """
+        # Get vault config to use correct paths
+        config = get_vault_config(str(temp_vault))
+        
         coordinator = Mock()
         coordinator.detect_orphaned_notes_comprehensive.return_value = [
             {
-                "path": str(temp_vault / "Permanent Notes" / "orphan1.md"),
+                "path": str(config.permanent_dir / "orphan1.md"),
                 "title": "Orphan 1",
                 "last_modified": "2024-10-01",
             },
             {
-                "path": str(temp_vault / "Fleeting Notes" / "orphan2.md"),
+                "path": str(config.fleeting_dir / "orphan2.md"),
                 "title": "Orphan 2",
                 "last_modified": "2024-10-02",
             },
             {
-                "path": str(temp_vault / "Permanent Notes" / "orphan3.md"),
+                "path": str(config.permanent_dir / "orphan3.md"),
                 "title": "Orphan 3",
                 "last_modified": "2024-10-03",
             },
@@ -172,8 +188,9 @@ class TestOrphanRemediationCoordinator:
         # Remove Home Note
         (temp_vault / "Home Note.md").unlink()
 
-        # Create MOC
-        (temp_vault / "Permanent Notes" / "Test MOC.md").write_text("# MOC\n")
+        # Create MOC using vault config path
+        config = get_vault_config(str(temp_vault))
+        (config.permanent_dir / "Test MOC.md").write_text("# MOC\n")
 
         coordinator = OrphanRemediationCoordinator(
             base_dir=str(temp_vault), analytics_coordinator=mock_analytics_coordinator
@@ -247,7 +264,9 @@ class TestOrphanRemediationCoordinator:
         """Test bidirectional link insertion modifies both orphan and target."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
-        orphan_path = temp_vault / "Permanent Notes" / "orphan.md"
+        # Use vault config path
+        config = get_vault_config(str(temp_vault))
+        orphan_path = config.permanent_dir / "orphan.md"
         target_path = temp_vault / "Home Note.md"
 
         orphan_path.write_text("# Orphan\n\nContent")
@@ -271,7 +290,9 @@ class TestOrphanRemediationCoordinator:
         """Test link insertion skips when links already exist."""
         from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
 
-        orphan_path = temp_vault / "Permanent Notes" / "orphan.md"
+        # Use vault config path
+        config = get_vault_config(str(temp_vault))
+        orphan_path = config.permanent_dir / "orphan.md"
         target_path = temp_vault / "Home Note.md"
 
         orphan_path.write_text("# Orphan\n\n[[Home Note]]")
@@ -400,3 +421,111 @@ class TestOrphanRemediationCoordinator:
 
         assert "error" in result
         assert "not found" in result["error"].lower()
+
+
+class TestVaultConfigIntegration:
+    """Test OrphanRemediationCoordinator integration with vault configuration (GitHub Issue #45)."""
+
+    @pytest.fixture
+    def vault_with_config(self, tmp_path):
+        """
+        Fixture providing vault structure with vault configuration.
+        
+        Creates knowledge/ subdirectory structure as per vault_config.yaml.
+        Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+        
+        Copied pattern from test_batch_processing_coordinator.py for consistency.
+        """
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        
+        # Get vault config (creates knowledge/ subdirectory structure)
+        config = get_vault_config(str(vault))
+        
+        # Ensure vault config directories exist
+        config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+        config.permanent_dir.mkdir(parents=True, exist_ok=True)
+        config.inbox_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create test orphan notes using vault config paths
+        (config.permanent_dir / "orphan1.md").write_text("# Orphan 1\n\nContent")
+        (config.permanent_dir / "orphan2.md").write_text("# Orphan 2\n\nContent")
+        (config.fleeting_dir / "orphan3.md").write_text("# Orphan 3\n\nContent")
+        
+        # Create Home Note at vault root
+        (vault / "Home Note.md").write_text("# Home Note\n\n## Linked Notes\n")
+        
+        return {
+            "vault": vault,
+            "config": config,
+            "fleeting_dir": config.fleeting_dir,
+            "permanent_dir": config.permanent_dir,
+            "inbox_dir": config.inbox_dir,
+        }
+
+    def test_coordinator_uses_vault_config_for_directory_paths(self, vault_with_config):
+        """
+        RED PHASE: Verify coordinator uses vault config for directory paths.
+        
+        This test validates that OrphanRemediationCoordinator uses the centralized
+        vault configuration (knowledge/Permanent Notes, knowledge/Fleeting Notes) 
+        instead of hardcoded paths (Permanent Notes/, Fleeting Notes/).
+        
+        Expected to FAIL until GREEN phase:
+        1. Updates constructor to accept base_dir and workflow_manager parameters
+        2. Loads directory paths from get_vault_config() internally
+        3. Uses vault config paths in list_orphans_by_scope() method
+        4. Uses vault config paths in _find_default_link_target() method
+        
+        Part of GitHub Issue #45 Phase 2 Priority 3 (P1-VAULT-11).
+        Duration target: ~35 minutes (proven pattern from P1-VAULT-10).
+        """
+        from src.ai.orphan_remediation_coordinator import OrphanRemediationCoordinator
+        
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+        
+        # Create mock analytics coordinator
+        mock_analytics = Mock()
+        mock_analytics.detect_orphaned_notes_comprehensive.return_value = [
+            {
+                "path": str(config.permanent_dir / "orphan1.md"),
+                "title": "Orphan 1",
+                "last_modified": "2024-10-01",
+            },
+            {
+                "path": str(config.permanent_dir / "orphan2.md"),
+                "title": "Orphan 2",
+                "last_modified": "2024-10-02",
+            },
+            {
+                "path": str(config.fleeting_dir / "orphan3.md"),
+                "title": "Orphan 3",
+                "last_modified": "2024-10-03",
+            },
+        ]
+        
+        # Initialize coordinator with base_dir (will fail in RED - no base_dir parameter yet)
+        coordinator = OrphanRemediationCoordinator(
+            base_dir=vault,
+            analytics_coordinator=mock_analytics
+        )
+        
+        # Verify coordinator loads vault config and exposes directory attributes
+        # These attributes don't exist yet - will fail in RED phase
+        assert hasattr(coordinator, "permanent_dir"), \
+            "Coordinator should have permanent_dir attribute from vault config"
+        assert hasattr(coordinator, "fleeting_dir"), \
+            "Coordinator should have fleeting_dir attribute from vault config"
+        
+        # Verify coordinator uses vault config paths (should use knowledge/ subdirectories)
+        assert coordinator.permanent_dir == config.permanent_dir, \
+            f"Expected permanent_dir={config.permanent_dir}, got {coordinator.permanent_dir}"
+        assert coordinator.fleeting_dir == config.fleeting_dir, \
+            f"Expected fleeting_dir={config.fleeting_dir}, got {coordinator.fleeting_dir}"
+        
+        # Verify paths contain knowledge/ subdirectory structure
+        assert "knowledge" in str(coordinator.permanent_dir), \
+            f"Expected 'knowledge' in permanent_dir path: {coordinator.permanent_dir}"
+        assert "knowledge" in str(coordinator.fleeting_dir), \
+            f"Expected 'knowledge' in fleeting_dir path: {coordinator.fleeting_dir}"
