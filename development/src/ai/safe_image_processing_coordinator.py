@@ -11,12 +11,17 @@ Responsibilities:
 - Enhanced processing with metrics collection
 - Session management for concurrent processing
 
+GitHub Issue #45 Phase 2 Priority 3: Vault configuration integration.
+Inbox directory path loaded from centralized vault_config.yaml.
+
 GREEN PHASE: Minimal implementation to pass all tests.
 """
 
 from pathlib import Path
 from typing import Dict, Callable, Optional
 from datetime import datetime
+
+from src.config.vault_config_loader import get_vault_config
 
 
 class SafeImageProcessingCoordinator:
@@ -29,6 +34,8 @@ class SafeImageProcessingCoordinator:
 
     def __init__(
         self,
+        base_dir: Path,
+        workflow_manager,
         safe_workflow_processor,
         atomic_workflow_engine,
         integrity_monitoring_manager,
@@ -36,7 +43,6 @@ class SafeImageProcessingCoordinator:
         performance_metrics_collector,
         safe_image_processor,
         image_integrity_monitor,
-        inbox_dir: Path,
         process_note_callback: Optional[Callable[[str], Dict]] = None,
         batch_process_callback: Optional[Callable[[], Dict]] = None,
     ):
@@ -44,6 +50,8 @@ class SafeImageProcessingCoordinator:
         Initialize coordinator with dependency injection.
 
         Args:
+            base_dir: Base directory of the vault (vault config loads from here)
+            workflow_manager: WorkflowManager instance for delegation pattern
             safe_workflow_processor: SafeWorkflowProcessor for safe note processing
             atomic_workflow_engine: AtomicWorkflowEngine for atomic operations
             integrity_monitoring_manager: IntegrityMonitoringManager for monitoring
@@ -51,10 +59,21 @@ class SafeImageProcessingCoordinator:
             performance_metrics_collector: PerformanceMetricsCollector for metrics
             safe_image_processor: SafeImageProcessor for image operations
             image_integrity_monitor: ImageIntegrityMonitor for integrity checks
-            inbox_dir: Path to inbox directory
             process_note_callback: Callback for processing single notes
             batch_process_callback: Callback for batch processing
+            
+        Note:
+            Inbox directory path loaded from vault_config.yaml in knowledge/ subdirectory.
+            Part of GitHub Issue #45 - Vault Configuration Centralization.
         """
+        # Store base directory and workflow manager
+        self.base_dir = Path(base_dir)
+        self.workflow_manager = workflow_manager
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        
         # Validate required dependencies (callbacks can be None and set later)
         if not all(
             [
@@ -65,7 +84,6 @@ class SafeImageProcessingCoordinator:
                 performance_metrics_collector,
                 safe_image_processor,
                 image_integrity_monitor,
-                inbox_dir,
             ]
         ):
             raise ValueError("All dependencies must be provided (no None values)")
@@ -77,7 +95,6 @@ class SafeImageProcessingCoordinator:
         self.performance_metrics_collector = performance_metrics_collector
         self.safe_image_processor = safe_image_processor
         self.image_integrity_monitor = image_integrity_monitor
-        self.inbox_dir = inbox_dir
         self.process_note_callback = process_note_callback
         self.batch_process_callback = batch_process_callback
 

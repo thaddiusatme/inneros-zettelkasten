@@ -11,16 +11,94 @@ Test Coverage:
 - Enhanced processing with metrics collection
 - Session management for concurrent processing
 - Error handling and recovery scenarios
+
+GitHub Issue #45 Phase 2 Priority 3:
+- Vault config integration tests added
+- Tests updated to use vault_with_config fixture
 """
 
 import pytest
 from pathlib import Path
 from unittest.mock import Mock
 
-# This will fail until we create the coordinator
-from development.src.ai.safe_image_processing_coordinator import (
-    SafeImageProcessingCoordinator,
-)
+from src.ai.safe_image_processing_coordinator import SafeImageProcessingCoordinator
+from src.config.vault_config_loader import get_vault_config
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+    
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+    
+    Copied pattern from test_analytics_coordinator.py for consistency.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+    
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+    
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
+
+
+class TestSafeImageProcessingCoordinatorVaultConfigIntegration:
+    """
+    Test SafeImageProcessingCoordinator uses vault configuration for directory paths.
+    
+    RED Phase: This test will fail because current SafeImageProcessingCoordinator constructor
+    does not accept base_dir and workflow_manager parameters.
+    
+    GitHub Issue #45 Phase 2 Priority 3 (P1-VAULT-9).
+    """
+
+    def test_coordinator_uses_vault_config_for_inbox_directory(self, vault_with_config):
+        """
+        Test that SafeImageProcessingCoordinator loads inbox path from vault config.
+        
+        Expected RED failure: TypeError about unexpected keyword arguments 'base_dir' 
+        and 'workflow_manager' because current constructor expects many parameters
+        including explicit inbox_dir parameter.
+        
+        Target GREEN signature includes:
+        - base_dir parameter for vault root
+        - workflow_manager parameter for delegation pattern
+        - Internal vault config loading for inbox_dir
+        """
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+        
+        # Create coordinator with vault config pattern (will fail in RED phase)
+        coordinator = SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
+            safe_workflow_processor=Mock(),
+            atomic_workflow_engine=Mock(),
+            integrity_monitoring_manager=Mock(),
+            concurrent_session_manager=Mock(),
+            performance_metrics_collector=Mock(),
+            safe_image_processor=Mock(),
+            image_integrity_monitor=Mock(),
+        )
+        
+        # Verify coordinator uses vault config path for inbox
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.base_dir == vault
 
 
 class TestSafeImageProcessingCoordinatorInitialization:
