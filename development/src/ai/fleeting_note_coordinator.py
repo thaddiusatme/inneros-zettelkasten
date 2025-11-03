@@ -1,5 +1,8 @@
 """
-FleetingNoteCoordinator - ADR-002 Phase 12b
+FleetingNoteCoordinator - ADR-002 Phase 12b (Vault Config Migration)
+
+GitHub Issue #45 - Phase 2 Priority 3: Migrate to centralized vault configuration.
+Uses vault_config.yaml for directory paths instead of hardcoded directories.
 
 Extracts fleeting note management logic from WorkflowManager.
 Responsible for:
@@ -18,6 +21,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Callable
 
 from src.utils.frontmatter import parse_frontmatter
+from src.config.vault_config_loader import get_vault_config
 
 
 class FleetingNoteCoordinator:
@@ -29,10 +33,8 @@ class FleetingNoteCoordinator:
 
     def __init__(
         self,
-        fleeting_dir: Path,
-        inbox_dir: Path,
-        permanent_dir: Path,
-        literature_dir: Path,
+        base_dir: Path,
+        workflow_manager,
         process_callback: Optional[Callable] = None,
         default_quality_threshold: float = 0.7,
     ):
@@ -40,17 +42,25 @@ class FleetingNoteCoordinator:
         Initialize fleeting note coordinator.
 
         Args:
-            fleeting_dir: Path to Fleeting Notes directory
-            inbox_dir: Path to Inbox directory
-            permanent_dir: Path to Permanent Notes directory
-            literature_dir: Path to Literature Notes directory
-            process_callback: Callback to WorkflowManager.process_inbox_note for quality assessment
+            base_dir: Base directory of the vault (vault config loads from here)
+            workflow_manager: WorkflowManager instance for AI processing
+            process_callback: Optional callback to WorkflowManager.process_inbox_note for quality assessment
             default_quality_threshold: Default quality threshold for promotion
+            
+        Note:
+            Directory paths loaded from vault_config.yaml in knowledge/ subdirectory.
+            Part of GitHub Issue #45 - Vault Configuration Centralization.
         """
-        self.fleeting_dir = Path(fleeting_dir)
-        self.inbox_dir = Path(inbox_dir)
-        self.permanent_dir = Path(permanent_dir)
-        self.literature_dir = Path(literature_dir)
+        self.base_dir = Path(base_dir)
+        self.workflow_manager = workflow_manager
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.fleeting_dir = vault_config.fleeting_dir
+        self.inbox_dir = vault_config.inbox_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.literature_dir = vault_config.literature_dir
+        
         self.process_callback = process_callback
         self.default_quality_threshold = default_quality_threshold
 
