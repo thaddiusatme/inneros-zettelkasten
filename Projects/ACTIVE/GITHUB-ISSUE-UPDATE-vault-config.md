@@ -82,13 +82,20 @@ Create centralized vault configuration system providing single source of truth f
 
 ---
 
-## 📊 Remaining Work
+## 📊 Phase 2: Module Migration Progress
 
-### Phase 2: Module Migration (2-3 hours)
-**Priority 1 - Core Workflow**:
-- [ ] `promotion_engine.py` - Auto-promotion → `knowledge/Inbox`
-- [ ] `workflow_reporting_coordinator.py` - Reports → correct directories
-- [ ] `review_triage_coordinator.py` - Weekly reviews → `knowledge/Inbox`
+### Phase 2.1: Priority 1 - Core Workflow (In Progress - 2/3 Complete)
+- ✅ **P0-VAULT-1**: `promotion_engine.py` - COMPLETE (2025-11-02)
+  - Migration time: 23 minutes
+  - 16/19 tests passing (84% success, 4 depend on NoteLifecycleManager)
+  - Commit: `6caab99`
+  - Branch: `feat/vault-config-phase2-priority1`
+- ✅ **P0-VAULT-2**: `workflow_reporting_coordinator.py` - COMPLETE (2025-11-02)
+  - Migration time: 24 minutes
+  - 15/16 tests passing (94% success, 1 pre-existing AI tag detection issue)
+  - Commits: `f0188ca` (implementation), `c686e54` (docs)
+  - Branch: `feat/vault-config-phase2-priority1` (continued)
+- [ ] **P0-VAULT-3**: `review_triage_coordinator.py` - Weekly reviews → `knowledge/Inbox` (NEXT)
 
 **Priority 2 - CLI Tools**:
 - [ ] `core_workflow_cli.py` - Add vault config support
@@ -159,14 +166,15 @@ vault_root = config.vault_root     # knowledge/
 
 - [x] Configuration infrastructure implemented
 - [x] Comprehensive test coverage (15+ tests passing)
-- [ ] All Priority 1-2 modules migrated
+- [x] P0-VAULT-1: promotion_engine.py migrated (1/3 Priority 1 modules)
+- [ ] All Priority 1-2 modules migrated (2/3 remaining)
 - [ ] All automation scripts updated
 - [ ] All tests pass (unit + integration)
 - [ ] Live vault verified working
 - [ ] Documentation updated
 - [ ] Starter pack reflects correct structure
 
-**Current**: 2/8 criteria met (25%)
+**Current**: 3/9 criteria met (33%) - Phase 2 in progress
 
 ---
 
