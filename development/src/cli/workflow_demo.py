@@ -1,5 +1,12 @@
 """
 CLI demo for the workflow manager system.
+
+Vault Configuration Integration (GitHub Issue #45):
+- Uses centralized vault_config.yaml for directory paths
+- Replaced hardcoded Inbox/ path in YouTube processing
+- Part of Phase 2 Priority 2 CLI tools migration (Module 2)
+
+Note: This CLI is deprecated per ADR-004. Functionality moved to dedicated CLIs.
 """
 
 import argparse
@@ -31,6 +38,7 @@ from src.cli.screenshot_cli_utils import (
     CLIExportManager,
 )
 from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
+from src.config.vault_config_loader import get_vault_config
 
 
 # TDD ITERATION 2 REFACTOR: Evening Screenshot Helper Methods
@@ -1807,7 +1815,9 @@ Examples:
             from src.cli.youtube_processor import YouTubeProcessor
             from src.ai.youtube_note_enhancer import YouTubeNoteEnhancer
 
-            inbox_dir = base_dir / "Inbox"
+            # Use vault config for inbox directory (replaces hardcoded "Inbox")
+            vault_config = get_vault_config(str(base_dir))
+            inbox_dir = vault_config.inbox_dir
             if not inbox_dir.exists():
                 print(f"❌ Error: Inbox directory not found at {inbox_dir}")
                 return 1
