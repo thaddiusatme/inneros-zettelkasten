@@ -19,7 +19,7 @@ GitHub Issue #45 Phase 2 Priority 3:
 
 import pytest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from src.ai.safe_image_processing_coordinator import SafeImageProcessingCoordinator
 from src.config.vault_config_loader import get_vault_config
@@ -104,9 +104,11 @@ class TestSafeImageProcessingCoordinatorVaultConfigIntegration:
 class TestSafeImageProcessingCoordinatorInitialization:
     """Test coordinator initialization with dependency injection."""
 
-    def test_coordinator_initialization_with_dependencies(self):
+    def test_coordinator_initialization_with_dependencies(self, vault_with_config):
         """Test SafeImageProcessingCoordinator accepts all required dependencies."""
         # Arrange
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
         safe_workflow_processor = Mock()
         atomic_workflow_engine = Mock()
         integrity_monitoring_manager = Mock()
@@ -114,12 +116,13 @@ class TestSafeImageProcessingCoordinatorInitialization:
         performance_metrics_collector = Mock()
         safe_image_processor = Mock()
         image_integrity_monitor = Mock()
-        inbox_dir = Path("/test/Inbox")
         process_note_callback = Mock()
         batch_process_callback = Mock()
 
         # Act
         coordinator = SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=safe_workflow_processor,
             atomic_workflow_engine=atomic_workflow_engine,
             integrity_monitoring_manager=integrity_monitoring_manager,
@@ -127,7 +130,6 @@ class TestSafeImageProcessingCoordinatorInitialization:
             performance_metrics_collector=performance_metrics_collector,
             safe_image_processor=safe_image_processor,
             image_integrity_monitor=image_integrity_monitor,
-            inbox_dir=inbox_dir,
             process_note_callback=process_note_callback,
             batch_process_callback=batch_process_callback,
         )
@@ -142,7 +144,7 @@ class TestSafeImageProcessingCoordinatorInitialization:
         )
         assert coordinator.safe_image_processor == safe_image_processor
         assert coordinator.image_integrity_monitor == image_integrity_monitor
-        assert coordinator.inbox_dir == inbox_dir
+        assert coordinator.inbox_dir == config.inbox_dir  # Now uses vault config
         assert coordinator.process_note_callback == process_note_callback
         assert coordinator.batch_process_callback == batch_process_callback
 
@@ -150,10 +152,27 @@ class TestSafeImageProcessingCoordinatorInitialization:
 class TestSafeProcessInboxNote:
     """Test safe_process_inbox_note() delegation to SafeWorkflowProcessor."""
 
-    def test_safe_process_delegates_to_workflow_processor(self):
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
+        return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
+            safe_workflow_processor=Mock(),
+            atomic_workflow_engine=Mock(),
+            integrity_monitoring_manager=Mock(),
+            concurrent_session_manager=Mock(),
+            performance_metrics_collector=Mock(),
+            safe_image_processor=Mock(),
+            image_integrity_monitor=Mock(),
+            process_note_callback=Mock(return_value={"success": True}),
+            batch_process_callback=Mock(return_value={"processed": 5}),
+        )
+
+    def test_safe_process_delegates_to_workflow_processor(self, coordinator):
         """Test safe_process_inbox_note delegates to SafeWorkflowProcessor."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_result = Mock()
@@ -176,10 +195,9 @@ class TestSafeProcessInboxNote:
         assert result["image_preservation"]["images_preserved"] == 3
         assert result["image_preservation"]["backup_session_id"] == "backup-123"
 
-    def test_safe_process_handles_failure_gracefully(self):
+    def test_safe_process_handles_failure_gracefully(self, coordinator):
         """Test safe_process_inbox_note handles processing failure."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_result = Mock()
@@ -199,29 +217,33 @@ class TestSafeProcessInboxNote:
         assert result["success"] is False
         assert result["error"] == "Processing failed"
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
+
+class TestProcessInboxNoteAtomic:
+    """Test process_inbox_note_atomic() with rollback capability."""
+
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
+        mock_processor = Mock()
+        mock_processor.image_extractor.extract_images_from_note.return_value = []
         return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=Mock(),
             atomic_workflow_engine=Mock(),
             integrity_monitoring_manager=Mock(),
             concurrent_session_manager=Mock(),
             performance_metrics_collector=Mock(),
-            safe_image_processor=Mock(),
+            safe_image_processor=mock_processor,
             image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
             process_note_callback=Mock(return_value={"success": True}),
             batch_process_callback=Mock(return_value={"processed": 5}),
         )
 
-
-class TestProcessInboxNoteAtomic:
-    """Test process_inbox_note_atomic() with rollback capability."""
-
-    def test_atomic_processing_with_success(self):
+    def test_atomic_processing_with_success(self, coordinator):
         """Test atomic processing completes successfully."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_result = Mock()
@@ -247,10 +269,9 @@ class TestProcessInboxNoteAtomic:
         assert result["images_preserved"] == 2
         assert result["backup_session_id"] == "backup-456"
 
-    def test_atomic_processing_rollback_on_failure(self):
+    def test_atomic_processing_rollback_on_failure(self, coordinator):
         """Test atomic processing performs rollback on failure."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_result = Mock()
@@ -272,44 +293,47 @@ class TestProcessInboxNoteAtomic:
         assert result["images_preserved"] == 0
         assert result["error"] == "Image processing failed"
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
-        mock_processor = Mock()
-        mock_processor.image_extractor.extract_images_from_note.return_value = []
 
+class TestSafeBatchProcessInbox:
+    """Test safe_batch_process_inbox() with comprehensive integrity reporting."""
+
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
         return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=Mock(),
             atomic_workflow_engine=Mock(),
             integrity_monitoring_manager=Mock(),
             concurrent_session_manager=Mock(),
             performance_metrics_collector=Mock(),
-            safe_image_processor=mock_processor,
+            safe_image_processor=Mock(),
             image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
             process_note_callback=Mock(return_value={"success": True}),
             batch_process_callback=Mock(return_value={"processed": 5}),
         )
 
-
-class TestSafeBatchProcessInbox:
-    """Test safe_batch_process_inbox() with comprehensive integrity reporting."""
-
-    def test_batch_processing_aggregates_results(self):
+    def test_batch_processing_aggregates_results(self, coordinator):
         """Test batch processing aggregates image preservation results."""
         # Arrange
-        coordinator = self._create_coordinator()
-
         mock_results = [
             Mock(success=True, preserved_images=["img1.png", "img2.png"]),
             Mock(success=True, preserved_images=["img3.png"]),
             Mock(success=False, preserved_images=[]),
         ]
 
-        coordinator.inbox_dir.glob.return_value = [
+        # Replace inbox_dir with a Mock that has glob method
+        mock_inbox = Mock()
+        mock_notes = [
             Path("/test/Inbox/note1.md"),
             Path("/test/Inbox/note2.md"),
             Path("/test/Inbox/note3.md"),
         ]
+        mock_inbox.glob.return_value = mock_notes
+        coordinator.inbox_dir = mock_inbox
+        
         coordinator.safe_image_processor.process_notes_batch.return_value = mock_results
         coordinator.batch_process_callback.return_value = {"processed": 3}
 
@@ -322,11 +346,14 @@ class TestSafeBatchProcessInbox:
         assert result["image_integrity_report"]["successful_image_preservation"] == 2
         assert result["image_integrity_report"]["failed_image_preservation"] == 1
 
-    def test_batch_processing_with_empty_inbox(self):
+    def test_batch_processing_with_empty_inbox(self, coordinator):
         """Test batch processing handles empty inbox gracefully."""
         # Arrange
-        coordinator = self._create_coordinator()
-        coordinator.inbox_dir.glob.return_value = []
+        # Replace inbox_dir with a Mock that returns empty list
+        mock_inbox = Mock()
+        mock_inbox.glob.return_value = []
+        coordinator.inbox_dir = mock_inbox
+        
         coordinator.safe_image_processor.process_notes_batch.return_value = (
             []
         )  # Empty list for empty inbox
@@ -339,29 +366,33 @@ class TestSafeBatchProcessInbox:
         assert result["images_preserved_total"] == 0
         assert result["processed"] == 0
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
+
+class TestProcessInboxNoteEnhanced:
+    """Test process_inbox_note_enhanced() with monitoring and metrics."""
+
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
+        mock_processor = Mock()
+        mock_processor.image_extractor.extract_images_from_note.return_value = []
         return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=Mock(),
             atomic_workflow_engine=Mock(),
             integrity_monitoring_manager=Mock(),
             concurrent_session_manager=Mock(),
             performance_metrics_collector=Mock(),
-            safe_image_processor=Mock(),
+            safe_image_processor=mock_processor,
             image_integrity_monitor=Mock(),
-            inbox_dir=Mock(),
             process_note_callback=Mock(return_value={"success": True}),
             batch_process_callback=Mock(return_value={"processed": 5}),
         )
 
-
-class TestProcessInboxNoteEnhanced:
-    """Test process_inbox_note_enhanced() with monitoring and metrics."""
-
-    def test_enhanced_processing_with_monitoring_enabled(self):
+    def test_enhanced_processing_with_monitoring_enabled(self, coordinator):
         """Test enhanced processing enables integrity monitoring."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         images = ["img1.png", "img2.png", "img3.png"]
@@ -380,10 +411,9 @@ class TestProcessInboxNoteEnhanced:
         assert result["integrity_report"]["monitoring_enabled"] is True
         assert len(result["integrity_report"]["scan_result"]["found_images"]) == 3
 
-    def test_enhanced_processing_with_performance_metrics(self):
+    def test_enhanced_processing_with_performance_metrics(self, coordinator):
         """Test enhanced processing collects performance metrics."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         metrics = {
@@ -404,10 +434,9 @@ class TestProcessInboxNoteEnhanced:
         assert result["performance_metrics"]["processing_time"] == 0.5
         assert result["performance_metrics"]["image_operations_time"] == 0.2
 
-    def test_enhanced_processing_with_both_features(self):
+    def test_enhanced_processing_with_both_features(self, coordinator):
         """Test enhanced processing with monitoring and metrics enabled."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         coordinator.safe_image_processor.image_extractor.extract_images_from_note.return_value = [
@@ -427,13 +456,19 @@ class TestProcessInboxNoteEnhanced:
         assert "integrity_report" in result
         assert "performance_metrics" in result
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
+
+class TestProcessInboxNoteSafe:
+    """Test process_inbox_note_safe() with automatic backup/rollback."""
+
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
         mock_processor = Mock()
         mock_processor.image_extractor.extract_images_from_note.return_value = []
-        mock_processor.get_performance_metrics.return_value = {}
-
         return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=Mock(),
             atomic_workflow_engine=Mock(),
             integrity_monitoring_manager=Mock(),
@@ -441,19 +476,13 @@ class TestProcessInboxNoteEnhanced:
             performance_metrics_collector=Mock(),
             safe_image_processor=mock_processor,
             image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
             process_note_callback=Mock(return_value={"success": True}),
             batch_process_callback=Mock(return_value={"processed": 5}),
         )
 
-
-class TestProcessInboxNoteSafe:
-    """Test process_inbox_note_safe() with automatic backup/rollback."""
-
-    def test_safe_processing_creates_backup_session(self):
+    def test_safe_processing_creates_backup_session(self, coordinator):
         """Test safe processing creates backup session before processing."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_session = Mock()
@@ -472,10 +501,9 @@ class TestProcessInboxNoteSafe:
         )
         assert result["processing_failed"] is False
 
-    def test_safe_processing_rollback_on_error(self):
+    def test_safe_processing_rollback_on_error(self, coordinator):
         """Test safe processing performs rollback when processing fails."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         mock_session = Mock()
@@ -497,10 +525,9 @@ class TestProcessInboxNoteSafe:
         assert result["images_restored"] == 1
         assert result["error"] == "Processing failed"
 
-    def test_safe_processing_handles_exceptions(self):
+    def test_safe_processing_handles_exceptions(self, coordinator):
         """Test safe processing handles exceptions gracefully."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
 
         coordinator.safe_image_processor.create_backup_session.side_effect = Exception(
@@ -515,32 +542,31 @@ class TestProcessInboxNoteSafe:
         assert result["rollback_successful"] is True
         assert "Backup failed" in result["error"]
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
-        mock_processor = Mock()
-        mock_processor.image_extractor.extract_images_from_note.return_value = []
 
+class TestSessionManagement:
+    """Test concurrent session management for safe processing."""
+
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
         return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
             safe_workflow_processor=Mock(),
             atomic_workflow_engine=Mock(),
             integrity_monitoring_manager=Mock(),
             concurrent_session_manager=Mock(),
             performance_metrics_collector=Mock(),
-            safe_image_processor=mock_processor,
+            safe_image_processor=Mock(),
             image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
             process_note_callback=Mock(return_value={"success": True}),
             batch_process_callback=Mock(return_value={"processed": 5}),
         )
 
-
-class TestSessionManagement:
-    """Test concurrent session management for safe processing."""
-
-    def test_start_safe_processing_session(self):
+    def test_start_safe_processing_session(self, coordinator):
         """Test starting a new safe processing session."""
         # Arrange
-        coordinator = self._create_coordinator()
         operation_name = "batch_processing"
         session_id = "session-123"
 
@@ -557,10 +583,9 @@ class TestSessionManagement:
             operation_name
         )
 
-    def test_process_note_in_session(self):
+    def test_process_note_in_session(self, coordinator):
         """Test processing note within an active session."""
         # Arrange
-        coordinator = self._create_coordinator()
         note_path = "/test/Inbox/test-note.md"
         session_id = "session-456"
 
@@ -576,10 +601,9 @@ class TestSessionManagement:
         assert result["processed"] is True
         coordinator.concurrent_session_manager.process_note_in_session.assert_called_once()
 
-    def test_commit_safe_processing_session(self):
+    def test_commit_safe_processing_session(self, coordinator):
         """Test committing and finalizing a processing session."""
         # Arrange
-        coordinator = self._create_coordinator()
         session_id = "session-789"
 
         mock_summary = {"success": True, "notes_processed": 5}
@@ -596,10 +620,9 @@ class TestSessionManagement:
             session_id
         )
 
-    def test_session_workflow_end_to_end(self):
+    def test_session_workflow_end_to_end(self, coordinator):
         """Test complete session workflow from start to commit."""
         # Arrange
-        coordinator = self._create_coordinator()
 
         coordinator.concurrent_session_manager.create_processing_session.return_value = (
             "session-001"
@@ -621,30 +644,18 @@ class TestSessionManagement:
         assert note_result["success"] is True
         assert commit_success is True
 
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
-        return SafeImageProcessingCoordinator(
-            safe_workflow_processor=Mock(),
-            atomic_workflow_engine=Mock(),
-            integrity_monitoring_manager=Mock(),
-            concurrent_session_manager=Mock(),
-            performance_metrics_collector=Mock(),
-            safe_image_processor=Mock(),
-            image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
-            process_note_callback=Mock(return_value={"success": True}),
-            batch_process_callback=Mock(return_value={"processed": 5}),
-        )
-
 
 class TestErrorHandlingAndEdgeCases:
-    """Test error handling and edge case scenarios."""
+    """Test error handling and edge cases."""
 
-    def test_coordinator_handles_none_dependencies_gracefully(self):
-        """Test coordinator initialization validates dependencies."""
-        # This should either raise ValueError or handle None gracefully
-        with pytest.raises((ValueError, AttributeError)):
+    def test_coordinator_handles_none_dependencies_gracefully(self, vault_with_config):
+        """Test coordinator raises ValueError when dependencies are None."""
+        # Arrange / Act / Assert
+        vault = vault_with_config["vault"]
+        with pytest.raises(ValueError, match="All dependencies must be provided"):
             SafeImageProcessingCoordinator(
+                base_dir=vault,
+                workflow_manager=None,
                 safe_workflow_processor=None,
                 atomic_workflow_engine=None,
                 integrity_monitoring_manager=None,
@@ -652,15 +663,31 @@ class TestErrorHandlingAndEdgeCases:
                 performance_metrics_collector=None,
                 safe_image_processor=None,
                 image_integrity_monitor=None,
-                inbox_dir=None,
                 process_note_callback=None,
                 batch_process_callback=None,
             )
 
-    def test_safe_process_with_invalid_path(self):
+    @pytest.fixture
+    def coordinator(self, vault_with_config):
+        """Fixture to create coordinator with vault config and mocked dependencies."""
+        vault = vault_with_config["vault"]
+        return SafeImageProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
+            safe_workflow_processor=Mock(),
+            atomic_workflow_engine=Mock(),
+            integrity_monitoring_manager=Mock(),
+            concurrent_session_manager=Mock(),
+            performance_metrics_collector=Mock(),
+            safe_image_processor=Mock(),
+            image_integrity_monitor=Mock(),
+            process_note_callback=Mock(return_value={"success": True}),
+            batch_process_callback=Mock(return_value={"processed": 5}),
+        )
+
+    def test_safe_process_with_invalid_path(self, coordinator):
         """Test safe processing handles invalid file paths."""
         # Arrange
-        coordinator = self._create_coordinator()
         invalid_path = "/nonexistent/path/note.md"
 
         # Mock the workflow processor to return a failure result
@@ -680,18 +707,3 @@ class TestErrorHandlingAndEdgeCases:
         assert isinstance(result, dict)
         assert result["success"] is False
         assert "error" in result
-
-    def _create_coordinator(self):
-        """Helper to create coordinator with mocked dependencies."""
-        return SafeImageProcessingCoordinator(
-            safe_workflow_processor=Mock(),
-            atomic_workflow_engine=Mock(),
-            integrity_monitoring_manager=Mock(),
-            concurrent_session_manager=Mock(),
-            performance_metrics_collector=Mock(),
-            safe_image_processor=Mock(),
-            image_integrity_monitor=Mock(),
-            inbox_dir=Path("/test/Inbox"),
-            process_note_callback=Mock(return_value={"success": True}),
-            batch_process_callback=Mock(return_value={"processed": 5}),
-        )
