@@ -22,15 +22,18 @@ class TestWorkflowReportingCoordinator:
 
     @pytest.fixture
     def temp_vault(self, tmp_path):
-        """Create a temporary vault structure."""
+        """Create a temporary vault structure with vault config."""
+        from src.config.vault_config_loader import get_vault_config
+        
         vault = tmp_path / "test_vault"
         vault.mkdir()
 
-        # Create standard directories
-        (vault / "Inbox").mkdir()
-        (vault / "Fleeting Notes").mkdir()
-        (vault / "Permanent Notes").mkdir()
-        (vault / "Archive").mkdir()
+        # Get vault config and create directories at correct paths
+        config = get_vault_config(str(vault))
+        config.inbox_dir.mkdir(parents=True, exist_ok=True)
+        config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+        config.permanent_dir.mkdir(parents=True, exist_ok=True)
+        config.archive_dir.mkdir(parents=True, exist_ok=True)
 
         return vault
 
@@ -56,14 +59,17 @@ class TestWorkflowReportingCoordinator:
 
     def test_coordinator_initialization(self, temp_vault, mock_analytics):
         """Test coordinator initializes with required dependencies."""
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(temp_vault))
         coordinator = WorkflowReportingCoordinator(temp_vault, mock_analytics)
 
         assert coordinator.base_dir == temp_vault
         assert coordinator.analytics == mock_analytics
-        assert coordinator.inbox_dir == temp_vault / "Inbox"
-        assert coordinator.fleeting_dir == temp_vault / "Fleeting Notes"
-        assert coordinator.permanent_dir == temp_vault / "Permanent Notes"
-        assert coordinator.archive_dir == temp_vault / "Archive"
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.fleeting_dir == config.fleeting_dir
+        assert coordinator.permanent_dir == config.permanent_dir
+        assert coordinator.archive_dir == config.archive_dir
 
     # ============================================================================
     # Test 2: Workflow Report Generation - Empty Vault
@@ -97,13 +103,13 @@ class TestWorkflowReportingCoordinator:
 
     def test_directory_counting_with_notes(self, coordinator, temp_vault):
         """Test accurate directory note counting."""
-        # Create test notes in each directory
-        (temp_vault / "Inbox" / "note1.md").write_text("# Note 1")
-        (temp_vault / "Inbox" / "note2.md").write_text("# Note 2")
-        (temp_vault / "Fleeting Notes" / "fleeting1.md").write_text("# Fleeting")
-        (temp_vault / "Permanent Notes" / "perm1.md").write_text("# Permanent")
-        (temp_vault / "Permanent Notes" / "perm2.md").write_text("# Permanent 2")
-        (temp_vault / "Permanent Notes" / "perm3.md").write_text("# Permanent 3")
+        # Create test notes in each directory using coordinator paths
+        (coordinator.inbox_dir / "note1.md").write_text("# Note 1")
+        (coordinator.inbox_dir / "note2.md").write_text("# Note 2")
+        (coordinator.fleeting_dir / "fleeting1.md").write_text("# Fleeting")
+        (coordinator.permanent_dir / "perm1.md").write_text("# Permanent")
+        (coordinator.permanent_dir / "perm2.md").write_text("# Permanent 2")
+        (coordinator.permanent_dir / "perm3.md").write_text("# Permanent 3")
 
         report = coordinator.generate_workflow_report()
 
@@ -122,7 +128,7 @@ class TestWorkflowReportingCoordinator:
         """Test workflow health assessment - healthy state."""
         # Create few inbox notes (< 20)
         for i in range(10):
-            (temp_vault / "Inbox" / f"note{i}.md").write_text(f"# Note {i}")
+            (coordinator.inbox_dir / f"note{i}.md").write_text(f"# Note {i}")
 
         report = coordinator.generate_workflow_report()
 
@@ -136,7 +142,7 @@ class TestWorkflowReportingCoordinator:
         """Test workflow health assessment - needs attention state."""
         # Create 25 inbox notes (> 20 but <= 50)
         for i in range(25):
-            (temp_vault / "Inbox" / f"note{i}.md").write_text(f"# Note {i}")
+            (coordinator.inbox_dir / f"note{i}.md").write_text(f"# Note {i}")
 
         report = coordinator.generate_workflow_report()
 
@@ -150,7 +156,7 @@ class TestWorkflowReportingCoordinator:
         """Test workflow health assessment - critical state."""
         # Create 60 inbox notes (> 50)
         for i in range(60):
-            (temp_vault / "Inbox" / f"note{i}.md").write_text(f"# Note {i}")
+            (coordinator.inbox_dir / f"note{i}.md").write_text(f"# Note {i}")
 
         report = coordinator.generate_workflow_report()
 
@@ -163,21 +169,19 @@ class TestWorkflowReportingCoordinator:
     def test_analyze_ai_usage_no_features(self, coordinator, temp_vault):
         """Test AI usage analysis with notes lacking AI features."""
         # Create notes without AI frontmatter
-        (temp_vault / "Permanent Notes" / "note1.md").write_text(
+        (coordinator.permanent_dir / "note1.md").write_text(
             """---
 title: Test Note
 tags: [test, manual]
 ---
-
 # Manual Note"""
         )
 
-        (temp_vault / "Inbox" / "note2.md").write_text(
+        (coordinator.inbox_dir / "note2.md").write_text(
             """---
 title: Another Note
 ---
-
-# Another Manual Note"""
+# Another Note"""
         )
 
         report = coordinator.generate_workflow_report()
@@ -195,33 +199,29 @@ title: Another Note
     def test_analyze_ai_usage_with_features(self, coordinator, temp_vault):
         """Test AI usage analysis detects AI-enhanced notes."""
         # Note with AI summary
-        (temp_vault / "Permanent Notes" / "ai_note1.md").write_text(
+        (coordinator.permanent_dir / "ai_note1.md").write_text(
             """---
 title: AI Enhanced Note
 ai_summary: This is an AI-generated summary
-ai_processed: true
-tags: [machine-learning, artificial-intelligence, deep-learning]
+ai_tags: [ai-feature, test]
 ---
-
-# AI Enhanced Note"""
+# AI Note"""
         )
 
         # Note with AI processing only
-        (temp_vault / "Inbox" / "ai_note2.md").write_text(
+        (coordinator.inbox_dir / "ai_note2.md").write_text(
             """---
 title: Processed Note
 ai_processed: true
 ---
-
 # Processed Note"""
         )
 
         # Manual note for comparison
-        (temp_vault / "Fleeting Notes" / "manual.md").write_text(
+        (coordinator.fleeting_dir / "manual.md").write_text(
             """---
 title: Manual Note
 ---
-
 # Manual Note"""
         )
 
@@ -241,7 +241,7 @@ title: Manual Note
         """Test recommendations for inbox backlog."""
         # Create 30 inbox notes to trigger recommendation
         for i in range(30):
-            (temp_vault / "Inbox" / f"note{i}.md").write_text(f"# Note {i}")
+            (coordinator.inbox_dir / f"note{i}.md").write_text(f"# Note {i}")
 
         report = coordinator.generate_workflow_report()
         recommendations = report["recommendations"]
@@ -258,12 +258,11 @@ title: Manual Note
         """Test recommendations for low AI feature adoption."""
         # Create 10 notes with no AI features
         for i in range(10):
-            (temp_vault / "Permanent Notes" / f"note{i}.md").write_text(
+            (coordinator.permanent_dir / f"note{i}.md").write_text(
                 f"""---
 title: Note {i}
 ---
-
-# Note {i}"""
+# Content {i}"""
             )
 
         report = coordinator.generate_workflow_report()
@@ -282,13 +281,13 @@ title: Note {i}
         """Test recommendations for fleeting/permanent note imbalance."""
         # Create many fleeting notes
         for i in range(20):
-            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(
+            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(
                 f"# Fleeting {i}"
             )
 
         # Create few permanent notes (imbalance ratio > 2)
         for i in range(5):
-            (temp_vault / "Permanent Notes" / f"perm{i}.md").write_text(
+            (coordinator.permanent_dir / f"perm{i}.md").write_text(
                 f"# Permanent {i}"
             )
 
@@ -307,11 +306,15 @@ title: Note {i}
 
     def test_missing_directories_handling(self, temp_vault):
         """Test coordinator handles missing directories gracefully."""
-        # Remove some directories
+        from src.config.vault_config_loader import get_vault_config
         import shutil
 
-        shutil.rmtree(temp_vault / "Archive")
-        shutil.rmtree(temp_vault / "Fleeting Notes")
+        # Get vault config for proper paths
+        config = get_vault_config(str(temp_vault))
+        
+        # Remove some directories
+        shutil.rmtree(config.archive_dir)
+        shutil.rmtree(config.fleeting_dir)
 
         mock_analytics = Mock()
         mock_analytics.generate_report.return_value = {}
@@ -331,7 +334,7 @@ title: Note {i}
     def test_malformed_yaml_handling(self, coordinator, temp_vault):
         """Test AI usage analysis handles malformed YAML gracefully."""
         # Create note with malformed YAML
-        (temp_vault / "Inbox" / "malformed.md").write_text(
+        (coordinator.inbox_dir / "malformed.md").write_text(
             """---
 title: Malformed
 tags: [unclosed, array
@@ -341,7 +344,7 @@ tags: [unclosed, array
         )
 
         # Create valid note
-        (temp_vault / "Inbox" / "valid.md").write_text(
+        (coordinator.inbox_dir / "valid.md").write_text(
             """---
 title: Valid
 ---
@@ -383,11 +386,11 @@ title: Valid
         # Create ideal state: few inbox notes, good AI adoption, balanced types
         # Create 5 inbox notes (healthy)
         for i in range(5):
-            (temp_vault / "Inbox" / f"note{i}.md").write_text(f"# Note {i}")
+            (coordinator.inbox_dir / f"note{i}.md").write_text(f"# Note {i}")
 
         # Create notes with high AI adoption
         for i in range(8):
-            (temp_vault / "Permanent Notes" / f"ai_note{i}.md").write_text(
+            (coordinator.permanent_dir / f"ai_note{i}.md").write_text(
                 f"""---
 ai_processed: true
 ai_summary: Summary {i}
@@ -398,7 +401,7 @@ ai_summary: Summary {i}
 
         # Balanced fleeting notes (not > 2x permanent)
         for i in range(10):
-            (temp_vault / "Fleeting Notes" / f"fleeting{i}.md").write_text(
+            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(
                 f"# Fleeting {i}"
             )
 
@@ -406,3 +409,46 @@ ai_summary: Summary {i}
 
         # Should have few or no recommendations
         assert isinstance(report["recommendations"], list)
+
+
+class TestVaultConfigIntegration:
+    """Test WorkflowReportingCoordinator integration with vault configuration."""
+
+    def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
+        """
+        RED PHASE: Verify coordinator uses vault config for directory paths.
+        
+        This test validates that WorkflowReportingCoordinator uses the centralized
+        vault configuration (knowledge/Inbox) instead of hardcoded paths (Inbox).
+        
+        Expected to FAIL until GREEN phase replaces hardcoded paths with config.
+        
+        Part of GitHub Issue #45 - Vault Configuration Centralization
+        """
+        from src.config.vault_config_loader import get_vault_config
+        
+        # Get vault config for test directory
+        config = get_vault_config(str(tmp_path))
+        
+        # Create mock analytics
+        analytics = Mock()
+        analytics.generate_report.return_value = {
+            "total_notes": 0,
+            "avg_quality": 0.0,
+            "connection_density": 0.0,
+        }
+        
+        # Initialize coordinator
+        coordinator = WorkflowReportingCoordinator(tmp_path, analytics)
+        
+        # Should use knowledge/Inbox, not root-level Inbox
+        assert "knowledge" in str(coordinator.inbox_dir), \
+            f"Expected 'knowledge' in path, got: {coordinator.inbox_dir}"
+        assert coordinator.inbox_dir == config.inbox_dir, \
+            f"Expected {config.inbox_dir}, got {coordinator.inbox_dir}"
+        assert coordinator.fleeting_dir == config.fleeting_dir, \
+            f"Expected {config.fleeting_dir}, got {coordinator.fleeting_dir}"
+        assert coordinator.permanent_dir == config.permanent_dir, \
+            f"Expected {config.permanent_dir}, got {coordinator.permanent_dir}"
+        assert coordinator.archive_dir == config.archive_dir, \
+            f"Expected {config.archive_dir}, got {coordinator.archive_dir}"
