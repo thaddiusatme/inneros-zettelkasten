@@ -56,18 +56,29 @@ python3 development/src/cli/core_workflow_cli.py process-inbox
 
 ## 🛠️ Essential Commands Reference
 
+### **Vault Configuration Note**
+
+All commands automatically work with the `knowledge/` subdirectory structure. Scripts use centralized vault configuration to find:
+
+- `knowledge/Inbox/` - New notes for processing
+- `knowledge/Permanent Notes/` - Promoted knowledge
+- `knowledge/Fleeting Notes/` - Quick captures
+
+**No path configuration needed** - scripts automatically detect and use correct paths.
+
 ### **Daily Use Commands**
+
 ```bash
-# Process new notes in Inbox/
+# Process new notes in knowledge/Inbox/
 python3 development/src/cli/core_workflow_cli.py process-inbox
 
 # Get system health check
 python3 development/src/cli/core_workflow_cli.py status
 
-# Interactive analytics exploration
+# Interactive analytics exploration (scans knowledge/ directories)
 python3 development/src/cli/analytics_demo.py . --interactive
 
-# Weekly review (promotion candidates)
+# Weekly review (scans knowledge/Inbox, knowledge/Fleeting Notes)
 python3 development/src/cli/weekly_review_cli.py weekly-review
 ```
 

@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# InnerOS Zettelkasten Health Monitor
+#
+# Vault Configuration:
+# - Uses centralized vault config via development/src imports
+# - Automatically handles knowledge/Inbox, knowledge/Archive paths
+# - No hardcoded paths - all paths relative to repo root
+# - Compatible with knowledge/ subdirectory structure
+# - See: .automation/README.md for vault config integration details
+#
 # InnerOS Zettelkasten - System Health Monitor
 # Lightweight monitoring that runs every 4 hours to detect issues early
 # Sends alerts only when problems are detected

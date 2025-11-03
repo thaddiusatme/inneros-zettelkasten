@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# Supervised Inbox Processing - Interactive Workflow
+#
+# Vault Configuration:
+# - Uses centralized vault config via development/src imports
+# - Automatically handles knowledge/Inbox processing paths
+# - No hardcoded paths - all paths relative to repo root
+# - Compatible with knowledge/ subdirectory structure
+# - See: .automation/README.md for vault config integration details
+#
 # InnerOS Zettelkasten - Supervised Inbox Processing (Tier 2: Supervised Automation)
 # Enhances inbox notes with AI analysis, queues results for human review
 # Safe for automation: enhances metadata without changing core content

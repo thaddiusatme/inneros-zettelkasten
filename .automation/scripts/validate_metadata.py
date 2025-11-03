@@ -5,6 +5,13 @@ InnerOS Metadata Validation Script
 Validates YAML frontmatter in markdown files according to the schema defined in the project manifest.
 This script is non-destructive and only reports validation errors without modifying files.
 
+Vault Configuration:
+- Uses centralized vault config via imports from development/src
+- Automatically handles knowledge/ directory paths
+- No hardcoded paths - all paths relative to repo root
+- Compatible with knowledge/ subdirectory structure
+- See: .automation/README.md for vault config integration details
+
 Usage:
     python validate_metadata.py <path_to_markdown_file>
 """

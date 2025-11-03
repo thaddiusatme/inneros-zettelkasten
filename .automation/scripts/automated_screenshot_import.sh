@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# Samsung Screenshot Import Automation
+#
+# Vault Configuration:
+# - Uses centralized vault config via development/src imports
+# - Automatically handles knowledge/Inbox path for screenshot import
+# - No hardcoded paths - all paths relative to repo root
+# - Compatible with knowledge/ subdirectory structure
+# - See: .automation/README.md for vault config integration details
+#
 # InnerOS Zettelkasten - Automated Screenshot Import (Tier 1: Fully Safe)
 # Runs unattended to import Samsung screenshots with OCR fallback protection
 # Safe for automation: only creates new notes, never modifies existing content

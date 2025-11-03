@@ -5,6 +5,13 @@ InnerOS Metadata Auto-Repair Script
 Automatically repairs metadata issues in markdown files according to the schema defined in the project manifest.
 This script creates backups before making changes and generates detailed reports of all modifications.
 
+Vault Configuration:
+- Uses centralized vault config via imports from development/src
+- Automatically handles knowledge/Inbox, knowledge/Permanent Notes paths
+- No hardcoded paths - all paths relative to repo root
+- Compatible with knowledge/ subdirectory structure
+- See: .automation/README.md for vault config integration details
+
 Usage:
     python repair_metadata.py [options] [path]
 

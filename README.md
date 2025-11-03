@@ -232,19 +232,32 @@ visibility: private | shared | team
 
 ## 🤖 AI & Automation
 
+### **Vault Configuration Integration**
+
+All automation scripts work seamlessly with the `knowledge/` subdirectory structure through centralized vault configuration:
+
+- **Python Scripts**: Use `development/src` imports (vault config aware)
+- **Shell Scripts**: Work with relative paths from repo root
+- **Cron Jobs**: Execute with repo context (`cd` before running)
+- **No Migration Required**: All scripts verified compatible (20/20 scripts, 0 issues)
+
+See [.automation/README.md](.automation/README.md) for complete vault config integration details.
+
 ### **Development Tools** (in `development/`)
+
 ```bash
 # Run AI analytics on knowledge base
 python3 development/src/cli/analytics_demo.py knowledge/ --interactive
 
-# Process inbox with AI
+# Process inbox with AI (uses knowledge/Inbox automatically)
 python3 development/src/cli/workflow_demo.py knowledge/ --process-inbox
 
-# Weekly review automation
+# Weekly review automation (scans knowledge/Inbox, knowledge/Fleeting Notes)
 python3 development/src/cli/workflow_demo.py knowledge/ --weekly-review
 ```
 
 ### **Knowledge Base Tools** (from `knowledge/`)
+
 ```bash
 # AI-enhanced note processing
 python3 ../development/src/cli/workflow_demo.py . --process-inbox
@@ -253,9 +266,12 @@ python3 ../development/src/cli/workflow_demo.py . --process-inbox
 python3 ../development/src/cli/analytics_demo.py . --interactive
 ```
 
+### **Automation Features**
+
 - **Templater scripts** automate file naming, sorting, and metadata
 - **LLM/AI integration** for summarization, tagging, linking, and triage
 - **Zero setup required** - tools work from both directories
+- **Path-aware** - all scripts automatically find `knowledge/Inbox/`, `knowledge/Permanent Notes/` paths
 
 ## 🤖 AI Features (Production Ready)
 

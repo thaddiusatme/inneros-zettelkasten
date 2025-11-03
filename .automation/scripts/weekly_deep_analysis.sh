@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# Weekly Deep Analysis Workflow
+#
+# Vault Configuration:
+# - Uses centralized vault config via development/src imports
+# - Automatically handles all knowledge/ directory paths
+# - No hardcoded paths - all paths relative to repo root
+# - Compatible with knowledge/ subdirectory structure
+# - See: .automation/README.md for vault config integration details
+#
 # InnerOS Zettelkasten - Weekly Deep Analysis (Tier 3: Human-Gated)
 # Comprehensive weekly analysis with human review queue generation
 # Creates detailed reports for human decision-making on promotions and organization
