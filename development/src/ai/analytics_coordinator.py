@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import re
 
+from src.config.vault_config_loader import get_vault_config
+
 
 class AnalyticsCoordinator:
     """
@@ -32,17 +34,26 @@ class AnalyticsCoordinator:
     exclusively on analytics and metrics calculation.
     """
 
-    def __init__(self, base_dir: Path):
+    def __init__(self, base_dir: Path, workflow_manager=None):
         """
         Initialize AnalyticsCoordinator.
 
         Args:
-            base_dir: Root directory of the Zettelkasten vault
+            base_dir: Base directory of the vault (vault config loads from here)
+            workflow_manager: WorkflowManager instance (optional, for future use)
+            
+        Note:
+            Directory paths loaded from vault_config.yaml in knowledge/ subdirectory.
+            Part of GitHub Issue #45 - Vault Configuration Centralization.
         """
         self.base_dir = Path(base_dir)
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
+        self.workflow_manager = workflow_manager
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
+        self.permanent_dir = vault_config.permanent_dir
 
     def detect_orphaned_notes(self) -> List[Dict]:
         """

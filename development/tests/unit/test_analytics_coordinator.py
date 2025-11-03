@@ -20,12 +20,72 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import tempfile
 import os
+from unittest.mock import Mock
 
-# Import will fail in RED phase - this is expected
-try:
-    from development.src.ai.analytics_coordinator import AnalyticsCoordinator
-except ImportError:
-    AnalyticsCoordinator = None
+from src.ai.analytics_coordinator import AnalyticsCoordinator
+from src.config.vault_config_loader import get_vault_config
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+    
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+    
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+    
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
+
+
+class TestAnalyticsCoordinatorVaultConfigIntegration:
+    """
+    Test AnalyticsCoordinator uses vault configuration for directory paths.
+    
+    RED Phase: This test will fail because current AnalyticsCoordinator constructor
+    does not accept workflow_manager parameter (GitHub Issue #45 Phase 2 Priority 3).
+    """
+
+    def test_analytics_coordinator_uses_vault_config_for_directories(self, vault_with_config):
+        """
+        Test that AnalyticsCoordinator loads directory paths from vault config.
+        
+        Expected RED failure: TypeError about unexpected keyword argument 'workflow_manager'
+        because current constructor signature is: __init__(self, base_dir: Path)
+        
+        Target GREEN signature: __init__(self, base_dir: Path, workflow_manager)
+        """
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+        
+        # Create coordinator with vault config pattern (will fail in RED phase)
+        coordinator = AnalyticsCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock()
+        )
+        
+        # Verify coordinator uses vault config paths
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.fleeting_dir == config.fleeting_dir
+        assert coordinator.permanent_dir == config.permanent_dir
 
 
 class TestAnalyticsCoordinatorCore:
@@ -68,8 +128,6 @@ class TestAnalyticsCoordinatorCore:
     @pytest.fixture
     def coordinator(self, temp_vault):
         """Create AnalyticsCoordinator instance."""
-        if AnalyticsCoordinator is None:
-            pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
         return AnalyticsCoordinator(temp_vault)
 
     def test_coordinator_initialization(self, coordinator):
