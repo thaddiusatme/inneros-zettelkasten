@@ -6,6 +6,12 @@ Extracted from workflow_demo.py (ADR-004 Iteration 4)
 Provides core workflow commands: status, process-inbox, promote, report
 
 Manager: WorkflowManager (has all core workflow methods)
+
+Vault Configuration Integration (GitHub Issue #45):
+- Uses centralized vault_config.yaml for directory paths
+- Replaced path access via WorkflowManager with direct vault config
+- Enables knowledge/ subdirectory organization
+- Part of Phase 2 Priority 2 CLI tools migration
 """
 
 import sys
@@ -20,6 +26,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
+from src.config.vault_config_loader import get_vault_config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
@@ -35,6 +42,11 @@ class CoreWorkflowCLI:
     - process-inbox: Process all inbox notes
     - promote: Promote a note to permanent/literature
     - report: Generate comprehensive workflow report
+    
+    Configuration:
+    - Directory paths from vault_config.yaml (inbox_dir, fleeting_dir)
+    - Supports knowledge/ subdirectory organization
+    - Uses centralized configuration for consistent path resolution
     """
 
     def __init__(self, vault_path: Optional[str] = None):
@@ -46,6 +58,12 @@ class CoreWorkflowCLI:
         """
         self.vault_path = vault_path or "."
         self.workflow_manager = WorkflowManager(base_directory=self.vault_path)
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(self.vault_path)
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
+        
         logger.info(f"Core Workflow CLI initialized with vault: {self.vault_path}")
 
     def _print_header(self, title: str) -> None:
@@ -277,10 +295,10 @@ class CoreWorkflowCLI:
                         resolved_path = vault_path
 
                 if resolved_path is None:
-                    # Search by filename in Inbox and Fleeting
+                    # Search by filename in Inbox and Fleeting using vault config paths
                     name_only = candidate.name
-                    inbox_candidate = self.workflow_manager.inbox_dir / name_only
-                    fleeting_candidate = self.workflow_manager.fleeting_dir / name_only
+                    inbox_candidate = self.inbox_dir / name_only
+                    fleeting_candidate = self.fleeting_dir / name_only
 
                     if inbox_candidate.exists():
                         resolved_path = inbox_candidate
