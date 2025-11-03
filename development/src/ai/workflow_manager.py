@@ -82,7 +82,7 @@ class WorkflowManager:
 
         # ADR-002 Phase 2: Connection coordinator extraction
         self.connection_coordinator = ConnectionCoordinator(
-            str(self.base_dir), min_similarity=0.7, max_suggestions=5
+            base_dir=self.base_dir, workflow_manager=self, min_similarity=0.7, max_suggestions=5
         )
 
         # ADR-002 Phase 3: Analytics coordinator extraction
