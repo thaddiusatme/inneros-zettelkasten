@@ -1,0 +1,49 @@
+# InnerOS Zettelkasten - Vault Structure Configuration
+# This file centralizes all directory paths for the vault structure
+
+vault:
+  # Root directory paths (relative to project root)
+  root: knowledge
+  
+  # Core directories (relative to vault root)
+  directories:
+    inbox: Inbox
+    fleeting: Fleeting Notes
+    permanent: Permanent Notes
+    literature: Literature Notes
+    archive: Archive
+    projects: Projects
+    people: People
+    templates: Templates
+    reports: Reports
+    media: Media
+    
+  # Content pipeline directories
+  content_pipeline:
+    root: Content Pipeline
+    idea_backlog: Content Pipeline/Idea Backlog
+    
+  # Automation directories
+  automation:
+    scripts: .automation/scripts
+    reports: .automation/reports
+    
+# Default paths for convenience (vault root + directory)
+# These are computed at runtime in code
+default_paths:
+  inbox: knowledge/Inbox
+  fleeting: knowledge/Fleeting Notes
+  permanent: knowledge/Permanent Notes
+  literature: knowledge/Literature Notes
+  archive: knowledge/Archive
+  
+# Quality thresholds
+quality:
+  auto_promote_threshold: 0.7
+  high_quality_threshold: 0.8
+  
+# Workflow settings
+workflow:
+  enable_auto_promotion: true
+  enable_quality_scoring: true
+  enable_ai_tagging: true
