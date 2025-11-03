@@ -346,11 +346,10 @@ class TestSingleNotePromotion:
     """Test single fleeting note promotion functionality."""
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_to_permanent(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_to_permanent(self, mock_organizer, vault_with_config):
         """Test promoting single fleeting note to permanent notes."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
@@ -361,17 +360,15 @@ class TestSingleNotePromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.8, "ai_tags": [], "metadata": {}}
             ),
         )
 
         result = coordinator.promote_fleeting_note(
-            str(note), target_type="permanent", base_dir=vault_path
+            str(note), target_type="permanent", base_dir=vault
         )
 
         assert result["success"] is True
@@ -380,20 +377,17 @@ class TestSingleNotePromotion:
         mock_organizer.assert_called_once()
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_with_preview_mode(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_with_preview_mode(self, mock_organizer, vault_with_config):
         """Test promoting note in preview mode (no actual changes)."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -404,15 +398,13 @@ class TestSingleNotePromotion:
         # DirectoryOrganizer should not be called in preview mode
         mock_organizer.assert_not_called()
 
-    def test_promote_fleeting_note_handles_invalid_path(self, tmp_path):
+    def test_promote_fleeting_note_handles_invalid_path(self, vault_with_config):
         """Test promotion handles invalid note paths gracefully."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -421,13 +413,11 @@ class TestSingleNotePromotion:
         assert "error" in result or result["success"] is False
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_updates_metadata(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_updates_metadata(self, mock_organizer, vault_with_config):
         """Test promotion updates note metadata correctly."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        permanent_dir = vault_path / "Permanent Notes"
-        fleeting_dir.mkdir(parents=True)
-        permanent_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\ncreated: 2024-01-01\n---\nContent")
@@ -437,10 +427,8 @@ class TestSingleNotePromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=permanent_dir,
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
