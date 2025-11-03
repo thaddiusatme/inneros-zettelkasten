@@ -8,6 +8,12 @@ Composition Pattern:
 - Used by WorkflowManager via delegation
 - Depends on NoteLifecycleManager for lifecycle operations
 - Integrates with DirectoryOrganizer for safe file operations
+
+Directory Configuration:
+- Uses centralized vault_config.yaml for directory paths
+- Automatically resolves knowledge/Inbox, knowledge/Permanent Notes, etc.
+- Supports configurable vault structures for testing vs production
+- Part of GitHub Issue #45 vault configuration centralization
 """
 
 from pathlib import Path
@@ -18,6 +24,7 @@ import logging
 from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 from src.utils.io import safe_write
 from .note_lifecycle_manager import NoteLifecycleManager
+from src.config.vault_config_loader import get_vault_config
 
 
 logger = logging.getLogger(__name__)
@@ -59,11 +66,12 @@ class PromotionEngine:
         self.lifecycle_manager = lifecycle_manager
         self.config = config or {}
 
-        # Set up directory paths
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.literature_dir = self.base_dir / "Literature Notes"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
+        # Set up directory paths from vault configuration
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.literature_dir = vault_config.literature_dir
+        self.fleeting_dir = vault_config.fleeting_dir
 
         # Ensure target directories exist
         self.permanent_dir.mkdir(parents=True, exist_ok=True)

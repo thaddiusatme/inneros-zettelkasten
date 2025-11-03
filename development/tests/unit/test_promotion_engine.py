@@ -33,46 +33,40 @@ class TestPromotionEngineInitialization:
     def test_initialization_with_required_dependencies(self, tmp_path):
         """Test PromotionEngine initializes with base_dir and lifecycle_manager."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
 
-        # Act
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        # Act - Pass root directory (vault config will add knowledge/)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
-        # Assert
-        assert engine.base_dir == base_dir
+        # Assert - Should use vault config paths (knowledge/Inbox, etc.)
+        assert engine.base_dir == tmp_path
         assert engine.lifecycle_manager == lifecycle_manager
-        assert engine.inbox_dir == base_dir / "Inbox"
-        assert engine.permanent_dir == base_dir / "Permanent Notes"
-        assert engine.literature_dir == base_dir / "Literature Notes"
-        assert engine.fleeting_dir == base_dir / "Fleeting Notes"
+        assert "knowledge" in str(engine.inbox_dir)
+        assert "knowledge" in str(engine.permanent_dir)
+        assert "knowledge" in str(engine.literature_dir)
+        assert "knowledge" in str(engine.fleeting_dir)
 
     def test_initialization_creates_target_directories(self, tmp_path):
         """Test that PromotionEngine ensures target directories exist."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
 
-        # Act
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        # Act - Pass root directory
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
-        # Assert - directories should be created during initialization
-        assert (base_dir / "Permanent Notes").exists()
-        assert (base_dir / "Literature Notes").exists()
-        assert (base_dir / "Fleeting Notes").exists()
+        # Assert - directories should be created during initialization (in knowledge/)
+        assert engine.permanent_dir.exists()
+        assert engine.literature_dir.exists()
+        assert engine.fleeting_dir.exists()
 
     def test_initialization_with_optional_config(self, tmp_path):
         """Test PromotionEngine accepts optional configuration."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
         config = {"default_quality_threshold": 0.8, "auto_summarize": True}
 
-        # Act
-        engine = PromotionEngine(base_dir, lifecycle_manager, config=config)
+        # Act - Pass root directory
+        engine = PromotionEngine(tmp_path, lifecycle_manager, config=config)
 
         # Assert
         assert engine.config["default_quality_threshold"] == 0.8
@@ -84,9 +78,11 @@ class TestSingleNotePromotion:
 
     def test_promote_note_to_permanent(self, tmp_path):
         """Test promoting a single note to permanent directory."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         note_content = """---
@@ -102,8 +98,8 @@ This is a test note ready for promotion.
         note_path.write_text(note_content)
 
         # Use real NoteLifecycleManager for actual file operations
-        lifecycle_manager = NoteLifecycleManager(base_dir)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        lifecycle_manager = NoteLifecycleManager(tmp_path)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_note(str(note_path), target_type="permanent")
@@ -112,7 +108,7 @@ This is a test note ready for promotion.
         assert result["success"] is True
         assert result["type"] == "permanent"
         assert not note_path.exists()  # Source removed
-        target_path = base_dir / "Permanent Notes" / "test-note.md"
+        target_path = config.permanent_dir / "test-note.md"
         assert target_path.exists()  # Target created
 
         # Verify metadata updated
@@ -124,9 +120,11 @@ This is a test note ready for promotion.
 
     def test_promote_note_to_literature(self, tmp_path):
         """Test promoting a note with source URL to literature directory."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         note_content = """---
@@ -143,8 +141,8 @@ Content from external source.
         note_path.write_text(note_content)
 
         # Use real NoteLifecycleManager for actual file operations
-        lifecycle_manager = NoteLifecycleManager(base_dir)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        lifecycle_manager = NoteLifecycleManager(tmp_path)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_note(str(note_path), target_type="literature")
@@ -152,16 +150,14 @@ Content from external source.
         # Assert
         assert result["success"] is True
         assert result["type"] == "literature"
-        target_path = base_dir / "Literature Notes" / "lit-note.md"
+        target_path = config.literature_dir / "lit-note.md"
         assert target_path.exists()
 
     def test_promote_note_handles_missing_file(self, tmp_path):
         """Test that promotion handles missing source file gracefully."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_note("/nonexistent/note.md", target_type="permanent")
@@ -176,9 +172,11 @@ class TestBatchPromotion:
 
     def test_promote_fleeting_notes_batch_with_quality_threshold(self, tmp_path):
         """Test batch promotion of fleeting notes above quality threshold."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        fleeting_dir = base_dir / "Fleeting Notes"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
 
         # Create 3 high-quality notes and 2 low-quality notes
@@ -197,7 +195,7 @@ Content here.
             note_path.write_text(note_content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_fleeting_notes_batch(quality_threshold=0.7)
@@ -209,9 +207,11 @@ Content here.
 
     def test_batch_promotion_preview_mode(self, tmp_path):
         """Test batch promotion in preview mode (dry-run)."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        fleeting_dir = base_dir / "Fleeting Notes"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
 
         note_content = """---
@@ -226,7 +226,7 @@ quality_score: 0.85
         note_path.write_text(note_content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_fleeting_notes_batch(preview_mode=True)
@@ -238,9 +238,11 @@ quality_score: 0.85
 
     def test_batch_promotion_creates_single_backup(self, tmp_path):
         """Test that batch promotion creates one backup for entire batch."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        fleeting_dir = base_dir / "Fleeting Notes"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
 
         # Create 2 notes
@@ -255,7 +257,7 @@ quality_score: 0.85
             (fleeting_dir / f"note-{i}.md").write_text(note_content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         with patch(
@@ -278,9 +280,11 @@ class TestAutoPromotion:
 
     def test_auto_promote_ready_notes_scans_inbox(self, tmp_path):
         """Test auto-promotion scans inbox for eligible notes."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         # Create notes with various quality scores
@@ -302,8 +306,8 @@ quality_score: {quality}
             (inbox_dir / filename).write_text(content)
 
         # Use real NoteLifecycleManager for actual file operations
-        lifecycle_manager = NoteLifecycleManager(base_dir)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        lifecycle_manager = NoteLifecycleManager(tmp_path)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.auto_promote_ready_notes(quality_threshold=0.7)
@@ -315,9 +319,11 @@ quality_score: {quality}
 
     def test_auto_promote_dry_run_mode(self, tmp_path):
         """Test auto-promotion in dry-run mode."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         note_content = """---
@@ -332,7 +338,7 @@ quality_score: 0.85
         note_path.write_text(note_content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.auto_promote_ready_notes(dry_run=True)
@@ -345,9 +351,11 @@ quality_score: 0.85
 
     def test_auto_promote_tracks_by_type(self, tmp_path):
         """Test auto-promotion tracks statistics by note type."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         # Create notes of different types
@@ -369,8 +377,8 @@ quality_score: {quality}
             (inbox_dir / filename).write_text(content)
 
         # Use real NoteLifecycleManager for actual file operations
-        lifecycle_manager = NoteLifecycleManager(base_dir)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        lifecycle_manager = NoteLifecycleManager(tmp_path)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.auto_promote_ready_notes(quality_threshold=0.7)
@@ -391,9 +399,11 @@ quality_score: {quality}
 
         Expected to FAIL until glob() is replaced with rglob() in GREEN phase.
         """
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         youtube_dir = inbox_dir / "YouTube"
         youtube_dir.mkdir(parents=True)
 
@@ -427,7 +437,7 @@ quality_score: {quality}
             (youtube_dir / filename).write_text(content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.auto_promote_ready_notes(dry_run=True, quality_threshold=0.7)
@@ -457,10 +467,8 @@ class TestPromotionValidation:
     def test_validate_note_for_promotion_checks_quality(self, tmp_path):
         """Test validation rejects notes below quality threshold."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         note_path = tmp_path / "test.md"
         frontmatter = {"type": "permanent", "quality_score": 0.5}
@@ -478,10 +486,8 @@ class TestPromotionValidation:
     def test_validate_note_requires_type_field(self, tmp_path):
         """Test validation requires 'type' field in frontmatter."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         note_path = tmp_path / "test.md"
         frontmatter = {"quality_score": 0.85}  # Missing 'type'
@@ -499,10 +505,8 @@ class TestPromotionValidation:
     def test_validate_note_accepts_valid_note(self, tmp_path):
         """Test validation passes for valid note."""
         # Arrange
-        base_dir = tmp_path / "knowledge"
-        base_dir.mkdir()
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         note_path = tmp_path / "test.md"
         frontmatter = {"type": "permanent", "quality_score": 0.85}
@@ -526,9 +530,11 @@ class TestPromotionEngineIntegration:
         # This test will verify integration after GREEN phase implementation
         # For now, we're testing the interface we expect
 
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        inbox_dir = base_dir / "Inbox"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
 
         note_content = """---
@@ -545,7 +551,7 @@ quality_score: 0.85
         # This will be implemented in GREEN phase
         # For now, just testing the expected interface exists
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         result = engine.promote_fleeting_note(str(note_path))
@@ -556,9 +562,11 @@ quality_score: 0.85
 
     def test_promotion_engine_integrates_with_directory_organizer(self, tmp_path):
         """Test PromotionEngine uses DirectoryOrganizer for safe operations."""
-        # Arrange
-        base_dir = tmp_path / "knowledge"
-        fleeting_dir = base_dir / "Fleeting Notes"
+        # Arrange - Use vault config paths
+        from src.config.vault_config_loader import get_vault_config
+        
+        config = get_vault_config(str(tmp_path))
+        fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
 
         note_content = """---
@@ -572,7 +580,7 @@ quality_score: 0.85
         note_path.write_text(note_content)
 
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
-        engine = PromotionEngine(base_dir, lifecycle_manager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
 
         # Act
         with patch(
@@ -587,6 +595,48 @@ quality_score: 0.85
             # Assert
             assert result["backup_created"] is True
             mock_organizer.assert_called_once()
+
+
+class TestVaultConfigIntegration:
+    """Test PromotionEngine integration with vault configuration."""
+
+    def test_promotion_engine_uses_vault_config_for_directories(self, tmp_path):
+        """
+        RED PHASE: Verify PromotionEngine uses vault config for directory paths.
+        
+        This test validates that PromotionEngine gets directory paths from
+        vault_config.yaml (knowledge/Inbox) instead of hardcoded paths (Inbox/).
+        
+        Expected to FAIL until GREEN phase replaces hardcoded paths with config.
+        """
+        # Arrange
+        from src.config.vault_config_loader import get_vault_config
+        
+        base_dir = tmp_path / "knowledge"
+        base_dir.mkdir()
+        
+        # Get expected paths from vault config
+        config = get_vault_config(str(tmp_path))
+        
+        lifecycle_manager = Mock(spec=NoteLifecycleManager)
+        engine = PromotionEngine(tmp_path, lifecycle_manager)
+        
+        # Act & Assert - Should use knowledge/Inbox, not root-level Inbox
+        assert "knowledge" in str(engine.inbox_dir), (
+            f"Expected inbox_dir to contain 'knowledge', got {engine.inbox_dir}"
+        )
+        assert engine.inbox_dir == config.inbox_dir, (
+            f"Expected {config.inbox_dir}, got {engine.inbox_dir}"
+        )
+        assert engine.permanent_dir == config.permanent_dir, (
+            f"Expected {config.permanent_dir}, got {engine.permanent_dir}"
+        )
+        assert engine.literature_dir == config.literature_dir, (
+            f"Expected {config.literature_dir}, got {engine.literature_dir}"
+        )
+        assert engine.fleeting_dir == config.fleeting_dir, (
+            f"Expected {config.fleeting_dir}, got {engine.fleeting_dir}"
+        )
 
 
 if __name__ == "__main__":
