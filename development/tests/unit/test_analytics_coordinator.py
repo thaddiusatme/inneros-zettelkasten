@@ -242,31 +242,23 @@ class TestAnalyticsCoordinatorGraphConstruction:
     """Test link graph construction logic."""
 
     @pytest.fixture
-    def temp_vault(self):
-        """Create vault with specific link patterns."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+    def coordinator(self, vault_with_config):
+        """Create coordinator with specific link patterns."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create notes with various link patterns
-            (vault_path / "Permanent Notes" / "hub.md").write_text(
-                "# Hub\n\nLinks: [[spoke1]], [[spoke2]], [[spoke3]]"
-            )
-            (vault_path / "Permanent Notes" / "spoke1.md").write_text(
-                "# Spoke 1\n\nBack to [[hub]]"
-            )
-            (vault_path / "Permanent Notes" / "spoke2.md").write_text(
-                "# Spoke 2\n\nLinks: [[hub]] and [[spoke1]]"
-            )
-
-            yield vault_path
-
-    @pytest.fixture
-    def coordinator(self, temp_vault):
-        """Create coordinator."""
-        if AnalyticsCoordinator is None:
-            pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
-        return AnalyticsCoordinator(temp_vault)
+        # Create notes with various link patterns
+        (permanent_dir / "hub.md").write_text(
+            "# Hub\n\nLinks: [[spoke1]], [[spoke2]], [[spoke3]]"
+        )
+        (permanent_dir / "spoke1.md").write_text(
+            "# Spoke 1\n\nBack to [[hub]]"
+        )
+        (permanent_dir / "spoke2.md").write_text(
+            "# Spoke 2\n\nLinks: [[hub]] and [[spoke1]]"
+        )
+        
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_build_link_graph_creates_correct_structure(self, coordinator):
         """Test that link graph correctly represents note connections."""
@@ -298,31 +290,27 @@ class TestAnalyticsCoordinatorAgeAnalysis:
     """Test note age and productivity analysis."""
 
     @pytest.fixture
-    def coordinator(self):
-        """Create coordinator with temp vault."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+    def coordinator(self, vault_with_config):
+        """Create coordinator with notes for age analysis."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create notes with different ages
-            # Note: Age distribution uses ctime (creation time) which can't be set on many filesystems
-            # We create 4 notes to test the categorization logic exists
-            new_note = vault_path / "Permanent Notes" / "new.md"
-            new_note.write_text("# New")
+        # Create notes with different ages
+        # Note: Age distribution uses ctime (creation time) which can't be set on many filesystems
+        # We create 4 notes to test the categorization logic exists
+        new_note = permanent_dir / "new.md"
+        new_note.write_text("# New")
 
-            recent_note = vault_path / "Permanent Notes" / "recent.md"
-            recent_note.write_text("# Recent")
+        recent_note = permanent_dir / "recent.md"
+        recent_note.write_text("# Recent")
 
-            mature_note = vault_path / "Permanent Notes" / "mature.md"
-            mature_note.write_text("# Mature")
+        mature_note = permanent_dir / "mature.md"
+        mature_note.write_text("# Mature")
 
-            old_note = vault_path / "Permanent Notes" / "old.md"
-            old_note.write_text("# Old")
-
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
-
-            yield AnalyticsCoordinator(vault_path)
+        old_note = permanent_dir / "old.md"
+        old_note.write_text("# Old")
+        
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_calculate_note_age_distribution_categorizes_correctly(self, coordinator):
         """Test age distribution categorization."""
