@@ -92,43 +92,33 @@ class TestAnalyticsCoordinatorCore:
     """Test core analytics functionality."""
 
     @pytest.fixture
-    def temp_vault(self):
-        """Create temporary vault structure for testing."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
+    def coordinator(self, vault_with_config):
+        """Create AnalyticsCoordinator instance with vault config."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
+        
+        # Create sample notes with links in vault config directory
+        (permanent_dir / "note1.md").write_text(
+            "# Note 1\n\nThis links to [[note2]] and [[note3]]."
+        )
+        (permanent_dir / "note2.md").write_text(
+            "# Note 2\n\nThis links to [[note1]]."
+        )
+        (permanent_dir / "note3.md").write_text(
+            "# Note 3\n\nThis has no links."
+        )
+        (permanent_dir / "orphan.md").write_text(
+            "# Orphan Note\n\nThis note has no links and is not linked to."
+        )
 
-            # Create directories
-            (vault_path / "Inbox").mkdir()
-            (vault_path / "Fleeting Notes").mkdir()
-            (vault_path / "Permanent Notes").mkdir()
-
-            # Create sample notes with links
-            (vault_path / "Permanent Notes" / "note1.md").write_text(
-                "# Note 1\n\nThis links to [[note2]] and [[note3]]."
-            )
-            (vault_path / "Permanent Notes" / "note2.md").write_text(
-                "# Note 2\n\nThis links to [[note1]]."
-            )
-            (vault_path / "Permanent Notes" / "note3.md").write_text(
-                "# Note 3\n\nThis has no links."
-            )
-            (vault_path / "Permanent Notes" / "orphan.md").write_text(
-                "# Orphan Note\n\nThis note has no links and is not linked to."
-            )
-
-            # Create stale note (modify timestamp)
-            stale_note = vault_path / "Permanent Notes" / "stale.md"
-            stale_note.write_text("# Stale Note")
-            # Set modification time to 100 days ago
-            old_time = (datetime.now() - timedelta(days=100)).timestamp()
-            os.utime(stale_note, (old_time, old_time))
-
-            yield vault_path
-
-    @pytest.fixture
-    def coordinator(self, temp_vault):
-        """Create AnalyticsCoordinator instance."""
-        return AnalyticsCoordinator(temp_vault)
+        # Create stale note (modify timestamp)
+        stale_note = permanent_dir / "stale.md"
+        stale_note.write_text("# Stale Note")
+        # Set modification time to 100 days ago
+        old_time = (datetime.now() - timedelta(days=100)).timestamp()
+        os.utime(stale_note, (old_time, old_time))
+        
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_coordinator_initialization(self, coordinator):
         """Test AnalyticsCoordinator initializes with vault path."""
@@ -153,10 +143,12 @@ class TestAnalyticsCoordinatorCore:
             assert "last_modified" in note
             assert "directory" in note
 
-    def test_detect_orphaned_notes_excludes_inbox(self, coordinator, temp_vault):
+    def test_detect_orphaned_notes_excludes_inbox(self, coordinator, vault_with_config):
         """Test that inbox notes are not flagged as orphaned."""
+        inbox_dir = vault_with_config["inbox_dir"]
+        
         # Create inbox note with no links
-        (temp_vault / "Inbox" / "inbox_note.md").write_text(
+        (inbox_dir / "inbox_note.md").write_text(
             "# Inbox Note\n\nNo links here."
         )
 
@@ -164,15 +156,17 @@ class TestAnalyticsCoordinatorCore:
         orphan_paths = [note["path"] for note in orphaned]
 
         # Inbox notes should not be flagged as orphaned
-        assert not any("Inbox" in path for path in orphan_paths)
+        assert not any("inbox" in path.lower() for path in orphan_paths)
 
     def test_detect_orphaned_notes_comprehensive_scans_all_files(
-        self, coordinator, temp_vault
+        self, coordinator, vault_with_config
     ):
         """Test comprehensive scan includes all markdown files in repo."""
+        vault = vault_with_config["vault"]
+        
         # Create note outside standard directories
-        (temp_vault / "Projects").mkdir()
-        (temp_vault / "Projects" / "project_note.md").write_text(
+        (vault / "Projects").mkdir()
+        (vault / "Projects" / "project_note.md").write_text(
             "# Project Note\n\nIsolated project note."
         )
 
@@ -202,10 +196,12 @@ class TestAnalyticsCoordinatorCore:
         if len(stale) > 1:
             assert stale[0]["days_since_modified"] >= stale[-1]["days_since_modified"]
 
-    def test_detect_stale_notes_with_custom_threshold(self, coordinator, temp_vault):
+    def test_detect_stale_notes_with_custom_threshold(self, coordinator, vault_with_config):
         """Test stale note detection with custom threshold."""
+        permanent_dir = vault_with_config["permanent_dir"]
+        
         # Create note that's 50 days old
-        medium_stale = temp_vault / "Permanent Notes" / "medium_stale.md"
+        medium_stale = permanent_dir / "medium_stale.md"
         medium_stale.write_text("# Medium Stale")
         old_time = (datetime.now() - timedelta(days=50)).timestamp()
         os.utime(medium_stale, (old_time, old_time))
