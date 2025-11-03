@@ -247,11 +247,10 @@ class TestTriageReportGeneration:
         assert report["quality_distribution"]["low"] == 1
         assert len(report["recommendations"]) == 3
 
-    def test_generate_triage_report_filters_by_quality_threshold(self, tmp_path):
+    def test_generate_triage_report_filters_by_quality_threshold(self, vault_with_config):
         """Test triage report filters recommendations by quality threshold."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "high.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "low.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -263,10 +262,8 @@ class TestTriageReportGeneration:
                 return {"quality_score": 0.25, "ai_tags": [], "metadata": {}}
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
@@ -276,15 +273,13 @@ class TestTriageReportGeneration:
         assert len(report["recommendations"]) == 1  # Only high quality note
         assert report["filtered_count"] == 1
 
-    def test_generate_triage_report_handles_empty_directory(self, tmp_path):
+    def test_generate_triage_report_handles_empty_directory(self, vault_with_config):
         """Test triage report handles empty fleeting notes directory."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -294,19 +289,16 @@ class TestTriageReportGeneration:
         assert report["quality_distribution"] == {"high": 0, "medium": 0, "low": 0}
         assert len(report["recommendations"]) == 0
 
-    def test_generate_triage_report_tracks_processing_time(self, tmp_path):
+    def test_generate_triage_report_tracks_processing_time(self, vault_with_config):
         """Test triage report tracks and reports processing time."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "note.md").write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.5, "ai_tags": [], "metadata": {}}
             ),
@@ -318,11 +310,10 @@ class TestTriageReportGeneration:
         assert isinstance(report["processing_time"], (int, float))
         assert report["processing_time"] >= 0
 
-    def test_generate_triage_report_sorts_by_quality_score(self, tmp_path):
+    def test_generate_triage_report_sorts_by_quality_score(self, vault_with_config):
         """Test triage report sorts recommendations by quality score (highest first)."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "low.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "high.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -337,10 +328,8 @@ class TestTriageReportGeneration:
                 return {"quality_score": 0.5, "ai_tags": [], "metadata": {}}
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
