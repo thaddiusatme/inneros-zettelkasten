@@ -14,6 +14,7 @@ Target: ~200-300 LOC, <15 methods
 from pathlib import Path
 from typing import Dict, List, Optional
 from .connections import AIConnections
+from src.config.vault_config_loader import get_vault_config
 
 
 class ConnectionCoordinator:
@@ -25,19 +26,29 @@ class ConnectionCoordinator:
     """
 
     def __init__(
-        self, base_directory: str, min_similarity: float = 0.7, max_suggestions: int = 5
+        self, base_dir: Path, workflow_manager=None, min_similarity: float = 0.7, max_suggestions: int = 5
     ):
         """
         Initialize connection coordinator.
 
         Args:
-            base_directory: Base directory of the Zettelkasten
+            base_dir: Base directory of the vault (vault config loads from here)
+            workflow_manager: WorkflowManager instance (optional, for future use)
             min_similarity: Minimum similarity threshold (0.0-1.0)
             max_suggestions: Maximum number of suggestions to return
+            
+        Note:
+            Directory paths loaded from vault_config.yaml in knowledge/ subdirectory.
+            Part of GitHub Issue #45 - Vault Configuration Centralization.
         """
-        self.base_dir = Path(base_directory)
+        self.base_dir = Path(base_dir)
+        self.workflow_manager = workflow_manager
         self.min_similarity = min_similarity
         self.max_suggestions = max_suggestions
+        
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.permanent_dir = vault_config.permanent_dir
 
         # Initialize AIConnections for semantic analysis
         self.connections = AIConnections(
@@ -110,7 +121,7 @@ class ConnectionCoordinator:
 
         # Default to Permanent Notes if no directory specified
         if corpus_dir is None:
-            corpus_dir = self.base_dir / "Permanent Notes"
+            corpus_dir = self.permanent_dir
 
         # Load the corpus from directory
         corpus = self.load_corpus(corpus_dir)
