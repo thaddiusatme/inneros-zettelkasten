@@ -18,6 +18,8 @@ import sys
 import subprocess
 from pathlib import Path
 
+pytestmark = pytest.mark.slow  # Mark entire module as slow - spawns subprocesses
+
 
 class TestCLIModuleImports:
     """Test that all CLI modules can be imported as Python modules."""
