@@ -23,6 +23,7 @@ from src.cli.dashboard_cli import (
 )
 
 
+@pytest.mark.slow
 class TestDashboardLauncher:
     """Test suite for web UI dashboard launcher."""
 
@@ -86,6 +87,7 @@ class TestDashboardLauncher:
             assert "error" in result or "message" in result
 
 
+@pytest.mark.slow
 class TestTerminalDashboardLauncher:
     """Test suite for live terminal dashboard launcher."""
 
@@ -131,6 +133,7 @@ class TestTerminalDashboardLauncher:
             )
 
 
+@pytest.mark.slow
 class TestDashboardOrchestrator:
     """Test suite for dashboard command orchestration."""
 
@@ -191,6 +194,7 @@ class TestDashboardOrchestrator:
         assert "running" in daemon_status or "available" in daemon_status
 
 
+@pytest.mark.slow
 class TestErrorHandling:
     """Test suite for error handling scenarios."""
 
