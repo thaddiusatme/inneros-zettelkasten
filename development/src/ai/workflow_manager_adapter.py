@@ -606,7 +606,10 @@ class LegacyWorkflowManagerAdapter:
                     frontmatter = yaml.safe_load(parts[1]) or {}
                     frontmatter["type"] = target_type
                     updated_content = (
-                        "---\n" + yaml.dump(frontmatter, sort_keys=False) + "---" + parts[2]
+                        "---\n"
+                        + yaml.dump(frontmatter, sort_keys=False)
+                        + "---"
+                        + parts[2]
                     )
                     note_path_obj.write_text(updated_content)
         except Exception as e:

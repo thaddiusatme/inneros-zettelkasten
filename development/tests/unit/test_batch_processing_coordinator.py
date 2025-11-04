@@ -31,24 +31,24 @@ except ImportError:
 def vault_with_config(tmp_path):
     """
     Fixture providing vault structure with vault configuration.
-    
+
     Creates knowledge/ subdirectory structure as per vault_config.yaml.
     Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
-    
+
     Copied pattern from test_safe_image_processing_coordinator.py for consistency.
     """
     vault = tmp_path / "vault"
     vault.mkdir()
-    
+
     # Get vault config (creates knowledge/ subdirectory structure)
     config = get_vault_config(str(vault))
-    
+
     # Ensure vault config directories exist
     config.fleeting_dir.mkdir(parents=True, exist_ok=True)
     config.inbox_dir.mkdir(parents=True, exist_ok=True)
     config.permanent_dir.mkdir(parents=True, exist_ok=True)
     config.literature_dir.mkdir(parents=True, exist_ok=True)
-    
+
     return {
         "vault": vault,
         "config": config,
@@ -96,10 +96,10 @@ class TestBatchProcessingCoordinatorVaultConfigIntegration:
     def test_coordinator_uses_vault_config_for_inbox_directory(self, vault_with_config):
         """
         Test that BatchProcessingCoordinator loads inbox path from vault config.
-        
-        Expected RED failure: TypeError about unexpected keyword arguments 'base_dir' 
+
+        Expected RED failure: TypeError about unexpected keyword arguments 'base_dir'
         and 'workflow_manager' because current constructor expects inbox_dir parameter.
-        
+
         Target GREEN signature includes:
         - base_dir parameter for vault root
         - workflow_manager parameter for delegation pattern
@@ -110,14 +110,14 @@ class TestBatchProcessingCoordinatorVaultConfigIntegration:
 
         vault = vault_with_config["vault"]
         config = vault_with_config["config"]
-        
+
         # Create coordinator with vault config pattern (will fail in RED phase)
         coordinator = BatchProcessingCoordinator(
             base_dir=vault,
             workflow_manager=Mock(),
             process_callback=Mock(),
         )
-        
+
         # Verify coordinator uses vault config path for inbox
         assert coordinator.inbox_dir == config.inbox_dir
         assert coordinator.base_dir == vault
@@ -162,7 +162,7 @@ class TestBatchProcessingCoordinatorInitialization:
             workflow_manager=Mock(),
             process_callback=mock_process_callback,
         )
-        
+
         # Verify coordinator uses vault config inbox directory
         assert coordinator.inbox_dir.exists()
         assert coordinator.inbox_dir == config.inbox_dir
@@ -191,12 +191,12 @@ class TestBatchProcessingCore:
     def coordinator_with_notes(self, vault_with_config, mock_process_callback):
         """Create coordinator with test notes in vault inbox."""
         inbox_dir = vault_with_config["inbox_dir"]
-        
+
         # Create test notes
         (inbox_dir / "note1.md").write_text("# Note 1\nContent")
         (inbox_dir / "note2.md").write_text("# Note 2\nContent")
         (inbox_dir / "note3.md").write_text("# Note 3\nContent")
-        
+
         return BatchProcessingCoordinator(
             base_dir=vault_with_config["vault"],
             workflow_manager=Mock(),
@@ -240,9 +240,7 @@ class TestBatchProcessingCore:
         assert "move_to_fleeting" in result["summary"]
         assert "needs_improvement" in result["summary"]
 
-    def test_batch_process_inbox_counts_successful_processing(
-        self, vault_with_config
-    ):
+    def test_batch_process_inbox_counts_successful_processing(self, vault_with_config):
         """Test that successful processing increments processed count."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -306,7 +304,9 @@ class TestResultCategorization:
         (inbox_dir / "note3.md").write_text("# Note 3\nContent")
         return vault_with_config
 
-    def test_batch_process_categorizes_promote_to_permanent(self, setup_vault_with_notes):
+    def test_batch_process_categorizes_promote_to_permanent(
+        self, setup_vault_with_notes
+    ):
         """Test that promote_to_permanent recommendations are counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -378,7 +378,9 @@ class TestResultCategorization:
 
         assert result["summary"]["needs_improvement"] == 3
 
-    def test_batch_process_handles_multiple_recommendations(self, setup_vault_with_notes):
+    def test_batch_process_handles_multiple_recommendations(
+        self, setup_vault_with_notes
+    ):
         """Test that multiple recommendations are all counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -502,7 +504,9 @@ class TestProgressReporting:
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
-    def test_batch_process_handles_empty_inbox(self, vault_with_config, mock_process_callback):
+    def test_batch_process_handles_empty_inbox(
+        self, vault_with_config, mock_process_callback
+    ):
         """Test that empty inbox returns correct zero results."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -521,7 +525,9 @@ class TestEdgeCases:
         assert result["failed"] == 0
         assert len(result["results"]) == 0
 
-    def test_batch_process_handles_error_results_with_error_key(self, vault_with_config):
+    def test_batch_process_handles_error_results_with_error_key(
+        self, vault_with_config
+    ):
         """Test that results containing 'error' key increment failed count."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")

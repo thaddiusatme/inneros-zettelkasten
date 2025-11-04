@@ -61,7 +61,7 @@ class SafeImageProcessingCoordinator:
             image_integrity_monitor: ImageIntegrityMonitor for integrity checks
             process_note_callback: Callback for processing single notes
             batch_process_callback: Callback for batch processing
-            
+
         Note:
             Inbox directory path loaded from vault_config.yaml in knowledge/ subdirectory.
             Part of GitHub Issue #45 - Vault Configuration Centralization.
@@ -69,11 +69,11 @@ class SafeImageProcessingCoordinator:
         # Store base directory and workflow manager
         self.base_dir = Path(base_dir)
         self.workflow_manager = workflow_manager
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(str(self.base_dir))
         self.inbox_dir = vault_config.inbox_dir
-        
+
         # Validate required dependencies (callbacks can be None and set later)
         if not all(
             [

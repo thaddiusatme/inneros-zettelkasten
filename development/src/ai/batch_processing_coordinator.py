@@ -38,7 +38,7 @@ class BatchProcessingCoordinator:
         # Store base directory and workflow manager
         self.base_dir = Path(base_dir)
         self.workflow_manager = workflow_manager
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(str(self.base_dir))
         self.inbox_dir = vault_config.inbox_dir
@@ -46,9 +46,11 @@ class BatchProcessingCoordinator:
         # Ensure inbox directory exists (create if needed for test environments)
         created = not self.inbox_dir.exists()
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
-        
+
         if created:
-            logger.info(f"Created inbox directory for test environment: {self.inbox_dir}")
+            logger.info(
+                f"Created inbox directory for test environment: {self.inbox_dir}"
+            )
         else:
             logger.debug(f"Using existing inbox directory: {self.inbox_dir}")
 
@@ -58,7 +60,7 @@ class BatchProcessingCoordinator:
             raise TypeError("process_callback must be a callable function")
 
         self.process_callback = process_callback
-        
+
         logger.info(
             f"BatchProcessingCoordinator initialized: base_dir={self.base_dir}, "
             f"inbox_dir={self.inbox_dir}, has_callback={process_callback is not None}"
@@ -68,7 +70,7 @@ class BatchProcessingCoordinator:
         """Process all notes in the inbox with progress tracking."""
         inbox_files = list(self.inbox_dir.glob("*.md"))
         total = len(inbox_files)
-        
+
         logger.info(
             f"Starting batch processing: {total} files in {self.inbox_dir}, "
             f"show_progress={show_progress}"
@@ -124,7 +126,7 @@ class BatchProcessingCoordinator:
                 results["failed"] += 1
                 logger.error(
                     f"Exception processing {note_file.name}: {type(e).__name__}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 results["results"].append(
                     {"original_file": str(note_file), "error": str(e)}

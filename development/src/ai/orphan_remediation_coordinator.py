@@ -45,7 +45,7 @@ class OrphanRemediationCoordinator:
         """
         self.base_dir = str(base_dir)  # Convert Path to str if needed
         self.analytics_coordinator = analytics_coordinator
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(self.base_dir)
         self.permanent_dir = vault_config.permanent_dir
@@ -347,7 +347,7 @@ class OrphanRemediationCoordinator:
         """Pick a sensible default target note (Home Note or an MOC)."""
         base = Path(self.base_dir)
         root = self._vault_root()
-        
+
         # 1) Home Note.md - check at vault base first (standard location)
         home = base / "Home Note.md"
         if home.exists():

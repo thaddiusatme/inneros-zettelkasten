@@ -22,29 +22,29 @@ from src.config.vault_config_loader import get_vault_config
 def vault_with_config(tmp_path):
     """
     Fixture providing vault structure with vault configuration.
-    
+
     Creates knowledge/ subdirectory structure as per vault_config.yaml.
     Used for vault config integration tests.
     """
     vault = tmp_path / "vault"
     vault.mkdir()
-    
+
     # Get vault config (creates knowledge/ subdirectory structure)
     config = get_vault_config(str(vault))
-    
+
     # Ensure vault config directories exist
     config.fleeting_dir.mkdir(parents=True, exist_ok=True)
     config.inbox_dir.mkdir(parents=True, exist_ok=True)
     config.permanent_dir.mkdir(parents=True, exist_ok=True)
     config.literature_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create legacy directories for WorkflowManager compatibility
     # TODO: Remove after WorkflowManager migrates to vault config
     (vault / "Fleeting Notes").mkdir(parents=True, exist_ok=True)
     (vault / "Inbox").mkdir(parents=True, exist_ok=True)
     (vault / "Permanent Notes").mkdir(parents=True, exist_ok=True)
     (vault / "Literature Notes").mkdir(parents=True, exist_ok=True)
-    
+
     return {
         "vault": vault,
         "config": config,
@@ -247,7 +247,9 @@ class TestTriageReportGeneration:
         assert report["quality_distribution"]["low"] == 1
         assert len(report["recommendations"]) == 3
 
-    def test_generate_triage_report_filters_by_quality_threshold(self, vault_with_config):
+    def test_generate_triage_report_filters_by_quality_threshold(
+        self, vault_with_config
+    ):
         """Test triage report filters recommendations by quality threshold."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -346,7 +348,9 @@ class TestSingleNotePromotion:
     """Test single fleeting note promotion functionality."""
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_to_permanent(self, mock_organizer, vault_with_config):
+    def test_promote_fleeting_note_to_permanent(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promoting single fleeting note to permanent notes."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -377,7 +381,9 @@ class TestSingleNotePromotion:
         mock_organizer.assert_called_once()
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_with_preview_mode(self, mock_organizer, vault_with_config):
+    def test_promote_fleeting_note_with_preview_mode(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promoting note in preview mode (no actual changes)."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -413,7 +419,9 @@ class TestSingleNotePromotion:
         assert "error" in result or result["success"] is False
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_updates_metadata(self, mock_organizer, vault_with_config):
+    def test_promote_fleeting_note_updates_metadata(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promotion updates note metadata correctly."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -506,7 +514,9 @@ class TestBatchPromotion:
         assert "promoted_notes" in result
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_notes_batch_preview_mode(self, mock_organizer, vault_with_config):
+    def test_promote_fleeting_notes_batch_preview_mode(
+        self, mock_organizer, vault_with_config
+    ):
         """Test batch promotion in preview mode."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -557,7 +567,9 @@ class TestFleetingNoteCoordinatorIntegration:
         assert callable(coordinator.promote_fleeting_note)
         assert callable(coordinator.promote_fleeting_notes_batch)
 
-    def test_coordinator_uses_process_callback_for_quality_assessment(self, vault_with_config):
+    def test_coordinator_uses_process_callback_for_quality_assessment(
+        self, vault_with_config
+    ):
         """Test coordinator uses process_callback for note quality assessment."""
         vault = vault_with_config["vault"]
         fleeting_dir = vault_with_config["fleeting_dir"]
@@ -588,35 +600,39 @@ class TestVaultConfigIntegration:
     def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
         """
         RED PHASE: Verify coordinator uses vault config for directory paths.
-        
+
         This test validates that FleetingNoteCoordinator uses centralized vault
         configuration instead of hardcoded paths. Expected to FAIL until GREEN
         phase replaces hardcoded directory initialization with config properties.
-        
+
         Part of GitHub Issue #45 Phase 2 Priority 3 (P0-VAULT-6).
         """
         from src.config.vault_config_loader import get_vault_config
-        
+
         # Get vault config (creates knowledge/ subdirectory structure)
         config = get_vault_config(str(tmp_path))
-        
+
         # Mock workflow_manager (required for process_callback)
         workflow_manager = Mock()
-        
+
         # Create coordinator with root path (config adds knowledge/)
         coordinator = FleetingNoteCoordinator(
-            base_dir=tmp_path,
-            workflow_manager=workflow_manager
+            base_dir=tmp_path, workflow_manager=workflow_manager
         )
-        
+
         # Should use knowledge/Fleeting Notes, knowledge/Inbox, etc. from config
-        assert "knowledge" in str(coordinator.fleeting_dir), \
-            f"Expected fleeting_dir to use knowledge/ subdirectory, got: {coordinator.fleeting_dir}"
-        assert coordinator.fleeting_dir == config.fleeting_dir, \
-            f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
-        assert coordinator.inbox_dir == config.inbox_dir, \
-            f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
-        assert coordinator.permanent_dir == config.permanent_dir, \
-            "Expected permanent_dir to match config"
-        assert coordinator.literature_dir == config.literature_dir, \
-            "Expected literature_dir to match config"
+        assert "knowledge" in str(
+            coordinator.fleeting_dir
+        ), f"Expected fleeting_dir to use knowledge/ subdirectory, got: {coordinator.fleeting_dir}"
+        assert (
+            coordinator.fleeting_dir == config.fleeting_dir
+        ), f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
+        assert (
+            coordinator.inbox_dir == config.inbox_dir
+        ), f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
+        assert (
+            coordinator.permanent_dir == config.permanent_dir
+        ), "Expected permanent_dir to match config"
+        assert (
+            coordinator.literature_dir == config.literature_dir
+        ), "Expected literature_dir to match config"

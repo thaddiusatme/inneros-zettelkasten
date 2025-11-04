@@ -26,7 +26,11 @@ class ConnectionCoordinator:
     """
 
     def __init__(
-        self, base_dir: Path, workflow_manager=None, min_similarity: float = 0.7, max_suggestions: int = 5
+        self,
+        base_dir: Path,
+        workflow_manager=None,
+        min_similarity: float = 0.7,
+        max_suggestions: int = 5,
     ):
         """
         Initialize connection coordinator.
@@ -36,7 +40,7 @@ class ConnectionCoordinator:
             workflow_manager: WorkflowManager instance (optional, for future use)
             min_similarity: Minimum similarity threshold (0.0-1.0)
             max_suggestions: Maximum number of suggestions to return
-            
+
         Note:
             Directory paths loaded from vault_config.yaml in knowledge/ subdirectory.
             Part of GitHub Issue #45 - Vault Configuration Centralization.
@@ -45,7 +49,7 @@ class ConnectionCoordinator:
         self.workflow_manager = workflow_manager
         self.min_similarity = min_similarity
         self.max_suggestions = max_suggestions
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(str(self.base_dir))
         self.permanent_dir = vault_config.permanent_dir

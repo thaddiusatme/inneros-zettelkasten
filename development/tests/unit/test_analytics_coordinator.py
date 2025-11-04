@@ -30,22 +30,22 @@ from src.config.vault_config_loader import get_vault_config
 def vault_with_config(tmp_path):
     """
     Fixture providing vault structure with vault configuration.
-    
+
     Creates knowledge/ subdirectory structure as per vault_config.yaml.
     Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
     """
     vault = tmp_path / "vault"
     vault.mkdir()
-    
+
     # Get vault config (creates knowledge/ subdirectory structure)
     config = get_vault_config(str(vault))
-    
+
     # Ensure vault config directories exist
     config.fleeting_dir.mkdir(parents=True, exist_ok=True)
     config.inbox_dir.mkdir(parents=True, exist_ok=True)
     config.permanent_dir.mkdir(parents=True, exist_ok=True)
     config.literature_dir.mkdir(parents=True, exist_ok=True)
-    
+
     return {
         "vault": vault,
         "config": config,
@@ -59,29 +59,28 @@ def vault_with_config(tmp_path):
 class TestAnalyticsCoordinatorVaultConfigIntegration:
     """
     Test AnalyticsCoordinator uses vault configuration for directory paths.
-    
+
     RED Phase: This test will fail because current AnalyticsCoordinator constructor
     does not accept workflow_manager parameter (GitHub Issue #45 Phase 2 Priority 3).
     """
 
-    def test_analytics_coordinator_uses_vault_config_for_directories(self, vault_with_config):
+    def test_analytics_coordinator_uses_vault_config_for_directories(
+        self, vault_with_config
+    ):
         """
         Test that AnalyticsCoordinator loads directory paths from vault config.
-        
+
         Expected RED failure: TypeError about unexpected keyword argument 'workflow_manager'
         because current constructor signature is: __init__(self, base_dir: Path)
-        
+
         Target GREEN signature: __init__(self, base_dir: Path, workflow_manager)
         """
         vault = vault_with_config["vault"]
         config = vault_with_config["config"]
-        
+
         # Create coordinator with vault config pattern (will fail in RED phase)
-        coordinator = AnalyticsCoordinator(
-            base_dir=vault,
-            workflow_manager=Mock()
-        )
-        
+        coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
+
         # Verify coordinator uses vault config paths
         assert coordinator.inbox_dir == config.inbox_dir
         assert coordinator.fleeting_dir == config.fleeting_dir
@@ -96,17 +95,13 @@ class TestAnalyticsCoordinatorCore:
         """Create AnalyticsCoordinator instance with vault config."""
         vault = vault_with_config["vault"]
         permanent_dir = vault_with_config["permanent_dir"]
-        
+
         # Create sample notes with links in vault config directory
         (permanent_dir / "note1.md").write_text(
             "# Note 1\n\nThis links to [[note2]] and [[note3]]."
         )
-        (permanent_dir / "note2.md").write_text(
-            "# Note 2\n\nThis links to [[note1]]."
-        )
-        (permanent_dir / "note3.md").write_text(
-            "# Note 3\n\nThis has no links."
-        )
+        (permanent_dir / "note2.md").write_text("# Note 2\n\nThis links to [[note1]].")
+        (permanent_dir / "note3.md").write_text("# Note 3\n\nThis has no links.")
         (permanent_dir / "orphan.md").write_text(
             "# Orphan Note\n\nThis note has no links and is not linked to."
         )
@@ -117,7 +112,7 @@ class TestAnalyticsCoordinatorCore:
         # Set modification time to 100 days ago
         old_time = (datetime.now() - timedelta(days=100)).timestamp()
         os.utime(stale_note, (old_time, old_time))
-        
+
         return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_coordinator_initialization(self, coordinator):
@@ -146,11 +141,9 @@ class TestAnalyticsCoordinatorCore:
     def test_detect_orphaned_notes_excludes_inbox(self, coordinator, vault_with_config):
         """Test that inbox notes are not flagged as orphaned."""
         inbox_dir = vault_with_config["inbox_dir"]
-        
+
         # Create inbox note with no links
-        (inbox_dir / "inbox_note.md").write_text(
-            "# Inbox Note\n\nNo links here."
-        )
+        (inbox_dir / "inbox_note.md").write_text("# Inbox Note\n\nNo links here.")
 
         orphaned = coordinator.detect_orphaned_notes()
         orphan_paths = [note["path"] for note in orphaned]
@@ -163,7 +156,7 @@ class TestAnalyticsCoordinatorCore:
     ):
         """Test comprehensive scan includes all markdown files in repo."""
         vault = vault_with_config["vault"]
-        
+
         # Create note outside standard directories
         (vault / "Projects").mkdir()
         (vault / "Projects" / "project_note.md").write_text(
@@ -196,10 +189,12 @@ class TestAnalyticsCoordinatorCore:
         if len(stale) > 1:
             assert stale[0]["days_since_modified"] >= stale[-1]["days_since_modified"]
 
-    def test_detect_stale_notes_with_custom_threshold(self, coordinator, vault_with_config):
+    def test_detect_stale_notes_with_custom_threshold(
+        self, coordinator, vault_with_config
+    ):
         """Test stale note detection with custom threshold."""
         permanent_dir = vault_with_config["permanent_dir"]
-        
+
         # Create note that's 50 days old
         medium_stale = permanent_dir / "medium_stale.md"
         medium_stale.write_text("# Medium Stale")
@@ -251,13 +246,11 @@ class TestAnalyticsCoordinatorGraphConstruction:
         (permanent_dir / "hub.md").write_text(
             "# Hub\n\nLinks: [[spoke1]], [[spoke2]], [[spoke3]]"
         )
-        (permanent_dir / "spoke1.md").write_text(
-            "# Spoke 1\n\nBack to [[hub]]"
-        )
+        (permanent_dir / "spoke1.md").write_text("# Spoke 1\n\nBack to [[hub]]")
         (permanent_dir / "spoke2.md").write_text(
             "# Spoke 2\n\nLinks: [[hub]] and [[spoke1]]"
         )
-        
+
         return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_build_link_graph_creates_correct_structure(self, coordinator):
@@ -309,7 +302,7 @@ class TestAnalyticsCoordinatorAgeAnalysis:
 
         old_note = permanent_dir / "old.md"
         old_note.write_text("# Old")
-        
+
         return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_calculate_note_age_distribution_categorizes_correctly(self, coordinator):
@@ -347,18 +340,18 @@ class TestAnalyticsCoordinatorAgeAnalysis:
 class TestAnalyticsCoordinatorIntegration:
     """Integration tests with WorkflowManager."""
 
-    @pytest.mark.skip(reason="WorkflowManager integration pending P0-VAULT-2 completion")
+    @pytest.mark.skip(
+        reason="WorkflowManager integration pending P0-VAULT-2 completion"
+    )
     def test_coordinator_integrates_with_workflow_manager(self, vault_with_config):
         """Test that WorkflowManager can delegate to AnalyticsCoordinator."""
         from src.ai.workflow_manager import WorkflowManager
 
         vault = vault_with_config["vault"]
         permanent_dir = vault_with_config["permanent_dir"]
-        
+
         # Create one note
-        (permanent_dir / "test.md").write_text(
-            "# Test Note\n\nSome content."
-        )
+        (permanent_dir / "test.md").write_text("# Test Note\n\nSome content.")
 
         # WorkflowManager should still work (backward compatibility)
         workflow = WorkflowManager(vault)
@@ -376,7 +369,7 @@ class TestAnalyticsCoordinatorIntegration:
     def test_coordinator_handles_empty_vault_gracefully(self, vault_with_config):
         """Test coordinator with empty vault."""
         vault = vault_with_config["vault"]
-        
+
         coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
         # Should return empty results, not crash

@@ -42,7 +42,7 @@ class CoreWorkflowCLI:
     - process-inbox: Process all inbox notes
     - promote: Promote a note to permanent/literature
     - report: Generate comprehensive workflow report
-    
+
     Configuration:
     - Directory paths from vault_config.yaml (inbox_dir, fleeting_dir)
     - Supports knowledge/ subdirectory organization
@@ -58,12 +58,12 @@ class CoreWorkflowCLI:
         """
         self.vault_path = vault_path or "."
         self.workflow_manager = WorkflowManager(base_directory=self.vault_path)
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(self.vault_path)
         self.inbox_dir = vault_config.inbox_dir
         self.fleeting_dir = vault_config.fleeting_dir
-        
+
         logger.info(f"Core Workflow CLI initialized with vault: {self.vault_path}")
 
     def _print_header(self, title: str) -> None:
@@ -128,7 +128,9 @@ class CoreWorkflowCLI:
         if results.get("skipped_notes"):
             self._print_section("SKIPPED NOTES")
             # skipped_notes is dict: {filename: reason}
-            for filename, reason in list(results["skipped_notes"].items())[:5]:  # Show first 5
+            for filename, reason in list(results["skipped_notes"].items())[
+                :5
+            ]:  # Show first 5
                 print(f"   📄 {filename}")
                 print(f"      Reason: {reason}")
 

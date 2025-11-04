@@ -80,7 +80,7 @@ class TestSingleNotePromotion:
         """Test promoting a single note to permanent directory."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -122,7 +122,7 @@ This is a test note ready for promotion.
         """Test promoting a note with source URL to literature directory."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -174,7 +174,7 @@ class TestBatchPromotion:
         """Test batch promotion of fleeting notes above quality threshold."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
@@ -209,7 +209,7 @@ Content here.
         """Test batch promotion in preview mode (dry-run)."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
@@ -240,7 +240,7 @@ quality_score: 0.85
         """Test that batch promotion creates one backup for entire batch."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
@@ -282,7 +282,7 @@ class TestAutoPromotion:
         """Test auto-promotion scans inbox for eligible notes."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -321,7 +321,7 @@ quality_score: {quality}
         """Test auto-promotion in dry-run mode."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -353,7 +353,7 @@ quality_score: 0.85
         """Test auto-promotion tracks statistics by note type."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -401,7 +401,7 @@ quality_score: {quality}
         """
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         youtube_dir = inbox_dir / "YouTube"
@@ -532,7 +532,7 @@ class TestPromotionEngineIntegration:
 
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         inbox_dir = config.inbox_dir
         inbox_dir.mkdir(parents=True)
@@ -564,7 +564,7 @@ quality_score: 0.85
         """Test PromotionEngine uses DirectoryOrganizer for safe operations."""
         # Arrange - Use vault config paths
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(tmp_path))
         fleeting_dir = config.fleeting_dir
         fleeting_dir.mkdir(parents=True)
@@ -603,40 +603,40 @@ class TestVaultConfigIntegration:
     def test_promotion_engine_uses_vault_config_for_directories(self, tmp_path):
         """
         RED PHASE: Verify PromotionEngine uses vault config for directory paths.
-        
+
         This test validates that PromotionEngine gets directory paths from
         vault_config.yaml (knowledge/Inbox) instead of hardcoded paths (Inbox/).
-        
+
         Expected to FAIL until GREEN phase replaces hardcoded paths with config.
         """
         # Arrange
         from src.config.vault_config_loader import get_vault_config
-        
+
         base_dir = tmp_path / "knowledge"
         base_dir.mkdir()
-        
+
         # Get expected paths from vault config
         config = get_vault_config(str(tmp_path))
-        
+
         lifecycle_manager = Mock(spec=NoteLifecycleManager)
         engine = PromotionEngine(tmp_path, lifecycle_manager)
-        
+
         # Act & Assert - Should use knowledge/Inbox, not root-level Inbox
-        assert "knowledge" in str(engine.inbox_dir), (
-            f"Expected inbox_dir to contain 'knowledge', got {engine.inbox_dir}"
-        )
-        assert engine.inbox_dir == config.inbox_dir, (
-            f"Expected {config.inbox_dir}, got {engine.inbox_dir}"
-        )
-        assert engine.permanent_dir == config.permanent_dir, (
-            f"Expected {config.permanent_dir}, got {engine.permanent_dir}"
-        )
-        assert engine.literature_dir == config.literature_dir, (
-            f"Expected {config.literature_dir}, got {engine.literature_dir}"
-        )
-        assert engine.fleeting_dir == config.fleeting_dir, (
-            f"Expected {config.fleeting_dir}, got {engine.fleeting_dir}"
-        )
+        assert "knowledge" in str(
+            engine.inbox_dir
+        ), f"Expected inbox_dir to contain 'knowledge', got {engine.inbox_dir}"
+        assert (
+            engine.inbox_dir == config.inbox_dir
+        ), f"Expected {config.inbox_dir}, got {engine.inbox_dir}"
+        assert (
+            engine.permanent_dir == config.permanent_dir
+        ), f"Expected {config.permanent_dir}, got {engine.permanent_dir}"
+        assert (
+            engine.literature_dir == config.literature_dir
+        ), f"Expected {config.literature_dir}, got {engine.literature_dir}"
+        assert (
+            engine.fleeting_dir == config.fleeting_dir
+        ), f"Expected {config.fleeting_dir}, got {engine.fleeting_dir}"
 
 
 if __name__ == "__main__":

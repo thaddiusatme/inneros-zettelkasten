@@ -44,7 +44,7 @@ class ReviewTriageCoordinator:
     - Uses vault_config.yaml for directory paths (GitHub Issue #45)
     - Consumed by CLI layer (workflow_demo.py)
     - Independent of other coordinators (Lifecycle, Connection, Analytics, Promotion)
-    
+
     Configuration:
     - Directory paths from vault_config.inbox_dir and vault_config.fleeting_dir
     - Supports knowledge/ subdirectory organization
@@ -60,7 +60,7 @@ class ReviewTriageCoordinator:
         """
         self.base_dir = Path(base_dir)
         self.workflow_manager = workflow_manager
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(str(self.base_dir))
         self.inbox_dir = vault_config.inbox_dir

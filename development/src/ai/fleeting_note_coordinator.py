@@ -46,21 +46,21 @@ class FleetingNoteCoordinator:
             workflow_manager: WorkflowManager instance for AI processing
             process_callback: Optional callback to WorkflowManager.process_inbox_note for quality assessment
             default_quality_threshold: Default quality threshold for promotion
-            
+
         Note:
             Directory paths loaded from vault_config.yaml in knowledge/ subdirectory.
             Part of GitHub Issue #45 - Vault Configuration Centralization.
         """
         self.base_dir = Path(base_dir)
         self.workflow_manager = workflow_manager
-        
+
         # Load vault configuration for directory paths
         vault_config = get_vault_config(str(self.base_dir))
         self.fleeting_dir = vault_config.fleeting_dir
         self.inbox_dir = vault_config.inbox_dir
         self.permanent_dir = vault_config.permanent_dir
         self.literature_dir = vault_config.literature_dir
-        
+
         self.process_callback = process_callback
         self.default_quality_threshold = default_quality_threshold
 

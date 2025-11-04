@@ -24,7 +24,7 @@ class TestWorkflowReportingCoordinator:
     def temp_vault(self, tmp_path):
         """Create a temporary vault structure with vault config."""
         from src.config.vault_config_loader import get_vault_config
-        
+
         vault = tmp_path / "test_vault"
         vault.mkdir()
 
@@ -60,7 +60,7 @@ class TestWorkflowReportingCoordinator:
     def test_coordinator_initialization(self, temp_vault, mock_analytics):
         """Test coordinator initializes with required dependencies."""
         from src.config.vault_config_loader import get_vault_config
-        
+
         config = get_vault_config(str(temp_vault))
         coordinator = WorkflowReportingCoordinator(temp_vault, mock_analytics)
 
@@ -281,15 +281,11 @@ title: Note {i}
         """Test recommendations for fleeting/permanent note imbalance."""
         # Create many fleeting notes
         for i in range(20):
-            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(
-                f"# Fleeting {i}"
-            )
+            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(f"# Fleeting {i}")
 
         # Create few permanent notes (imbalance ratio > 2)
         for i in range(5):
-            (coordinator.permanent_dir / f"perm{i}.md").write_text(
-                f"# Permanent {i}"
-            )
+            (coordinator.permanent_dir / f"perm{i}.md").write_text(f"# Permanent {i}")
 
         report = coordinator.generate_workflow_report()
         recommendations = report["recommendations"]
@@ -311,7 +307,7 @@ title: Note {i}
 
         # Get vault config for proper paths
         config = get_vault_config(str(temp_vault))
-        
+
         # Remove some directories
         shutil.rmtree(config.archive_dir)
         shutil.rmtree(config.fleeting_dir)
@@ -401,9 +397,7 @@ ai_summary: Summary {i}
 
         # Balanced fleeting notes (not > 2x permanent)
         for i in range(10):
-            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(
-                f"# Fleeting {i}"
-            )
+            (coordinator.fleeting_dir / f"fleeting{i}.md").write_text(f"# Fleeting {i}")
 
         report = coordinator.generate_workflow_report()
 
@@ -417,19 +411,19 @@ class TestVaultConfigIntegration:
     def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
         """
         RED PHASE: Verify coordinator uses vault config for directory paths.
-        
+
         This test validates that WorkflowReportingCoordinator uses the centralized
         vault configuration (knowledge/Inbox) instead of hardcoded paths (Inbox).
-        
+
         Expected to FAIL until GREEN phase replaces hardcoded paths with config.
-        
+
         Part of GitHub Issue #45 - Vault Configuration Centralization
         """
         from src.config.vault_config_loader import get_vault_config
-        
+
         # Get vault config for test directory
         config = get_vault_config(str(tmp_path))
-        
+
         # Create mock analytics
         analytics = Mock()
         analytics.generate_report.return_value = {
@@ -437,18 +431,23 @@ class TestVaultConfigIntegration:
             "avg_quality": 0.0,
             "connection_density": 0.0,
         }
-        
+
         # Initialize coordinator
         coordinator = WorkflowReportingCoordinator(tmp_path, analytics)
-        
+
         # Should use knowledge/Inbox, not root-level Inbox
-        assert "knowledge" in str(coordinator.inbox_dir), \
-            f"Expected 'knowledge' in path, got: {coordinator.inbox_dir}"
-        assert coordinator.inbox_dir == config.inbox_dir, \
-            f"Expected {config.inbox_dir}, got {coordinator.inbox_dir}"
-        assert coordinator.fleeting_dir == config.fleeting_dir, \
-            f"Expected {config.fleeting_dir}, got {coordinator.fleeting_dir}"
-        assert coordinator.permanent_dir == config.permanent_dir, \
-            f"Expected {config.permanent_dir}, got {coordinator.permanent_dir}"
-        assert coordinator.archive_dir == config.archive_dir, \
-            f"Expected {config.archive_dir}, got {coordinator.archive_dir}"
+        assert "knowledge" in str(
+            coordinator.inbox_dir
+        ), f"Expected 'knowledge' in path, got: {coordinator.inbox_dir}"
+        assert (
+            coordinator.inbox_dir == config.inbox_dir
+        ), f"Expected {config.inbox_dir}, got {coordinator.inbox_dir}"
+        assert (
+            coordinator.fleeting_dir == config.fleeting_dir
+        ), f"Expected {config.fleeting_dir}, got {coordinator.fleeting_dir}"
+        assert (
+            coordinator.permanent_dir == config.permanent_dir
+        ), f"Expected {config.permanent_dir}, got {coordinator.permanent_dir}"
+        assert (
+            coordinator.archive_dir == config.archive_dir
+        ), f"Expected {config.archive_dir}, got {coordinator.archive_dir}"

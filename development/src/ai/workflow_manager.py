@@ -82,7 +82,10 @@ class WorkflowManager:
 
         # ADR-002 Phase 2: Connection coordinator extraction
         self.connection_coordinator = ConnectionCoordinator(
-            base_dir=self.base_dir, workflow_manager=self, min_similarity=0.7, max_suggestions=5
+            base_dir=self.base_dir,
+            workflow_manager=self,
+            min_similarity=0.7,
+            max_suggestions=5,
         )
 
         # ADR-002 Phase 3: Analytics coordinator extraction
@@ -254,31 +257,35 @@ class WorkflowManager:
         # - No AI processing errors occurred
         has_processing_errors = self._has_ai_processing_errors(results)
         should_update_status = (
-            not dry_run 
-            and not fast 
-            and results.get("file_updated") 
+            not dry_run
+            and not fast
+            and results.get("file_updated")
             and not has_processing_errors
         )
-        
+
         if should_update_status:
             try:
                 note_path_obj = Path(note_path)
                 status_result = self.lifecycle_manager.update_status(
                     note_path_obj,
                     new_status="promoted",
-                    reason="AI processing completed successfully"
+                    reason="AI processing completed successfully",
                 )
-                
+
                 # Add status_updated field to results if successful
                 if status_result.get("validation_passed"):
-                    results["status_updated"] = status_result.get("status_updated", "promoted")
+                    results["status_updated"] = status_result.get(
+                        "status_updated", "promoted"
+                    )
                 else:
                     # Log validation failure but don't fail the whole operation
                     if "warnings" not in results:
                         results["warnings"] = []
                     error_msg = status_result.get("error", "Unknown validation error")
-                    results["warnings"].append(f"Status update validation failed: {error_msg}")
-                    
+                    results["warnings"].append(
+                        f"Status update validation failed: {error_msg}"
+                    )
+
             except Exception as e:
                 # Graceful degradation - don't fail processing if status update fails
                 if "warnings" not in results:
@@ -290,15 +297,15 @@ class WorkflowManager:
     def _has_ai_processing_errors(self, results: Dict) -> bool:
         """
         Check if AI processing encountered any errors.
-        
+
         Args:
             results: Processing results dict from NoteProcessingCoordinator
-            
+
         Returns:
             True if any AI processing errors were detected
         """
         processing = results.get("processing", {})
-        
+
         # Check each AI processing component for errors
         for component in ["tags", "quality", "connections"]:
             if component in processing:
@@ -306,7 +313,7 @@ class WorkflowManager:
                 # Error is indicated by presence of "error" key
                 if isinstance(component_result, dict) and "error" in component_result:
                     return True
-        
+
         return False
 
     # ADR-002 Phase 6: Template processing methods removed - delegated to NoteProcessingCoordinator

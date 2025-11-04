@@ -61,8 +61,12 @@ class TestReviewCandidateScanning:
             config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
             # Create test notes in vault config inbox
-            (config.inbox_dir / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
-            (config.inbox_dir / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
+            (config.inbox_dir / "note1.md").write_text(
+                "---\ntitle: Note 1\n---\nContent"
+            )
+            (config.inbox_dir / "note2.md").write_text(
+                "---\ntitle: Note 2\n---\nContent"
+            )
 
             workflow_manager = Mock()
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -111,9 +115,13 @@ class TestReviewCandidateScanning:
             config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
             # Malformed YAML
-            (config.inbox_dir / "broken.md").write_text("---\ninvalid yaml: {{\n---\nContent")
+            (config.inbox_dir / "broken.md").write_text(
+                "---\ninvalid yaml: {{\n---\nContent"
+            )
             # Valid note
-            (config.inbox_dir / "valid.md").write_text("---\ntitle: Valid\n---\nContent")
+            (config.inbox_dir / "valid.md").write_text(
+                "---\ntitle: Valid\n---\nContent"
+            )
 
             workflow_manager = Mock()
             coordinator = ReviewTriageCoordinator(vault, workflow_manager)
@@ -137,8 +145,12 @@ class TestWeeklyRecommendations:
             config = get_vault_config(str(vault))
             config.inbox_dir.mkdir(parents=True, exist_ok=True)
 
-            (config.inbox_dir / "note1.md").write_text("---\ntitle: Note 1\n---\nContent")
-            (config.inbox_dir / "note2.md").write_text("---\ntitle: Note 2\n---\nContent")
+            (config.inbox_dir / "note1.md").write_text(
+                "---\ntitle: Note 1\n---\nContent"
+            )
+            (config.inbox_dir / "note2.md").write_text(
+                "---\ntitle: Note 2\n---\nContent"
+            )
 
             # Mock workflow_manager.process_inbox_note
             workflow_manager = Mock()
@@ -462,32 +474,35 @@ class TestVaultConfigIntegration:
     def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
         """
         RED PHASE: Verify coordinator uses vault config for directory paths.
-        
+
         This test validates that ReviewTriageCoordinator uses centralized vault
         configuration instead of hardcoded paths. Expected to FAIL until GREEN
         phase replaces hardcoded directory initialization with config properties.
-        
+
         Part of GitHub Issue #45 Phase 2 Priority 1 (P0-VAULT-3).
         """
         from src.config.vault_config_loader import get_vault_config
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
-        
+
         # Get vault config (creates knowledge/ subdirectory structure)
         config = get_vault_config(str(tmp_path))
-        
+
         # Mock workflow_manager (required dependency)
         workflow_manager = Mock()
-        
+
         # Create coordinator with root path (config adds knowledge/)
         coordinator = ReviewTriageCoordinator(tmp_path, workflow_manager)
-        
+
         # Should use knowledge/Inbox and knowledge/Fleeting Notes from config
-        assert "knowledge" in str(coordinator.inbox_dir), \
-            f"Expected inbox_dir to use knowledge/ subdirectory, got: {coordinator.inbox_dir}"
-        assert coordinator.inbox_dir == config.inbox_dir, \
-            f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
-        assert coordinator.fleeting_dir == config.fleeting_dir, \
-            f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
+        assert "knowledge" in str(
+            coordinator.inbox_dir
+        ), f"Expected inbox_dir to use knowledge/ subdirectory, got: {coordinator.inbox_dir}"
+        assert (
+            coordinator.inbox_dir == config.inbox_dir
+        ), f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
+        assert (
+            coordinator.fleeting_dir == config.fleeting_dir
+        ), f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
 
 
 # RED Phase Expected Results:
