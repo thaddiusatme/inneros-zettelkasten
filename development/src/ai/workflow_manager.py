@@ -37,6 +37,7 @@ from .workflow_integration_utils import (
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.io import safe_write
 from .workflow_metrics_coordinator import WorkflowMetricsCoordinator
+from src.config.vault_config_loader import get_vault_config
 
 
 class WorkflowManager:
@@ -63,12 +64,13 @@ class WorkflowManager:
         else:
             self.base_dir = Path(base_directory).expanduser()
 
-        # Define workflow directories
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
-        self.literature_dir = self.base_dir / "Literature Notes"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.archive_dir = self.base_dir / "Archive"
+        # Load vault configuration and define workflow directories
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
+        self.literature_dir = vault_config.literature_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.archive_dir = vault_config.archive_dir
 
         # Initialize AI components
         self.tagger = AITagger()
