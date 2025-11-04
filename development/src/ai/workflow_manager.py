@@ -137,6 +137,8 @@ class WorkflowManager:
 
         # ADR-002 Phase 7: Safe image processing coordinator extraction
         self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
+            base_dir=Path(self.base_directory),
+            workflow_manager=self,
             safe_workflow_processor=self.safe_workflow_processor,
             atomic_workflow_engine=self.atomic_workflow_engine,
             integrity_monitoring_manager=self.integrity_monitoring_manager,
@@ -144,7 +146,6 @@ class WorkflowManager:
             performance_metrics_collector=self.performance_metrics_collector,
             safe_image_processor=self.safe_image_processor,
             image_integrity_monitor=self.image_integrity_monitor,
-            inbox_dir=self.inbox_dir,
             process_note_callback=self.process_inbox_note,
             batch_process_callback=self.batch_process_inbox,
         )
