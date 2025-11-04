@@ -12,6 +12,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from src.config.vault_config_loader import get_vault_config
 
+pytestmark = pytest.mark.slow  # CLI tests
+
 
 class TestWorkflowDemoVaultConfigIntegration:
     """Test workflow_demo.py integration with vault configuration."""

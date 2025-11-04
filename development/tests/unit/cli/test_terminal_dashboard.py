@@ -7,7 +7,9 @@ RED phase - All tests should fail until terminal_dashboard.py is implemented.
 
 import json
 from unittest.mock import Mock, patch
+import pytest
 
+pytestmark = pytest.mark.slow  # CLI tests - terminal dashboard interaction
 
 # RED Phase Tests
 
