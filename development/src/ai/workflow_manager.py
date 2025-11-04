@@ -137,7 +137,7 @@ class WorkflowManager:
 
         # ADR-002 Phase 7: Safe image processing coordinator extraction
         self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
-            base_dir=Path(self.base_directory),
+            base_dir=self.base_dir,
             workflow_manager=self,
             safe_workflow_processor=self.safe_workflow_processor,
             atomic_workflow_engine=self.atomic_workflow_engine,
@@ -168,15 +168,15 @@ class WorkflowManager:
 
         # ADR-002 Phase 11: Batch processing coordinator extraction
         self.batch_processing_coordinator = BatchProcessingCoordinator(
-            inbox_dir=self.inbox_dir, process_callback=self.process_inbox_note
+            base_dir=self.base_dir,
+            workflow_manager=self,
+            process_callback=self.process_inbox_note
         )
 
         # ADR-002 Phase 12b: Fleeting note coordinator extraction
         self.fleeting_note_coordinator = FleetingNoteCoordinator(
-            fleeting_dir=self.fleeting_dir,
-            inbox_dir=self.inbox_dir,
-            permanent_dir=self.permanent_dir,
-            literature_dir=self.literature_dir,
+            base_dir=self.base_dir,
+            workflow_manager=self,
             process_callback=self.process_inbox_note,
             default_quality_threshold=0.7,
         )
