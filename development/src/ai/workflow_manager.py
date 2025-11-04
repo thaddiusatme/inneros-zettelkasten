@@ -170,7 +170,7 @@ class WorkflowManager:
         self.batch_processing_coordinator = BatchProcessingCoordinator(
             base_dir=self.base_dir,
             workflow_manager=self,
-            process_callback=self.process_inbox_note
+            process_callback=self.process_inbox_note,
         )
 
         # ADR-002 Phase 12b: Fleeting note coordinator extraction
