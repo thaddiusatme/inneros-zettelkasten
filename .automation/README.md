@@ -2,6 +2,74 @@
 
 This directory contains automation scripts and configuration for the InnerOS Zettelkasten + AI workflow system.
 
+## Vault Configuration Integration
+
+**All automation scripts are compatible with the centralized vault configuration system** introduced in Phase 2 of GitHub Issue #45.
+
+### How Scripts Use Vault Configuration
+
+Scripts automatically handle the `knowledge/` subdirectory structure through two integration patterns:
+
+1. **Python Scripts**: Import from `development/src` which uses vault config internally
+   - Paths like `knowledge/Inbox/`, `knowledge/Permanent Notes/` resolved automatically
+   - No hardcoded paths - all paths relative to repository root
+   - Compatible with vault config `VaultConfig.get_inbox_path()`, etc.
+
+2. **Shell Scripts**: Call Python CLI tools or use relative paths from repo root
+   - All cron jobs execute with `cd` to repo root first
+   - Scripts accept path arguments for flexibility
+   - No environment variables required (INBOX_DIR, etc.)
+
+### Migration Status
+
+**✅ Zero migration required** - All 20 automation scripts verified compatible (as of 2025-11-03):
+
+- 8 Python scripts: Use `development/src` imports (vault config aware)
+- 12 Shell scripts: Use relative paths or call compatible CLI tools
+- 4 Cron jobs: All configured correctly with repo root context
+- 0 Issues found: No hardcoded paths, fully compatible
+
+**See**: `Projects/ACTIVE/p1-vault-12-script-verification-report.md` for detailed verification results.
+
+### Path Structure
+
+Scripts work with this directory layout:
+
+```text
+knowledge/
+  ├── Inbox/                    # Quick captures, pending triage
+  ├── Fleeting Notes/           # In-progress ideas
+  ├── Permanent Notes/          # Processed knowledge
+  ├── Literature Notes/         # Source summaries
+  └── Archive/                  # Completed/deprecated notes
+```
+
+### Best Practices for Custom Scripts
+
+When creating new automation scripts:
+
+1. **Python Scripts**: Import from `development/src` for vault config access
+
+   ```python
+   from development.src.utils.vault_config import VaultConfig
+   
+   vault = VaultConfig()
+   inbox_path = vault.get_inbox_path()  # Returns: knowledge/Inbox
+   ```
+
+2. **Shell Scripts**: Use relative paths from repo root
+
+   ```bash
+   cd "$(git rev-parse --show-toplevel)"
+   INBOX_DIR="knowledge/Inbox"
+   ```
+
+3. **Cron Jobs**: Always `cd` to repo root before execution
+
+   ```bash
+   cd "/path/to/inneros-zettelkasten" && ./script.sh
+   ```
+
 ## Directory Structure
 
 - `scripts/`: Python automation scripts

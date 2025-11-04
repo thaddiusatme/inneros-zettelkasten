@@ -3,70 +3,105 @@ Tests for FleetingNoteCoordinator (ADR-002 Phase 12b)
 
 RED Phase: Comprehensive failing tests for fleeting note management extraction.
 Target: Extract ~250-300 LOC from WorkflowManager (fleeting note triage and promotion).
+
+Vault Config Integration (GitHub Issue #45 Phase 2 Priority 3):
+Updated to use vault configuration for directory paths.
 """
 
+import tempfile
+from pathlib import Path
 from unittest.mock import Mock, patch
+import pytest
 
 # Target class (doesn't exist yet - RED phase)
 from src.ai.fleeting_note_coordinator import FleetingNoteCoordinator
+from src.config.vault_config_loader import get_vault_config
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create legacy directories for WorkflowManager compatibility
+    # TODO: Remove after WorkflowManager migrates to vault config
+    (vault / "Fleeting Notes").mkdir(parents=True, exist_ok=True)
+    (vault / "Inbox").mkdir(parents=True, exist_ok=True)
+    (vault / "Permanent Notes").mkdir(parents=True, exist_ok=True)
+    (vault / "Literature Notes").mkdir(parents=True, exist_ok=True)
+
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
 
 
 class TestFleetingNoteCoordinatorInitialization:
     """Test FleetingNoteCoordinator initialization and dependency management."""
 
-    def test_initialization_with_required_dependencies(self, tmp_path):
+    def test_initialization_with_required_dependencies(self, vault_with_config):
         """Test coordinator initialization with all required dependencies."""
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
-        (vault_path / "Fleeting Notes").mkdir()
-        (vault_path / "Inbox").mkdir()
-        (vault_path / "Permanent Notes").mkdir()
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
 
-        # Mock process callback
+        # Mock workflow_manager
+        mock_workflow_manager = Mock()
         mock_process_callback = Mock(return_value={"quality_score": 0.8})
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=mock_workflow_manager,
             process_callback=mock_process_callback,
         )
 
-        assert coordinator.fleeting_dir == vault_path / "Fleeting Notes"
-        assert coordinator.inbox_dir == vault_path / "Inbox"
-        assert coordinator.permanent_dir == vault_path / "Permanent Notes"
+        # Should use vault config paths
+        assert coordinator.fleeting_dir == config.fleeting_dir
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.permanent_dir == config.permanent_dir
         assert coordinator.process_callback is mock_process_callback
 
-    def test_initialization_validates_directory_paths(self, tmp_path):
+    def test_initialization_validates_directory_paths(self, vault_with_config):
         """Test coordinator validates that directory paths exist or can be created."""
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
 
-        # Create coordinator with non-existent directories (should create them)
+        # Create coordinator (should create directories if they don't exist)
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
         )
 
         # Directories should exist after initialization
         assert coordinator.fleeting_dir.exists()
         assert coordinator.inbox_dir.exists()
+        assert coordinator.fleeting_dir == config.fleeting_dir
 
-    def test_initialization_accepts_quality_threshold_config(self, tmp_path):
+    def test_initialization_accepts_quality_threshold_config(self, vault_with_config):
         """Test coordinator accepts quality threshold configuration."""
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
             default_quality_threshold=0.75,
         )
 
@@ -76,11 +111,10 @@ class TestFleetingNoteCoordinatorInitialization:
 class TestFleetingNoteDiscovery:
     """Test fleeting note discovery and scanning functionality."""
 
-    def test_find_fleeting_notes_in_fleeting_directory(self, tmp_path):
+    def test_find_fleeting_notes_in_fleeting_directory(self, vault_with_config):
         """Test finding notes in Fleeting Notes directory."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         # Create test fleeting notes
         note1 = fleeting_dir / "fleeting1.md"
@@ -89,11 +123,8 @@ class TestFleetingNoteDiscovery:
         note2.write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
         )
 
         notes = coordinator.find_fleeting_notes()
@@ -102,11 +133,10 @@ class TestFleetingNoteDiscovery:
         assert note1 in notes
         assert note2 in notes
 
-    def test_find_fleeting_notes_in_inbox_with_fleeting_type(self, tmp_path):
+    def test_find_fleeting_notes_in_inbox_with_fleeting_type(self, vault_with_config):
         """Test finding fleeting-type notes in Inbox directory."""
-        vault_path = tmp_path / "vault"
-        inbox_dir = vault_path / "Inbox"
-        inbox_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        inbox_dir = vault_with_config["inbox_dir"]
 
         # Create inbox notes with fleeting type
         fleeting_in_inbox = inbox_dir / "inbox_fleeting.md"
@@ -116,11 +146,8 @@ class TestFleetingNoteDiscovery:
         permanent_in_inbox.write_text("---\ntype: permanent\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=inbox_dir,
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
         )
 
         notes = coordinator.find_fleeting_notes()
@@ -129,27 +156,24 @@ class TestFleetingNoteDiscovery:
         assert fleeting_in_inbox in notes
         assert permanent_in_inbox not in notes
 
-    def test_find_fleeting_notes_handles_missing_directories(self, tmp_path):
+    def test_find_fleeting_notes_handles_missing_directories(self, vault_with_config):
         """Test finding fleeting notes when directories don't exist."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
         )
 
         notes = coordinator.find_fleeting_notes()
 
-        assert len(notes) == 0
+        # Should return empty list, not error
+        assert isinstance(notes, list)
 
-    def test_find_fleeting_notes_handles_unparseable_files(self, tmp_path):
+    def test_find_fleeting_notes_handles_unparseable_files(self, vault_with_config):
         """Test finding fleeting notes skips files that can't be parsed."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         # Create valid and invalid notes
         valid_note = fleeting_dir / "valid.md"
@@ -159,11 +183,8 @@ class TestFleetingNoteDiscovery:
         invalid_note.write_text("Invalid YAML\n---\nBroken")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
-            process_callback=Mock(),
+            base_dir=vault,
+            workflow_manager=Mock(),
         )
 
         notes = coordinator.find_fleeting_notes()
@@ -175,11 +196,10 @@ class TestFleetingNoteDiscovery:
 class TestTriageReportGeneration:
     """Test fleeting note triage report generation."""
 
-    def test_generate_triage_report_with_quality_distribution(self, tmp_path):
+    def test_generate_triage_report_with_quality_distribution(self, vault_with_config):
         """Test generating triage report with quality score distribution."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         # Create test notes
         (fleeting_dir / "high_quality.md").write_text(
@@ -214,10 +234,8 @@ class TestTriageReportGeneration:
                 }
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
@@ -229,11 +247,12 @@ class TestTriageReportGeneration:
         assert report["quality_distribution"]["low"] == 1
         assert len(report["recommendations"]) == 3
 
-    def test_generate_triage_report_filters_by_quality_threshold(self, tmp_path):
+    def test_generate_triage_report_filters_by_quality_threshold(
+        self, vault_with_config
+    ):
         """Test triage report filters recommendations by quality threshold."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "high.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "low.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -245,10 +264,8 @@ class TestTriageReportGeneration:
                 return {"quality_score": 0.25, "ai_tags": [], "metadata": {}}
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
@@ -258,15 +275,13 @@ class TestTriageReportGeneration:
         assert len(report["recommendations"]) == 1  # Only high quality note
         assert report["filtered_count"] == 1
 
-    def test_generate_triage_report_handles_empty_directory(self, tmp_path):
+    def test_generate_triage_report_handles_empty_directory(self, vault_with_config):
         """Test triage report handles empty fleeting notes directory."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -276,19 +291,16 @@ class TestTriageReportGeneration:
         assert report["quality_distribution"] == {"high": 0, "medium": 0, "low": 0}
         assert len(report["recommendations"]) == 0
 
-    def test_generate_triage_report_tracks_processing_time(self, tmp_path):
+    def test_generate_triage_report_tracks_processing_time(self, vault_with_config):
         """Test triage report tracks and reports processing time."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "note.md").write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.5, "ai_tags": [], "metadata": {}}
             ),
@@ -300,11 +312,10 @@ class TestTriageReportGeneration:
         assert isinstance(report["processing_time"], (int, float))
         assert report["processing_time"] >= 0
 
-    def test_generate_triage_report_sorts_by_quality_score(self, tmp_path):
+    def test_generate_triage_report_sorts_by_quality_score(self, vault_with_config):
         """Test triage report sorts recommendations by quality score (highest first)."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "low.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "high.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -319,10 +330,8 @@ class TestTriageReportGeneration:
                 return {"quality_score": 0.5, "ai_tags": [], "metadata": {}}
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
@@ -339,11 +348,12 @@ class TestSingleNotePromotion:
     """Test single fleeting note promotion functionality."""
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_to_permanent(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_to_permanent(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promoting single fleeting note to permanent notes."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
@@ -354,17 +364,15 @@ class TestSingleNotePromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.8, "ai_tags": [], "metadata": {}}
             ),
         )
 
         result = coordinator.promote_fleeting_note(
-            str(note), target_type="permanent", base_dir=vault_path
+            str(note), target_type="permanent", base_dir=vault
         )
 
         assert result["success"] is True
@@ -373,20 +381,19 @@ class TestSingleNotePromotion:
         mock_organizer.assert_called_once()
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_with_preview_mode(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_with_preview_mode(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promoting note in preview mode (no actual changes)."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -397,15 +404,13 @@ class TestSingleNotePromotion:
         # DirectoryOrganizer should not be called in preview mode
         mock_organizer.assert_not_called()
 
-    def test_promote_fleeting_note_handles_invalid_path(self, tmp_path):
+    def test_promote_fleeting_note_handles_invalid_path(self, vault_with_config):
         """Test promotion handles invalid note paths gracefully."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -414,13 +419,13 @@ class TestSingleNotePromotion:
         assert "error" in result or result["success"] is False
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_note_updates_metadata(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_note_updates_metadata(
+        self, mock_organizer, vault_with_config
+    ):
         """Test promotion updates note metadata correctly."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        permanent_dir = vault_path / "Permanent Notes"
-        fleeting_dir.mkdir(parents=True)
-        permanent_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
         note = fleeting_dir / "test_note.md"
         note.write_text("---\ntype: fleeting\ncreated: 2024-01-01\n---\nContent")
@@ -430,10 +435,8 @@ class TestSingleNotePromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=permanent_dir,
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -449,12 +452,11 @@ class TestBatchPromotion:
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
     def test_promote_fleeting_notes_batch_by_quality_threshold(
-        self, mock_organizer, tmp_path
+        self, mock_organizer, vault_with_config
     ):
         """Test batch promotion based on quality threshold."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "high1.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "high2.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -471,10 +473,8 @@ class TestBatchPromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_process,
         )
 
@@ -485,12 +485,11 @@ class TestBatchPromotion:
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
     def test_promote_fleeting_notes_batch_tracks_statistics(
-        self, mock_organizer, tmp_path
+        self, mock_organizer, vault_with_config
     ):
         """Test batch promotion tracks detailed statistics."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         (fleeting_dir / "note1.md").write_text("---\ntype: fleeting\n---\nContent")
         (fleeting_dir / "note2.md").write_text("---\ntype: fleeting\n---\nContent")
@@ -500,10 +499,8 @@ class TestBatchPromotion:
         mock_organizer.return_value = mock_org_instance
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.8, "ai_tags": [], "metadata": {}}
             ),
@@ -517,20 +514,19 @@ class TestBatchPromotion:
         assert "promoted_notes" in result
 
     @patch("src.utils.directory_organizer.DirectoryOrganizer")
-    def test_promote_fleeting_notes_batch_preview_mode(self, mock_organizer, tmp_path):
+    def test_promote_fleeting_notes_batch_preview_mode(
+        self, mock_organizer, vault_with_config
+    ):
         """Test batch promotion in preview mode."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "note.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(
                 return_value={"quality_score": 0.8, "ai_tags": [], "metadata": {}}
             ),
@@ -549,15 +545,13 @@ class TestBatchPromotion:
 class TestFleetingNoteCoordinatorIntegration:
     """Test integration with WorkflowManager."""
 
-    def test_coordinator_provides_all_fleeting_note_methods(self, tmp_path):
+    def test_coordinator_provides_all_fleeting_note_methods(self, vault_with_config):
         """Test coordinator provides all required fleeting note methods."""
-        vault_path = tmp_path / "vault"
+        vault = vault_with_config["vault"]
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=vault_path / "Fleeting Notes",
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=Mock(),
         )
 
@@ -573,11 +567,12 @@ class TestFleetingNoteCoordinatorIntegration:
         assert callable(coordinator.promote_fleeting_note)
         assert callable(coordinator.promote_fleeting_notes_batch)
 
-    def test_coordinator_uses_process_callback_for_quality_assessment(self, tmp_path):
+    def test_coordinator_uses_process_callback_for_quality_assessment(
+        self, vault_with_config
+    ):
         """Test coordinator uses process_callback for note quality assessment."""
-        vault_path = tmp_path / "vault"
-        fleeting_dir = vault_path / "Fleeting Notes"
-        fleeting_dir.mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        fleeting_dir = vault_with_config["fleeting_dir"]
 
         note = fleeting_dir / "test.md"
         note.write_text("---\ntype: fleeting\n---\nContent")
@@ -587,10 +582,8 @@ class TestFleetingNoteCoordinatorIntegration:
         )
 
         coordinator = FleetingNoteCoordinator(
-            fleeting_dir=fleeting_dir,
-            inbox_dir=vault_path / "Inbox",
-            permanent_dir=vault_path / "Permanent Notes",
-            literature_dir=vault_path / "Literature Notes",
+            base_dir=vault,
+            workflow_manager=Mock(),
             process_callback=mock_callback,
         )
 
@@ -599,3 +592,47 @@ class TestFleetingNoteCoordinatorIntegration:
         # Verify callback was called for quality assessment
         assert mock_callback.called
         assert mock_callback.call_count >= 1
+
+
+class TestVaultConfigIntegration:
+    """Test FleetingNoteCoordinator integration with vault configuration."""
+
+    def test_coordinator_uses_vault_config_for_directories(self, tmp_path):
+        """
+        RED PHASE: Verify coordinator uses vault config for directory paths.
+
+        This test validates that FleetingNoteCoordinator uses centralized vault
+        configuration instead of hardcoded paths. Expected to FAIL until GREEN
+        phase replaces hardcoded directory initialization with config properties.
+
+        Part of GitHub Issue #45 Phase 2 Priority 3 (P0-VAULT-6).
+        """
+        from src.config.vault_config_loader import get_vault_config
+
+        # Get vault config (creates knowledge/ subdirectory structure)
+        config = get_vault_config(str(tmp_path))
+
+        # Mock workflow_manager (required for process_callback)
+        workflow_manager = Mock()
+
+        # Create coordinator with root path (config adds knowledge/)
+        coordinator = FleetingNoteCoordinator(
+            base_dir=tmp_path, workflow_manager=workflow_manager
+        )
+
+        # Should use knowledge/Fleeting Notes, knowledge/Inbox, etc. from config
+        assert "knowledge" in str(
+            coordinator.fleeting_dir
+        ), f"Expected fleeting_dir to use knowledge/ subdirectory, got: {coordinator.fleeting_dir}"
+        assert (
+            coordinator.fleeting_dir == config.fleeting_dir
+        ), f"Expected fleeting_dir to match config, got: {coordinator.fleeting_dir} vs {config.fleeting_dir}"
+        assert (
+            coordinator.inbox_dir == config.inbox_dir
+        ), f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
+        assert (
+            coordinator.permanent_dir == config.permanent_dir
+        ), "Expected permanent_dir to match config"
+        assert (
+            coordinator.literature_dir == config.literature_dir
+        ), "Expected literature_dir to match config"

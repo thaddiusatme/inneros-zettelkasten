@@ -13,6 +13,8 @@ from unittest.mock import patch
 
 from src.monitoring import MetricsCollector, MetricsStorage
 
+pytestmark = pytest.mark.slow  # CLI tests
+
 
 @pytest.fixture
 def vault_dir(tmpdir):

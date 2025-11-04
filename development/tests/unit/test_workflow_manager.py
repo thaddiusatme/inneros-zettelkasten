@@ -45,12 +45,18 @@ class TestWorkflowManager:
         return note_path
 
     def test_initialization(self):
-        """Test workflow manager initialization."""
+        """Test workflow manager initialization with vault config."""
         assert self.workflow.base_dir == self.base_dir
-        assert self.workflow.inbox_dir == self.base_dir / "Inbox"
-        assert self.workflow.fleeting_dir == self.base_dir / "Fleeting Notes"
-        assert self.workflow.permanent_dir == self.base_dir / "Permanent Notes"
-        assert self.workflow.archive_dir == self.base_dir / "Archive"
+        # After vault config integration, paths include knowledge/ subdirectory
+        assert self.workflow.inbox_dir == self.base_dir / "knowledge" / "Inbox"
+        assert (
+            self.workflow.fleeting_dir == self.base_dir / "knowledge" / "Fleeting Notes"
+        )
+        assert (
+            self.workflow.permanent_dir
+            == self.base_dir / "knowledge" / "Permanent Notes"
+        )
+        assert self.workflow.archive_dir == self.base_dir / "knowledge" / "Archive"
 
         # Check AI components
         assert self.workflow.tagger is not None

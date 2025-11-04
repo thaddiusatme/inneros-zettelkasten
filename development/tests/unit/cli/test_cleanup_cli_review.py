@@ -1,6 +1,9 @@
 """RED phase: CLI decision review with user confirmation and persistence."""
 
+import pytest
 from io import StringIO
+
+pytestmark = pytest.mark.slow  # CLI tests
 
 
 def test_cli_review_decisions_displays_pending_moves(tmp_path, monkeypatch):

@@ -11,9 +11,11 @@ Following TDD methodology: RED → GREEN → REFACTOR
 Phase: RED - Comprehensive failing tests
 """
 
+import pytest
 from unittest.mock import patch
 
 
+@pytest.mark.slow
 class TestDaemonStarter:
     """Tests for daemon start command."""
 
@@ -65,6 +67,7 @@ class TestDaemonStarter:
         assert isinstance(result["pid"], int)
 
 
+@pytest.mark.slow
 class TestDaemonStopper:
     """Tests for daemon stop command."""
 
@@ -113,6 +116,7 @@ class TestDaemonStopper:
             mock_kill.assert_called()
 
 
+@pytest.mark.slow
 class TestEnhancedDaemonStatus:
     """Tests for enhanced daemon status command."""
 
@@ -133,6 +137,7 @@ class TestEnhancedDaemonStatus:
         assert "uptime" in result or "start_time" in result
 
 
+@pytest.mark.slow
 class TestLogReader:
     """Tests for daemon log reading."""
 
@@ -173,6 +178,7 @@ class TestLogReader:
         )
 
 
+@pytest.mark.slow
 class TestErrorHandling:
     """Tests for error handling scenarios."""
 
@@ -209,6 +215,7 @@ class TestErrorHandling:
         assert "pid" in str(result).lower() or "invalid" in str(result).lower()
 
 
+@pytest.mark.slow
 class TestDaemonOrchestrator:
     """Tests for main orchestrator and command routing."""
 

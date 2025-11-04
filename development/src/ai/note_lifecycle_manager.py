@@ -307,7 +307,9 @@ class NoteLifecycleManager:
                     content = f.read()
                 frontmatter, body = parse_frontmatter(content)
                 if "promoted_date" not in frontmatter:
-                    frontmatter["promoted_date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    frontmatter["promoted_date"] = datetime.now().strftime(
+                        "%Y-%m-%d %H:%M"
+                    )
                     updated_content = build_frontmatter(frontmatter, body)
                     with open(note_path, "w", encoding="utf-8") as f:
                         f.write(updated_content)

@@ -10,69 +10,69 @@
 
 ## The Prompt
 
-Let's create a new branch for the next feature: **Vault Configuration Module Migration (Phase 2)**. We want to perform TDD framework with red, green, refactor phases, followed by git commit and lessons learned documentation. This equals one iteration.
+Let's create a new branch for the next feature: **Vault Configuration Module Migration - Phase 2 Priority 1 Modules**. We want to perform TDD framework with red, green, refactor phases, followed by git commit and lessons learned documentation. This equals one iteration.
 
 ### Updated Execution Plan (focused P0/P1)
 
-**Context**: Completed Sprint 1 Retrospective successfully. Created centralized vault configuration infrastructure (Phase 1) to point all automations to `knowledge/Inbox` instead of root-level `Inbox/`. Now migrating core modules to use the new configuration system.
+**Context**: GitHub Issue #45 - Vault Configuration Centralization. Phase 1 infrastructure complete (vault_config.yaml + loader + 15 passing tests). Currently 15+ modules have hardcoded `Inbox/` paths instead of using `knowledge/Inbox/`. This causes confusion for users and breaks starter pack examples. Phase 2 migrates core modules to centralized config.
 
-I'm following the guidance in `.windsurf/rules/updated-development-workflow.md` and `.windsurf/guides/tdd-methodology-patterns.md` (critical path: **Module migration to vault config for production readiness**).
+I'm following the guidance in `.windsurf/rules/updated-development-workflow.md` and `.windsurf/guides/tdd-methodology-patterns.md` (critical path: **Priority 1 module migration - promotion_engine, workflow_reporting_coordinator, review_triage_coordinator**).
 
 ### Current Status
 
 **Completed**:
-- ✅ Sprint 1 Retrospective (3 docs: retrospective, patterns, Sprint 2 recs)
-- ✅ Vault Config Phase 1: Infrastructure complete
-  - `vault_config.yaml` created (58 lines)
-  - `vault_config_loader.py` implemented (252 lines)
-  - 15 tests written and passing (0.07s execution)
-  - Migration plan documented (315 lines)
-  - Implementation summary written (300 lines)
-  - Project manifest created
-  - Commit: `08345c4`
+- ✅ Sprint 1 Retrospective (retrospective, patterns, Sprint 2 recommendations)
+- ✅ Vault Config Phase 1: Infrastructure (GitHub Issue #45)
+  - `vault_config.yaml` with `vault.root: knowledge` (58 lines)
+  - `vault_config_loader.py` with property-based API (252 lines)  
+  - 15 unit tests, all passing, 0.07s execution
+  - `get_vault_config()`, `get_inbox_dir()` convenience functions
+  - Complete documentation: plan, implementation summary, manifest
+  - Branch: `docs/sprint-1-retrospective`, Commit: `08345c4`
 
 **In progress**: 
-- Phase 2: Module migration to use `knowledge/Inbox` consistently
-- Starting with Priority 1 modules: `promotion_engine.py`, `workflow_reporting_coordinator.py`, `review_triage_coordinator.py`
+- Phase 2: Module migration - Priority 1 (Critical Path)
+- Target modules in `development/src/ai/`: `promotion_engine.py`, `workflow_reporting_coordinator.py`, `review_triage_coordinator.py`
 
 **Lessons from last iteration**:
-- Test-driven infrastructure creation prevents rework
-- Property-based API (`config.inbox_dir`) cleaner than method calls
-- Singleton pattern with `@lru_cache` provides performance without complexity
-- Backwards compatibility critical - default config ensures no breaking changes
-- Comprehensive tests (15 passing) give confidence for module migration
+- Infrastructure-first TDD prevents downstream rework (15 tests → 100% confidence)
+- Property-based API (`.inbox_dir`) beats methods for clarity and brevity
+- Singleton + `@lru_cache` = zero-config performance optimization
+- Backwards compatibility via defaults = zero breaking changes for existing code
+- Integration test pattern: `assert "knowledge" in str(module.inbox_dir)` validates migration
 
 ---
 
-## P0 — Critical/Unblocker (Phase 2: Core Module Migration)
+## P0 — Critical/Unblocker (Priority 1: Core Workflow Modules)
 
-**Migrate Priority 1 Modules to Vault Config**:
+**Migrate 3 Core Modules to Vault Config** - TDD RED → GREEN → REFACTOR cycle:
 
-1. **`promotion_engine.py`** - Auto-promotion uses correct inbox
-   - Replace: `self.inbox_dir = self.base_dir / "Inbox"`
-   - With: `config = get_vault_config(str(self.base_dir))`, `self.inbox_dir = config.inbox_dir`
-   - Update all directory path initializations (inbox, permanent, literature, fleeting)
-   - Verify 4 unit tests still pass
-   - Add integration test confirming `knowledge/Inbox` used
+1. **`promotion_engine.py`** (development/src/ai/promotion_engine.py)
+   - **Lines 60-66**: Replace hardcoded `self.inbox_dir = self.base_dir / "Inbox"`
+   - Import: `from src.config import get_vault_config`
+   - Initialize: `config = get_vault_config(str(self.base_dir))`
+   - Update: `self.inbox_dir = config.inbox_dir`, `self.permanent_dir = config.permanent_dir`, etc.
+   - Test location: `development/tests/unit/test_promotion_engine.py`
+   - Expected: 4 existing tests + 1 new integration test = 5 passing
 
-2. **`workflow_reporting_coordinator.py`** - Reports scan correct directories
-   - Replace: `self.inbox_dir = self.base_dir / "Inbox"`
-   - With: `config = get_vault_config(str(self.base_dir))`, `self.inbox_dir = config.inbox_dir`
-   - Update all directory references
-   - Verify report metrics accurate for production vault
+2. **`workflow_reporting_coordinator.py`** (development/src/ai/coordinators/workflow_reporting_coordinator.py)
+   - Replace: `self.inbox_dir = self.base_dir / "Inbox"` with vault config
+   - Update: All directory references (inbox, permanent, literature, fleeting)
+   - Test: Verify report metrics scan `knowledge/Inbox` not root `Inbox/`
+   - Expected: All coordinator tests pass + reports show correct directory counts
 
-3. **`review_triage_coordinator.py`** - Weekly reviews scan correct inbox
-   - Replace: `self.inbox_dir = self.base_dir / "Inbox"`
-   - With: `config = get_vault_config(str(self.base_dir))`, `self.inbox_dir = config.inbox_dir`
-   - Update fleeting and inbox directory references
-   - Verify review scan test passes
+3. **`review_triage_coordinator.py`** (development/src/ai/coordinators/review_triage_coordinator.py)  
+   - Replace: Hardcoded `"Inbox"` and `"Fleeting Notes"` paths
+   - Update: Use `config.inbox_dir` and `config.fleeting_dir` throughout
+   - Test: Weekly review scan finds notes in correct locations
+   - Expected: Review tests pass + live weekly review works on production vault
 
 **Acceptance Criteria**:
-- ✅ All 3 Priority 1 modules migrated to vault config
-- ✅ All existing tests pass (no regressions)
-- ✅ New integration test confirms `knowledge/Inbox` usage
-- ✅ Auto-promotion workflow verified on live vault
-- ✅ Code review shows no hardcoded `"Inbox"` paths in migrated modules
+- ✅ 3 modules migrated following TDD cycle (RED test → GREEN implementation → REFACTOR cleanup)
+- ✅ All existing module tests pass (zero regressions)
+- ✅ New integration tests validate `knowledge/Inbox` usage: `assert "knowledge" in str(module.inbox_dir)`
+- ✅ Live workflow verification: auto-promotion on `knowledge/Inbox` succeeds
+- ✅ Code review: No `Inbox/`, `Permanent Notes/` string literals remain in migrated files
 
 ---
 
@@ -132,13 +132,16 @@ I'm following the guidance in `.windsurf/rules/updated-development-workflow.md` 
 
 ## Task Tracker
 
-- [x] **Phase 1**: Vault config infrastructure complete
-- [In progress] **P0-VAULT-1**: Migrate `promotion_engine.py`
-- [Pending] **P0-VAULT-2**: Migrate `workflow_reporting_coordinator.py`
-- [Pending] **P0-VAULT-3**: Migrate `review_triage_coordinator.py`
-- [Pending] **P1-VAULT-4**: Migrate `core_workflow_cli.py`
-- [Pending] **P1-VAULT-5**: Migrate `workflow_demo.py`
-- [Pending] **P1-VAULT-6**: Integration testing & verification
+- [x] **INFRA-PHASE-1**: Vault config infrastructure (vault_config.yaml + loader + 15 tests)
+- [In progress] **P0-VAULT-1**: Migrate `promotion_engine.py` to vault config
+- [Pending] **P0-VAULT-2**: Migrate `workflow_reporting_coordinator.py` to vault config
+- [Pending] **P0-VAULT-3**: Migrate `review_triage_coordinator.py` to vault config
+- [Pending] **P1-VAULT-4**: Migrate `core_workflow_cli.py` with vault config support
+- [Pending] **P1-VAULT-5**: Migrate `workflow_demo.py` with explicit config integration
+- [Pending] **P1-VAULT-6**: Integration tests + live vault verification
+- [Pending] **P2-VAULT-7**: Remaining coordinators (6 modules)
+- [Pending] **P2-VAULT-8**: Automation scripts (10+ scripts)
+- [Pending] **P2-VAULT-9**: Documentation updates (README, CLI-REFERENCE, GETTING-STARTED)
 
 ---
 
@@ -212,21 +215,64 @@ I'm following the guidance in `.windsurf/rules/updated-development-workflow.md` 
 
 ## Next Action (for this session)
 
-**Immediate task**: Create new branch and start Priority 1 module migration
+**Immediate task**: TDD Cycle for `promotion_engine.py` migration (P0-VAULT-1)
 
-1. **Create branch**: `feat/vault-config-migration` from `docs/sprint-1-retrospective`
-2. **Start with `promotion_engine.py`**:
-   - Location: `development/src/ai/promotion_engine.py`
-   - Current: Lines 60-66 (directory initialization)
-   - Action: Replace hardcoded paths with vault config
-3. **Write/update tests**:
-   - Location: `development/tests/unit/test_promotion_engine.py`
-   - Add integration test for config usage
-4. **Verify**:
-   - Run: `python3 -m pytest development/tests/unit/test_promotion_engine.py -v`
-   - Confirm 4 existing tests + new integration test pass
+**Step 1: Setup** (1 min)
 
-Would you like me to implement the `promotion_engine.py` migration now in small, reviewable commits following the TDD cycle (RED → GREEN → REFACTOR)?
+- Create branch: `feat/vault-config-phase2-priority1` from `docs/sprint-1-retrospective`
+- Confirm vault config available: `development/src/config/vault_config_loader.py` exists
+- Locate target: `development/src/ai/promotion_engine.py` lines 60-66
+
+**Step 2: RED Phase** (5 min)
+
+- Write failing integration test in `development/tests/unit/test_promotion_engine.py`:
+
+  ```python
+  def test_promotion_engine_uses_vault_config():
+      """Verify PromotionEngine uses knowledge/Inbox from vault config."""
+      engine = PromotionEngine(base_dir=".")
+      assert "knowledge" in str(engine.inbox_dir)  # Should fail - uses root Inbox/
+      config = get_vault_config()
+      assert engine.inbox_dir == config.inbox_dir
+  ```
+
+- Run: `pytest development/tests/unit/test_promotion_engine.py::test_promotion_engine_uses_vault_config -v`
+- **Expected**: Test FAILS (AssertionError: 'knowledge' not in 'Inbox')
+
+**Step 3: GREEN Phase** (10 min)
+
+- Import at top of `promotion_engine.py`: `from src.config import get_vault_config`
+- Replace lines 60-66 directory initialization:
+
+  ```python
+  config = get_vault_config(str(self.base_dir))
+  self.inbox_dir = config.inbox_dir
+  self.permanent_dir = config.permanent_dir
+  self.literature_dir = config.literature_dir
+  self.fleeting_dir = config.fleeting_dir
+  ```
+
+- Run: `pytest development/tests/unit/test_promotion_engine.py -v`
+- **Expected**: 5 tests pass (4 existing + 1 new integration test)
+
+**Step 4: REFACTOR Phase** (5 min)
+
+- Update module docstring: mention vault config usage
+- Search/replace any remaining hardcoded `"Inbox"` strings
+- Verify all tests still pass: `pytest development/tests/unit/test_promotion_engine.py -v`
+
+**Step 5: COMMIT** (2 min)
+
+- Commit message: `feat: migrate promotion_engine to vault config (P0-VAULT-1)
+
+- Replace hardcoded Inbox/ paths with config.inbox_dir
+- Add integration test validating knowledge/Inbox usage  
+- All 5 tests passing (4 existing + 1 new)
+- Part of GitHub Issue #45 Phase 2 Priority 1`
+
+**Total Time**: ~23 minutes for first module
+
+Would you like me to implement P0-VAULT-1 (`promotion_engine.py` migration) now in small, reviewable commits following this TDD cycle?
 
 ---
 
