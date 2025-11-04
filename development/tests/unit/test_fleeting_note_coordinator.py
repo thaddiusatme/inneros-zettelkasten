@@ -617,6 +617,6 @@ class TestVaultConfigIntegration:
         assert coordinator.inbox_dir == config.inbox_dir, \
             f"Expected inbox_dir to match config, got: {coordinator.inbox_dir} vs {config.inbox_dir}"
         assert coordinator.permanent_dir == config.permanent_dir, \
-            f"Expected permanent_dir to match config"
+            "Expected permanent_dir to match config"
         assert coordinator.literature_dir == config.literature_dir, \
-            f"Expected literature_dir to match config"
+            "Expected literature_dir to match config"

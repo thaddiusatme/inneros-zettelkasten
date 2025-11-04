@@ -368,8 +368,8 @@ class TestVaultConfigIntegration(unittest.TestCase):
         self.assertTrue(hasattr(cli, 'inbox_dir'), "CLI should have inbox_dir property")
         self.assertTrue(hasattr(cli, 'fleeting_dir'), "CLI should have fleeting_dir property")
         self.assertIn("knowledge", str(cli.inbox_dir), f"Expected knowledge/ in inbox_dir, got: {cli.inbox_dir}")
-        self.assertEqual(cli.inbox_dir, self.config.inbox_dir, f"inbox_dir mismatch")
-        self.assertEqual(cli.fleeting_dir, self.config.fleeting_dir, f"fleeting_dir mismatch")
+        self.assertEqual(cli.inbox_dir, self.config.inbox_dir, "inbox_dir mismatch")
+        self.assertEqual(cli.fleeting_dir, self.config.fleeting_dir, "fleeting_dir mismatch")
     
     def test_promote_resolves_inbox_path_using_vault_config(self):
         """
