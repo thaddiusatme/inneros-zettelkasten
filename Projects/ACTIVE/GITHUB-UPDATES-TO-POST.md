@@ -113,30 +113,55 @@ Based on recent testing:
 
 ## Issue #39: Migrate Automation Scripts to Dedicated CLIs
 
-**Status**: Can now proceed with Issue #45 complete
+**Status**: IN PROGRESS - 2/5 scripts migrated with TDD coverage
 
 ### Comment to Post:
 
 ```markdown
-## Ready to Start
+## ✅ Progress Update: TDD Iterations 1 & 2 Complete
 
-With Issue #45 vault configuration complete, we can now migrate automation scripts to dedicated CLIs per ADR-004.
+### Completed Migrations (2/5)
 
-**Current Status**:
-- ✅ Vault configuration centralized
-- ✅ All automation scripts verified working
-- ✅ Dedicated CLIs exist (`screenshot_processor.py`, `core_workflow_cli.py`, etc.)
+#### ✅ Iteration 1: `automated_screenshot_import.sh` → `screenshot_cli.py`
+- **Date**: 2025-11-03
+- **Status**: Complete with TDD coverage
+- **Test**: `test_screenshot_import_script_uses_dedicated_cli` passing
+- **Lessons**: `Projects/COMPLETED-2025-11/cli-migration-iteration-1-lessons-learned.md`
 
-**Next Steps**:
-1. Update `automated_screenshot_import.sh` → `screenshot_processor.py`
-2. Update `supervised_inbox_processing.sh` → `core_workflow_cli.py process-inbox`
-3. Update `weekly_deep_analysis.sh` → `weekly_review_cli.py`
-4. Update `process_inbox_workflow.sh` → `core_workflow_cli.py`
-5. Test Phase 1/2/3 rollout scripts
+#### ✅ Iteration 2: `supervised_inbox_processing.sh` → Dedicated CLIs
+- **Date**: 2025-11-04
+- **Status**: Complete with TDD coverage
+- **CLI Migration**:
+  - `core_workflow_cli.py`: status, process-inbox commands
+  - `safe_workflow_cli.py`: backup command
+  - `connections_demo.py`: suggest-links (manual only)
+- **Test**: `test_supervised_inbox_script_uses_core_workflow_cli` passing
+- **Lessons**: `Projects/COMPLETED-2025-11/cli-migration-iteration-2-lessons-learned.md`
+- **Commit**: `feat: CLI Migration Iteration 2 - Supervised Inbox Processing`
 
-**Estimated**: 2-3 hours
-**Priority**: P1 (architectural cleanup)
-**Blocked by**: Nothing - ready to start
+### Migration Status
+
+| Script | Status | CLI Target | Test Coverage |
+|--------|--------|-----------|---------------|
+| `automated_screenshot_import.sh` | ✅ Complete | `screenshot_cli.py` | ✅ Passing |
+| `supervised_inbox_processing.sh` | ✅ Complete | `core_workflow_cli.py`, `safe_workflow_cli.py` | ✅ Passing |
+| `health_monitor.sh` | ✅ Already migrated | N/A | N/A |
+| `weekly_deep_analysis.sh` | ⏳ Next | TBD - needs CLI discovery | TBD |
+| `process_inbox_workflow.sh` | ⏳ Pending | `core_workflow_cli.py` | TBD |
+
+### Test Results
+- **Migration Tests**: 2/2 passing (100%)
+- **Full Automation Suite**: 191 passed, 12 skipped
+- **Regressions**: 0
+
+### Next Steps
+1. TDD Iteration 3: Migrate `weekly_deep_analysis.sh`
+2. TDD Iteration 4: Migrate `process_inbox_workflow.sh`
+3. Update documentation (`CLI-REFERENCE.md`, `automation-user-guide.md`)
+4. Add CI smoke job for CLI `--help` commands
+
+**Branch**: `feat/cli-migration-iteration-2-supervised-inbox` (completed)  
+**Estimated Remaining**: 2-3 iterations (~1.5 hours)
 ```
 
 ---

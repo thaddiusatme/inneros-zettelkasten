@@ -19,12 +19,26 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+
+# Dedicated CLI paths (migrated from deprecated monolithic CLI per ADR-004 Iteration 3)
+CORE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+SAFE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/safe_workflow_cli.py"
+FLEETING_CLI="python3 $REPO_ROOT/development/src/cli/fleeting_cli.py"
+WEEKLY_REVIEW_CLI="python3 $REPO_ROOT/development/src/cli/weekly_review_cli.py"
+CONNECTIONS_CLI="python3 $REPO_ROOT/development/src/cli/connections_demo.py"
+
 LOG_DIR="$REPO_ROOT/.automation/logs"
 REVIEW_DIR="$REPO_ROOT/.automation/review_queue"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/weekly_analysis_$TIMESTAMP.log"
 ANALYSIS_REPORT="$REVIEW_DIR/weekly_analysis_$TIMESTAMP.md"
+
+# Migration note: Dedicated CLI migration completed 2025-11-04 (Issue #39)
+# - core_workflow_cli.py: status command
+# - safe_workflow_cli.py: backup command
+# - fleeting_cli.py: fleeting-triage command
+# - weekly_review_cli.py: enhanced-metrics command
+# - connections_demo.py: suggest-links command (manual only)
 
 # Weekly analysis settings
 MIN_QUALITY_THRESHOLD=0.7
@@ -194,7 +208,7 @@ main() {
     
     # Step 1: System health check
     log "🏥 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status --format json" 30; then
         log_error "System health check failed"
         send_weekly_notification "FAILED" "System health check failed"
         exit 1
@@ -202,7 +216,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating weekly backup..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 120; then
+    if ! run_with_timeout "$SAFE_WORKFLOW_CLI '$KNOWLEDGE_DIR' backup --format json" 120; then
         log_error "Weekly backup failed"
         send_weekly_notification "FAILED" "Weekly backup failed"
         exit 1
@@ -211,7 +225,7 @@ main() {
     # Step 3: Fleeting note triage analysis
     log "📝 Analyzing fleeting notes for promotion candidates..."
     triage_export="$REVIEW_DIR/fleeting_triage_$TIMESTAMP.md"
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --fleeting-triage --min-quality $MIN_QUALITY_THRESHOLD --export '$triage_export'" 180; then
+    if run_with_timeout "$FLEETING_CLI '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold $MIN_QUALITY_THRESHOLD --export '$triage_export'" 180; then
         log "✅ Fleeting triage completed"
     else
         log_error "Fleeting triage failed (non-critical)"
@@ -219,7 +233,7 @@ main() {
     
     # Step 4: Enhanced metrics with orphaned/stale detection
     log "📊 Generating enhanced knowledge metrics..."
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --enhanced-metrics --export '$ENHANCED_METRICS_EXPORT'" 120; then
+    if run_with_timeout "$WEEKLY_REVIEW_CLI '$KNOWLEDGE_DIR' enhanced-metrics --export '$ENHANCED_METRICS_EXPORT'" 120; then
         log "✅ Enhanced metrics completed"
     else
         log_error "Enhanced metrics failed (non-critical)"
@@ -227,12 +241,9 @@ main() {
     
     # Step 5: Semantic connection discovery
     log "🔗 Discovering new semantic connections..."
-    links_export="$REVIEW_DIR/link_suggestions_$TIMESTAMP.md"
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links --export '$links_export'" 300; then
-        log "✅ Link suggestions completed"
-    else
-        log_error "Link suggestions failed (non-critical)"
-    fi
+    # Note: Connection discovery requires specific note targets, skipping for batch automation
+    # Manual connection discovery available via: connections_demo.py suggest-links <note> <corpus>
+    log "ℹ️  Connection discovery skipped (requires manual note selection)"
     
     # Step 6: Generate comprehensive weekly report
     generate_weekly_report "$ANALYSIS_REPORT"

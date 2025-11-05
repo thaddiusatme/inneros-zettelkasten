@@ -44,3 +44,23 @@ class TestAutomationCLIMigration:
         assert (
             "workflow_demo.py" not in script_contents
         ), "automation script should not reference deprecated workflow_demo.py"
+
+    def test_weekly_deep_analysis_script_uses_dedicated_clis(self):
+        """RED: weekly_deep_analysis.sh should invoke dedicated CLIs (fleeting_cli, weekly_review_cli, etc.)."""
+
+        script_path = REPO_ROOT / ".automation" / "scripts" / "weekly_deep_analysis.sh"
+        script_contents = script_path.read_text(encoding="utf-8")
+
+        # Should reference multiple dedicated CLIs
+        assert (
+            "development/src/cli/fleeting_cli.py" in script_contents
+        ), "automation script missing dedicated fleeting_cli path"
+
+        assert (
+            "development/src/cli/weekly_review_cli.py" in script_contents
+        ), "automation script missing dedicated weekly_review_cli path"
+
+        # Should not reference deprecated CLI
+        assert (
+            "workflow_demo.py" not in script_contents
+        ), "automation script should not reference deprecated workflow_demo.py"
