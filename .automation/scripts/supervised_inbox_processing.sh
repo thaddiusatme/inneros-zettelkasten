@@ -19,12 +19,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+
+# Dedicated CLI paths (migrated from deprecated monolithic CLI per ADR-004 Iteration 2)
+CORE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+SAFE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/safe_workflow_cli.py"
+CONNECTIONS_CLI="python3 $REPO_ROOT/development/src/cli/connections_demo.py"
+
 LOG_DIR="$REPO_ROOT/.automation/logs"
 REVIEW_DIR="$REPO_ROOT/.automation/review_queue"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/supervised_processing_$TIMESTAMP.log"
 REVIEW_REPORT="$REVIEW_DIR/inbox_analysis_$TIMESTAMP.md"
+
+# Migration note: Dedicated CLI migration completed 2025-11-04 (Issue #39)
+# - core_workflow_cli.py: status, process-inbox commands
+# - safe_workflow_cli.py: backup command  
+# - connections_demo.py: suggest-links command (manual only)
 
 # Automation settings  
 MAX_RUNTIME=600  # 10 minutes max runtime
@@ -146,7 +156,7 @@ main() {
     
     # Step 1: Quick health check
     log "📊 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status --format json" 30; then
         log_error "System health check failed"
         send_notification "FAILED" "System health check failed"
         exit 1
@@ -154,7 +164,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating safety backup..."  
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 60; then
+    if ! run_with_timeout "$SAFE_WORKFLOW_CLI '$KNOWLEDGE_DIR' backup --format json" 60; then
         log_error "Backup creation failed"
         send_notification "FAILED" "Backup creation failed"
         exit 1
@@ -162,7 +172,7 @@ main() {
     
     # Step 3: Process inbox with AI enhancement (no promotion, just analysis)
     log "🧠 Processing inbox with AI enhancement..."
-    process_cmd="$CLI '$KNOWLEDGE_DIR' --process-inbox --progress --export '$REVIEW_REPORT.tmp'"
+    process_cmd="$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox --format json"
     
     if run_with_timeout "$process_cmd" 300; then
         notes_processed=$(grep -c "processed" "$LOG_FILE" || echo "0")
@@ -175,11 +185,9 @@ main() {
     
     # Step 4: Generate connection suggestions
     log "🔗 Discovering semantic connections..."
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links" 120; then
-        log "✅ Connection discovery completed"
-    else
-        log_error "Connection discovery failed or timed out (non-critical)"
-    fi
+    # Note: Connection discovery requires specific note targets, skipping for batch automation
+    # Manual connection discovery available via: connections_demo.py suggest-links <note> <corpus>
+    log "ℹ️  Connection discovery skipped (requires manual note selection)"
     
     # Step 5: Generate human review report
     generate_review_report "$REVIEW_REPORT"

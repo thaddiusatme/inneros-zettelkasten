@@ -200,9 +200,8 @@ class YouTubeTranscriptFetcher:
                             and transcript.language_code.startswith(lang)
                         ):
                             transcript_data = transcript.fetch()
-                            # youtube-transcript-api >=1.2.3 returns list directly
                             transcript_entries = self._convert_transcript_to_dict(
-                                transcript_data
+                                transcript_data.snippets
                             )
                             logger.info(
                                 f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -221,9 +220,8 @@ class YouTubeTranscriptFetcher:
                 for transcript in transcript_list:
                     if not transcript.is_generated:
                         transcript_data = transcript.fetch()
-                        # youtube-transcript-api >=1.2.3 returns list directly
                         transcript_entries = self._convert_transcript_to_dict(
-                            transcript_data
+                            transcript_data.snippets
                         )
                         logger.info(
                             f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -246,9 +244,8 @@ class YouTubeTranscriptFetcher:
                             and transcript.language_code.startswith(lang)
                         ):
                             transcript_data = transcript.fetch()
-                            # youtube-transcript-api >=1.2.3 returns list directly
                             transcript_entries = self._convert_transcript_to_dict(
-                                transcript_data
+                                transcript_data.snippets
                             )
                             logger.info(
                                 f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -265,9 +262,8 @@ class YouTubeTranscriptFetcher:
                 for transcript in transcript_list:
                     if transcript.is_generated:
                         transcript_data = transcript.fetch()
-                        # youtube-transcript-api >=1.2.3 returns list directly
                         transcript_entries = self._convert_transcript_to_dict(
-                            transcript_data
+                            transcript_data.snippets
                         )
                         logger.info(
                             f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -285,9 +281,8 @@ class YouTubeTranscriptFetcher:
                 )
                 for transcript in transcript_list:
                     transcript_data = transcript.fetch()
-                    # youtube-transcript-api >=1.2.3 returns list directly
                     transcript_entries = self._convert_transcript_to_dict(
-                        transcript_data
+                        transcript_data.snippets
                     )
                     is_manual = not transcript.is_generated
                     logger.info(

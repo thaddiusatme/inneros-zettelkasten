@@ -336,7 +336,7 @@ def _is_promotable(self, metadata: dict, threshold: float) -> bool:
 #### Git Workflow
 ```bash
 git add -A
-git commit -m "fix(workflow): Restore promotion and status update logic after decomposition
+git commit -m "fix(workflow): Restore promotion and status update logic after decomposition"
 
 Fixes 16 test failures in workflow manager promotion system.
 

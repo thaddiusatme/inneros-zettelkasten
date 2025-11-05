@@ -19,7 +19,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+CLI="python3 $REPO_ROOT/development/src/cli/screenshot_cli.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/screenshot_import_$TIMESTAMP.log"
@@ -96,10 +96,11 @@ main() {
     log "🤖 Starting automated screenshot import"
     log "Repository: $REPO_ROOT"
     log "Knowledge base: $KNOWLEDGE_DIR"
+    log "ℹ️  CLI Migration: using screenshot_cli.py (Issue #39)"
     
     # Step 1: System health check (30s timeout)
     log "📊 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "python3 $REPO_ROOT/development/src/cli/automation_status_cli.py --status" 30; then
         log_error "System health check failed or timed out"
         send_notification "FAILED" "System health check failed. Check logs: $LOG_FILE"
         exit 1
@@ -107,7 +108,7 @@ main() {
     
     # Step 2: Create backup (safety first, 60s timeout)  
     log "💾 Creating safety backup..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 60; then
+    if ! run_with_timeout "python3 $REPO_ROOT/development/src/cli/backup_cli.py --vault '$KNOWLEDGE_DIR' create" 60; then
         log_error "Backup creation failed"
         send_notification "FAILED" "Backup creation failed. Check logs: $LOG_FILE"
         exit 1
@@ -115,7 +116,7 @@ main() {
     
     # Step 3: Import screenshots with built-in fallback handling (180s timeout)
     log "📸 Importing Samsung screenshots with progress tracking..."
-    screenshot_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --progress"
+    screenshot_cmd="$CLI --vault '$KNOWLEDGE_DIR' evening-screenshots --progress"
     
     if run_with_timeout "$screenshot_cmd" 180; then
         screenshot_count=$(grep -c "✅ Screenshot imported" "$LOG_FILE" || echo "0")
