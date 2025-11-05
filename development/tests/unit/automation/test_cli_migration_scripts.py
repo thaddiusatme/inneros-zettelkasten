@@ -105,3 +105,25 @@ class TestAutomationCLIMigration:
             assert (
                 "--evening-screenshots" in script_contents
             ), "workflow_demo.py should only be used for evening-screenshots"
+
+    def test_health_monitor_script_uses_core_workflow_cli(self):
+        """RED: health_monitor.sh should invoke core_workflow_cli.py status."""
+
+        script_path = REPO_ROOT / ".automation" / "scripts" / "health_monitor.sh"
+        script_contents = script_path.read_text(encoding="utf-8")
+
+        # Should reference dedicated CLI for status command
+        assert (
+            "development/src/cli/core_workflow_cli.py" in script_contents
+        ), "automation script missing dedicated core_workflow_cli path"
+
+        # Should not reference deprecated CLI
+        assert (
+            "workflow_demo.py" not in script_contents
+        ), "automation script should not reference deprecated workflow_demo.py"
+
+        # Should have migration trace message
+        assert (
+            "Migration note:" in script_contents
+            or "MIGRATION:" in script_contents
+        ), "automation script missing migration completion note"

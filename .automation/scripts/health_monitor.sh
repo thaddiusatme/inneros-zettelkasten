@@ -12,6 +12,9 @@
 # InnerOS Zettelkasten - System Health Monitor
 # Lightweight monitoring that runs every 4 hours to detect issues early
 # Sends alerts only when problems are detected
+#
+# Migration note: Dedicated CLI migration completed (TDD Iteration 5)
+# Now uses core_workflow_cli.py status command (replaced deprecated CLI interface)
 
 set -euo pipefail
 
@@ -19,7 +22,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+CLI="python3 $REPO_ROOT/development/src/cli/core_workflow_cli.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/health_monitor_$TIMESTAMP.log"
@@ -136,12 +139,12 @@ check_system_responsiveness() {
     local start_time=$(date +%s)
     local ok=1
     if command -v gtimeout >/dev/null 2>&1; then
-        if gtimeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if gtimeout 15 "$CLI" --vault "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     elif command -v timeout >/dev/null 2>&1; then
-        if timeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if timeout 15 "$CLI" --vault "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     else
         # No timeout available; run directly
-        if "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if "$CLI" --vault "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     fi
     if [[ $ok -eq 0 ]]; then
         local duration=$(($(date +%s) - start_time))
