@@ -64,3 +64,44 @@ class TestAutomationCLIMigration:
         assert (
             "workflow_demo.py" not in script_contents
         ), "automation script should not reference deprecated workflow_demo.py"
+
+    def test_process_inbox_workflow_script_uses_core_workflow_cli(self):
+        """RED: process_inbox_workflow.sh should invoke core_workflow_cli.py process-inbox."""
+
+        script_path = REPO_ROOT / ".automation" / "scripts" / "process_inbox_workflow.sh"
+        script_contents = script_path.read_text(encoding="utf-8")
+
+        # Verify dedicated CLI paths are present
+        assert (
+            "development/src/cli/core_workflow_cli.py" in script_contents
+        ), "automation script missing dedicated core_workflow_cli path"
+
+        assert (
+            "development/src/cli/safe_workflow_cli.py" in script_contents
+        ), "automation script missing dedicated safe_workflow_cli path"
+
+        assert (
+            "development/src/cli/fleeting_cli.py" in script_contents
+        ), "automation script missing dedicated fleeting_cli path"
+
+        assert (
+            "development/src/cli/connections_demo.py" in script_contents
+        ), "automation script missing dedicated connections_demo path"
+
+        # Verify migration note is present
+        assert (
+            "Migration note: Dedicated CLI migration completed" in script_contents
+        ), "automation script missing migration completion note"
+
+        # TEMPORARY: Allow workflow_demo.py ONLY for evening-screenshots (pending extraction)
+        # This is documented with TODO comments in the script
+        if "workflow_demo.py" in script_contents:
+            assert (
+                "WORKFLOW_DEMO_CLI" in script_contents
+            ), "workflow_demo.py usage must be through WORKFLOW_DEMO_CLI variable"
+            assert (
+                "TEMPORARY: evening-screenshots not yet extracted" in script_contents
+            ), "workflow_demo.py usage must be documented as TEMPORARY"
+            assert (
+                "--evening-screenshots" in script_contents
+            ), "workflow_demo.py should only be used for evening-screenshots"

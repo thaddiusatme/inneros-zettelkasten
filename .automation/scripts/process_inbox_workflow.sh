@@ -35,8 +35,25 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 cd "$REPO_ROOT"
 
 KNOWLEDGE_DIR="knowledge/"
-CLI="python3 development/src/cli/workflow_demo.py"
+
+# Dedicated CLI paths (migrated from deprecated monolithic CLI per ADR-004 Iteration 4)
+CORE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+SAFE_WORKFLOW_CLI="python3 $REPO_ROOT/development/src/cli/safe_workflow_cli.py"
+FLEETING_CLI="python3 $REPO_ROOT/development/src/cli/fleeting_cli.py"
+CONNECTIONS_CLI="python3 $REPO_ROOT/development/src/cli/connections_demo.py"
+
+# TEMPORARY: evening-screenshots not yet extracted - still uses workflow_demo.py
+# TODO: Extract --evening-screenshots to dedicated screenshot_cli.py (future iteration)
+WORKFLOW_DEMO_CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
+
+# Migration note: Dedicated CLI migration completed 2025-11-04 (Issue #39, TDD Iteration 4)
+# - core_workflow_cli.py: status, process-inbox commands
+# - safe_workflow_cli.py: backup command
+# - fleeting_cli.py: fleeting-triage command
+# - connections_demo.py: suggest-links command
+# - workflow_demo.py: TEMPORARY for --evening-screenshots only (pending extraction)
 
 # Defaults
 DO_BACKUP=1
@@ -104,12 +121,12 @@ run_with_timeout() {
 }
 
 echo "[1/5] Checking workflow status (read-only)…"
-run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" "Status check timed out" || true
+run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status" "Status check timed out" || true
 
 echo
 if [[ "$DO_BACKUP" -eq 1 ]]; then
   echo "[2/5] Creating timestamped backup (safety-first)…"
-  $CLI "$KNOWLEDGE_DIR" --backup
+  $SAFE_WORKFLOW_CLI "$KNOWLEDGE_DIR" backup
 else
   echo "[2/5] Skipping backup as requested (--skip-backup)."
 fi
@@ -118,8 +135,8 @@ echo
 if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
   echo "[3/5] Samsung Evening Screenshots: DRY-RUN (non-mutating)…"
   
-  # Build screenshot command with options
-  screenshot_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
+  # Build screenshot command with options (TEMPORARY: using workflow_demo.py until extracted)
+  screenshot_cmd="$WORKFLOW_DEMO_CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
   if [[ -n "$ONEDRIVE_PATH" ]]; then
     screenshot_cmd="$screenshot_cmd --onedrive-path '$ONEDRIVE_PATH'"
   fi
@@ -131,7 +148,7 @@ if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
     echo "⚠️  Screenshot dry-run failed/timed out. Try --no-ocr or --force-fallback"
     if [[ "$NO_OCR" -eq 0 ]]; then
       echo "Retrying with basic command (OCR fallback not yet available in CLI)..."
-      basic_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
+      basic_cmd="$WORKFLOW_DEMO_CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
       if [[ -n "$ONEDRIVE_PATH" ]]; then
         basic_cmd="$basic_cmd --onedrive-path '$ONEDRIVE_PATH'"
       fi
@@ -148,7 +165,7 @@ if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
   read -r -p "Proceed with ACTUAL Samsung screenshot import? [y/N] " RESP
   if [[ "$RESP" =~ ^[Yy]$ ]]; then
     # Build actual command
-    actual_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --progress"
+    actual_cmd="$WORKFLOW_DEMO_CLI '$KNOWLEDGE_DIR' --evening-screenshots --progress"
     if [[ -n "$ONEDRIVE_PATH" ]]; then
       actual_cmd="$actual_cmd --onedrive-path '$ONEDRIVE_PATH'"
     fi
@@ -168,7 +185,7 @@ fi
 
 echo
 echo "[4/5] Inbox processing: DRY-RUN (fast-mode) to preview…"
-if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --process-inbox --dry-run" "Inbox dry-run timed out"; then
+if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox --fast" "Inbox dry-run timed out"; then
   echo "⚠️  Inbox dry-run failed/timed out. Continuing anyway..."
 fi
 
@@ -180,7 +197,7 @@ fi
 echo
 read -r -p "Proceed with ACTUAL inbox processing with progress? [y/N] " RESP2
 if [[ "$RESP2" =~ ^[Yy]$ ]]; then
-  inbox_cmd="$CLI '$KNOWLEDGE_DIR' --process-inbox --progress"
+  inbox_cmd="$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox"
   if [[ -n "$EXPORT_PATH" ]]; then
     echo "Running with export → $EXPORT_PATH"
     inbox_cmd="$inbox_cmd --export '$EXPORT_PATH'"
@@ -197,13 +214,14 @@ fi
 if [[ "$RUN_FLEETING_TRIAGE" -eq 1 ]]; then
   echo
   echo "[5/5] Optional: Fleeting triage report (min-quality=$MIN_QUALITY)…"
-  run_with_timeout "$CLI '$KNOWLEDGE_DIR' --fleeting-triage --min-quality '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
+  run_with_timeout "$FLEETING_CLI '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
 fi
 
 if [[ "$RUN_SUGGEST_LINKS" -eq 1 ]]; then
   echo
   echo "[5/5] Optional: Smart Link suggestions for new/updated notes…"
-  run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links" "Link suggestions timed out" || echo "⚠️  Link suggestions failed/timed out"
+  echo "⚠️  Note: suggest-links requires manual note selection - skipping in automation context"
+  echo "    Run manually: $CONNECTIONS_CLI <note-path> '$KNOWLEDGE_DIR' suggest-links"
 fi
 
 echo
