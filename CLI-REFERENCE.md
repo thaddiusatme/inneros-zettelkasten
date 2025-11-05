@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - CLI Command Reference
 
 > **Complete reference for dedicated CLI tools and the unified `inneros` wrapper**  
-> **Updated**: 2025-10-11 (ADR-004 CLI Layer Extraction Complete)
+> **Updated**: 2025-11-04 (Issue #39 Automation Script CLI Migration Complete)
 
 ## 🚀 **Overview**
 
@@ -9,10 +9,11 @@ InnerOS provides two ways to interact with the knowledge management system:
 
 ### **Dedicated CLIs** (Recommended)
 Focused, single-purpose command-line tools extracted per ADR-004:
-- `weekly_review_cli.py` - Weekly review generation and metrics
-- `fleeting_cli.py` - Fleeting note health and triage
-- `safe_workflow_cli.py` - Safe processing with image preservation
 - `core_workflow_cli.py` - Core workflow operations (status, inbox, promote)
+- `safe_workflow_cli.py` - Safe processing with image preservation
+- `fleeting_cli.py` - Fleeting note health and triage
+- `weekly_review_cli.py` - Weekly review generation and metrics
+- `connections_demo.py` - Note connection discovery and link suggestions
 - `backup_cli.py` - Backup management and pruning
 - `interactive_cli.py` - Interactive workflow mode
 - Plus 4 specialized CLIs (YouTube, tags, notes, performance)
@@ -25,12 +26,12 @@ The `inneros` wrapper provides backward compatibility:
 
 # Available commands  
 inneros analytics    # Analyze knowledge collection
-inneros workflow     # Manage knowledge workflows (⚠️ see migration guide)
+inneros workflow     # Manage knowledge workflows (⚠️ DEPRECATED - use dedicated CLIs)
 inneros enhance      # AI-enhance specific notes
 inneros notes        # Create review notes from templates
 ```
 
-> **Migration Note**: The monolithic `workflow_demo.py` is deprecated. See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for transition to dedicated CLIs.
+> **✅ Migration Complete**: All automation scripts migrated to dedicated CLIs (Issue #39). The monolithic `workflow_demo.py` is deprecated except for evening-screenshots (pending extraction). See migration guide below.
 
 ---
 
@@ -306,16 +307,8 @@ python3 development/src/cli/real_data_performance_cli.py benchmark
 
 # Validate real data processing
 python3 development/src/cli/real_data_performance_cli.py validate
-```
 
----
-
-## 📝 **Notes Command**
-
-Create review notes (daily, weekly, sprint review, sprint retrospective) with proper frontmatter and minimal body templates. Files are written atomically, with optional editor open and git commit.
-
-### **Basic Usage**
-```bash
+# Create review notes (daily, weekly, sprint review, sprint retrospective) with proper frontmatter and minimal body templates.
 inneros notes [PATH] new (--daily | --weekly | --sprint-review | --sprint-retro) \
   [--sprint-id ID] [--dir REVIEWS_DIR] [--open] [--editor CMD] [--git]
 ```
@@ -791,5 +784,78 @@ Directory: knowledge/
   • Include links to related concepts
   • Expand on technical details
 ```
+
+---
+
+## 📋 **CLI Migration Guide** (Issue #39)
+
+### Migration Status: ✅ Complete (5/5 automation scripts migrated)
+
+All automation scripts in `.automation/scripts/` have been successfully migrated from the deprecated `workflow_demo.py` to dedicated CLIs.
+
+### Command Mapping Table
+
+| workflow_demo.py Command | Dedicated CLI Command | Notes |
+|-------------------------|----------------------|-------|
+| `--status` | `core_workflow_cli.py --vault <path> status` | Read-only health check |
+| `--backup` | `safe_workflow_cli.py --vault <path> backup` | Creates timestamped backup |
+| `--process-inbox` | `core_workflow_cli.py --vault <path> process-inbox` | With optional `--fast` for dry-run |
+| `--process-inbox --dry-run` | `core_workflow_cli.py --vault <path> process-inbox --fast` | Fast mode = dry-run |
+| `--fleeting-triage --min-quality X` | `fleeting_cli.py --vault <path> fleeting-triage --quality-threshold X` | Note argument name change |
+| `--fleeting-health` | `fleeting_cli.py --vault <path> fleeting-health` | Age analysis and stale note detection |
+| `--suggest-links` | `connections_demo.py <note-path> <vault> suggest-links` | Requires manual note path |
+| `--weekly-review` | `weekly_review_cli.py --vault <path> weekly-review` | Generate review checklist |
+| `--evening-screenshots` | **TEMPORARY**: `workflow_demo.py --vault <path> --evening-screenshots` | Pending extraction (P2_TASK_3) |
+
+### Key Changes
+
+**Argument Name Variations:**
+- `--min-quality` → `--quality-threshold` (fleeting_cli.py)
+- `--dry-run` → `--fast` (core_workflow_cli.py)
+- `--vault` flag now required before subcommands
+
+**Subcommand Pattern:**
+All dedicated CLIs follow consistent pattern:
+```bash
+<cli_name>.py --vault <path> <subcommand> [options]
+```
+
+### Migrated Automation Scripts
+
+1. ✅ `automated_screenshot_import.sh` (Iteration 1)
+2. ✅ `supervised_inbox_processing.sh` (Iteration 2)
+3. ✅ `weekly_deep_analysis.sh` (Iteration 3)
+4. ✅ `process_inbox_workflow.sh` (Iteration 4)
+5. ✅ `health_monitor.sh` (Iteration 5)
+
+**Only Remaining workflow_demo.py Usage:**
+- `process_inbox_workflow.sh`: evening-screenshots only (documented TEMPORARY)
+
+### For Users of workflow_demo.py
+
+**If you have custom scripts using workflow_demo.py:**
+1. Identify which commands you're using
+2. Look up the dedicated CLI equivalent in the table above
+3. Update your scripts with the new CLI paths and argument names
+4. Test with `--help` to verify correct syntax
+
+**Example Migration:**
+```bash
+# Before (deprecated)
+python3 development/src/cli/workflow_demo.py knowledge/ --status --process-inbox --dry-run
+
+# After (dedicated CLIs)
+python3 development/src/cli/core_workflow_cli.py --vault knowledge/ status
+python3 development/src/cli/core_workflow_cli.py --vault knowledge/ process-inbox --fast
+```
+
+### CI Validation
+
+All migrated CLIs are validated in CI through smoke tests:
+- `.github/workflows/cli-smoke-tests.yml`
+- Runs `--help` on all dedicated CLIs
+- Ensures CLIs are functional before deployment
+
+---
 
 This CLI reference provides comprehensive documentation for all `inneros` commands and usage patterns!
