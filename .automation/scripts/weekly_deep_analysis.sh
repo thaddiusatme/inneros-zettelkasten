@@ -216,7 +216,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating weekly backup..."
-    if ! run_with_timeout "$SAFE_WORKFLOW_CLI '$KNOWLEDGE_DIR' backup --format json" 120; then
+    if ! run_with_timeout "$SAFE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' backup --format json" 120; then
         log_error "Weekly backup failed"
         send_weekly_notification "FAILED" "Weekly backup failed"
         exit 1

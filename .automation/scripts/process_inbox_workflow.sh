@@ -126,7 +126,7 @@ run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status" "Status check time
 echo
 if [[ "$DO_BACKUP" -eq 1 ]]; then
   echo "[2/5] Creating timestamped backup (safety-first)…"
-  $SAFE_WORKFLOW_CLI "$KNOWLEDGE_DIR" backup
+  $SAFE_WORKFLOW_CLI --vault "$KNOWLEDGE_DIR" backup
 else
   echo "[2/5] Skipping backup as requested (--skip-backup)."
 fi

@@ -164,7 +164,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating safety backup..."  
-    if ! run_with_timeout "$SAFE_WORKFLOW_CLI '$KNOWLEDGE_DIR' backup --format json" 60; then
+    if ! run_with_timeout "$SAFE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' backup --format json" 60; then
         log_error "Backup creation failed"
         send_notification "FAILED" "Backup creation failed"
         exit 1
