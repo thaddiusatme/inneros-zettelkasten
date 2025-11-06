@@ -258,6 +258,11 @@ class SafeWorkflowCLI:
 
             # Use DirectoryOrganizer for backup
             backup_path = self.organizer.create_backup()
+            
+            # Convert to Path if string (defensive programming)
+            from pathlib import Path
+            if isinstance(backup_path, str):
+                backup_path = Path(backup_path)
 
             result = {
                 "success": True,
