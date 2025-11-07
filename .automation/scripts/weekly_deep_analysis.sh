@@ -208,7 +208,7 @@ main() {
     
     # Step 1: System health check
     log "🏥 Checking system health..."
-    if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status --format json" 30; then
+    if ! run_with_timeout "$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' status --format json" 30; then
         log_error "System health check failed"
         send_weekly_notification "FAILED" "System health check failed"
         exit 1

@@ -156,7 +156,7 @@ main() {
     
     # Step 1: Quick health check
     log "📊 Checking system health..."
-    if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status --format json" 30; then
+    if ! run_with_timeout "$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' status --format json" 30; then
         log_error "System health check failed"
         send_notification "FAILED" "System health check failed"
         exit 1
@@ -172,7 +172,7 @@ main() {
     
     # Step 3: Process inbox with AI enhancement (no promotion, just analysis)
     log "🧠 Processing inbox with AI enhancement..."
-    process_cmd="$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox --format json"
+    process_cmd="$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' process-inbox --format json"
     
     if run_with_timeout "$process_cmd" 300; then
         notes_processed=$(grep -c "processed" "$LOG_FILE" || echo "0")

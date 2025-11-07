@@ -121,7 +121,7 @@ run_with_timeout() {
 }
 
 echo "[1/5] Checking workflow status (read-only)…"
-run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' status" "Status check timed out" || true
+run_with_timeout "$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' status" "Status check timed out" || true
 
 echo
 if [[ "$DO_BACKUP" -eq 1 ]]; then
@@ -185,7 +185,7 @@ fi
 
 echo
 echo "[4/5] Inbox processing: DRY-RUN (fast-mode) to preview…"
-if ! run_with_timeout "$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox --fast" "Inbox dry-run timed out"; then
+if ! run_with_timeout "$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' process-inbox --fast" "Inbox dry-run timed out"; then
   echo "⚠️  Inbox dry-run failed/timed out. Continuing anyway..."
 fi
 
@@ -197,7 +197,7 @@ fi
 echo
 read -r -p "Proceed with ACTUAL inbox processing with progress? [y/N] " RESP2
 if [[ "$RESP2" =~ ^[Yy]$ ]]; then
-  inbox_cmd="$CORE_WORKFLOW_CLI '$KNOWLEDGE_DIR' process-inbox"
+  inbox_cmd="$CORE_WORKFLOW_CLI --vault '$KNOWLEDGE_DIR' process-inbox"
   if [[ -n "$EXPORT_PATH" ]]; then
     echo "Running with export → $EXPORT_PATH"
     inbox_cmd="$inbox_cmd --export '$EXPORT_PATH'"
@@ -214,7 +214,7 @@ fi
 if [[ "$RUN_FLEETING_TRIAGE" -eq 1 ]]; then
   echo
   echo "[5/5] Optional: Fleeting triage report (min-quality=$MIN_QUALITY)…"
-  run_with_timeout "$FLEETING_CLI '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
+  run_with_timeout "$FLEETING_CLI --vault '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
 fi
 
 if [[ "$RUN_SUGGEST_LINKS" -eq 1 ]]; then

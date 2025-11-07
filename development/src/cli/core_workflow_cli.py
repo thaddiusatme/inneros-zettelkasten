@@ -595,8 +595,16 @@ Examples:
         """,
     )
 
+    # Support both --vault flag (new standard) and positional argument (backward compat)
     parser.add_argument(
-        "vault_path", help="Path to the Zettelkasten vault root directory"
+        "--vault",
+        dest="vault_path_flag",
+        help="Path to the Zettelkasten vault root directory (recommended)",
+    )
+    parser.add_argument(
+        "vault_path",
+        nargs="?",
+        help="Path to vault (DEPRECATED: use --vault flag instead)",
     )
 
     # Subcommands
@@ -705,8 +713,17 @@ def main() -> int:
         return 1
 
     try:
+        # Determine vault path: --vault flag takes precedence over positional
+        vault_path = args.vault_path_flag if args.vault_path_flag else args.vault_path
+        
+        # Show deprecation warning if using positional argument
+        if args.vault_path and not args.vault_path_flag:
+            print("⚠️  Warning: Positional vault_path is deprecated.", file=sys.stderr)
+            print("   Use --vault flag instead: core_workflow_cli.py --vault <path> <command>", file=sys.stderr)
+            print("", file=sys.stderr)  # Blank line for readability
+        
         # Initialize CLI
-        cli = CoreWorkflowCLI(vault_path=args.vault_path)
+        cli = CoreWorkflowCLI(vault_path=vault_path)
 
         # Execute command
         if args.command == "status":
