@@ -1,0 +1,68 @@
+name: CLI Pattern Linter
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'development/src/cli/**/*.py'
+      - 'development/scripts/cli_pattern_linter.py'
+      - 'development/docs/CLI-ARGUMENT-STANDARDS.md'
+      - '.github/workflows/cli-pattern-linter.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'development/src/cli/**/*.py'
+      - 'development/scripts/cli_pattern_linter.py'
+      - 'development/docs/CLI-ARGUMENT-STANDARDS.md'
+      - '.github/workflows/cli-pattern-linter.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  lint-cli-patterns:
+    name: Lint CLI Argument Patterns
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run CLI Pattern Linter
+        run: |
+          echo "🔍 Running CLI Pattern Linter on all CLI files..."
+          python development/scripts/cli_pattern_linter.py --all --format json --fail-on-violations
+          
+      - name: CLI Linter Success
+        if: success()
+        run: |
+          echo "✅ All CLI files comply with argument pattern standards"
+          echo "📄 Standards: development/docs/CLI-ARGUMENT-STANDARDS.md"
+          
+      - name: CLI Linter Failure
+        if: failure()
+        run: |
+          echo "❌ CLI pattern violations found"
+          echo ""
+          echo "To fix violations:"
+          echo "  1. Review standards: development/docs/CLI-ARGUMENT-STANDARDS.md"
+          echo "  2. Run linter locally: python development/scripts/cli_pattern_linter.py --all"
+          echo "  3. Fix violations in your CLI files"
+          echo "  4. Test with pre-commit hook: ./development/scripts/install-pre-commit-hook.sh"
+          echo ""
+          echo "Common issues:"
+          echo "  • Missing --vault flag in workflow CLIs"
+          echo "  • Missing ArgumentParser description or epilog"
+          echo "  • Underscore in argument names (use hyphens: --dry-run not --dry_run)"
+          echo "  • Boolean flags using type=bool (use action='store_true')"
+          exit 1

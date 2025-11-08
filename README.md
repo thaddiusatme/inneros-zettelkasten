@@ -3,6 +3,7 @@
 > **A powerful personal knowledge management system combining the Zettelkasten method with AI assistance**
 
 [![CI](https://github.com/thaddiusatme/inneros-zettelkasten/workflows/CI%20-%20Quality%20Gates/badge.svg)](https://github.com/thaddiusatme/inneros-zettelkasten/actions/workflows/ci.yml)
+[![CLI Linter](https://github.com/thaddiusatme/inneros-zettelkasten/workflows/CLI%20Pattern%20Linter/badge.svg)](https://github.com/thaddiusatme/inneros-zettelkasten/actions/workflows/cli-pattern-linter.yml)
 [![Version](https://img.shields.io/badge/version-0.1.0--beta-blue)]() 
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
 [![Python](https://img.shields.io/badge/python-3.13-blue)]()
