@@ -13,14 +13,14 @@ These branches are already merged into main and can be safely deleted.
 
 ### Command
 ```bash
-# List all merged branches (excluding main)
-git branch --merged main | grep -v "^\*" | grep -v "main"
+# List all merged branches (excluding main and current branch)
+git branch --merged main | grep -v "^\*" | grep -v "^  main$"
 
 # Delete all merged branches locally
-git branch --merged main | grep -v "^\*" | grep -v "main" | xargs git branch -d
+git branch --merged main | grep -v "^\*" | grep -v "^  main$" | xargs git branch -d
 
-# After local cleanup, delete from remote
-git push origin --delete $(git branch --merged main | grep -v "^\*" | grep -v "main" | tr -d ' ')
+# For remote cleanup (do manually or in batches, not all at once):
+# git push origin --delete <branch-name>
 ```
 
 **Expected Result**: 129 → ~28 branches
