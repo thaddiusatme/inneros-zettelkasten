@@ -1,11 +1,11 @@
 # InnerOS Zettelkasten - Current Priorities
 
-**Last Updated**: 2025-10-30 17:08 PDT
+**Last Updated**: 2025-11-11 18:05 PDT
 **Single Source of Truth**: [GitHub Issues](https://github.com/thaddiusatme/inneros-zettelkasten/issues)
 
 ---
 
-## 🎯 Current Sprint (Oct 30 - Nov 6, 2025)
+## 🎯 Current Sprint (Nov 11 - Nov 18, 2025)
 
 ### P0 - Must Do This Week
 - **[#21](https://github.com/thaddiusatme/inneros-zettelkasten/issues/21)** Web UI Feature Flags
@@ -14,25 +14,25 @@
   - Impact: Production safety (7 unrestricted routes)
 
 ### P1 - High Priority Next
+- **[#25](https://github.com/thaddiusatme/inneros-zettelkasten/issues/25)** Inbox Metadata Repair (⚡ Quick Win)
+  - Status: Not started
+  - Estimated: 30 minutes
+  - Impact: Enable auto-promotion for 8 blocked notes
+
+- **[#39](https://github.com/thaddiusatme/inneros-zettelkasten/issues/39)** Migrate Automation Scripts to Dedicated CLIs
+  - Status: In progress (integration testing complete)
+  - Estimated: 4-6 hours remaining
+  - Impact: Complete CLI architecture migration
+
 - **[#19](https://github.com/thaddiusatme/inneros-zettelkasten/issues/19)** WorkflowManager Decomposition
   - Status: Not started
   - Estimated: 8-12 hours (can be phased)
-  - Impact: Reduce god-class technical debt (~900 LOC)
+  - Impact: Reduce god-class technical debt (~812 LOC)
 
 - **[#20](https://github.com/thaddiusatme/inneros-zettelkasten/issues/20)** Automation Visibility UX
   - Status: Not started
   - Estimated: 4-6 hours
   - Impact: Surface daemon health in CLI/Web UI
-
-- **[#24](https://github.com/thaddiusatme/inneros-zettelkasten/issues/24)** Git Branch Cleanup
-  - Status: Not started
-  - Estimated: 2-3 hours
-  - Impact: Reduce 70+ branches to <20
-
-- **[#25](https://github.com/thaddiusatme/inneros-zettelkasten/issues/25)** Inbox Metadata Repair
-  - Status: Not started
-  - Estimated: 30 minutes
-  - Impact: Enable auto-promotion for 8 blocked notes
 
 - **[#26](https://github.com/thaddiusatme/inneros-zettelkasten/issues/26)** Pre-commit Hooks
   - Status: Not started
@@ -52,13 +52,28 @@
 
 ---
 
-## ✅ Recent Completions (Oct 30, 2025)
+## ✅ Recent Completions (Nov 1-11, 2025)
 
-- **P2-4 Automation Test Suite**: 178/178 (100% passing)
-- **Pattern Library**: 6 patterns documented (`.windsurf/guides/automation-test-patterns.md`)
-- **Bug Report Template**: Enhanced with post-beta context
-- **GitHub Issues Created**: 11 issues (P0/P1/P2 backlog)
-- **Documentation Archived**: 11 P2-4 files to COMPLETED-2025-10
+### November 9, 2025
+- **[#24](https://github.com/thaddiusatme/inneros-zettelkasten/issues/24)** Git Branch Cleanup ✅
+  - 129 → 20 branches (84% reduction)
+  - **Action Required**: Close issue on GitHub
+  
+- **[#47](https://github.com/thaddiusatme/inneros-zettelkasten/issues/47)** CLI Syntax Mismatch Bug ✅
+  - Fixed in `feat/cli-integration-tests` branch
+  - 8 integration tests added
+  - **Action Required**: Create PR, close issue
+
+### November 1-4, 2025 - P0 Sprint
+- **[#41](https://github.com/thaddiusatme/inneros-zettelkasten/issues/41)** P0-1: WorkflowManager promotion logic (16 tests) ✅
+- **[#42](https://github.com/thaddiusatme/inneros-zettelkasten/issues/42)** P0-2: CLI Safe Workflow Utils (14 tests) ✅
+- **[#43](https://github.com/thaddiusatme/inneros-zettelkasten/issues/43)** P0-3: Enhanced AI CLI Integration (15 tests) ✅
+- **[#44](https://github.com/thaddiusatme/inneros-zettelkasten/issues/44)** P0-4: PromotionEngine return format (5 tests) ✅
+- **[#45](https://github.com/thaddiusatme/inneros-zettelkasten/issues/45)** Vault configuration centralization ✅
+
+### October 31, 2025
+- **[#29](https://github.com/thaddiusatme/inneros-zettelkasten/issues/29)** YouTube Rate Limiting (global 60s cooldown) ✅
+- **[#30](https://github.com/thaddiusatme/inneros-zettelkasten/issues/30)** File Watching Loop Bug ✅
 
 ---
 

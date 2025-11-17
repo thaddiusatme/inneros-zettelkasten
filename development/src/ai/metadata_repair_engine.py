@@ -54,7 +54,7 @@ class MetadataRepairEngine:
         # Check if note has frontmatter
         if not content.startswith("---"):
             # No frontmatter at all - missing both type and created
-            return ["type", "created"]
+            return ["type", "created", "status"]
 
         # Parse frontmatter
         missing_fields = []
@@ -63,7 +63,7 @@ class MetadataRepairEngine:
         parts = content.split("---", 2)
         if len(parts) < 3:
             # Malformed frontmatter
-            return ["type", "created"]
+            return ["type", "created", "status"]
 
         frontmatter = parts[1]
 
@@ -72,6 +72,8 @@ class MetadataRepairEngine:
             missing_fields.append("type")
         if "created:" not in frontmatter:
             missing_fields.append("created")
+        if "status:" not in frontmatter:
+            missing_fields.append("status")
 
         return missing_fields
 
@@ -133,6 +135,8 @@ class MetadataRepairEngine:
             repairs["type"] = self.infer_note_type(str(note_path))
         if "created" in missing_fields:
             repairs["created"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if "status" in missing_fields:
+            repairs["status"] = "inbox"
 
         # Dry-run mode: just return what would be added
         if self.dry_run:

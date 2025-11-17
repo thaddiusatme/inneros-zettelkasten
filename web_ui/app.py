@@ -13,7 +13,7 @@ from datetime import datetime
 # Add the src directory to the Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
-src_dir = os.path.join(project_root, "development", "src")
+src_dir = os.path.join(project_root, "development")
 sys.path.insert(0, src_dir)
 
 # Import AI modules
@@ -32,6 +32,9 @@ from web_metrics_utils import (
     MetricsCoordinatorIntegration,
     WebMetricsErrorHandler,
 )
+
+# Import feature flag utilities
+from feature_flags import require_feature
 
 app = Flask(__name__)
 app.secret_key = "inneros-zettelkasten-demo-key"  # Change in production
@@ -61,6 +64,7 @@ def index():
 
 
 @app.route("/dashboard")
+@require_feature("dashboard")
 def dashboard():
     """System dashboard with real-time metrics visualization.
 
@@ -74,6 +78,7 @@ def dashboard():
 
 
 @app.route("/analytics")
+@require_feature("analytics")
 def analytics():
     """Analytics dashboard showing note collection insights."""
     vault_path = request.args.get("path", DEFAULT_VAULT_PATH)
@@ -123,6 +128,7 @@ def analytics():
 
 
 @app.route("/weekly-review")
+@require_feature("weekly_review")
 def weekly_review():
     """Weekly review interface with AI recommendations."""
     vault_path = request.args.get("path", DEFAULT_VAULT_PATH)
@@ -193,6 +199,7 @@ def weekly_review():
 
 
 @app.route("/api/process-note", methods=["POST"])
+@require_feature("api_process_note")
 def process_note():
     """API endpoint to process a single note from weekly review."""
     data = request.get_json()
@@ -216,6 +223,7 @@ def process_note():
 
 
 @app.route("/api/metrics")
+@require_feature("api_metrics")
 def api_metrics():
     """API endpoint for real-time metrics data.
 
@@ -237,6 +245,7 @@ def api_metrics():
 
 
 @app.route("/settings")
+@require_feature("settings")
 def settings():
     """Settings page for vault configuration."""
     return render_template(
@@ -245,6 +254,7 @@ def settings():
 
 
 @app.route("/onboarding")
+@require_feature("onboarding")
 def onboarding():
     """Onboarding flow for new users."""
     return render_template("onboarding.html", title="Welcome to InnerOS Zettelkasten")
