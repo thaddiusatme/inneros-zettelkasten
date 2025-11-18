@@ -102,13 +102,103 @@ Remaining improvements for future iterations:
 
 ## 🚀 Next Steps Proposed for the Issue
 
-1. **Iteration 2 – Performance tuning and CI alignment**  
-   - Measure typical runtime of `pre-commit` on staged changes.  
-   - Refine hook args or file sets if needed.  
-   - Confirm CI workflows use the same commands (or strict supersets) as pre-commit.
+1. **Iteration 3 – Performance tuning and CI alignment (tracked in #48)**  
+   - Implement the configuration and test changes described in Issue #48 so that pre-commit lints operate on changed files while CI continues to run full-tree checks.  
+   - Decide how `pytest-unit-fast` should be invoked (e.g., pre-push/manual vs every commit).
 
-2. **Iteration 3 – Extended checks (optional)**  
+2. **Iteration 4 – Extended checks (optional)**  
    - Add a type-check hook (e.g., Pyright) under a separate stage or manual invocation.  
    - Consider hooks for security scanning (e.g., `pip-audit`) if they can be scoped and kept fast.
 
-> Suggestion: Keep #26 **open** but mark “Iteration 1 (baseline hooks + tests)” as **complete**, and track performance tuning / extra hooks as follow-up subtasks.
+> Suggestion: Keep #26 **open** but mark Iterations 1–2 (baseline hooks + CI alignment + performance investigation) as **complete**, and use #48 to drive performance-focused configuration changes.
+
+---
+
+## ⚠️ Performance Incident – `pre-commit run --all-files` (2025-11-17)
+
+**Context**: On branch `feat/pre-commit-hooks-tdd-iteration-2`, running `pre-commit run --all-files` as part of Iteration 2 performance validation was left running overnight and still had not completed by the next day. The process had to be manually cancelled.
+
+### Reproduction (current state)
+
+1. Branch: `feat/pre-commit-hooks-tdd-iteration-2`  
+2. Ensure dependencies are installed (per `Makefile` / CI): `pip install -r requirements.txt` plus `ruff`, `black`, `pyright`, `pytest`, etc.  
+3. Install hooks: `pre-commit install`  
+4. Run: `pre-commit run --all-files`
+
+Observed behavior on this machine:
+
+- Command ran overnight (>8 hours) without completing.
+- No explicit error was reported; the run simply did not finish within a reasonable time window.
+
+### Technical Analysis / Likely Root Cause
+
+Current `.pre-commit-config.yaml` (Iteration 2) has three hooks in the fast subset:
+
+- **Ruff**:
+  - Runs:
+    - `ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841`
+  - Always lints the full `development/src` and `development/tests` trees, regardless of how many files are actually staged.
+
+- **Black**:
+  - Runs:
+    - `black --check development/src development/tests`
+  - Also walks the full `development/src` and `development/tests` trees on every run.
+
+- **pytest-unit-fast**:
+  - Runs:
+    - `python -m pytest -q -m "not slow" development/tests/unit`
+  - This is effectively the same as `make unit` (fast subset of tests, but still ~1800+ tests).
+
+From CI configuration and prior measurements:
+
+- `ci.yml` and `Makefile` indicate that `make unit` alone requires ~15 minutes on CI (Ubuntu) for the current test suite.
+- `make lint` (ruff + black) also operates over the full `development/src` and `development/tests` trees.
+
+Putting these together:
+
+- `pre-commit run --all-files` currently triggers:
+  - Full-tree ruff lint (`check development/src development/tests ...`).
+  - Full-tree black check (`--check development/src development/tests`).
+  - Full `pytest -m "not slow" development/tests/unit` run.
+- This is effectively **“full CI (lint + unit tests)” via pre-commit**, plus pre-commit’s own environment setup and caching overhead.
+- On this machine, the combined cost appears to exceed a practical runtime threshold; leaving it overnight gave the appearance of a stuck process even though each individual command is finite.
+
+### Impact on DevEx and Iteration 2 Goals
+
+- The command we suggested for performance validation (`pre-commit run --all-files`) is **too heavy** to be treated as a normal, recommended workflow for this repo.
+- For a large test suite (~1800+ tests) and full lint over the entire tree, `pre-commit run --all-files` behaves like running full CI locally and can tie up a development session for hours.
+- This undermines the Iteration 2 goal of making pre-commit a **fast, reliable predictor of CI** for common changes.
+
+### Proposed New GitHub Issue – “Pre-commit all-files run behaves like full CI and is too slow”
+
+**Problem statement**:
+
+> On InnerOS, `pre-commit run --all-files` currently invokes full-tree ruff + black and the entire `pytest -m "not slow" development/tests/unit` suite. This makes pre-commit behave like full CI locally and can take hours (or appear to hang), which is unacceptable for the intended “fast subset” developer workflow.
+
+**Suggested scope / acceptance criteria for the new issue**:
+
+1. **Clarify intended usage**
+   - Document that `pre-commit run` on staged changes is the primary “fast subset” workflow.
+   - Clearly label `pre-commit run --all-files` as a heavy, CI-like operation that should be used sparingly (e.g., before big refactors, not on every push).
+
+2. **Re-scope lint hooks for better performance**
+   - Update `.pre-commit-config.yaml` so:
+     - Ruff and Black **do not hard-code** `development/src` and `development/tests` in their args.
+     - Instead, let pre-commit pass the affected file list and keep only flags like `--select` / `--ignore` in the args.
+   - Update `TestPreCommitConfig` to assert flags and behavior, not exact directory args, so lint runs remain aligned with `make lint` but only touch changed files in the common case.
+
+3. **Reconsider pytest hook behavior**
+   - Evaluate moving `pytest-unit-fast` to an optional/manual stage (e.g., `manual` stage or a dedicated command like `pre-commit run pytest-unit-fast`).
+   - Keep `pytest-unit-fast` as the recommended **pre-push** or **pre-PR** check, but avoid forcing it on every commit or on `--all-files` runs.
+
+4. **Developer workflow documentation**
+   - Update `README-ACTIVE.md` (and any DevEx docs) to explain:
+     - Recommended commands: `pre-commit run`, `pre-commit run pytest-unit-fast`, and `make unit`.
+     - Expected runtimes for each (fast subset vs. full CI-style runs).
+   - Optionally add a `make precommit-fast` target that runs a curated pre-commit subset (e.g., ruff + black) without pytest.
+
+**Outcome**:
+
+- Developers can safely rely on `pre-commit run` for fast feedback on staged changes.
+- `pre-commit run --all-files` is explicitly treated as a rare, “full repo health check” tool rather than a default workflow.
+- The configuration and tests for pre-commit hooks remain aligned with CI while avoiding CI-level runtimes on every local run.

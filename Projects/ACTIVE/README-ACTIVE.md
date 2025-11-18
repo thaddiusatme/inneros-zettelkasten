@@ -289,6 +289,33 @@ logs()        # Display last N lines from daemon logs
 
 ---
 
+## 🧪 Pre-commit & CI Workflow (DevEx)
+
+**Goal**: Use pre-commit as a fast, reliable predictor of CI for common changes, without turning every commit into a full CI run.
+
+### Pre-commit hooks (Issue #26)
+
+Current fast subset (configured in `.pre-commit-config.yaml`):
+- Ruff lint (`ruff check` with CI-aligned flags)
+- Black formatting (`black --check`)
+- Fast unit tests (`pytest-unit-fast` ≈ `make unit`, `-m "not slow"` on `development/tests/unit`)
+
+**Recommended usage:**
+- Run `pre-commit install` once per clone.
+- Use `pre-commit run` to check **staged changes only** (fast feedback for typical edits).
+- Use `pre-commit run pytest-unit-fast` or `make unit` when you want a stronger gate before pushing / opening a PR.
+
+**Important:**
+- `pre-commit run --all-files` currently behaves like **full CI** (full-tree ruff + black + full `-m "not slow"` unit suite).
+- Treat `pre-commit run --all-files` as a **heavy health check**, not a routine command. Running it can take a long time on this repo.
+- CI workflows (`ci-lite.yml`, `ci.yml`) run `make lint`, `make unit`, and optional `make type` as stricter gates.
+
+Future work (separate issue):
+- Re-scope pre-commit hooks so lints operate on changed files only, while CI continues to run full-tree checks.
+- Document a `make precommit-fast` target once the configuration is tuned.
+
+---
+
 ## 📈 Directory Health
 
 **Status**: ✅ **EXCELLENT** - Major reorganization complete  
