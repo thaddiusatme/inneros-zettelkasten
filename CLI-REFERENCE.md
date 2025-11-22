@@ -1,24 +1,57 @@
 # InnerOS Zettelkasten - CLI Command Reference
-
-> **Complete reference for dedicated CLI tools and the unified `inneros` wrapper**  
-> **Updated**: 2025-10-11 (ADR-004 CLI Layer Extraction Complete)
-
-## 🚀 **Overview**
-
-InnerOS provides two ways to interact with the knowledge management system:
-
-### **Dedicated CLIs** (Recommended)
-Focused, single-purpose command-line tools extracted per ADR-004:
-- `weekly_review_cli.py` - Weekly review generation and metrics
-- `fleeting_cli.py` - Fleeting note health and triage
-- `safe_workflow_cli.py` - Safe processing with image preservation
-- `core_workflow_cli.py` - Core workflow operations (status, inbox, promote)
-- `backup_cli.py` - Backup management and pruning
-- `interactive_cli.py` - Interactive workflow mode
-- Plus 4 specialized CLIs (YouTube, tags, notes, performance)
-
-### **Unified Wrapper** (Legacy)
-The `inneros` wrapper provides backward compatibility:
+ 
+ > **Complete reference for dedicated CLI tools, automation helper, and the unified `inneros` wrapper**  
+ > **Updated**: 2025-11-22 (ADR-004 CLI Layer Extraction Complete)
+ 
+ ## 🚀 **Overview**
+ 
+ InnerOS provides three ways to interact with the knowledge management system:
+  
+  ### **Dedicated CLIs** (Recommended)
+  Focused, single-purpose command-line tools extracted per ADR-004:
+  - `weekly_review_cli.py` - Weekly review generation and metrics
+  - `fleeting_cli.py` - Fleeting note health and triage
+  - `safe_workflow_cli.py` - Safe processing with image preservation
+  - `core_workflow_cli.py` - Core workflow operations (status, inbox, promote)
+  - `backup_cli.py` - Backup management and pruning
+  - `interactive_cli.py` - Interactive workflow mode
+  - Plus 4 specialized CLIs (YouTube, tags, notes, performance)
+ 
+ ### **Automation Helper** (Preferred for automation flows)
+ The `inneros-automation` helper (currently `python3 -m src.cli.inneros_automation_cli` in development) provides a thin, ergonomic entrypoint around automation tooling:
+ - Routes `daemon` commands to `src.cli.daemon_cli` (`start`, `stop`, `status`)
+ - Routes AI automation commands (`inbox-sweep`, `repair-metadata`) to dedicated CLIs
+ - Forwards core flags like `--repo-root`, `--execute`, `--format`
+ - Propagates exit codes so scripts and CI can safely depend on results
+ 
+ **Development usage (today):**
+ ```bash
+ # Daemon management
+ python3 -m src.cli.inneros_automation_cli daemon start
+ python3 -m src.cli.inneros_automation_cli daemon status
+ 
+ # AI workflows (forwarding arguments to dedicated CLIs)
+ python3 -m src.cli.inneros_automation_cli ai inbox-sweep \
+   --repo-root /path/to/repo --format json
+ 
+ python3 -m src.cli.inneros_automation_cli ai repair-metadata \
+   --repo-root /path/to/repo --execute --format text
+ ```
+ 
+ **Future packaging (console_scripts):**
+ ```bash
+ inneros-automation daemon status
+ inneros-automation ai inbox-sweep --repo-root /path/to/repo --format json
+ inneros-automation ai repair-metadata --repo-root /path/to/repo --execute --format text
+ ```
+ 
+ **Key arguments (forwarded to dedicated CLIs):**
+ - `--repo-root PATH` – repository root to operate on (for example, `~/repos/inneros-zettelkasten`)
+ - `--execute` – for metadata repair: actually apply changes instead of dry run
+ - `--format {text,json}` – controls output format for downstream automation
+ 
+  ### **Unified Wrapper** (Legacy)
+  The `inneros` wrapper provides backward compatibility for analytics, notes, and legacy workflow commands. Prefer dedicated CLIs and the Automation Helper for new automation flows:
 ```bash
 # General usage
 ./inneros <command> [options]
