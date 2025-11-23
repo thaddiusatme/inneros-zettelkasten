@@ -5,6 +5,10 @@ This module extracts batch processing logic from WorkflowManager
 to reduce its size toward the <500 LOC target.
 
 RED Phase: All tests should fail initially until GREEN phase implementation.
+
+GitHub Issue #45 Phase 2 Priority 3 (P1-VAULT-10):
+- Vault config integration tests added
+- Tests updated to use vault_with_config fixture
 """
 
 import pytest
@@ -13,12 +17,46 @@ from unittest.mock import Mock, patch
 import tempfile
 import shutil
 
+from src.config.vault_config_loader import get_vault_config
+
 
 # Import will fail until GREEN phase creates the module
 try:
     from src.ai.batch_processing_coordinator import BatchProcessingCoordinator
 except ImportError:
     BatchProcessingCoordinator = None
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+
+    Copied pattern from test_safe_image_processing_coordinator.py for consistency.
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
 
 
 @pytest.fixture
@@ -52,69 +90,127 @@ def mock_process_callback():
     return mock
 
 
+class TestBatchProcessingCoordinatorVaultConfigIntegration:
+    """Test vault configuration integration (GitHub Issue #45 P1-VAULT-10)."""
+
+    def test_coordinator_uses_vault_config_for_inbox_directory(self, vault_with_config):
+        """
+        Test that BatchProcessingCoordinator loads inbox path from vault config.
+
+        Expected RED failure: TypeError about unexpected keyword arguments 'base_dir'
+        and 'workflow_manager' because current constructor expects inbox_dir parameter.
+
+        Target GREEN signature includes:
+        - base_dir parameter for vault root
+        - workflow_manager parameter for delegation pattern
+        - Internal vault config loading for inbox_dir
+        """
+        if BatchProcessingCoordinator is None:
+            pytest.skip("BatchProcessingCoordinator not yet implemented")
+
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+
+        # Create coordinator with vault config pattern (will fail in RED phase)
+        coordinator = BatchProcessingCoordinator(
+            base_dir=vault,
+            workflow_manager=Mock(),
+            process_callback=Mock(),
+        )
+
+        # Verify coordinator uses vault config path for inbox
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.base_dir == vault
+
+
 class TestBatchProcessingCoordinatorInitialization:
     """Test coordinator initialization and dependency injection."""
 
     def test_coordinator_initialization_with_required_dependencies(
-        self, temp_inbox, mock_process_callback
+        self, vault_with_config, mock_process_callback
     ):
-        """Test that coordinator initializes with inbox_dir and process_callback."""
+        """Test that coordinator initializes with base_dir, workflow_manager, and process_callback."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault,
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
 
-        assert coordinator.inbox_dir == temp_inbox
+        assert coordinator.inbox_dir == config.inbox_dir
         assert coordinator.process_callback == mock_process_callback
+        assert coordinator.base_dir == vault
 
     def test_coordinator_initialization_validates_inbox_dir_exists(
-        self, mock_process_callback, tmp_path
+        self, vault_with_config, mock_process_callback
     ):
         """Test that coordinator creates inbox directory if it doesn't exist."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        # Use tmp_path to avoid read-only filesystem issues
-        nonexistent_dir = tmp_path / "nonexistent" / "inbox"
-        assert not nonexistent_dir.exists()
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
 
-        # Should create directory instead of raising error (updated behavior for test environments)
+        # Coordinator should use vault config inbox path
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=nonexistent_dir, process_callback=mock_process_callback
+            base_dir=vault,
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
-        
-        # Verify directory was created
-        assert nonexistent_dir.exists()
-        assert coordinator.inbox_dir == nonexistent_dir
+
+        # Verify coordinator uses vault config inbox directory
+        assert coordinator.inbox_dir.exists()
+        assert coordinator.inbox_dir == config.inbox_dir
 
     def test_coordinator_initialization_requires_callable_process_callback(
-        self, temp_inbox
+        self, vault_with_config
     ):
         """Test that coordinator validates process_callback is callable."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
+        vault = vault_with_config["vault"]
+
         with pytest.raises((ValueError, TypeError)):
             BatchProcessingCoordinator(
-                inbox_dir=temp_inbox, process_callback="not_a_function"
+                base_dir=vault,
+                workflow_manager=Mock(),
+                process_callback="not_a_function",
             )
 
 
 class TestBatchProcessingCore:
     """Test core batch processing functionality."""
 
+    @pytest.fixture
+    def coordinator_with_notes(self, vault_with_config, mock_process_callback):
+        """Create coordinator with test notes in vault inbox."""
+        inbox_dir = vault_with_config["inbox_dir"]
+
+        # Create test notes
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+
+        return BatchProcessingCoordinator(
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
+        )
+
     def test_batch_process_inbox_processes_all_markdown_files(
-        self, temp_inbox, mock_process_callback
+        self, coordinator_with_notes, mock_process_callback
     ):
         """Test that batch_process_inbox processes all .md files in inbox."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
-        )
+        coordinator = coordinator_with_notes
 
         result = coordinator.batch_process_inbox(show_progress=False)
 
@@ -122,15 +218,13 @@ class TestBatchProcessingCore:
         assert mock_process_callback.call_count == 3
 
     def test_batch_process_inbox_returns_complete_results_structure(
-        self, temp_inbox, mock_process_callback
+        self, coordinator_with_notes
     ):
         """Test that result contains all expected keys and structure."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
-        )
+        coordinator = coordinator_with_notes
 
         result = coordinator.batch_process_inbox(show_progress=False)
 
@@ -146,21 +240,27 @@ class TestBatchProcessingCore:
         assert "move_to_fleeting" in result["summary"]
         assert "needs_improvement" in result["summary"]
 
-    def test_batch_process_inbox_counts_successful_processing(
-        self, temp_inbox, mock_process_callback
-    ):
+    def test_batch_process_inbox_counts_successful_processing(self, vault_with_config):
         """Test that successful processing increments processed count."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        mock_process_callback.return_value = {
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+
+        mock_callback = Mock()
+        mock_callback.return_value = {
             "original_file": "test.md",
             "quality_score": 0.8,
             "recommendations": [],
         }
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
@@ -168,15 +268,22 @@ class TestBatchProcessingCore:
         assert result["processed"] == 3
         assert result["failed"] == 0
 
-    def test_batch_process_inbox_handles_processing_errors(self, temp_inbox):
+    def test_batch_process_inbox_handles_processing_errors(self, vault_with_config):
         """Test that processing errors increment failed count."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+
         mock_callback = Mock(side_effect=Exception("Processing failed"))
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
@@ -188,7 +295,18 @@ class TestBatchProcessingCore:
 class TestResultCategorization:
     """Test recommendation categorization and summary generation."""
 
-    def test_batch_process_categorizes_promote_to_permanent(self, temp_inbox):
+    @pytest.fixture
+    def setup_vault_with_notes(self, vault_with_config):
+        """Setup vault with test notes."""
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+        return vault_with_config
+
+    def test_batch_process_categorizes_promote_to_permanent(
+        self, setup_vault_with_notes
+    ):
         """Test that promote_to_permanent recommendations are counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -203,14 +321,16 @@ class TestResultCategorization:
         )
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=setup_vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
 
         assert result["summary"]["promote_to_permanent"] == 3
 
-    def test_batch_process_categorizes_move_to_fleeting(self, temp_inbox):
+    def test_batch_process_categorizes_move_to_fleeting(self, setup_vault_with_notes):
         """Test that move_to_fleeting recommendations are counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -225,14 +345,16 @@ class TestResultCategorization:
         )
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=setup_vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
 
         assert result["summary"]["move_to_fleeting"] == 3
 
-    def test_batch_process_categorizes_needs_improvement(self, temp_inbox):
+    def test_batch_process_categorizes_needs_improvement(self, setup_vault_with_notes):
         """Test that improve_or_archive recommendations are counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -247,14 +369,18 @@ class TestResultCategorization:
         )
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=setup_vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
 
         assert result["summary"]["needs_improvement"] == 3
 
-    def test_batch_process_handles_multiple_recommendations(self, temp_inbox):
+    def test_batch_process_handles_multiple_recommendations(
+        self, setup_vault_with_notes
+    ):
         """Test that multiple recommendations are all counted."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
@@ -289,7 +415,9 @@ class TestResultCategorization:
         mock_callback = Mock(side_effect=callback_with_variations)
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=setup_vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
@@ -302,16 +430,27 @@ class TestResultCategorization:
 class TestProgressReporting:
     """Test progress reporting functionality."""
 
+    @pytest.fixture
+    def vault_with_notes(self, vault_with_config, mock_process_callback):
+        """Create vault with test notes."""
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+        return vault_with_config
+
     @patch("sys.stderr")
     def test_batch_process_shows_progress_when_enabled(
-        self, mock_stderr, temp_inbox, mock_process_callback
+        self, mock_stderr, vault_with_notes, mock_process_callback
     ):
         """Test that progress is written to stderr when show_progress=True."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=True)
@@ -321,14 +460,16 @@ class TestProgressReporting:
         assert mock_stderr.flush.called
 
     def test_batch_process_suppresses_progress_when_disabled(
-        self, temp_inbox, mock_process_callback
+        self, vault_with_notes, mock_process_callback
     ):
         """Test that no progress is shown when show_progress=False."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
 
         with patch("sys.stderr") as mock_stderr:
@@ -339,14 +480,16 @@ class TestProgressReporting:
 
     @patch("sys.stderr")
     def test_batch_process_clears_progress_line_after_completion(
-        self, mock_stderr, temp_inbox, mock_process_callback
+        self, mock_stderr, vault_with_notes, mock_process_callback
     ):
         """Test that progress line is cleared after processing completes."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault_with_notes["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=True)
@@ -361,40 +504,47 @@ class TestProgressReporting:
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
-    def test_batch_process_handles_empty_inbox(self, mock_process_callback):
+    def test_batch_process_handles_empty_inbox(
+        self, vault_with_config, mock_process_callback
+    ):
         """Test that empty inbox returns correct zero results."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
-        temp_dir = tempfile.mkdtemp()
-        empty_inbox = Path(temp_dir) / "Inbox"
-        empty_inbox.mkdir()
+        # Vault inbox already exists but is empty
+        coordinator = BatchProcessingCoordinator(
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
+        )
 
-        try:
-            coordinator = BatchProcessingCoordinator(
-                inbox_dir=empty_inbox, process_callback=mock_process_callback
-            )
+        result = coordinator.batch_process_inbox(show_progress=False)
 
-            result = coordinator.batch_process_inbox(show_progress=False)
+        assert result["total_files"] == 0
+        assert result["processed"] == 0
+        assert result["failed"] == 0
+        assert len(result["results"]) == 0
 
-            assert result["total_files"] == 0
-            assert result["processed"] == 0
-            assert result["failed"] == 0
-            assert len(result["results"]) == 0
-        finally:
-            shutil.rmtree(temp_dir)
-
-    def test_batch_process_handles_error_results_with_error_key(self, temp_inbox):
+    def test_batch_process_handles_error_results_with_error_key(
+        self, vault_with_config
+    ):
         """Test that results containing 'error' key increment failed count."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
+
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
 
         mock_callback = Mock(
             return_value={"original_file": "test.md", "error": "Processing failed"}
         )
 
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_callback
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)
@@ -403,14 +553,21 @@ class TestEdgeCases:
         assert result["processed"] == 0
 
     def test_batch_process_includes_all_individual_results(
-        self, temp_inbox, mock_process_callback
+        self, vault_with_config, mock_process_callback
     ):
         """Test that all individual note results are included in results list."""
         if BatchProcessingCoordinator is None:
             pytest.skip("BatchProcessingCoordinator not yet implemented (RED phase)")
 
+        inbox_dir = vault_with_config["inbox_dir"]
+        (inbox_dir / "note1.md").write_text("# Note 1\nContent")
+        (inbox_dir / "note2.md").write_text("# Note 2\nContent")
+        (inbox_dir / "note3.md").write_text("# Note 3\nContent")
+
         coordinator = BatchProcessingCoordinator(
-            inbox_dir=temp_inbox, process_callback=mock_process_callback
+            base_dir=vault_with_config["vault"],
+            workflow_manager=Mock(),
+            process_callback=mock_process_callback,
         )
 
         result = coordinator.batch_process_inbox(show_progress=False)

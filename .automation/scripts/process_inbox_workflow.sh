@@ -3,6 +3,13 @@
 # Safely runs backup, Samsung screenshot import (optional dry-run → actual),
 # then processes the inbox with progress, and optional follow-ups.
 #
+# Vault Configuration:
+# - Uses centralized vault config via development/src imports
+# - Automatically handles knowledge/Inbox, knowledge/Permanent Notes paths
+# - No hardcoded paths - all paths relative to repo root
+# - Compatible with knowledge/ subdirectory structure
+# - See: .automation/README.md for vault config integration details
+#
 # Usage examples:
 #   ./process_inbox_workflow.sh                   # full workflow (backup → screenshots (dry-run+actual) → inbox processing)
 #   ./process_inbox_workflow.sh --dry-run-only    # backup + screenshots dry-run only (no actual import, no processing)

@@ -22,6 +22,8 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 import pytest
 
+pytestmark = pytest.mark.slow  # CLI tests - daemon/cron/log interaction
+
 
 class TestDaemonDetection:
     """Test daemon process detection functionality."""

@@ -135,8 +135,10 @@ class AdvancedTagEnhancementCLI:
 
     def execute_command(self, command_args, **kwargs) -> Dict[str, Any]:
         """Execute CLI command with parameters - Enhanced for TDD Iteration 6"""
-        logger.debug(f"execute_command called with args={command_args}, kwargs={list(kwargs.keys())}")
-        
+        logger.debug(
+            f"execute_command called with args={command_args}, kwargs={list(kwargs.keys())}"
+        )
+
         # Handle both string and list input for backwards compatibility
         if isinstance(command_args, str):
             command = command_args
@@ -159,7 +161,7 @@ class AdvancedTagEnhancementCLI:
         else:
             logger.error(f"Invalid command format: {type(command_args)}")
             return {"error": "Invalid command format"}
-        
+
         logger.info(f"Executing command: {command}")
 
         # Handle concurrent processing if requested (will merge with command result)
@@ -200,18 +202,18 @@ class AdvancedTagEnhancementCLI:
         else:
             logger.warning(f"Unknown command requested: {command}")
             result = {"error": f"Unknown command: {command}"}
-        
+
         # Merge concurrent metadata if present
         if concurrent_metadata and result:
             result.update(concurrent_metadata)
-        
+
         # Log result summary
         if "error" in result:
             logger.error(f"Command {command} failed: {result.get('error')}")
         else:
             logger.info(f"Command {command} completed successfully")
             logger.debug(f"Result keys: {list(result.keys())}")
-        
+
         return result
 
     def _analyze_tags(
@@ -287,7 +289,10 @@ class AdvancedTagEnhancementCLI:
         return result
 
     def _suggest_improvements(
-        self, tag: Optional[str] = None, min_quality: float = 0.7, export_format: Optional[str] = None
+        self,
+        tag: Optional[str] = None,
+        min_quality: float = 0.7,
+        export_format: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Generate improvement suggestions for low-quality tags - REFACTOR enhanced"""
         # Use utility to collect all tags from vault (or specific tag if provided)
@@ -327,13 +332,16 @@ class AdvancedTagEnhancementCLI:
         return result
 
     def _batch_enhance(
-        self, tags: Optional[List[str]] = None, create_backup: bool = True, dry_run: bool = False
+        self,
+        tags: Optional[List[str]] = None,
+        create_backup: bool = True,
+        dry_run: bool = False,
     ) -> Dict[str, Any]:
         """Apply enhancements to multiple tags with user confirmation - REFACTOR enhanced"""
         # Use sample tags if none provided (for testing/demo)
         if tags is None:
             tags = self.sample_problematic_tags
-            
+
         backup_path = None
         if create_backup:
             backup_path = self.backup_manager.create_backup()
@@ -425,7 +433,7 @@ class AdvancedTagEnhancementCLI:
         """Enhanced analyze-tags with 100% suggestion coverage - REFACTOR implementation"""
         logger.info("Starting enhanced tag analysis with 100% coverage engine")
         logger.debug(f"Enhanced analysis parameters: {list(kwargs.keys())}")
-        
+
         # Import enhanced AI features
         from ..ai.enhanced_ai_features import (
             EnhancedSuggestionEngine,
@@ -529,7 +537,7 @@ class AdvancedTagEnhancementCLI:
                     "enhancement_type": suggestion.enhancement_type,
                 }
             )
-        
+
         # Fallback: Ensure at least one suggestion for testing
         if not contextual_suggestions:
             contextual_suggestions.append(

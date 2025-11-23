@@ -29,14 +29,10 @@ jobs:
           pip install ruff black pyright
       
       - name: Run linters (ruff, black)
-        env:
-          PYTHONPATH: development
         run: |
           make lint
       
       - name: Run type checker (pyright)
-        env:
-          PYTHONPATH: development
         run: |
           make type
         continue-on-error: true  # pyright optional for now

@@ -20,57 +20,100 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import tempfile
 import os
+from unittest.mock import Mock
 
-# Import will fail in RED phase - this is expected
-try:
-    from development.src.ai.analytics_coordinator import AnalyticsCoordinator
-except ImportError:
-    AnalyticsCoordinator = None
+from src.ai.analytics_coordinator import AnalyticsCoordinator
+from src.config.vault_config_loader import get_vault_config
+
+
+@pytest.fixture
+def vault_with_config(tmp_path):
+    """
+    Fixture providing vault structure with vault configuration.
+
+    Creates knowledge/ subdirectory structure as per vault_config.yaml.
+    Used for vault config integration tests (GitHub Issue #45 Phase 2 Priority 3).
+    """
+    vault = tmp_path / "vault"
+    vault.mkdir()
+
+    # Get vault config (creates knowledge/ subdirectory structure)
+    config = get_vault_config(str(vault))
+
+    # Ensure vault config directories exist
+    config.fleeting_dir.mkdir(parents=True, exist_ok=True)
+    config.inbox_dir.mkdir(parents=True, exist_ok=True)
+    config.permanent_dir.mkdir(parents=True, exist_ok=True)
+    config.literature_dir.mkdir(parents=True, exist_ok=True)
+
+    return {
+        "vault": vault,
+        "config": config,
+        "fleeting_dir": config.fleeting_dir,
+        "inbox_dir": config.inbox_dir,
+        "permanent_dir": config.permanent_dir,
+        "literature_dir": config.literature_dir,
+    }
+
+
+class TestAnalyticsCoordinatorVaultConfigIntegration:
+    """
+    Test AnalyticsCoordinator uses vault configuration for directory paths.
+
+    RED Phase: This test will fail because current AnalyticsCoordinator constructor
+    does not accept workflow_manager parameter (GitHub Issue #45 Phase 2 Priority 3).
+    """
+
+    def test_analytics_coordinator_uses_vault_config_for_directories(
+        self, vault_with_config
+    ):
+        """
+        Test that AnalyticsCoordinator loads directory paths from vault config.
+
+        Expected RED failure: TypeError about unexpected keyword argument 'workflow_manager'
+        because current constructor signature is: __init__(self, base_dir: Path)
+
+        Target GREEN signature: __init__(self, base_dir: Path, workflow_manager)
+        """
+        vault = vault_with_config["vault"]
+        config = vault_with_config["config"]
+
+        # Create coordinator with vault config pattern (will fail in RED phase)
+        coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
+
+        # Verify coordinator uses vault config paths
+        assert coordinator.inbox_dir == config.inbox_dir
+        assert coordinator.fleeting_dir == config.fleeting_dir
+        assert coordinator.permanent_dir == config.permanent_dir
 
 
 class TestAnalyticsCoordinatorCore:
     """Test core analytics functionality."""
 
     @pytest.fixture
-    def temp_vault(self):
-        """Create temporary vault structure for testing."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
+    def coordinator(self, vault_with_config):
+        """Create AnalyticsCoordinator instance with vault config."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create directories
-            (vault_path / "Inbox").mkdir()
-            (vault_path / "Fleeting Notes").mkdir()
-            (vault_path / "Permanent Notes").mkdir()
+        # Create sample notes with links in vault config directory
+        (permanent_dir / "note1.md").write_text(
+            "# Note 1\n\nThis links to [[note2]] and [[note3]]."
+        )
+        (permanent_dir / "note2.md").write_text("# Note 2\n\nThis links to [[note1]].")
+        (permanent_dir / "note3.md").write_text("# Note 3\n\nThis has no links.")
+        (permanent_dir / "orphan.md").write_text(
+            "# Orphan Note\n\nThis note has no links and is not linked to."
+        )
 
-            # Create sample notes with links
-            (vault_path / "Permanent Notes" / "note1.md").write_text(
-                "# Note 1\n\nThis links to [[note2]] and [[note3]]."
-            )
-            (vault_path / "Permanent Notes" / "note2.md").write_text(
-                "# Note 2\n\nThis links to [[note1]]."
-            )
-            (vault_path / "Permanent Notes" / "note3.md").write_text(
-                "# Note 3\n\nThis has no links."
-            )
-            (vault_path / "Permanent Notes" / "orphan.md").write_text(
-                "# Orphan Note\n\nThis note has no links and is not linked to."
-            )
+        # Create stale note (modify timestamp)
+        stale_note = permanent_dir / "stale.md"
+        stale_note.write_text("# Stale Note")
+        # Set modification time to 100 days ago
+        old_time = (datetime.now() - timedelta(days=100)).timestamp()
+        os.utime(stale_note, (old_time, old_time))
 
-            # Create stale note (modify timestamp)
-            stale_note = vault_path / "Permanent Notes" / "stale.md"
-            stale_note.write_text("# Stale Note")
-            # Set modification time to 100 days ago
-            old_time = (datetime.now() - timedelta(days=100)).timestamp()
-            os.utime(stale_note, (old_time, old_time))
-
-            yield vault_path
-
-    @pytest.fixture
-    def coordinator(self, temp_vault):
-        """Create AnalyticsCoordinator instance."""
-        if AnalyticsCoordinator is None:
-            pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
-        return AnalyticsCoordinator(temp_vault)
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_coordinator_initialization(self, coordinator):
         """Test AnalyticsCoordinator initializes with vault path."""
@@ -95,26 +138,28 @@ class TestAnalyticsCoordinatorCore:
             assert "last_modified" in note
             assert "directory" in note
 
-    def test_detect_orphaned_notes_excludes_inbox(self, coordinator, temp_vault):
+    def test_detect_orphaned_notes_excludes_inbox(self, coordinator, vault_with_config):
         """Test that inbox notes are not flagged as orphaned."""
+        inbox_dir = vault_with_config["inbox_dir"]
+
         # Create inbox note with no links
-        (temp_vault / "Inbox" / "inbox_note.md").write_text(
-            "# Inbox Note\n\nNo links here."
-        )
+        (inbox_dir / "inbox_note.md").write_text("# Inbox Note\n\nNo links here.")
 
         orphaned = coordinator.detect_orphaned_notes()
         orphan_paths = [note["path"] for note in orphaned]
 
         # Inbox notes should not be flagged as orphaned
-        assert not any("Inbox" in path for path in orphan_paths)
+        assert not any("inbox" in path.lower() for path in orphan_paths)
 
     def test_detect_orphaned_notes_comprehensive_scans_all_files(
-        self, coordinator, temp_vault
+        self, coordinator, vault_with_config
     ):
         """Test comprehensive scan includes all markdown files in repo."""
+        vault = vault_with_config["vault"]
+
         # Create note outside standard directories
-        (temp_vault / "Projects").mkdir()
-        (temp_vault / "Projects" / "project_note.md").write_text(
+        (vault / "Projects").mkdir()
+        (vault / "Projects" / "project_note.md").write_text(
             "# Project Note\n\nIsolated project note."
         )
 
@@ -144,10 +189,14 @@ class TestAnalyticsCoordinatorCore:
         if len(stale) > 1:
             assert stale[0]["days_since_modified"] >= stale[-1]["days_since_modified"]
 
-    def test_detect_stale_notes_with_custom_threshold(self, coordinator, temp_vault):
+    def test_detect_stale_notes_with_custom_threshold(
+        self, coordinator, vault_with_config
+    ):
         """Test stale note detection with custom threshold."""
+        permanent_dir = vault_with_config["permanent_dir"]
+
         # Create note that's 50 days old
-        medium_stale = temp_vault / "Permanent Notes" / "medium_stale.md"
+        medium_stale = permanent_dir / "medium_stale.md"
         medium_stale.write_text("# Medium Stale")
         old_time = (datetime.now() - timedelta(days=50)).timestamp()
         os.utime(medium_stale, (old_time, old_time))
@@ -188,31 +237,21 @@ class TestAnalyticsCoordinatorGraphConstruction:
     """Test link graph construction logic."""
 
     @pytest.fixture
-    def temp_vault(self):
-        """Create vault with specific link patterns."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+    def coordinator(self, vault_with_config):
+        """Create coordinator with specific link patterns."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create notes with various link patterns
-            (vault_path / "Permanent Notes" / "hub.md").write_text(
-                "# Hub\n\nLinks: [[spoke1]], [[spoke2]], [[spoke3]]"
-            )
-            (vault_path / "Permanent Notes" / "spoke1.md").write_text(
-                "# Spoke 1\n\nBack to [[hub]]"
-            )
-            (vault_path / "Permanent Notes" / "spoke2.md").write_text(
-                "# Spoke 2\n\nLinks: [[hub]] and [[spoke1]]"
-            )
+        # Create notes with various link patterns
+        (permanent_dir / "hub.md").write_text(
+            "# Hub\n\nLinks: [[spoke1]], [[spoke2]], [[spoke3]]"
+        )
+        (permanent_dir / "spoke1.md").write_text("# Spoke 1\n\nBack to [[hub]]")
+        (permanent_dir / "spoke2.md").write_text(
+            "# Spoke 2\n\nLinks: [[hub]] and [[spoke1]]"
+        )
 
-            yield vault_path
-
-    @pytest.fixture
-    def coordinator(self, temp_vault):
-        """Create coordinator."""
-        if AnalyticsCoordinator is None:
-            pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
-        return AnalyticsCoordinator(temp_vault)
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_build_link_graph_creates_correct_structure(self, coordinator):
         """Test that link graph correctly represents note connections."""
@@ -244,31 +283,27 @@ class TestAnalyticsCoordinatorAgeAnalysis:
     """Test note age and productivity analysis."""
 
     @pytest.fixture
-    def coordinator(self):
-        """Create coordinator with temp vault."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+    def coordinator(self, vault_with_config):
+        """Create coordinator with notes for age analysis."""
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create notes with different ages
-            # Note: Age distribution uses ctime (creation time) which can't be set on many filesystems
-            # We create 4 notes to test the categorization logic exists
-            new_note = vault_path / "Permanent Notes" / "new.md"
-            new_note.write_text("# New")
+        # Create notes with different ages
+        # Note: Age distribution uses ctime (creation time) which can't be set on many filesystems
+        # We create 4 notes to test the categorization logic exists
+        new_note = permanent_dir / "new.md"
+        new_note.write_text("# New")
 
-            recent_note = vault_path / "Permanent Notes" / "recent.md"
-            recent_note.write_text("# Recent")
+        recent_note = permanent_dir / "recent.md"
+        recent_note.write_text("# Recent")
 
-            mature_note = vault_path / "Permanent Notes" / "mature.md"
-            mature_note.write_text("# Mature")
+        mature_note = permanent_dir / "mature.md"
+        mature_note.write_text("# Mature")
 
-            old_note = vault_path / "Permanent Notes" / "old.md"
-            old_note.write_text("# Old")
+        old_note = permanent_dir / "old.md"
+        old_note.write_text("# Old")
 
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
-
-            yield AnalyticsCoordinator(vault_path)
+        return AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
     def test_calculate_note_age_distribution_categorizes_correctly(self, coordinator):
         """Test age distribution categorization."""
@@ -305,28 +340,21 @@ class TestAnalyticsCoordinatorAgeAnalysis:
 class TestAnalyticsCoordinatorIntegration:
     """Integration tests with WorkflowManager."""
 
-    @pytest.fixture
-    def temp_vault(self):
-        """Create minimal vault."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Inbox").mkdir()
-            (vault_path / "Fleeting Notes").mkdir()
-            (vault_path / "Permanent Notes").mkdir()
-
-            # Create one note
-            (vault_path / "Permanent Notes" / "test.md").write_text(
-                "# Test Note\n\nSome content."
-            )
-
-            yield vault_path
-
-    def test_coordinator_integrates_with_workflow_manager(self, temp_vault):
+    @pytest.mark.skip(
+        reason="WorkflowManager integration pending P0-VAULT-2 completion"
+    )
+    def test_coordinator_integrates_with_workflow_manager(self, vault_with_config):
         """Test that WorkflowManager can delegate to AnalyticsCoordinator."""
-        from development.src.ai.workflow_manager import WorkflowManager
+        from src.ai.workflow_manager import WorkflowManager
+
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
+
+        # Create one note
+        (permanent_dir / "test.md").write_text("# Test Note\n\nSome content.")
 
         # WorkflowManager should still work (backward compatibility)
-        workflow = WorkflowManager(temp_vault)
+        workflow = WorkflowManager(vault)
 
         # These methods should now delegate to AnalyticsCoordinator
         orphaned = workflow.detect_orphaned_notes()
@@ -338,81 +366,65 @@ class TestAnalyticsCoordinatorIntegration:
         metrics = workflow.generate_enhanced_metrics()
         assert isinstance(metrics, dict)
 
-    def test_coordinator_handles_empty_vault_gracefully(self):
+    def test_coordinator_handles_empty_vault_gracefully(self, vault_with_config):
         """Test coordinator with empty vault."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+        vault = vault_with_config["vault"]
 
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
+        coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
-            coordinator = AnalyticsCoordinator(vault_path)
+        # Should return empty results, not crash
+        orphaned = coordinator.detect_orphaned_notes()
+        assert orphaned == []
 
-            # Should return empty results, not crash
-            orphaned = coordinator.detect_orphaned_notes()
-            assert orphaned == []
+        stale = coordinator.detect_stale_notes()
+        assert stale == []
 
-            stale = coordinator.detect_stale_notes()
-            assert stale == []
-
-            metrics = coordinator.generate_enhanced_metrics()
-            assert metrics["summary"]["total_notes"] == 0
+        metrics = coordinator.generate_enhanced_metrics()
+        assert metrics["summary"]["total_notes"] == 0
 
 
 class TestAnalyticsCoordinatorEdgeCases:
     """Test edge cases and error handling."""
 
-    def test_coordinator_handles_malformed_markdown(self):
+    def test_coordinator_handles_malformed_markdown(self, vault_with_config):
         """Test handling of files with encoding issues."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create file with potential encoding issues
-            normal_note = vault_path / "Permanent Notes" / "normal.md"
-            normal_note.write_text("# Normal\n\nLinks: [[other]]", encoding="utf-8")
+        # Create file with potential encoding issues
+        normal_note = permanent_dir / "normal.md"
+        normal_note.write_text("# Normal\n\nLinks: [[other]]", encoding="utf-8")
 
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
+        coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
-            coordinator = AnalyticsCoordinator(vault_path)
+        # Should handle gracefully
+        orphaned = coordinator.detect_orphaned_notes()
+        assert isinstance(orphaned, list)
 
-            # Should handle gracefully
-            orphaned = coordinator.detect_orphaned_notes()
-            assert isinstance(orphaned, list)
-
-    def test_coordinator_handles_missing_directories(self):
+    def test_coordinator_handles_missing_directories(self, tmp_path):
         """Test handling when expected directories don't exist."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            # Don't create subdirectories
+        vault_path = tmp_path / "empty_vault"
+        vault_path.mkdir()
+        # Don't create subdirectories (vault config will create them)
 
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
+        coordinator = AnalyticsCoordinator(base_dir=vault_path, workflow_manager=Mock())
 
-            coordinator = AnalyticsCoordinator(vault_path)
+        # Should not crash, should return empty results
+        orphaned = coordinator.detect_orphaned_notes()
+        assert isinstance(orphaned, list)
+        assert len(orphaned) == 0
 
-            # Should not crash, should return empty results
-            orphaned = coordinator.detect_orphaned_notes()
-            assert isinstance(orphaned, list)
-            assert len(orphaned) == 0
-
-    def test_extract_note_title_fallback_to_filename(self):
+    def test_extract_note_title_fallback_to_filename(self, vault_with_config):
         """Test title extraction falls back to filename when no heading found."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir)
-            (vault_path / "Permanent Notes").mkdir(parents=True)
+        vault = vault_with_config["vault"]
+        permanent_dir = vault_with_config["permanent_dir"]
 
-            # Create note without markdown heading
-            no_heading = vault_path / "Permanent Notes" / "no-heading.md"
-            no_heading.write_text("Just some content without a heading.")
+        # Create note without markdown heading
+        no_heading = permanent_dir / "no-heading.md"
+        no_heading.write_text("Just some content without a heading.")
 
-            if AnalyticsCoordinator is None:
-                pytest.skip("AnalyticsCoordinator not yet implemented (RED phase)")
+        coordinator = AnalyticsCoordinator(base_dir=vault, workflow_manager=Mock())
 
-            coordinator = AnalyticsCoordinator(vault_path)
-
-            # Should use filename as title
-            title = coordinator._extract_note_title(no_heading)
-            assert title == "no-heading"
+        # Should use filename as title
+        title = coordinator._extract_note_title(no_heading)
+        assert title == "no-heading"

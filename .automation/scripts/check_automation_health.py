@@ -9,6 +9,13 @@ Python-based health monitoring that integrates with existing daemon infrastructu
 - Rate limiter cooldown status (YouTubeGlobalRateLimiter)
 - Concurrent execution validation
 
+Vault Configuration:
+- Uses centralized vault config via imports from development/src
+- Automatically handles knowledge/Inbox, knowledge/Permanent Notes paths
+- No hardcoded paths - all paths relative to repo root
+- Compatible with knowledge/ subdirectory structure
+- See: .automation/README.md for vault config integration details
+
 Usage:
     python3 check_automation_health.py [--json] [--prometheus] [--export FILE]
 """

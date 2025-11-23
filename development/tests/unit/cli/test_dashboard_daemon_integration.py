@@ -29,6 +29,8 @@ from src.cli.dashboard_utils import (
     DashboardHealthMonitor,
 )
 
+pytestmark = pytest.mark.slow  # CLI tests - dashboard/daemon integration
+
 
 class TestDashboardDaemonStatusDetection:
     """Test daemon status detection before dashboard launch."""

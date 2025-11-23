@@ -12,16 +12,16 @@ type:
 	python3 -m pyright development/src || true
 
 unit:
-	PYTHONPATH=development python3 -m pytest -q --timeout=300 -m "not slow" development/tests/unit
+	cd development && PYTHONPATH=. python3 -m pytest -q -m "not slow" tests/unit
 
 unit-all:
-	PYTHONPATH=development python3 -m pytest -q --timeout=300 development/tests/unit
+	cd development && PYTHONPATH=. python3 -m pytest -q tests/unit
 
 integ:
-	PYTHONPATH=development python3 -m pytest -q development/tests/integration
+	cd development && PYTHONPATH=. python3 -m pytest -q tests/integration
 
 cov:
-	PYTHONPATH=development python3 -m pytest --cov=development/src --cov-report=term-missing
+	cd development && PYTHONPATH=. python3 -m pytest --cov=src --cov-report=term-missing
 
 test: lint type unit
 

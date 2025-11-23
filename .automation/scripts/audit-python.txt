@@ -1,0 +1,2 @@
+update_changelog.py:15:- ✚ Added  Inbox/idea-x.md
+update_changelog.py:16:- ✹ Edited Permanent Notes/note-y.md

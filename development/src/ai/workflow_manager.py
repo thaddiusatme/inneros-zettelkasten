@@ -37,6 +37,7 @@ from .workflow_integration_utils import (
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.io import safe_write
 from .workflow_metrics_coordinator import WorkflowMetricsCoordinator
+from src.config.vault_config_loader import get_vault_config
 
 
 class WorkflowManager:
@@ -63,12 +64,13 @@ class WorkflowManager:
         else:
             self.base_dir = Path(base_directory).expanduser()
 
-        # Define workflow directories
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
-        self.literature_dir = self.base_dir / "Literature Notes"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.archive_dir = self.base_dir / "Archive"
+        # Load vault configuration and define workflow directories
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
+        self.literature_dir = vault_config.literature_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.archive_dir = vault_config.archive_dir
 
         # Initialize AI components
         self.tagger = AITagger()
@@ -82,7 +84,10 @@ class WorkflowManager:
 
         # ADR-002 Phase 2: Connection coordinator extraction
         self.connection_coordinator = ConnectionCoordinator(
-            str(self.base_dir), min_similarity=0.7, max_suggestions=5
+            base_dir=self.base_dir,
+            workflow_manager=self,
+            min_similarity=0.7,
+            max_suggestions=5,
         )
 
         # ADR-002 Phase 3: Analytics coordinator extraction
@@ -134,6 +139,8 @@ class WorkflowManager:
 
         # ADR-002 Phase 7: Safe image processing coordinator extraction
         self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
+            base_dir=self.base_dir,
+            workflow_manager=self,
             safe_workflow_processor=self.safe_workflow_processor,
             atomic_workflow_engine=self.atomic_workflow_engine,
             integrity_monitoring_manager=self.integrity_monitoring_manager,
@@ -141,7 +148,6 @@ class WorkflowManager:
             performance_metrics_collector=self.performance_metrics_collector,
             safe_image_processor=self.safe_image_processor,
             image_integrity_monitor=self.image_integrity_monitor,
-            inbox_dir=self.inbox_dir,
             process_note_callback=self.process_inbox_note,
             batch_process_callback=self.batch_process_inbox,
         )
@@ -164,15 +170,15 @@ class WorkflowManager:
 
         # ADR-002 Phase 11: Batch processing coordinator extraction
         self.batch_processing_coordinator = BatchProcessingCoordinator(
-            inbox_dir=self.inbox_dir, process_callback=self.process_inbox_note
+            base_dir=self.base_dir,
+            workflow_manager=self,
+            process_callback=self.process_inbox_note,
         )
 
         # ADR-002 Phase 12b: Fleeting note coordinator extraction
         self.fleeting_note_coordinator = FleetingNoteCoordinator(
-            fleeting_dir=self.fleeting_dir,
-            inbox_dir=self.inbox_dir,
-            permanent_dir=self.permanent_dir,
-            literature_dir=self.literature_dir,
+            base_dir=self.base_dir,
+            workflow_manager=self,
             process_callback=self.process_inbox_note,
             default_quality_threshold=0.7,
         )
@@ -254,31 +260,35 @@ class WorkflowManager:
         # - No AI processing errors occurred
         has_processing_errors = self._has_ai_processing_errors(results)
         should_update_status = (
-            not dry_run 
-            and not fast 
-            and results.get("file_updated") 
+            not dry_run
+            and not fast
+            and results.get("file_updated")
             and not has_processing_errors
         )
-        
+
         if should_update_status:
             try:
                 note_path_obj = Path(note_path)
                 status_result = self.lifecycle_manager.update_status(
                     note_path_obj,
                     new_status="promoted",
-                    reason="AI processing completed successfully"
+                    reason="AI processing completed successfully",
                 )
-                
+
                 # Add status_updated field to results if successful
                 if status_result.get("validation_passed"):
-                    results["status_updated"] = status_result.get("status_updated", "promoted")
+                    results["status_updated"] = status_result.get(
+                        "status_updated", "promoted"
+                    )
                 else:
                     # Log validation failure but don't fail the whole operation
                     if "warnings" not in results:
                         results["warnings"] = []
                     error_msg = status_result.get("error", "Unknown validation error")
-                    results["warnings"].append(f"Status update validation failed: {error_msg}")
-                    
+                    results["warnings"].append(
+                        f"Status update validation failed: {error_msg}"
+                    )
+
             except Exception as e:
                 # Graceful degradation - don't fail processing if status update fails
                 if "warnings" not in results:
@@ -290,15 +300,15 @@ class WorkflowManager:
     def _has_ai_processing_errors(self, results: Dict) -> bool:
         """
         Check if AI processing encountered any errors.
-        
+
         Args:
             results: Processing results dict from NoteProcessingCoordinator
-            
+
         Returns:
             True if any AI processing errors were detected
         """
         processing = results.get("processing", {})
-        
+
         # Check each AI processing component for errors
         for component in ["tags", "quality", "connections"]:
             if component in processing:
@@ -306,7 +316,7 @@ class WorkflowManager:
                 # Error is indicated by presence of "error" key
                 if isinstance(component_result, dict) and "error" in component_result:
                     return True
-        
+
         return False
 
     # ADR-002 Phase 6: Template processing methods removed - delegated to NoteProcessingCoordinator

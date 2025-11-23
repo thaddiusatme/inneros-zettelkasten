@@ -8,6 +8,12 @@ Composition Pattern:
 - Used by WorkflowManager via delegation
 - Depends on NoteLifecycleManager for lifecycle operations
 - Integrates with DirectoryOrganizer for safe file operations
+
+Directory Configuration:
+- Uses centralized vault_config.yaml for directory paths
+- Automatically resolves knowledge/Inbox, knowledge/Permanent Notes, etc.
+- Supports configurable vault structures for testing vs production
+- Part of GitHub Issue #45 vault configuration centralization
 """
 
 from pathlib import Path
@@ -18,6 +24,7 @@ import logging
 from src.utils.frontmatter import parse_frontmatter, build_frontmatter
 from src.utils.io import safe_write
 from .note_lifecycle_manager import NoteLifecycleManager
+from src.config.vault_config_loader import get_vault_config
 
 
 logger = logging.getLogger(__name__)
@@ -34,11 +41,13 @@ class PromotionEngine:
     - Validation of promotion eligibility
     - Integration with DirectoryOrganizer for safe operations
     """
-    
+
     # Constants for auto-promotion configuration
     DEFAULT_QUALITY_THRESHOLD = 0.7
     VALID_NOTE_TYPES = ["fleeting", "literature", "permanent"]
-    AUTO_PROMOTION_STATUS = "promoted"  # Notes must have this status to be auto-promoted
+    AUTO_PROMOTION_STATUS = (
+        "promoted"  # Notes must have this status to be auto-promoted
+    )
     AUTO_PROMOTION_TARGET_STATUS = "published"  # Final status after auto-promotion
 
     def __init__(
@@ -59,11 +68,12 @@ class PromotionEngine:
         self.lifecycle_manager = lifecycle_manager
         self.config = config or {}
 
-        # Set up directory paths
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.literature_dir = self.base_dir / "Literature Notes"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
+        # Set up directory paths from vault configuration
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.literature_dir = vault_config.literature_dir
+        self.fleeting_dir = vault_config.fleeting_dir
 
         # Ensure target directories exist
         self.permanent_dir.mkdir(parents=True, exist_ok=True)
@@ -146,14 +156,11 @@ class PromotionEngine:
             else:
                 return {
                     "success": False,
-                    "error": result.get("error", "Promotion failed")
+                    "error": result.get("error", "Promotion failed"),
                 }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to promote note: {e}"
-            }
+            return {"success": False, "error": f"Failed to promote note: {e}"}
 
     def _validate_note_for_promotion(
         self, note_path: Path, frontmatter: Dict, quality_threshold: float
@@ -221,7 +228,7 @@ class PromotionEngine:
                     status_result = self.lifecycle_manager.update_status(
                         promoted_path,
                         new_status=self.AUTO_PROMOTION_TARGET_STATUS,
-                        reason="Auto-promotion completed successfully"
+                        reason="Auto-promotion completed successfully",
                     )
                     if not status_result.get("validation_passed"):
                         logger.warning(
@@ -243,13 +250,13 @@ class PromotionEngine:
     def _get_target_directory(self, note_type: str) -> Path:
         """
         Get target directory path for a given note type.
-        
+
         Args:
             note_type: Note type ('fleeting', 'literature', or 'permanent')
-            
+
         Returns:
             Path to target directory
-            
+
         Raises:
             ValueError: If note_type is invalid
         """
@@ -258,13 +265,13 @@ class PromotionEngine:
                 f"Invalid note type: '{note_type}'. "
                 f"Must be one of: {', '.join(self.VALID_NOTE_TYPES)}"
             )
-        
+
         type_to_dir = {
             "fleeting": self.fleeting_dir,
             "literature": self.literature_dir,
             "permanent": self.permanent_dir,
         }
-        
+
         return type_to_dir[note_type]
 
     def auto_promote_ready_notes(
@@ -359,12 +366,14 @@ class PromotionEngine:
                 if not is_valid:
                     results["skipped_count"] += 1
                     # Store filename as key, reason as value
-                    results["skipped_notes"][note_path.name] = error_msg or "Validation failed"
-                    
+                    results["skipped_notes"][note_path.name] = (
+                        error_msg or "Validation failed"
+                    )
+
                     # Track skipped by type if we have note_type
                     if note_type and note_type in results["by_type"]:
                         results["by_type"][note_type]["skipped"] += 1
-                    
+
                     # Track errors separately if related to missing type field
                     if error_msg and "type" in error_msg.lower():
                         results["error_count"] += 1
@@ -445,8 +454,8 @@ class PromotionEngine:
 
         # Summary logging with breakdown by type
         by_type_summary = ", ".join(
-            f"{type_name}: {counts['promoted']}" 
-            for type_name, counts in results["by_type"].items() 
+            f"{type_name}: {counts['promoted']}"
+            for type_name, counts in results["by_type"].items()
             if counts["promoted"] > 0
         )
         logger.info(

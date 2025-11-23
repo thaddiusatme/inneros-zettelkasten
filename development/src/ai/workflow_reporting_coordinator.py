@@ -9,11 +9,17 @@ This coordinator handles:
 - AI feature usage analysis across the vault
 - Workflow health assessment (healthy/needs_attention/critical)
 - Intelligent recommendation generation
+
+Vault Configuration:
+- Uses centralized vault_config.yaml for directory paths (GitHub Issue #45)
+- Supports knowledge/ subdirectory organization (knowledge/Inbox, etc.)
+- All directory references use get_vault_config() instead of hardcoded paths
 """
 
 from pathlib import Path
 from typing import Dict, List
 
+from src.config.vault_config_loader import get_vault_config
 from src.utils.frontmatter import parse_frontmatter
 
 
@@ -46,11 +52,12 @@ class WorkflowReportingCoordinator:
         self.base_dir = Path(base_dir)
         self.analytics = analytics
 
-        # Define standard directories
-        self.inbox_dir = self.base_dir / "Inbox"
-        self.fleeting_dir = self.base_dir / "Fleeting Notes"
-        self.permanent_dir = self.base_dir / "Permanent Notes"
-        self.archive_dir = self.base_dir / "Archive"
+        # Load vault configuration for directory paths
+        vault_config = get_vault_config(str(self.base_dir))
+        self.inbox_dir = vault_config.inbox_dir
+        self.fleeting_dir = vault_config.fleeting_dir
+        self.permanent_dir = vault_config.permanent_dir
+        self.archive_dir = vault_config.archive_dir
 
     def generate_workflow_report(self) -> Dict:
         """
