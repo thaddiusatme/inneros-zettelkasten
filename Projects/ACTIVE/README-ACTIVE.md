@@ -1,9 +1,9 @@
 # ACTIVE Projects Directory
 
-**Last Updated**: 2025-10-26 10:27 PDT  
-**Current Branch**: `feat/automation-visibility-cli-tdd-iteration-1`  
-**Latest Release**: `v2.3-youtube-automation` ✅  
-**Status**: 🎉 **MAJOR MILESTONE** - Automation Visibility CLI complete, daemon registry system operational
+**Last Updated**: 2025-11-11 18:05 PDT  
+**Current Branch**: `main` (2 commits ahead of origin/main)  
+**Latest Release**: `v0.1.0-beta` ✅  
+**Status**: 🎉 **P0 SPRINT COMPLETE** - 50+ tests fixed, branch cleanup done, CLI integration testing complete
 
 ---
 
@@ -17,37 +17,41 @@
 - Quality-gated note promotion with zero manual intervention
 - Zettelkasten methodology with AI enhancement
 
-**Recent Achievements** (October 2025):
-- ✅ Automation Visibility CLI - 18/18 tests passing, daemon registry system with AI context integration
-- ✅ YouTube Automation System - Complete end-to-end (checkbox approval, API, archival)
-- ✅ Cleanup Workflow Automation - 8/8 tests passing, 45 files moved safely
-- ✅ Knowledge Base Cleanup Phase 2 - 28 orphaned notes fixed, root directory cleaned
-- ✅ CLI Architecture - 10 dedicated CLIs extracted (ADR-004)
-- ✅ Projects Directory Organization - 344 files reorganized, 93% cognitive load reduction
+**Recent Achievements** (November 2025):
+- ✅ P0 Sprint Complete - 5 critical issues fixed (41-45), 50 tests passing
+- ✅ Git Branch Cleanup (Issue #24) - 129 → 20 branches (84% reduction)
+- ✅ CLI Integration Testing - 8 tests added, fixes Issue #47
+- ✅ YouTube Rate Limiting (Issue #29) - Global 60s cooldown
+- ✅ Vault Configuration (Issue #45) - Centralized automation config
+- ✅ File Watching Bug (Issue #30) - Loop bug resolved
 
 ---
 
-## ✅ CURRENT STATE (Oct 26, 2025)
+## ✅ CURRENT STATE (Nov 11, 2025)
 
-**Just Completed**: Automation Visibility CLI (TDD Iteration 1)
-- ✅ 18/18 tests passing (100% success rate)
-- ✅ AutomationStatusCLI with 5 utility classes (DaemonDetector, LogParser, DaemonRegistry, StatusFormatter)
-- ✅ Daemon registry system with comprehensive validation
-- ✅ AI context integration - daemon registry now CRITICAL priority
-- ✅ Performance: <0.05s (100x better than 5s requirement)
-- ✅ Complete documentation: 3 maintenance guides created
-- ✅ Commits: df51a20 (implementation) + d5cad2f (AI context docs)
+**Just Completed**: P0 Sprint + Branch Cleanup + CLI Integration Testing
+
+**November 9, 2025 Session**:
+- ✅ Git Branch Cleanup (Issue #24) - 129 → 20 branches (84% reduction)
+- ✅ CLI Integration Testing - 8 tests, fixes Issue #47
+- ✅ Branch `feat/cli-integration-tests` ready for PR
+- ⚠️ **Action Required**: Push 2 commits, create PR, close issues #24 & #47
+
+**November 1-4, 2025 P0 Sprint**:
+- ✅ Issue #41: WorkflowManager promotion logic (16 tests fixed)
+- ✅ Issue #42: CLI Safe Workflow Utils (14 tests fixed)
+- ✅ Issue #43: Enhanced AI CLI Integration (15 tests fixed)
+- ✅ Issue #44: PromotionEngine return format (5 tests fixed)
+- ✅ Issue #45: Vault configuration centralization
 
 **System Status**:
-- ✅ Architecture: CLI layer complete (11 dedicated CLIs - added automation_status_cli)
-- ✅ Automation: YouTube, cleanup, health monitor operational with full visibility
-- ✅ Daemon Registry: 3/3 daemons registered (100% coverage)
-- ✅ AI Context: Daemon registry enforcement integrated
-- ✅ Tests: 100% passing (all test suites)
-- ✅ Organization: Clean monthly archives (COMPLETED-2025-XX)
-- ✅ Pipeline: Knowledge capture workflow restored and trusted
+- ✅ Tests: 1,384 passing + 8 new CLI integration tests
+- ✅ Branches: 20 (target achieved, down from 129)
+- ✅ CI/CD: All passing, unlimited minutes (public repo)
+- ✅ Architecture: Clean, 11 dedicated CLIs
+- ✅ Documentation: Up to date through Nov 11
 
-**Ready for Next Priority**: Automation visibility achieved - user can now check daemon status in <5s
+**Ready for Next Priority**: Quick win #25 (30 min) or P0 #21 (2-3 hours)
 
 ---
 
@@ -282,6 +286,33 @@ logs()        # Display last N lines from daemon logs
 1. User testing session - validate automation visibility
 2. Update project-todo-v4.md with completion status
 3. Continue P0 priorities from user feedback
+
+---
+
+## 🧪 Pre-commit & CI Workflow (DevEx)
+
+**Goal**: Use pre-commit as a fast, reliable predictor of CI for common changes, without turning every commit into a full CI run.
+
+### Pre-commit hooks (Issue #26)
+
+Current fast subset (configured in `.pre-commit-config.yaml`):
+- Ruff lint (`ruff check` with CI-aligned flags)
+- Black formatting (`black --check`)
+- Fast unit tests (`pytest-unit-fast` ≈ `make unit`, `-m "not slow"` on `development/tests/unit`)
+
+**Recommended usage:**
+- Run `pre-commit install` once per clone.
+- Use `pre-commit run` to check **staged changes only** (fast feedback for typical edits).
+- Use `pre-commit run pytest-unit-fast` or `make unit` when you want a stronger gate before pushing / opening a PR.
+
+**Important:**
+- `pre-commit run --all-files` currently behaves like **full CI** (full-tree ruff + black + full `-m "not slow"` unit suite).
+- Treat `pre-commit run --all-files` as a **heavy health check**, not a routine command. Running it can take a long time on this repo.
+- CI workflows (`ci-lite.yml`, `ci.yml`) run `make lint`, `make unit`, and optional `make type` as stricter gates.
+
+Future work (separate issue):
+- Re-scope pre-commit hooks so lints operate on changed files only, while CI continues to run full-tree checks.
+- Document a `make precommit-fast` target once the configuration is tuned.
 
 ---
 

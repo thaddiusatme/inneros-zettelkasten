@@ -1,0 +1,33 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.8
+    hooks:
+      - id: ruff
+        args: [
+          "check",
+          "development/src",
+          "development/tests",
+          "--select",
+          "E,F,W",
+          "--ignore",
+          "E402,E501,E712,W291,W293,F401,F841",
+        ]
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        args: ["--check", "development/src", "development/tests"]
+
+  - repo: local
+    hooks:
+      - id: pytest-unit-fast
+        name: pytest unit (fast subset)
+        language: system
+        entry: python -m pytest
+        args:
+          - "-q"
+          - "-m"
+          - "not slow"
+          - "development/tests/unit"
+        pass_filenames: false
