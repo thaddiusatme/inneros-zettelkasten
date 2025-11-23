@@ -21,6 +21,44 @@ InnerOS provides three tiers of automation to transform your knowledge capture w
 
 ---
 
+## 🔧 Preferred Manual Control: Automation Helper CLI
+
+For day-to-day manual control of automation, prefer the **Automation Helper CLI** over calling individual Python modules directly. This keeps your commands stable as automation internals evolve.
+
+**Development usage (today):**
+
+```bash
+# Daemon management (maps to src.cli.daemon_cli)
+python3 -m src.cli.inneros_automation_cli daemon start
+python3 -m src.cli.inneros_automation_cli daemon status
+
+# AI inbox enhancement (maps to inneros_ai_inbox_sweep_cli)
+python3 -m src.cli.inneros_automation_cli ai inbox-sweep \
+  --repo-root ~/repos/inneros-zettelkasten --format json
+
+# Metadata repair (maps to inneros_ai_repair_metadata_cli)
+python3 -m src.cli.inneros_automation_cli ai repair-metadata \
+  --repo-root ~/repos/inneros-zettelkasten --execute --format text
+```
+
+**Console entrypoint (future packaging):**
+
+```bash
+inneros-automation daemon status
+inneros-automation ai inbox-sweep --repo-root ~/repos/inneros-zettelkasten --format json
+inneros-automation ai repair-metadata --repo-root ~/repos/inneros-zettelkasten --execute --format text
+```
+
+Use these helper commands when you want to:
+
+- Start/stop/check the daemon outside cron or systemd.
+- Run an on-demand inbox AI sweep before a review session.
+- Repair inbox metadata safely with explicit `--execute` and machine-readable `--format` output.
+
+The existing `.automation/scripts/*.sh` entrypoints remain the canonical way to **schedule** automation; the helper CLI is the canonical way to **run and debug** automation flows manually.
+
+---
+
 ## 📱 Tier 1: Screenshot Import Automation
 
 **What It Does**: Automatically imports Samsung screenshots from OneDrive, extracts text with OCR, generates AI descriptions, creates markdown notes in your Inbox.
