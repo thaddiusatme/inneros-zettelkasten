@@ -1,7 +1,7 @@
-# 🚀 START HERE - Your System Works!
+# 🚀 START HERE - InnerOS Daily Use
 
-**Created**: 2025-10-22  
-**For**: Thaddius (overwhelmed by complexity, needs clarity)
+**Updated**: 2025-12-01  
+**Status**: Automation running via cron since Nov 1, 2025
 
 ---
 
@@ -18,13 +18,17 @@
 
 ---
 
-## 🎯 Run This Right Now (30 Seconds)
+## 🎯 Daily Commands (memorize these 5)
 
 ```bash
-./status.sh
+make status    # Check system health
+make review    # See notes needing attention (55 pending)
+make fleeting  # Check fleeting notes health (80 notes, 68% critical)
+make up        # Start automation daemon
+make down      # Stop automation daemon
 ```
 
-This shows you everything at a glance.
+Run `make status` first - shows you everything at a glance.
 
 ---
 

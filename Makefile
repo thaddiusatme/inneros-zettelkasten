@@ -1,4 +1,35 @@
-.PHONY: setup lint type test unit integ cov run ui
+.PHONY: setup lint type test unit integ cov run ui up down status review fleeting
+
+# ============================================
+# USER COMMANDS (what you use daily)
+# ============================================
+
+up:
+	@echo "🚀 Starting InnerOS automation daemon..."
+	PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon start
+
+down:
+	@echo "🛑 Stopping InnerOS automation daemon..."
+	PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon stop
+
+status:
+	@echo "📊 InnerOS Status:"
+	@PYTHONPATH=development python3 -c "from src.cli.inneros_status_cli import main; main()"
+	@echo ""
+	@echo "🔧 Daemon Status:"
+	@PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon status
+
+review:
+	@echo "📋 Generating weekly review..."
+	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview
+
+fleeting:
+	@echo "📊 Checking fleeting notes health..."
+	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault knowledge fleeting-health
+
+# ============================================
+# DEV COMMANDS (for development only)
+# ============================================
 
 setup:
 	python3 -m pip install -r requirements.txt
