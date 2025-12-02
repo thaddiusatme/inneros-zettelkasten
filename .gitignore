@@ -138,3 +138,6 @@ development/.automation/cache/youtube_transcripts.json
 
 # Generated transcripts
 Media/Transcripts/
+
+# Development logs (AIHS sessions, etc.)
+development/logs/
