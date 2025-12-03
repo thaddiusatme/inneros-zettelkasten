@@ -133,13 +133,16 @@ status:
 - [ ] Test passes OR document IP ban status
 - [ ] If blocked, skip for now
 
-#### Step 2.4: Weekly Review Workflow Test
+#### Step 2.4: Weekly Review Workflow Test ✅ COMPLETE (2025-12-02)
 ```bash
-PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py weekly-review
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview
+# Or simply: make review
 ```
-- [ ] Test runs without error
-- [ ] Output shows actionable recommendations
-- [ ] Export works
+- [x] Test runs without error (exit code 0)
+- [x] Output shows actionable recommendations (20 notes: 4 promote, 10 refine, 6 improve)
+- [x] Export works (`--export review.md`)
+- [x] 12 E2E tests added, 1 skipped (full AI run)
+- [x] Bug fixed: `--preview` now passes `dry_run=True` for fast execution (0.14s vs 10+ min)
 
 ---
 
