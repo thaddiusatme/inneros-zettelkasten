@@ -193,7 +193,7 @@ class TestWeeklyReviewE2E:
             "Ready to Promote" in result.stdout,
             "Further Development" in result.stdout,
             "Needs Significant Work" in result.stdout,
-        ])
+        ])s
         
         assert has_actionable_section, (
             f"Output should contain actionable recommendation sections.\n"
@@ -340,15 +340,20 @@ class TestWeeklyReviewE2E:
     # =========================================================================
     # TEST 7: Full run (non-preview) works
     # =========================================================================
-    @pytest.mark.skip(reason="Full run requires AI/Ollama - run manually with: PYTHONPATH=development pytest -k 'full_run' --run-slow")
+    @pytest.mark.skip(reason="Full run processes 20+ notes with AI (~30s each = 10+ min total)")
     def test_weekly_review_full_run_exits_zero(
         self, repo_root: Path, env_with_pythonpath: dict
     ):
         """
         TEST 7: Full run (without --preview) exits with code 0.
         
-        NOTE: This test is skipped by default because it makes external AI calls
-        which may timeout in CI environments. Run manually when AI is available.
+        NOTE: This test is skipped because full run calls process_inbox_note()
+        for EACH note in the vault with full AI processing. With 20 notes and
+        ~30s per AI call, this takes 10+ minutes.
+        
+        For practical use:
+        - Use `make review` (with --preview) for quick daily reviews
+        - Full AI processing happens when you actually promote individual notes
         
         Acceptance Criteria:
         - CLI command completes without error
