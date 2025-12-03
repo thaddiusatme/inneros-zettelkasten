@@ -241,7 +241,7 @@ class DailyNoteGenerator:
         """
         self.knowledge_path = Path(knowledge_path)
         self.inbox_path = self.knowledge_path / "Inbox"
-        self.inbox_path.mkdir(exist_ok=True)
+        self.inbox_path.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"Initialized DailyNoteGenerator for {knowledge_path}")
 

@@ -193,7 +193,7 @@ class TestWeeklyReviewE2E:
             "Ready to Promote" in result.stdout,
             "Further Development" in result.stdout,
             "Needs Significant Work" in result.stdout,
-        ])s
+        ])
         
         assert has_actionable_section, (
             f"Output should contain actionable recommendation sections.\n"

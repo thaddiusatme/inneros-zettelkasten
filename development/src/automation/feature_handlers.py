@@ -85,6 +85,7 @@ class ScreenshotEventHandler:
             self.logger,
             ocr_enabled=self.ocr_enabled,
             processing_timeout=self.processing_timeout,
+            knowledge_path=self.knowledge_path,
         )
         self.metrics_tracker = ProcessingMetricsTracker()
 

@@ -47,6 +47,7 @@ class ScreenshotProcessorIntegrator:
         logger: logging.Logger,
         ocr_enabled: bool = True,
         processing_timeout: int = 600,
+        knowledge_path: Optional[Path] = None,
     ):
         """
         Initialize screenshot processor integrator.
@@ -56,11 +57,13 @@ class ScreenshotProcessorIntegrator:
             logger: Logger instance for processing events
             ocr_enabled: Whether OCR processing is enabled
             processing_timeout: Maximum processing time in seconds
+            knowledge_path: Path to knowledge vault (for note creation)
         """
         self.onedrive_path = onedrive_path
         self.logger = logger
         self.ocr_enabled = ocr_enabled
         self.processing_timeout = processing_timeout
+        self.knowledge_path = knowledge_path or (onedrive_path.parent if onedrive_path else Path.cwd())
         self.processor = None
 
     def process_screenshot(self, file_path: Path) -> Dict[str, Any]:
@@ -85,16 +88,13 @@ class ScreenshotProcessorIntegrator:
             }
 
         try:
+            from datetime import date
+            
             # Initialize processor (lazy initialization for performance)
             if not self.processor:
-                knowledge_path = (
-                    self.onedrive_path.parent
-                    if self.onedrive_path.parent
-                    else Path.cwd()
-                )
                 self.processor = ScreenshotProcessor(
                     onedrive_path=str(self.onedrive_path),
-                    knowledge_path=str(knowledge_path),
+                    knowledge_path=str(self.knowledge_path),
                 )
 
             # Process with OCR
@@ -102,10 +102,23 @@ class ScreenshotProcessorIntegrator:
 
             if ocr_results:
                 self.logger.info(f"Screenshot processed with OCR: {file_path.name}")
+                
+                # Generate note with OCR results
+                ocr_results_list = list(ocr_results.values())
+                screenshot_paths = list(ocr_results.keys())
+                date_str = date.today().isoformat()
+                
+                note_path = self.processor.note_generator.generate_daily_note(
+                    ocr_results=ocr_results_list,
+                    screenshot_paths=screenshot_paths,
+                    date_str=date_str,
+                )
+                
                 return {
                     "success": True,
                     "ocr_results": ocr_results,
                     "screenshot_count": len(ocr_results),
+                    "note_path": note_path,
                 }
             else:
                 self.logger.warning(
