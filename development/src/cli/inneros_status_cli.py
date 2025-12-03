@@ -7,6 +7,7 @@ Design goals:
 - Print a clear, compact summary of each automation.
 - Print an overall status line that can be parsed by humans.
 - Return exit code 0 when overall_status is OK, non zero otherwise.
+- Machine-parseable output with clear status indicators.
 """
 
 from typing import Any, Dict, List, Optional
@@ -14,9 +15,20 @@ from typing import Any, Dict, List, Optional
 from src.automation.system_health import check_all
 
 
-def _format_automation(automation: Dict[str, Any]) -> str:
-    """Format a single automation entry for terminal output."""
+# =============================================================================
+# Output Formatting Helpers
+# =============================================================================
 
+
+def _format_automation(automation: Dict[str, Any]) -> str:
+    """Format a single automation entry for terminal output.
+
+    Args:
+        automation: Dictionary with keys: name, running, last_run_status, error_message
+
+    Returns:
+        Formatted string like "- daemon_name: running, last run: success"
+    """
     name = automation.get("name", "unknown")
     running = bool(automation.get("running", False))
     last_status = automation.get("last_run_status", "unknown")
@@ -39,6 +51,25 @@ def _format_automation(automation: Dict[str, Any]) -> str:
     return line
 
 
+def _format_summary(automations: List[Dict[str, Any]]) -> str:
+    """Format the daemon summary line showing running/total counts.
+
+    Args:
+        automations: List of automation status dictionaries
+
+    Returns:
+        Summary string like "Daemons: 3/3 running"
+    """
+    total = len(automations)
+    running = sum(1 for a in automations if a.get("running", False))
+    return f"Daemons: {running}/{total} running"
+
+
+# =============================================================================
+# Main Entry Point
+# =============================================================================
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """Entry point for inneros-status.
 
@@ -53,14 +84,28 @@ def main(argv: Optional[List[str]] = None) -> int:
     # We ignore argv for now but keep the signature for future options.
     _ = argv
 
-    result: Dict[str, Any] = check_all()
+    try:
+        result: Dict[str, Any] = check_all()
+    except Exception as e:
+        print(f"Error checking automation status: {e}")
+        print("Overall status: ERROR")
+        return 1
+
     overall_status = result.get("overall_status", "ERROR")
     automations = result.get("automations", [])
 
+    # Print formatted status report
     print("Automation status")
+    print(_format_summary(automations))
+    print()
     for automation in automations:
         print(_format_automation(automation))
 
-    print(f"Overall status: {overall_status}")
+    print(f"\nOverall status: {overall_status}")
 
     return 0 if overall_status == "OK" else 1
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv[1:]))
