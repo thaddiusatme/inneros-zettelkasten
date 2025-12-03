@@ -3,6 +3,7 @@ Automation Status CLI - TDD GREEN Phase
 Provides visibility into automation daemon status, logs, and control.
 """
 
+import os
 import psutil
 import yaml
 from pathlib import Path
@@ -32,6 +33,35 @@ class DaemonDetector:
                 continue
 
         return {"running": False, "pid": None}
+
+    def check_daemon_by_pid_file(self, pid_file: Path) -> Dict[str, Any]:
+        """
+        Check if a daemon is running by reading its PID file.
+
+        This method is used for Python daemons that write their PID to a file
+        (e.g., ~/.inneros/daemon.pid) instead of being detected via ps aux.
+
+        Args:
+            pid_file: Path to the PID file
+
+        Returns:
+            Dictionary with 'running' status and 'pid' if running
+        """
+        if not pid_file.exists():
+            return {"running": False, "pid": None}
+
+        try:
+            pid_text = pid_file.read_text().strip()
+            if not pid_text or not pid_text.isdigit():
+                return {"running": False, "pid": None}
+
+            pid = int(pid_text)
+            # Check if process is actually running
+            os.kill(pid, 0)  # Signal 0 just checks if process exists
+            return {"running": True, "pid": pid}
+        except (ValueError, ProcessLookupError, OSError):
+            # PID file exists but process is not running (stale)
+            return {"running": False, "pid": None}
 
     def check_all_daemons(self, daemon_configs: List[tuple]) -> List[Dict[str, Any]]:
         """

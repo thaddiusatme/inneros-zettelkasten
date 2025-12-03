@@ -1,36 +1,32 @@
 # Automation Daemon Registry
 # Defines all automation daemons for status monitoring and management
 # 
+# ARCHITECTURE (Updated 2025-12-02):
+# InnerOS uses a single Python daemon (AutomationDaemon) that handles all features:
+# - Screenshot processing (Samsung OneDrive integration)
+# - Smart link management (AI-powered connection discovery)
+# - YouTube note processing (video-to-note automation)
+# - Weekly review automation
+#
+# The daemon writes its PID to ~/.inneros/daemon.pid when started via `make up`.
+# Detection uses PID file checking, not ps aux script path matching.
+#
 # MAINTENANCE:
-# - When adding new daemons: Copy an existing entry and update all fields
-# - Test with: cd development && pytest tests/unit/cli/test_automation_status_cli.py
-# - Validate schema: All 5 fields (name, script_path, log_path, pid_file, description) are REQUIRED
-# - Keep alphabetically sorted by name for easy discovery
+# - Test with: cd development && pytest tests/unit/automation/test_daemon_alignment.py
+# - Validate: `make up && make status` should show daemon running
 #
 # SCHEMA:
 #   name: Unique identifier (alphanumeric + underscore, no spaces)
-#   script_path: Relative path from repo root to daemon script
+#   script_path: Module path for Python daemon (e.g., src.automation.daemon)
 #   log_path: Relative path from repo root to log file
-#   pid_file: Relative path from repo root to PID file (for future use)
+#   pid_file: Path to PID file (absolute or relative; ~/.inneros/daemon.pid is default)
 #   description: Human-readable description (used in status output)
 #
-# Last updated: 2025-10-23
+# Last updated: 2025-12-02
 
 daemons:
-  - name: youtube_watcher
-    script_path: process_youtube_note.sh
-    log_path: .automation/logs/youtube_watcher.log
-    pid_file: .automation/logs/youtube_watcher.pid
-    description: Monitors YouTube content for processing
-    
-  - name: screenshot_processor
-    script_path: .automation/scripts/automated_screenshot_import.sh
-    log_path: .automation/logs/screenshot_processor.log
-    pid_file: .automation/logs/screenshot_processor.pid
-    description: Processes Samsung screenshot imports
-    
-  - name: health_monitor
-    script_path: .automation/scripts/health_monitor.sh
-    log_path: .automation/logs/health_monitor.log
-    pid_file: .automation/logs/health_monitor.pid
-    description: System health monitoring daemon
+  - name: automation_daemon
+    script_path: src.automation.daemon
+    log_path: .automation/logs/daemon.log
+    pid_file: ~/.inneros/daemon.pid
+    description: Main InnerOS automation daemon (handles screenshots, smart links, YouTube, reviews)
