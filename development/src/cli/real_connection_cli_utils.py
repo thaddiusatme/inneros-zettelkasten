@@ -7,11 +7,11 @@ Enhanced CLI utilities for real connection discovery integration
 import os
 from typing import List, Optional, Dict, Any
 
-from ai.real_connection_integration_engine import (
+from src.ai.real_connection_integration_engine import (
     CLIIntegrationOrchestrator,
     ProductionOptimizedProcessor,
 )
-from ai.link_suggestion_engine import LinkSuggestion
+from src.ai.link_suggestion_engine import LinkSuggestion
 
 
 class EnhancedConnectionCLIProcessor:

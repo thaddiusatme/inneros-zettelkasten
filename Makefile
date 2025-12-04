@@ -13,11 +13,7 @@ down:
 	PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon stop
 
 status:
-	@echo "📊 InnerOS Status:"
-	@PYTHONPATH=development python3 -c "from src.cli.inneros_status_cli import main; main()"
-	@echo ""
-	@echo "🔧 Daemon Status:"
-	@PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon status
+	@PYTHONPATH=development python3 development/src/cli/inneros_status_cli.py
 
 review:
 	@echo "📋 Generating weekly review..."

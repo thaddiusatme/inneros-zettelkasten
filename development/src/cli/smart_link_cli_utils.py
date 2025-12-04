@@ -5,7 +5,7 @@ Minimal implementation to pass failing tests
 """
 
 from typing import List
-from ai.link_suggestion_engine import LinkSuggestion
+from src.ai.link_suggestion_engine import LinkSuggestion
 
 
 def display_suggestion_interactively(

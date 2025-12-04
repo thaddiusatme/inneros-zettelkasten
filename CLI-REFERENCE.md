@@ -75,29 +75,38 @@ Generate weekly review checklists and enhanced metrics.
 
 **Commands:**
 ```bash
-# Generate weekly review checklist
-python3 development/src/cli/weekly_review_cli.py weekly-review
+# Generate weekly review checklist (quick preview mode - recommended for daily use)
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview
+
+# Or use Makefile shortcut
+make review
 
 # Enhanced metrics with orphaned/stale note detection
-python3 development/src/cli/weekly_review_cli.py enhanced-metrics
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge enhanced-metrics
 
 # Export checklist to file
-python3 development/src/cli/weekly_review_cli.py weekly-review --export-checklist review.md
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview --export review.md
 
 # JSON output for automation
-python3 development/src/cli/weekly_review_cli.py weekly-review --format json
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview --format json
 ```
 
-**Options:**
-- `--export-checklist PATH` - Export markdown checklist to file
-- `--format {text,json}` - Output format (default: text)
-- `--dry-run` - Preview without processing
+**Global Options:**
+- `--vault PATH` - Path to vault root directory (default: current directory)
+- `--verbose` - Enable verbose logging
+
+**Command Options (weekly-review):**
+- `--preview` - Fast mode using heuristics (recommended for daily reviews)
+- `--export PATH` - Export markdown checklist to file
+- `--format {normal,json}` - Output format (default: normal)
 
 **Use Cases:**
-- Weekly knowledge work review
+- Weekly knowledge work review (`make review`)
 - Identify promotion candidates
 - Find orphaned/stale notes
 - Generate action items
+
+**Note:** Use `--preview` for quick daily reviews (0.14s). Full AI processing happens when promoting individual notes.
 
 ---
 

@@ -112,8 +112,10 @@ class WeeklyReviewCLI:
             if preview and not quiet:
                 print("   🔍 DRY RUN MODE - No files will be modified")
 
-            # Generate recommendations
-            recommendations = self.workflow.generate_weekly_recommendations(candidates)
+            # Generate recommendations (pass preview as dry_run to skip AI calls in preview mode)
+            recommendations = self.workflow.generate_weekly_recommendations(
+                candidates, dry_run=preview
+            )
 
             # Format and display output
             if quiet:

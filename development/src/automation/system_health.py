@@ -15,6 +15,18 @@ from typing import Any, Dict, List, Optional
 from src.cli.automation_status_cli import DaemonDetector, DaemonRegistry, LogParser
 
 
+def _get_daemon_pid_file() -> Path:
+    """Get the default daemon PID file path.
+
+    The daemon writes its PID to ~/.inneros/daemon.pid when started.
+    This is the canonical location used by `inneros daemon start`.
+
+    Returns:
+        Path to the daemon PID file.
+    """
+    return Path.home() / ".inneros" / "daemon.pid"
+
+
 def _load_daemons(repo_root: Path) -> List[Dict[str, Any]]:
     """Load daemon configurations from the standard registry location.
 
@@ -36,12 +48,31 @@ def _build_automation_entry(
     repo_root: Path,
     daemon_config: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Build a single automation status entry from daemon and log state."""
+    """Build a single automation status entry from daemon and log state.
 
+    Detection strategy:
+    1. If daemon_config has a pid_file field, use PID file detection
+    2. Otherwise fall back to ps aux script path matching
+
+    This allows the Python daemon (which uses PID files) to be detected
+    alongside legacy shell script daemons (which use ps aux matching).
+    """
     name = daemon_config["name"]
     script_path = daemon_config["script_path"]
 
-    status = detector.check_daemon_status(name, script_path)
+    # Determine PID file path - check for both relative and absolute paths
+    pid_file_path = daemon_config.get("pid_file")
+    if pid_file_path:
+        # Expand ~ to home directory
+        pid_file = Path(pid_file_path).expanduser()
+        # If it's a relative path (after expansion), resolve against repo_root
+        if not pid_file.is_absolute():
+            pid_file = repo_root / pid_file_path
+        # Use PID file detection for Python daemons
+        status = detector.check_daemon_by_pid_file(pid_file)
+    else:
+        # Fall back to ps aux script path matching for shell scripts
+        status = detector.check_daemon_status(name, script_path)
 
     log_rel_path = daemon_config.get(
         "log_path", f".automation/logs/{name}.log"
