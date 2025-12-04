@@ -354,9 +354,9 @@ pwd  # Should be ~/repos/inneros-zettelkasten
 # Check Ollama is running
 ollama list
 
-# Test AI connection
+# Test AI model availability
 cd development
-PYTHONPATH=. python3 -c "from src.ai.ollama_client import OllamaClient; print(OllamaClient().is_available())"
+PYTHONPATH=. python3 -c "from src.ai.ollama_client import OllamaClient; print('Model available:', OllamaClient().is_model_available('gpt-oss:20b'))"
 ```
 
 #### "YouTube quotes not extracted"
