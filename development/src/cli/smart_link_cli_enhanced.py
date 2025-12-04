@@ -7,7 +7,7 @@ Extracted utilities for production-ready CLI experience
 import time
 from typing import List, Dict, Any
 from dataclasses import dataclass
-from ai.link_suggestion_engine import LinkSuggestion
+from src.ai.link_suggestion_engine import LinkSuggestion
 
 
 @dataclass
