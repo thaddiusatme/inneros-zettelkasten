@@ -40,6 +40,7 @@ Content here...
 title: "Video Title"
 source: youtube
 video_id: XXXXXXXXXXX
+url: https://www.youtube.com/watch?v=XXXXXXXXXXX
 ready_for_processing: false
 ---
 
@@ -49,6 +50,8 @@ My notes...
 ```
 
 Change `ready_for_processing: true` when ready for AI quotes.
+
+> ⚠️ **Must use `url:`** not `video_url:` - CLI requires exact field name.
 
 ---
 
