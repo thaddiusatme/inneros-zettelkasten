@@ -39,7 +39,8 @@ make fleeting  # Check fleeting notes health
 ### Prerequisites
 
 - Python 3.12+
-- Ollama with llama3.2-vision (for OCR) and gemma3 or similar (for text)
+- Ollama with `llama3.2-vision` (for OCR) and `gpt-oss:20b` or similar (for text)
+- `youtube-transcript-api` package (for YouTube workflow)
 - Obsidian (optional, for viewing notes)
 
 ### Installation
@@ -122,6 +123,7 @@ title: "Video Title Here"
 created: 2025-12-04
 source: youtube
 video_id: dQw4w9WgXcQ
+url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ready_for_processing: false
 tags: [youtube]
 ---
@@ -130,6 +132,8 @@ tags: [youtube]
 
 Your notes about this video...
 ```
+
+> ⚠️ **Important**: The `url:` field is required (not `video_url:`). The CLI looks for this exact field name.
 
 2. When you're ready for AI to extract quotes, change:
 ```yaml
@@ -145,13 +149,15 @@ ready_for_processing: true
 #### Manual Processing
 
 ```bash
-# Process a specific YouTube note
-cd development
-PYTHONPATH=. python3 src/cli/youtube_cli.py process-note "../knowledge/Inbox/your-video.md"
+# Process a specific YouTube note (from repo root)
+cd ~/repos/inneros-zettelkasten/development
+PYTHONPATH=. python3 src/cli/youtube_cli.py --vault ../knowledge process-note "../knowledge/Inbox/YouTube/your-video.md"
 
 # Preview all pending YouTube notes
-PYTHONPATH=. python3 src/cli/youtube_cli.py batch-process --preview
+PYTHONPATH=. python3 src/cli/youtube_cli.py --vault ../knowledge batch-process --preview
 ```
+
+> **Note**: The `--vault ../knowledge` flag is required. Notes must be in `Inbox/YouTube/` subdirectory.
 
 #### What You Get
 
@@ -362,9 +368,12 @@ PYTHONPATH=. python3 -c "from src.ai.ollama_client import OllamaClient; print('M
 #### "YouTube quotes not extracted"
 Check that your note has:
 - `source: youtube` in frontmatter
-- `ready_for_processing: true` (not false)
+- `url: https://www.youtube.com/watch?v=XXXXX` (**required** - not `video_url:`)
 - `video_id: XXXXX` (valid YouTube video ID)
+- `ready_for_processing: true` (not false)
 - NOT `ai_processed: true` (only processes once)
+
+> **Common mistake**: Using `video_url:` instead of `url:`. The CLI expects exactly `url:`.
 
 ### Getting Help
 
