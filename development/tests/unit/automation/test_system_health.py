@@ -42,7 +42,9 @@ class TestSystemHealthCheckAll:
     """
 
     @pytest.mark.parametrize("overall_status", ["OK"])
-    def test_check_all_all_healthy_returns_ok(self, tmp_path: Path, overall_status: str) -> None:
+    def test_check_all_all_healthy_returns_ok(
+        self, tmp_path: Path, overall_status: str
+    ) -> None:
         """All daemons running with successful last runs yields overall OK."""
 
         repo_root = _write_daemon_registry(tmp_path)
@@ -50,7 +52,9 @@ class TestSystemHealthCheckAll:
         # Import inside test so module is loaded after registry exists
         from src.automation.system_health import check_all
 
-        with patch("src.automation.system_health.DaemonDetector") as MockDetector, patch(
+        with patch(
+            "src.automation.system_health.DaemonDetector"
+        ) as MockDetector, patch(
             "src.automation.system_health.LogParser"
         ) as MockParser:
             detector = MockDetector.return_value
@@ -79,7 +83,9 @@ class TestSystemHealthCheckAll:
 
         from src.automation.system_health import check_all
 
-        with patch("src.automation.system_health.DaemonDetector") as MockDetector, patch(
+        with patch(
+            "src.automation.system_health.DaemonDetector"
+        ) as MockDetector, patch(
             "src.automation.system_health.LogParser"
         ) as MockParser:
             detector = MockDetector.return_value

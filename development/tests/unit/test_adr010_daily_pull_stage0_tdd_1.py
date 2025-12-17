@@ -140,6 +140,7 @@ class TestSelectDailyPullCandidatesTDDIteration1:
 
         if mtime is not None:
             import os
+
             ts = mtime.timestamp()
             os.utime(path, (ts, ts))
 
@@ -160,7 +161,9 @@ class TestSelectDailyPullCandidatesTDDIteration1:
         assert len(result.note_paths) >= 1
         assert any(p.name == "recent-note.md" for p in result.note_paths)
 
-    def test_excludes_notes_modified_more_than_24_hours_ago(self, tmp_path: Path) -> None:
+    def test_excludes_notes_modified_more_than_24_hours_ago(
+        self, tmp_path: Path
+    ) -> None:
         """Notes modified more than 24h ago should be excluded."""
 
         from src.ai.daily_content_pull import select_daily_pull_candidates
@@ -178,7 +181,9 @@ class TestSelectDailyPullCandidatesTDDIteration1:
         # Old note should NOT be selected.
         assert not any(p.name == "old-note.md" for p in result.note_paths)
 
-    def test_returns_per_note_tokens_aligned_with_note_paths(self, tmp_path: Path) -> None:
+    def test_returns_per_note_tokens_aligned_with_note_paths(
+        self, tmp_path: Path
+    ) -> None:
         """Result must have per_note_tokens aligned with note_paths."""
 
         from src.ai.daily_content_pull import select_daily_pull_candidates
@@ -297,7 +302,9 @@ class TestDailyPullJSONLLoggingTDDIteration1:
         assert log_file.exists(), "Log file should be created"
 
         log_lines = [
-            line for line in log_file.read_text(encoding="utf-8").splitlines() if line.strip()
+            line
+            for line in log_file.read_text(encoding="utf-8").splitlines()
+            if line.strip()
         ]
         assert log_lines, "Log file should contain at least one record"
 

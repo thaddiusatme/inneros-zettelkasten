@@ -84,7 +84,7 @@ class TestBatchProcessingCoordinatorInitialization:
         coordinator = BatchProcessingCoordinator(
             inbox_dir=nonexistent_dir, process_callback=mock_process_callback
         )
-        
+
         # Verify directory was created
         assert nonexistent_dir.exists()
         assert coordinator.inbox_dir == nonexistent_dir

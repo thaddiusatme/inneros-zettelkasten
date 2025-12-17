@@ -73,7 +73,9 @@ class TestMakeUpStatusDownCycle:
             pid_file.unlink()
 
         # Helper to run make commands with consistent settings
-        def _run_make(target: str, timeout: int = 60) -> subprocess.CompletedProcess[str]:
+        def _run_make(
+            target: str, timeout: int = 60
+        ) -> subprocess.CompletedProcess[str]:
             return subprocess.run(
                 ["make", target],
                 cwd=str(repo_root),
@@ -108,7 +110,9 @@ class TestMakeUpStatusDownCycle:
                 "Status output should include a 'Daemons:' summary line.\n"
                 f"stdout: {status_result.stdout}"
             )
-            assert "1/1" in status_result.stdout or "1/1 running" in status_result.stdout, (
+            assert (
+                "1/1" in status_result.stdout or "1/1 running" in status_result.stdout
+            ), (
                 "Expected 1/1 running daemon after `make up`.\n"
                 f"stdout: {status_result.stdout}"
             )
@@ -142,7 +146,10 @@ class TestMakeUpStatusDownCycle:
                 "Status output should still include daemon summary after shutdown.\n"
                 f"stdout: {status_after_down.stdout}"
             )
-            assert "0/1" in status_after_down.stdout or "0/1 running" in status_after_down.stdout, (
+            assert (
+                "0/1" in status_after_down.stdout
+                or "0/1 running" in status_after_down.stdout
+            ), (
                 "Expected 0/1 running daemon after `make down`.\n"
                 f"stdout: {status_after_down.stdout}"
             )

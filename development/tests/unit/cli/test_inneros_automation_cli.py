@@ -164,7 +164,9 @@ def test_ai_repair_metadata_routes_and_forwards_execute_and_format(
     assert exit_code == 3
 
 
-def test_unknown_top_level_command_returns_non_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_unknown_top_level_command_returns_non_zero(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Unknown top-level commands should not attempt to call subprocess and
     should return a non-zero exit code.
     """

@@ -1,4 +1,4 @@
-.PHONY: setup lint type test unit integ cov run ui up down status review fleeting clean-venv
+.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -48,6 +48,12 @@ setup: $(VENV)/bin/activate
 lint: $(VENV)/bin/activate
 	$(PYTHON) -m ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
 	$(PYTHON) -m black --check development/src development/tests
+
+format: $(VENV)/bin/activate
+	@echo "🔧 Auto-formatting code..."
+	$(PYTHON) -m ruff check --fix development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
+	$(PYTHON) -m black development/src development/tests
+	@echo "✅ Formatting complete."
 
 type: $(VENV)/bin/activate
 	$(PYTHON) -m pyright development/src || true

@@ -25,7 +25,7 @@ class TestPythonDaemonDetection:
         self, tmp_path
     ):
         """When PID file exists with valid running process, status should show running.
-        
+
         This is the core fix: check ~/.inneros/daemon.pid instead of ps aux script matching.
         """
         from src.automation.system_health import check_all
@@ -37,25 +37,29 @@ class TestPythonDaemonDetection:
 
         # Mock the daemon registry to return our Python daemon entry
         with patch("src.automation.system_health._load_daemons") as mock_load:
-            mock_load.return_value = [{
-                "name": "automation_daemon",
-                "script_path": "src.automation.daemon",  # Python module, not shell script
-                "log_path": ".automation/logs/daemon.log",
-                "pid_file": str(pid_file),
-                "description": "Main InnerOS automation daemon",
-            }]
-            
+            mock_load.return_value = [
+                {
+                    "name": "automation_daemon",
+                    "script_path": "src.automation.daemon",  # Python module, not shell script
+                    "log_path": ".automation/logs/daemon.log",
+                    "pid_file": str(pid_file),
+                    "description": "Main InnerOS automation daemon",
+                }
+            ]
+
             with patch("src.automation.system_health._get_daemon_pid_file") as mock_pid:
                 mock_pid.return_value = pid_file
-                
+
                 result = check_all(repo_root=tmp_path)
 
         # Expect the daemon to show as running
         assert result["overall_status"] == "OK", f"Expected OK, got {result}"
         assert len(result["automations"]) >= 1
-        
+
         daemon_status = result["automations"][0]
-        assert daemon_status["running"] is True, f"Daemon should be running: {daemon_status}"
+        assert (
+            daemon_status["running"] is True
+        ), f"Daemon should be running: {daemon_status}"
         assert daemon_status["name"] == "automation_daemon"
 
     def test_status_shows_not_running_when_pid_file_missing(self, tmp_path):
@@ -66,23 +70,27 @@ class TestPythonDaemonDetection:
         pid_file = tmp_path / ".inneros" / "daemon.pid"
 
         with patch("src.automation.system_health._load_daemons") as mock_load:
-            mock_load.return_value = [{
-                "name": "automation_daemon",
-                "script_path": "src.automation.daemon",
-                "log_path": ".automation/logs/daemon.log",
-                "pid_file": str(pid_file),
-                "description": "Main InnerOS automation daemon",
-            }]
-            
+            mock_load.return_value = [
+                {
+                    "name": "automation_daemon",
+                    "script_path": "src.automation.daemon",
+                    "log_path": ".automation/logs/daemon.log",
+                    "pid_file": str(pid_file),
+                    "description": "Main InnerOS automation daemon",
+                }
+            ]
+
             with patch("src.automation.system_health._get_daemon_pid_file") as mock_pid:
                 mock_pid.return_value = pid_file
-                
+
                 result = check_all(repo_root=tmp_path)
 
         # Expect daemon to show as not running
         assert len(result["automations"]) >= 1
         daemon_status = result["automations"][0]
-        assert daemon_status["running"] is False, f"Daemon should not be running: {daemon_status}"
+        assert (
+            daemon_status["running"] is False
+        ), f"Daemon should not be running: {daemon_status}"
 
     def test_status_shows_not_running_when_pid_file_has_stale_process(self, tmp_path):
         """When PID file exists but process is not running, status shows not running."""
@@ -94,23 +102,27 @@ class TestPythonDaemonDetection:
         pid_file.write_text("999999")  # Very unlikely to be a real running process
 
         with patch("src.automation.system_health._load_daemons") as mock_load:
-            mock_load.return_value = [{
-                "name": "automation_daemon",
-                "script_path": "src.automation.daemon",
-                "log_path": ".automation/logs/daemon.log",
-                "pid_file": str(pid_file),
-                "description": "Main InnerOS automation daemon",
-            }]
-            
+            mock_load.return_value = [
+                {
+                    "name": "automation_daemon",
+                    "script_path": "src.automation.daemon",
+                    "log_path": ".automation/logs/daemon.log",
+                    "pid_file": str(pid_file),
+                    "description": "Main InnerOS automation daemon",
+                }
+            ]
+
             with patch("src.automation.system_health._get_daemon_pid_file") as mock_pid:
                 mock_pid.return_value = pid_file
-                
+
                 result = check_all(repo_root=tmp_path)
 
         # Expect daemon to show as not running (stale PID)
         assert len(result["automations"]) >= 1
         daemon_status = result["automations"][0]
-        assert daemon_status["running"] is False, f"Daemon should not be running (stale): {daemon_status}"
+        assert (
+            daemon_status["running"] is False
+        ), f"Daemon should not be running (stale): {daemon_status}"
 
 
 class TestDaemonDetectorPIDSupport:
@@ -125,7 +137,7 @@ class TestDaemonDetectorPIDSupport:
         pid_file.write_text(str(os.getpid()))
 
         detector = DaemonDetector()
-        
+
         # New method that should be added: check_daemon_by_pid_file
         status = detector.check_daemon_by_pid_file(pid_file)
 
@@ -137,7 +149,7 @@ class TestDaemonDetectorPIDSupport:
         from src.cli.automation_status_cli import DaemonDetector
 
         pid_file = tmp_path / "nonexistent.pid"
-        
+
         detector = DaemonDetector()
         status = detector.check_daemon_by_pid_file(pid_file)
 
@@ -169,16 +181,18 @@ class TestSystemHealthPIDFileIntegration:
         # Setup: create daemon registry YAML with Python daemon entry
         config_dir = tmp_path / ".automation" / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         registry_file = config_dir / "daemon_registry.yaml"
-        registry_file.write_text("""
+        registry_file.write_text(
+            """
 daemons:
   - name: automation_daemon
     script_path: src.automation.daemon
     log_path: .automation/logs/daemon.log
     pid_file: .inneros/daemon.pid
     description: Main InnerOS automation daemon
-""")
+"""
+        )
 
         # Create running daemon PID file
         pid_file = tmp_path / ".inneros" / "daemon.pid"
@@ -191,7 +205,9 @@ daemons:
         assert len(result["automations"]) == 1
         daemon_status = result["automations"][0]
         assert daemon_status["name"] == "automation_daemon"
-        assert daemon_status["running"] is True, f"Should detect running daemon: {daemon_status}"
+        assert (
+            daemon_status["running"] is True
+        ), f"Should detect running daemon: {daemon_status}"
         assert result["overall_status"] == "OK"
 
     def test_check_all_returns_ok_with_single_running_daemon(self, tmp_path):
@@ -201,16 +217,18 @@ daemons:
         # Setup registry with single Python daemon
         config_dir = tmp_path / ".automation" / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         registry_file = config_dir / "daemon_registry.yaml"
-        registry_file.write_text("""
+        registry_file.write_text(
+            """
 daemons:
   - name: automation_daemon
     script_path: src.automation.daemon
     log_path: .automation/logs/daemon.log
     pid_file: .inneros/daemon.pid
     description: Main InnerOS automation daemon
-""")
+"""
+        )
 
         # Daemon running
         pid_file = tmp_path / ".inneros" / "daemon.pid"
@@ -218,7 +236,7 @@ daemons:
         pid_file.write_text(str(os.getpid()))
 
         result = check_all(repo_root=tmp_path)
-        
+
         assert result["overall_status"] == "OK"
 
     def test_check_all_returns_warning_when_daemon_not_running(self, tmp_path):
@@ -228,21 +246,23 @@ daemons:
         # Setup registry with single Python daemon
         config_dir = tmp_path / ".automation" / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         registry_file = config_dir / "daemon_registry.yaml"
-        registry_file.write_text("""
+        registry_file.write_text(
+            """
 daemons:
   - name: automation_daemon
     script_path: src.automation.daemon
     log_path: .automation/logs/daemon.log
     pid_file: .inneros/daemon.pid
     description: Main InnerOS automation daemon
-""")
+"""
+        )
 
         # No PID file = daemon not running
 
         result = check_all(repo_root=tmp_path)
-        
+
         # Not running without errors should be WARNING (not ERROR)
         assert result["overall_status"] in ["WARNING", "ERROR"]
 
@@ -253,21 +273,23 @@ class TestMakeUpMakeStatusCycleAlignment:
     def test_status_uses_same_pid_file_as_daemon_start(self, tmp_path):
         """Status checker must use same PID file location as daemon starter."""
         from src.cli.daemon_cli_utils import DaemonStarter
-        
+
         # Get default PID file path from DaemonStarter
         starter = DaemonStarter()
         expected_pid_path = starter.pid_file
-        
+
         # Verify it's ~/.inneros/daemon.pid
         assert expected_pid_path == Path.home() / ".inneros" / "daemon.pid"
-        
+
         # Now verify system_health can be configured to check this location
         # This will fail until we implement the fix
         from src.automation import system_health
-        
+
         # New function we need to add
         pid_file = system_health._get_daemon_pid_file()
-        assert pid_file == expected_pid_path, f"PID file mismatch: {pid_file} vs {expected_pid_path}"
+        assert (
+            pid_file == expected_pid_path
+        ), f"PID file mismatch: {pid_file} vs {expected_pid_path}"
 
     def test_integration_daemon_start_then_status_shows_running(self, tmp_path):
         """Full integration: start daemon, check status shows running."""
@@ -284,25 +306,29 @@ class TestMakeUpMakeStatusCycleAlignment:
         # Check via EnhancedDaemonStatus (daemon CLI)
         status_checker = EnhancedDaemonStatus(pid_file_path=pid_file)
         status = status_checker.get_status()
-        assert status["running"] is True, f"EnhancedDaemonStatus should detect running: {status}"
+        assert (
+            status["running"] is True
+        ), f"EnhancedDaemonStatus should detect running: {status}"
 
         # Check via system_health (make status path)
         # This requires the fix we're implementing
         config_dir = tmp_path / ".automation" / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         registry_file = config_dir / "daemon_registry.yaml"
-        registry_file.write_text(f"""
+        registry_file.write_text(
+            f"""
 daemons:
   - name: automation_daemon
     script_path: src.automation.daemon
     log_path: .automation/logs/daemon.log
     pid_file: {pid_file}
     description: Main InnerOS automation daemon
-""")
+"""
+        )
 
         result = check_all(repo_root=tmp_path)
-        
+
         assert len(result["automations"]) == 1
         assert result["automations"][0]["running"] is True
         assert result["overall_status"] == "OK"

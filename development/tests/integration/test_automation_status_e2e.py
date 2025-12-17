@@ -100,7 +100,9 @@ class TestInnerOSStatusCLI:
         log_rel = first.get("log_path", ".automation/logs/daemon.log")
         log_path = repo_root / log_rel
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_text("2025-12-02 16:00:00 - SUCCESS - automation daemon started\n")
+        log_path.write_text(
+            "2025-12-02 16:00:00 - SUCCESS - automation daemon started\n"
+        )
 
     def test_cli_exit_zero_and_lists_daemons_when_healthy(
         self,
@@ -139,9 +141,9 @@ class TestInnerOSStatusCLI:
         )
 
         # Output should show an overall OK line
-        assert "Overall status: OK" in result.stdout, (
-            f"Expected 'Overall status: OK' in output.\nstdout: {result.stdout}"
-        )
+        assert (
+            "Overall status: OK" in result.stdout
+        ), f"Expected 'Overall status: OK' in output.\nstdout: {result.stdout}"
 
         # Output should include all daemon names from the registry
         for name in registry_daemon_names:
@@ -203,7 +205,9 @@ class TestMakeStatusTarget:
     def repo_root(self) -> Path:
         return Path(__file__).parent.parent.parent.parent
 
-    def test_make_status_exits_non_zero_when_unhealthy(self, repo_root: Path, tmp_path: Path) -> None:
+    def test_make_status_exits_non_zero_when_unhealthy(
+        self, repo_root: Path, tmp_path: Path
+    ) -> None:
         """`make status` should return a non-zero code when daemon is unhealthy.
 
         We override HOME so this does not depend on any real ~/.inneros state.

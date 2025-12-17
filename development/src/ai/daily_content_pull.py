@@ -11,7 +11,7 @@ analytics.
 Architecture (ADR-010 Section 4):
 - Stage 0: Candidate Selection (this module)
 - Stage 1: Summary Assurance
-- Stage 2: Batch Review  
+- Stage 2: Batch Review
 - Stage 3: Blender Synthesis
 """
 

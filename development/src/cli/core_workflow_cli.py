@@ -110,7 +110,9 @@ class CoreWorkflowCLI:
         if results.get("skipped_notes"):
             self._print_section("SKIPPED NOTES")
             # skipped_notes is dict: {filename: reason}
-            for filename, reason in list(results["skipped_notes"].items())[:5]:  # Show first 5
+            for filename, reason in list(results["skipped_notes"].items())[
+                :5
+            ]:  # Show first 5
                 print(f"   📄 {filename}")
                 print(f"      Reason: {reason}")
 
