@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv
+.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv smoke
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -28,6 +28,16 @@ review:
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
 	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault knowledge fleeting-health
+
+smoke:
+	@echo "🔥 Running usability smoke test..."
+	@echo "--- Step 1/3: Status check ---"
+	@$(MAKE) status
+	@echo "--- Step 2/3: Review (preview) ---"
+	@$(MAKE) review
+	@echo "--- Step 3/3: Fleeting health ---"
+	@$(MAKE) fleeting
+	@echo "✅ Smoke test complete. All core commands working."
 
 # ============================================
 # DEV COMMANDS (for development only)
