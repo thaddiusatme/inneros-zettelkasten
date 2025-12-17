@@ -1,4 +1,10 @@
-.PHONY: setup lint type test unit integ cov run ui up down status review fleeting
+.PHONY: setup lint type test unit integ cov run ui up down status review fleeting clean-venv
+
+# Venv configuration - ensures reproducible tooling
+VENV := .venv
+PYTHON := $(VENV)/bin/python
+PIP := $(VENV)/bin/pip
+SYSTEM_PYTHON ?= python3
 
 # ============================================
 # USER COMMANDS (what you use daily)
@@ -27,28 +33,41 @@ fleeting:
 # DEV COMMANDS (for development only)
 # ============================================
 
-setup:
-	python3 -m pip install -r requirements.txt
-	python3 -m pip install ruff black pyright pytest pytest-cov pytest-timeout
+# Bootstrap venv (idempotent - only creates if missing)
+$(VENV)/bin/activate:
+	@echo "📦 Creating virtual environment..."
+	$(SYSTEM_PYTHON) -m venv $(VENV)
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install -r dev-requirements.txt
+	@echo "✅ Virtual environment ready at $(VENV)"
 
-lint:
-	python3 -m ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
-	python3 -m black --check development/src development/tests
+setup: $(VENV)/bin/activate
+	@echo "✅ Setup complete. Use 'make lint' to check code."
 
-type:
-	python3 -m pyright development/src || true
+lint: $(VENV)/bin/activate
+	$(PYTHON) -m ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
+	$(PYTHON) -m black --check development/src development/tests
 
-unit:
-	PYTHONPATH=development python3 -m pytest -q --timeout=300 -m "not slow" development/tests/unit
+type: $(VENV)/bin/activate
+	$(PYTHON) -m pyright development/src || true
 
-unit-all:
-	PYTHONPATH=development python3 -m pytest -q --timeout=300 development/tests/unit
+clean-venv:
+	@echo "🧹 Removing virtual environment..."
+	rm -rf $(VENV)
+	@echo "✅ Virtual environment removed. Run 'make setup' to recreate."
 
-integ:
-	PYTHONPATH=development python3 -m pytest -q development/tests/integration
+unit: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 -m "not slow" development/tests/unit
 
-cov:
-	PYTHONPATH=development python3 -m pytest --cov=development/src --cov-report=term-missing
+unit-all: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 development/tests/unit
+
+integ: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest -q development/tests/integration
+
+cov: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest --cov=development/src --cov-report=term-missing
 
 test: lint type unit
 
