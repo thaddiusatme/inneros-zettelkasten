@@ -204,9 +204,9 @@ class TestThreeDaemonOutput:
 
         # All 3 daemon names must appear in output
         for daemon_name in CORE_DAEMON_NAMES:
-            assert daemon_name in captured.out, (
-                f"Daemon '{daemon_name}' not found in output"
-            )
+            assert (
+                daemon_name in captured.out
+            ), f"Daemon '{daemon_name}' not found in output"
 
         assert exit_code == 0
 
@@ -227,9 +227,9 @@ class TestThreeDaemonOutput:
 
         # All 3 daemon names must appear in output
         for daemon_name in CORE_DAEMON_NAMES:
-            assert daemon_name in captured.out, (
-                f"Daemon '{daemon_name}' not found in output"
-            )
+            assert (
+                daemon_name in captured.out
+            ), f"Daemon '{daemon_name}' not found in output"
 
         # The specific error message should also be visible
         assert "OneDrive path not accessible" in captured.out
@@ -295,7 +295,9 @@ class TestExitCodeSemantics:
 
         exit_code = main([])
         # WARNING should also return non-zero for shell script safety
-        assert exit_code != 0, "Should exit non-zero when any daemon is in warning state"
+        assert (
+            exit_code != 0
+        ), "Should exit non-zero when any daemon is in warning state"
 
 
 class TestMachineParseable:

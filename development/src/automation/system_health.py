@@ -74,9 +74,7 @@ def _build_automation_entry(
         # Fall back to ps aux script path matching for shell scripts
         status = detector.check_daemon_status(name, script_path)
 
-    log_rel_path = daemon_config.get(
-        "log_path", f".automation/logs/{name}.log"
-    )
+    log_rel_path = daemon_config.get("log_path", f".automation/logs/{name}.log")
     log_path = repo_root / log_rel_path
     last_run = parser.parse_last_run(log_path)
 

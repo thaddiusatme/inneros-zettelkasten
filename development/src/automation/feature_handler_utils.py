@@ -63,7 +63,9 @@ class ScreenshotProcessorIntegrator:
         self.logger = logger
         self.ocr_enabled = ocr_enabled
         self.processing_timeout = processing_timeout
-        self.knowledge_path = knowledge_path or (onedrive_path.parent if onedrive_path else Path.cwd())
+        self.knowledge_path = knowledge_path or (
+            onedrive_path.parent if onedrive_path else Path.cwd()
+        )
         self.processor = None
 
     def process_screenshot(self, file_path: Path) -> Dict[str, Any]:
@@ -89,7 +91,7 @@ class ScreenshotProcessorIntegrator:
 
         try:
             from datetime import date
-            
+
             # Initialize processor (lazy initialization for performance)
             if not self.processor:
                 self.processor = ScreenshotProcessor(
@@ -102,18 +104,18 @@ class ScreenshotProcessorIntegrator:
 
             if ocr_results:
                 self.logger.info(f"Screenshot processed with OCR: {file_path.name}")
-                
+
                 # Generate note with OCR results
                 ocr_results_list = list(ocr_results.values())
                 screenshot_paths = list(ocr_results.keys())
                 date_str = date.today().isoformat()
-                
+
                 note_path = self.processor.note_generator.generate_daily_note(
                     ocr_results=ocr_results_list,
                     screenshot_paths=screenshot_paths,
                     date_str=date_str,
                 )
-                
+
                 return {
                     "success": True,
                     "ocr_results": ocr_results,

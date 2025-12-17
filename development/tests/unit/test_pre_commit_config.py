@@ -111,7 +111,9 @@ class TestPreCommitConfig:
             if pytest_hook is not None:
                 break
 
-        assert pytest_hook is not None, "pytest-unit-fast hook must be defined in pre-commit config"
+        assert (
+            pytest_hook is not None
+        ), "pytest-unit-fast hook must be defined in pre-commit config"
 
         args = pytest_hook.get("args", [])
         joined_args = " ".join(args)
@@ -141,7 +143,9 @@ class TestPreCommitConfig:
 
         assert ruff_hook is not None, "Expected ruff hook in pre-commit fast subset"
         assert black_hook is not None, "Expected black hook in pre-commit fast subset"
-        assert pytest_fast_hook is not None, "Expected pytest-unit-fast hook in pre-commit fast subset"
+        assert (
+            pytest_fast_hook is not None
+        ), "Expected pytest-unit-fast hook in pre-commit fast subset"
 
         ruff_args = ruff_hook.get("args", [])
         # Ruff should lint development/src and development/tests with the same
@@ -183,8 +187,12 @@ class TestPreCommitConfig:
         ci_lite_path = root / ".github" / "workflows" / "ci-lite.yml"
         ci_main_path = root / ".github" / "workflows" / "ci.yml"
 
-        assert ci_lite_path.exists(), "Expected .github/workflows/ci-lite.yml for fast CI checks"
-        assert ci_main_path.exists(), "Expected .github/workflows/ci.yml for full CI checks"
+        assert (
+            ci_lite_path.exists()
+        ), "Expected .github/workflows/ci-lite.yml for fast CI checks"
+        assert (
+            ci_main_path.exists()
+        ), "Expected .github/workflows/ci.yml for full CI checks"
 
         ci_lite = yaml.safe_load(ci_lite_path.read_text(encoding="utf-8"))
         ci_main = yaml.safe_load(ci_main_path.read_text(encoding="utf-8"))

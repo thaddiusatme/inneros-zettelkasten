@@ -104,7 +104,9 @@ quality_score: 0.80
 
 Another note without metadata.
 """
-        note_path = self._write_inbox_note(temp_vault, "sprint-2-8020.md", broken_content)
+        note_path = self._write_inbox_note(
+            temp_vault, "sprint-2-8020.md", broken_content
+        )
 
         # First run: should repair the note
         first = workflow_manager.repair_inbox_metadata(execute=True)
@@ -194,7 +196,9 @@ Source: https://example.com/newsletter
             self._write_inbox_note(temp_vault, filename, content)
 
         # Precondition: auto-promote should see metadata errors due to missing type
-        before = workflow_manager.auto_promote_ready_notes(dry_run=True, quality_threshold=0.7)
+        before = workflow_manager.auto_promote_ready_notes(
+            dry_run=True, quality_threshold=0.7
+        )
         assert before["total_candidates"] == 2
         assert before["error_count"] >= 1
         # At least one error message should reference 'type'
@@ -202,7 +206,9 @@ Source: https://example.com/newsletter
 
         # Act: repair metadata (execute mode) and re-run auto-promotion
         workflow_manager.repair_inbox_metadata(execute=True)
-        after = workflow_manager.auto_promote_ready_notes(dry_run=True, quality_threshold=0.7)
+        after = workflow_manager.auto_promote_ready_notes(
+            dry_run=True, quality_threshold=0.7
+        )
 
         # After repair: no metadata errors; both notes should be promotable
         assert after["total_candidates"] == 2
@@ -223,7 +229,9 @@ quality_score: 0.75
 
 Needs metadata repair.
 """
-        note_path = self._write_inbox_note(temp_vault, "progress-8-26.md", broken_content)
+        note_path = self._write_inbox_note(
+            temp_vault, "progress-8-26.md", broken_content
+        )
 
         before = note_path.read_text(encoding="utf-8")
 

@@ -30,7 +30,7 @@ class BatchProcessingCoordinator:
         # Ensure inbox directory exists (create if needed for test environments)
         created = not inbox_dir.exists()
         inbox_dir.mkdir(parents=True, exist_ok=True)
-        
+
         if created:
             logger.info(f"Created inbox directory for test environment: {inbox_dir}")
         else:
@@ -43,7 +43,7 @@ class BatchProcessingCoordinator:
 
         self.inbox_dir = inbox_dir
         self.process_callback = process_callback
-        
+
         logger.info(
             f"BatchProcessingCoordinator initialized: inbox_dir={inbox_dir}, "
             f"has_callback={process_callback is not None}"
@@ -53,7 +53,7 @@ class BatchProcessingCoordinator:
         """Process all notes in the inbox with progress tracking."""
         inbox_files = list(self.inbox_dir.glob("*.md"))
         total = len(inbox_files)
-        
+
         logger.info(
             f"Starting batch processing: {total} files in {self.inbox_dir}, "
             f"show_progress={show_progress}"
@@ -109,7 +109,7 @@ class BatchProcessingCoordinator:
                 results["failed"] += 1
                 logger.error(
                     f"Exception processing {note_file.name}: {type(e).__name__}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 results["results"].append(
                     {"original_file": str(note_file), "error": str(e)}
