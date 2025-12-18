@@ -11,6 +11,12 @@ Architecture:
 - Minimal wrapping of existing functionality
 
 Usage:
+    # Create a timestamped backup
+    python3 backup_cli.py backup
+
+    # Create backup with JSON output for automation
+    python3 backup_cli.py backup --format json
+
     # Prune old backups (keep 5 most recent)
     python3 backup_cli.py prune-backups --keep 5
 
@@ -43,6 +49,7 @@ class BackupCLI:
     Dedicated CLI for backup management operations
 
     Responsibilities:
+    - Backup creation (timestamped backups)
     - Backup pruning (keep N most recent)
     - Handle output formatting (normal/JSON)
 
@@ -69,6 +76,45 @@ class BackupCLI:
     def _is_quiet_mode(self, output_format: str) -> bool:
         """Check if output should be suppressed (JSON mode)."""
         return output_format == "json"
+
+    def backup(self, output_format: str = "normal") -> int:
+        """
+        Create a timestamped backup of the vault.
+
+        Args:
+            output_format: 'normal' or 'json'
+
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
+        quiet = self._is_quiet_mode(output_format)
+
+        try:
+            if not quiet:
+                print("💾 Creating timestamped backup...")
+
+            # Execute backup using DirectoryOrganizer
+            # create_backup() returns a string path, wrap in dict for consistent output
+            backup_path = self.organizer.create_backup()
+            backup_result = {
+                "backup_path": str(backup_path),
+                "success": True,
+            }
+
+            # Format and display output
+            if quiet:
+                print(json.dumps(backup_result, indent=2, default=str))
+            else:
+                self._print_header("BACKUP CREATED")
+                print("✅ Backup created successfully")
+                print(f"📁 Location: {backup_path}")
+
+            return 0
+
+        except Exception as e:
+            print(f"❌ Error creating backup: {e}", file=sys.stderr)
+            logger.exception("Error in backup")
+            return 1
 
     def prune_backups(
         self, keep: int = 5, dry_run: bool = False, output_format: str = "normal"
@@ -136,6 +182,12 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # Create a timestamped backup
+  %(prog)s backup
+  
+  # Create backup with JSON output
+  %(prog)s backup --format json
+  
   # Prune backups (keep 5 most recent)
   %(prog)s prune-backups --keep 5
   
@@ -158,6 +210,14 @@ Examples:
 
     # Subcommands
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # backup subcommand (create backup)
+    backup_parser = subparsers.add_parser(
+        "backup", help="Create a timestamped backup of the vault"
+    )
+    backup_parser.add_argument(
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
+    )
 
     # prune-backups subcommand
     prune_parser = subparsers.add_parser(
@@ -199,7 +259,9 @@ def main():
 
     # Execute command
     try:
-        if args.command == "prune-backups":
+        if args.command == "backup":
+            return cli.backup(output_format=args.format)
+        elif args.command == "prune-backups":
             return cli.prune_backups(
                 keep=args.keep, dry_run=args.dry_run, output_format=args.format
             )

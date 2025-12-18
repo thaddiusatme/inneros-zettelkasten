@@ -9,7 +9,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+PYTHON="$REPO_ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "[ERROR] Missing executable venv python at: $PYTHON" >&2
+    echo "[ERROR] Run 'make setup' to create the repo venv." >&2
+    exit 1
+fi
+# Dedicated CLIs (ADR-004 CLI Layer Extraction - Issue #39)
+CORE_CLI="$PYTHON $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+BACKUP_CLI="$PYTHON $REPO_ROOT/development/src/cli/backup_cli.py"
+CONNECTIONS_CLI="$PYTHON $REPO_ROOT/development/src/cli/connections_demo.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
 REVIEW_DIR="$REPO_ROOT/.automation/review_queue"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
@@ -136,7 +145,7 @@ main() {
     
     # Step 1: Quick health check
     log "📊 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "$CORE_CLI '$KNOWLEDGE_DIR' status" 30; then
         log_error "System health check failed"
         send_notification "FAILED" "System health check failed"
         exit 1
@@ -144,7 +153,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating safety backup..."  
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 60; then
+    if ! run_with_timeout "$BACKUP_CLI --vault '$KNOWLEDGE_DIR' backup" 60; then
         log_error "Backup creation failed"
         send_notification "FAILED" "Backup creation failed"
         exit 1
@@ -152,7 +161,7 @@ main() {
     
     # Step 3: Process inbox with AI enhancement (no promotion, just analysis)
     log "🧠 Processing inbox with AI enhancement..."
-    process_cmd="$CLI '$KNOWLEDGE_DIR' --process-inbox --progress --export '$REVIEW_REPORT.tmp'"
+    process_cmd="$CORE_CLI '$KNOWLEDGE_DIR' process-inbox"
     
     if run_with_timeout "$process_cmd" 300; then
         notes_processed=$(grep -c "processed" "$LOG_FILE" || echo "0")
@@ -165,7 +174,7 @@ main() {
     
     # Step 4: Generate connection suggestions
     log "🔗 Discovering semantic connections..."
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links" 120; then
+    if run_with_timeout "$CONNECTIONS_CLI '$KNOWLEDGE_DIR' --corpus-dir '$KNOWLEDGE_DIR'" 120; then
         log "✅ Connection discovery completed"
     else
         log_error "Connection discovery failed or timed out (non-critical)"

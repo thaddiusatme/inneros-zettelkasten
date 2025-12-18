@@ -28,7 +28,18 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 cd "$REPO_ROOT"
 
 KNOWLEDGE_DIR="knowledge/"
-CLI="python3 development/src/cli/workflow_demo.py"
+PYTHON="$REPO_ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+  echo "[ERROR] Missing executable venv python at: $PYTHON" >&2
+  echo "[ERROR] Run 'make setup' to create the repo venv." >&2
+  exit 1
+fi
+# Dedicated CLIs (ADR-004 CLI Layer Extraction - Issue #39)
+CORE_CLI="$PYTHON development/src/cli/core_workflow_cli.py"
+BACKUP_CLI="$PYTHON development/src/cli/backup_cli.py"
+SCREENSHOT_CLI="$PYTHON development/src/cli/screenshot_cli.py"
+FLEETING_CLI="$PYTHON development/src/cli/fleeting_cli.py"
+CONNECTIONS_CLI="$PYTHON development/src/cli/connections_demo.py"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 
 # Defaults
@@ -97,12 +108,12 @@ run_with_timeout() {
 }
 
 echo "[1/5] Checking workflow status (read-only)…"
-run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" "Status check timed out" || true
+run_with_timeout "$CORE_CLI '$KNOWLEDGE_DIR' status" "Status check timed out" || true
 
 echo
 if [[ "$DO_BACKUP" -eq 1 ]]; then
   echo "[2/5] Creating timestamped backup (safety-first)…"
-  $CLI "$KNOWLEDGE_DIR" --backup
+  $BACKUP_CLI --vault "$KNOWLEDGE_DIR" backup
 else
   echo "[2/5] Skipping backup as requested (--skip-backup)."
 fi
@@ -112,7 +123,7 @@ if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
   echo "[3/5] Samsung Evening Screenshots: DRY-RUN (non-mutating)…"
   
   # Build screenshot command with options
-  screenshot_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
+  screenshot_cmd="$SCREENSHOT_CLI --vault '$KNOWLEDGE_DIR' process --dry-run --progress"
   if [[ -n "$ONEDRIVE_PATH" ]]; then
     screenshot_cmd="$screenshot_cmd --onedrive-path '$ONEDRIVE_PATH'"
   fi
@@ -124,7 +135,7 @@ if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
     echo "⚠️  Screenshot dry-run failed/timed out. Try --no-ocr or --force-fallback"
     if [[ "$NO_OCR" -eq 0 ]]; then
       echo "Retrying with basic command (OCR fallback not yet available in CLI)..."
-      basic_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --dry-run --progress"
+      basic_cmd="$SCREENSHOT_CLI --vault '$KNOWLEDGE_DIR' process --dry-run --progress"
       if [[ -n "$ONEDRIVE_PATH" ]]; then
         basic_cmd="$basic_cmd --onedrive-path '$ONEDRIVE_PATH'"
       fi
@@ -141,7 +152,7 @@ if [[ "$DO_SCREENSHOTS" -eq 1 ]]; then
   read -r -p "Proceed with ACTUAL Samsung screenshot import? [y/N] " RESP
   if [[ "$RESP" =~ ^[Yy]$ ]]; then
     # Build actual command
-    actual_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --progress"
+    actual_cmd="$SCREENSHOT_CLI --vault '$KNOWLEDGE_DIR' process --progress"
     if [[ -n "$ONEDRIVE_PATH" ]]; then
       actual_cmd="$actual_cmd --onedrive-path '$ONEDRIVE_PATH'"
     fi
@@ -161,7 +172,7 @@ fi
 
 echo
 echo "[4/5] Inbox processing: DRY-RUN (fast-mode) to preview…"
-if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --process-inbox --dry-run" "Inbox dry-run timed out"; then
+if ! run_with_timeout "$CORE_CLI '$KNOWLEDGE_DIR' process-inbox --format normal" "Inbox dry-run timed out"; then
   echo "⚠️  Inbox dry-run failed/timed out. Continuing anyway..."
 fi
 
@@ -173,7 +184,7 @@ fi
 echo
 read -r -p "Proceed with ACTUAL inbox processing with progress? [y/N] " RESP2
 if [[ "$RESP2" =~ ^[Yy]$ ]]; then
-  inbox_cmd="$CLI '$KNOWLEDGE_DIR' --process-inbox --progress"
+  inbox_cmd="$CORE_CLI '$KNOWLEDGE_DIR' process-inbox"
   if [[ -n "$EXPORT_PATH" ]]; then
     echo "Running with export → $EXPORT_PATH"
     inbox_cmd="$inbox_cmd --export '$EXPORT_PATH'"
@@ -190,13 +201,13 @@ fi
 if [[ "$RUN_FLEETING_TRIAGE" -eq 1 ]]; then
   echo
   echo "[5/5] Optional: Fleeting triage report (min-quality=$MIN_QUALITY)…"
-  run_with_timeout "$CLI '$KNOWLEDGE_DIR' --fleeting-triage --min-quality '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
+  run_with_timeout "$FLEETING_CLI --vault '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold '$MIN_QUALITY'" "Fleeting triage timed out" || echo "⚠️  Triage failed/timed out"
 fi
 
 if [[ "$RUN_SUGGEST_LINKS" -eq 1 ]]; then
   echo
   echo "[5/5] Optional: Smart Link suggestions for new/updated notes…"
-  run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links" "Link suggestions timed out" || echo "⚠️  Link suggestions failed/timed out"
+  run_with_timeout "$CONNECTIONS_CLI '$KNOWLEDGE_DIR' --corpus-dir '$KNOWLEDGE_DIR'" "Link suggestions timed out" || echo "⚠️  Link suggestions failed/timed out"
 fi
 
 echo

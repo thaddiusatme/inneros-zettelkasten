@@ -9,7 +9,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+PYTHON="$REPO_ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "[ERROR] Missing executable venv python at: $PYTHON" >&2
+    echo "[ERROR] Run 'make setup' to create the repo venv." >&2
+    exit 1
+fi
+# Dedicated CLIs (ADR-004 CLI Layer Extraction - Issue #39)
+CORE_CLI="$PYTHON $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+BACKUP_CLI="$PYTHON $REPO_ROOT/development/src/cli/backup_cli.py"
+SCREENSHOT_CLI="$PYTHON $REPO_ROOT/development/src/cli/screenshot_cli.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/screenshot_import_$TIMESTAMP.log"
@@ -89,7 +98,7 @@ main() {
     
     # Step 1: System health check (30s timeout)
     log "📊 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "$CORE_CLI '$KNOWLEDGE_DIR' status" 30; then
         log_error "System health check failed or timed out"
         send_notification "FAILED" "System health check failed. Check logs: $LOG_FILE"
         exit 1
@@ -97,7 +106,7 @@ main() {
     
     # Step 2: Create backup (safety first, 60s timeout)  
     log "💾 Creating safety backup..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 60; then
+    if ! run_with_timeout "$BACKUP_CLI --vault '$KNOWLEDGE_DIR' backup" 60; then
         log_error "Backup creation failed"
         send_notification "FAILED" "Backup creation failed. Check logs: $LOG_FILE"
         exit 1
@@ -105,7 +114,7 @@ main() {
     
     # Step 3: Import screenshots with built-in fallback handling (180s timeout)
     log "📸 Importing Samsung screenshots with progress tracking..."
-    screenshot_cmd="$CLI '$KNOWLEDGE_DIR' --evening-screenshots --progress"
+    screenshot_cmd="$SCREENSHOT_CLI --vault '$KNOWLEDGE_DIR' process --progress"
     
     if run_with_timeout "$screenshot_cmd" 180; then
         screenshot_count=$(grep -c "✅ Screenshot imported" "$LOG_FILE" || echo "0")

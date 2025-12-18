@@ -9,7 +9,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+PYTHON="$REPO_ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "[ERROR] Missing executable venv python at: $PYTHON" >&2
+    echo "[ERROR] Run 'make setup' to create the repo venv." >&2
+    exit 1
+fi
+# Dedicated CLIs (ADR-004 CLI Layer Extraction - Issue #39)
+CORE_CLI="$PYTHON $REPO_ROOT/development/src/cli/core_workflow_cli.py"
+BACKUP_CLI="$PYTHON $REPO_ROOT/development/src/cli/backup_cli.py"
+FLEETING_CLI="$PYTHON $REPO_ROOT/development/src/cli/fleeting_cli.py"
+WEEKLY_CLI="$PYTHON $REPO_ROOT/development/src/cli/weekly_review_cli.py"
+CONNECTIONS_CLI="$PYTHON $REPO_ROOT/development/src/cli/connections_demo.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
 REVIEW_DIR="$REPO_ROOT/.automation/review_queue"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
@@ -184,7 +195,7 @@ main() {
     
     # Step 1: System health check
     log "🏥 Checking system health..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --status" 30; then
+    if ! run_with_timeout "$CORE_CLI '$KNOWLEDGE_DIR' status" 30; then
         log_error "System health check failed"
         send_weekly_notification "FAILED" "System health check failed"
         exit 1
@@ -192,7 +203,7 @@ main() {
     
     # Step 2: Safety backup
     log "💾 Creating weekly backup..."
-    if ! run_with_timeout "$CLI '$KNOWLEDGE_DIR' --backup" 120; then
+    if ! run_with_timeout "$BACKUP_CLI --vault '$KNOWLEDGE_DIR' backup" 120; then
         log_error "Weekly backup failed"
         send_weekly_notification "FAILED" "Weekly backup failed"
         exit 1
@@ -201,7 +212,7 @@ main() {
     # Step 3: Fleeting note triage analysis
     log "📝 Analyzing fleeting notes for promotion candidates..."
     triage_export="$REVIEW_DIR/fleeting_triage_$TIMESTAMP.md"
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --fleeting-triage --min-quality $MIN_QUALITY_THRESHOLD --export '$triage_export'" 180; then
+    if run_with_timeout "$FLEETING_CLI --vault '$KNOWLEDGE_DIR' fleeting-triage --quality-threshold $MIN_QUALITY_THRESHOLD --export '$triage_export'" 180; then
         log "✅ Fleeting triage completed"
     else
         log_error "Fleeting triage failed (non-critical)"
@@ -209,7 +220,7 @@ main() {
     
     # Step 4: Enhanced metrics with orphaned/stale detection
     log "📊 Generating enhanced knowledge metrics..."
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --enhanced-metrics --export '$ENHANCED_METRICS_EXPORT'" 120; then
+    if run_with_timeout "$WEEKLY_CLI --vault '$KNOWLEDGE_DIR' enhanced-metrics --export '$ENHANCED_METRICS_EXPORT'" 120; then
         log "✅ Enhanced metrics completed"
     else
         log_error "Enhanced metrics failed (non-critical)"
@@ -218,7 +229,7 @@ main() {
     # Step 5: Semantic connection discovery
     log "🔗 Discovering new semantic connections..."
     links_export="$REVIEW_DIR/link_suggestions_$TIMESTAMP.md"
-    if run_with_timeout "$CLI '$KNOWLEDGE_DIR' --suggest-links --export '$links_export'" 300; then
+    if run_with_timeout "$CONNECTIONS_CLI '$KNOWLEDGE_DIR' --corpus-dir '$KNOWLEDGE_DIR' --export '$links_export'" 300; then
         log "✅ Link suggestions completed"
     else
         log_error "Link suggestions failed (non-critical)"

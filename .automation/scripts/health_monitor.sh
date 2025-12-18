@@ -9,8 +9,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 KNOWLEDGE_DIR="$REPO_ROOT/knowledge/"
-CLI="python3 $REPO_ROOT/development/src/cli/workflow_demo.py"
+PYTHON="$REPO_ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+    echo "[ERROR] Missing executable venv python at: $PYTHON" >&2
+    echo "[ERROR] Run 'make setup' to create the repo venv." >&2
+    exit 1
+fi
+# Dedicated CLIs (ADR-004 CLI Layer Extraction - Issue #39)
+CORE_CLI="$PYTHON $REPO_ROOT/development/src/cli/core_workflow_cli.py"
 LOG_DIR="$REPO_ROOT/.automation/logs"
+REVIEW_DIR="$REPO_ROOT/.automation/review_queue"
 TIMESTAMP="$(date +%Y-%m-%d_%H-%M-%S)"
 LOG_FILE="$LOG_DIR/health_monitor_$TIMESTAMP.log"
 
@@ -20,8 +28,8 @@ MAX_LOG_SIZE_MB=100    # Alert if log directory exceeds 100MB
 MIN_DISK_SPACE_GB=5    # Alert if available space < 5GB
 MAX_BACKUP_AGE_DAYS=7  # Alert if no backup in 7 days
 
-# Ensure log directory exists
-mkdir -p "$LOG_DIR"
+# Ensure log/review directories exist
+mkdir -p "$LOG_DIR" "$REVIEW_DIR"
 
 # Logging functions
 log() {
@@ -79,7 +87,9 @@ check_log_size() {
 
 # Check available disk space
 check_disk_space() {
-    local available_gb=$(df -BG "$REPO_ROOT" | awk 'NR==2 {print $4}' | sed 's/G//')
+    local available_kb
+    available_kb=$(df -Pk "$REPO_ROOT" | awk 'NR==2 {print $4}')
+    local available_gb=$((available_kb / 1024 / 1024))
     
     if [[ $available_gb -lt $MIN_DISK_SPACE_GB ]]; then
         send_alert "Low disk space" "Only ${available_gb}GB available (threshold: ${MIN_DISK_SPACE_GB}GB). Free up space soon."
@@ -126,12 +136,12 @@ check_system_responsiveness() {
     local start_time=$(date +%s)
     local ok=1
     if command -v gtimeout >/dev/null 2>&1; then
-        if gtimeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if gtimeout 15 $CORE_CLI "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     elif command -v timeout >/dev/null 2>&1; then
-        if timeout 15 "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if timeout 15 $CORE_CLI "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     else
         # No timeout available; run directly
-        if "$CLI" "$KNOWLEDGE_DIR" --status >/dev/null 2>&1; then ok=0; fi
+        if $CORE_CLI "$KNOWLEDGE_DIR" status >/dev/null 2>&1; then ok=0; fi
     fi
     if [[ $ok -eq 0 ]]; then
         local duration=$(($(date +%s) - start_time))
