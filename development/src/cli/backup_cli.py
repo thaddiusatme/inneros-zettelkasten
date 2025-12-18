@@ -37,6 +37,7 @@ from typing import Optional
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from src.cli.cli_output_contract import build_json_response
 from src.utils.directory_organizer import DirectoryOrganizer
 
 # Configure logging
@@ -94,16 +95,20 @@ class BackupCLI:
                 print("💾 Creating timestamped backup...")
 
             # Execute backup using DirectoryOrganizer
-            # create_backup() returns a string path, wrap in dict for consistent output
             backup_path = self.organizer.create_backup()
-            backup_result = {
-                "backup_path": str(backup_path),
-                "success": True,
-            }
+
+            # Build contract-compliant response
+            response = build_json_response(
+                success=True,
+                data={"backup_path": str(backup_path)},
+                errors=[],
+                cli_name="backup_cli",
+                subcommand="backup",
+            )
 
             # Format and display output
             if quiet:
-                print(json.dumps(backup_result, indent=2, default=str))
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("BACKUP CREATED")
                 print("✅ Backup created successfully")
@@ -112,7 +117,18 @@ class BackupCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error creating backup: {e}", file=sys.stderr)
+            error_msg = str(e)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[error_msg],
+                    cli_name="backup_cli",
+                    subcommand="backup",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error creating backup: {e}", file=sys.stderr)
             logger.exception("Error in backup")
             return 1
 
@@ -134,25 +150,40 @@ class BackupCLI:
 
         try:
             if not quiet:
-                print(f"🗑️  Pruning backups (keeping {keep} most recent)...")
+                print(f"🗑️  Pruning backups (keeping {keep} most recent)...)")
                 if dry_run:
                     print("🔍 Dry run mode - no files will be deleted")
 
             # Execute using DirectoryOrganizer
             prune_result = self.organizer.prune_backups(keep=keep, dry_run=dry_run)
 
+            # Build contract-compliant response
+            response = build_json_response(
+                success=True,
+                data={
+                    "total_backups": prune_result.get("found", prune_result.get("total_backups", 0)),
+                    "keep": keep,
+                    "dry_run": dry_run,
+                    "to_prune": prune_result.get("to_prune", []),
+                    "deleted": prune_result.get("deleted", []),
+                },
+                errors=prune_result.get("errors", []),
+                cli_name="backup_cli",
+                subcommand="prune-backups",
+            )
+
             # Format and display output
             if quiet:
-                print(json.dumps(prune_result, indent=2, default=str))
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("BACKUP PRUNING RESULT")
-                print(f"📊 Total backups found: {prune_result.get('total_backups', 0)}")
+                print(f"📊 Total backups found: {response['data']['total_backups']}")
                 print(f"✅ Backups to keep: {keep}")
-                print(f"🗑️  Backups to prune: {len(prune_result.get('to_prune', []))}")
+                print(f"🗑️  Backups to prune: {len(response['data']['to_prune'])}")
 
-                if prune_result.get("to_prune"):
+                if response['data']['to_prune']:
                     print("\nBackups marked for deletion:")
-                    for backup in prune_result["to_prune"]:
+                    for backup in response['data']['to_prune']:
                         print(f"  - {backup}")
 
                     if dry_run:
@@ -165,7 +196,18 @@ class BackupCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error pruning backups: {e}", file=sys.stderr)
+            error_msg = str(e)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[error_msg],
+                    cli_name="backup_cli",
+                    subcommand="prune-backups",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error pruning backups: {e}", file=sys.stderr)
             logger.exception("Error in prune_backups")
             return 1
 

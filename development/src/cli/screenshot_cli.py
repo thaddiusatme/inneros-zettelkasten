@@ -37,6 +37,7 @@ from typing import Optional
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from src.cli.cli_output_contract import build_json_response
 from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
 
 # Configure logging
@@ -127,14 +128,18 @@ class ScreenshotCLI:
 
             # Check if processor is available
             if self.processor is None:
-                result = {
-                    "success": False,
-                    "error": "Screenshot processor not initialized",
-                    "onedrive_path": self.onedrive_path,
-                    "processed_count": 0,
-                }
+                response = build_json_response(
+                    success=False,
+                    data={
+                        "onedrive_path": self.onedrive_path,
+                        "processed_count": 0,
+                    },
+                    errors=["Screenshot processor not initialized - OneDrive path not found"],
+                    cli_name="screenshot_cli",
+                    subcommand="process",
+                )
                 if quiet:
-                    print(json.dumps(result, indent=2, default=str))
+                    print(json.dumps(response, indent=2, default=str))
                 else:
                     print(f"⚠️ OneDrive path not found: {self.onedrive_path}")
                     print("   Configure --onedrive-path or check OneDrive sync")
@@ -143,15 +148,21 @@ class ScreenshotCLI:
             # Dry-run mode: just scan and report
             if dry_run:
                 screenshots = self.processor.scan_todays_screenshots(limit=limit)
-                result = {
-                    "dry_run": True,
-                    "screenshots_found": len(screenshots),
-                    "screenshot_paths": [str(p) for p in screenshots[:10]],  # First 10
-                    "onedrive_path": self.onedrive_path,
-                }
+                response = build_json_response(
+                    success=True,
+                    data={
+                        "dry_run": True,
+                        "screenshots_found": len(screenshots),
+                        "screenshot_paths": [str(p) for p in screenshots[:10]],
+                        "onedrive_path": self.onedrive_path,
+                    },
+                    errors=[],
+                    cli_name="screenshot_cli",
+                    subcommand="process",
+                )
 
                 if quiet:
-                    print(json.dumps(result, indent=2, default=str))
+                    print(json.dumps(response, indent=2, default=str))
                 else:
                     self._print_header("SCREENSHOT SCAN (DRY RUN)")
                     print(f"📊 Screenshots found: {len(screenshots)}")
@@ -173,35 +184,43 @@ class ScreenshotCLI:
 
             process_result = self.processor.process_evening_batch(limit=limit)
 
-            # Format result for output
-            result = {
-                "success": True,
-                "processed_count": process_result.get("processed_count", 0),
-                "daily_note_path": str(process_result.get("daily_note_path", "")),
-                "processing_time": process_result.get("processing_time", 0),
-                "backup_path": str(process_result.get("backup_path", "")),
-            }
+            # Build contract-compliant response
+            response = build_json_response(
+                success=True,
+                data={
+                    "processed_count": process_result.get("processed_count", 0),
+                    "daily_note_path": str(process_result.get("daily_note_path", "")),
+                    "processing_time": process_result.get("processing_time", 0),
+                    "backup_path": str(process_result.get("backup_path", "")),
+                },
+                errors=[],
+                cli_name="screenshot_cli",
+                subcommand="process",
+            )
 
             if quiet:
-                print(json.dumps(result, indent=2, default=str))
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("SCREENSHOT PROCESSING COMPLETE")
-                print(f"✅ Screenshots processed: {result['processed_count']}")
-                print(f"📄 Daily note: {result['daily_note_path']}")
-                print(f"⏱️  Processing time: {result['processing_time']:.1f}s")
-                if result.get("backup_path"):
-                    print(f"💾 Backup: {result['backup_path']}")
+                print(f"✅ Screenshots processed: {response['data']['processed_count']}")
+                print(f"📄 Daily note: {response['data']['daily_note_path']}")
+                print(f"⏱️  Processing time: {response['data']['processing_time']:.1f}s")
+                if response['data'].get("backup_path"):
+                    print(f"💾 Backup: {response['data']['backup_path']}")
 
             return 0
 
         except Exception as e:
-            error_result = {
-                "success": False,
-                "error": str(e),
-                "processed_count": 0,
-            }
+            error_msg = str(e)
             if quiet:
-                print(json.dumps(error_result, indent=2, default=str))
+                response = build_json_response(
+                    success=False,
+                    data={"processed_count": 0},
+                    errors=[error_msg],
+                    cli_name="screenshot_cli",
+                    subcommand="process",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 print(f"❌ Error processing screenshots: {e}", file=sys.stderr)
             logger.exception("Error in process_evening_screenshots")
