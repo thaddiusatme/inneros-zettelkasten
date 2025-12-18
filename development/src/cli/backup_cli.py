@@ -150,7 +150,7 @@ class BackupCLI:
 
         try:
             if not quiet:
-                print(f"🗑️  Pruning backups (keeping {keep} most recent)...)")
+                print(f"🗑️  Pruning backups (keeping {keep} most recent)...")
                 if dry_run:
                     print("🔍 Dry run mode - no files will be deleted")
 
