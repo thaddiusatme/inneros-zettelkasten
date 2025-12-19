@@ -54,7 +54,6 @@ class WebDashboardLauncher:
             return {
                 "success": False,
                 "message": "Dashboard already running",
-                "url": "http://localhost:8000",
             }
 
         # Check if dashboard script exists
@@ -85,8 +84,77 @@ class WebDashboardLauncher:
             return {
                 "success": True,
                 "process": self.process,
-                "url": "http://localhost:8000",
-                "message": "Dashboard launched successfully",
+                "message": "Workflow dashboard launched successfully",
+            }
+
+        except FileNotFoundError as e:
+            return {
+                "success": False,
+                "error": True,
+                "message": f"Dashboard not found: {e}",
+            }
+        except PermissionError as e:
+            return {
+                "success": False,
+                "error": True,
+                "message": f"Permission denied: {e}",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": True,
+                "message": f"Failed to launch dashboard: {e}",
+            }
+
+
+class BrowserDashboardLauncher:
+    """Utility for launching browser-based web dashboard."""
+
+    def __init__(self, vault_path: str = "."):
+        self.vault_path = vault_path
+        self.process: Optional[subprocess.Popen] = None
+
+        repo_root = Path(__file__).parent.parent.parent.parent
+        self.web_app_script = repo_root / "web_ui" / "app.py"
+
+    def is_running(self) -> bool:
+        return self.process is not None and self.process.poll() is None
+
+    def launch(self) -> Dict[str, Any]:
+        if self.is_running():
+            return {
+                "success": False,
+                "message": "Dashboard already running",
+                "url": "http://localhost:8081",
+            }
+
+        if not self.web_app_script.exists():
+            return {
+                "success": False,
+                "error": True,
+                "message": f"Dashboard script not found: {self.web_app_script}",
+            }
+
+        try:
+            self.process = subprocess.Popen(
+                [sys.executable, str(self.web_app_script)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+
+            if self.process.poll() is not None:
+                return {
+                    "success": False,
+                    "error": True,
+                    "message": "Dashboard process exited immediately (possible port conflict)",
+                }
+
+            return {
+                "success": True,
+                "process": self.process,
+                "url": "http://localhost:8081/dashboard",
+                "message": "Web dashboard launched successfully",
             }
 
         except FileNotFoundError as e:

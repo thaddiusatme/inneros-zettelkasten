@@ -26,19 +26,20 @@ Phase 2.2 Enhancements:
 Following patterns from Phase 2.1 daemon management success.
 """
 
-import sys
 import logging
-from typing import Dict, Any
-
-# Configure logging for performance tracking
-logger = logging.getLogger(__name__)
+import sys
+from typing import Any, Dict
 
 # Import extracted utilities
 from .dashboard_utils import (
-    WebDashboardLauncher,
+    BrowserDashboardLauncher,
     LiveDashboardLauncher,
     OutputFormatter,
+    WebDashboardLauncher,
 )
+
+# Configure logging for performance tracking
+logger = logging.getLogger(__name__)
 
 # Import Phase 1 utilities for daemon detection
 try:
@@ -110,6 +111,7 @@ class DashboardOrchestrator:
         """
         self.vault_path = vault_path
         self.web_launcher = DashboardLauncher(vault_path=vault_path)
+        self.browser_launcher = BrowserDashboardLauncher(vault_path=vault_path)
         self.terminal_launcher = TerminalDashboardLauncher()
         self.daemon_detector = DaemonDetector() if HAVE_STATUS_UTILS else None
 
@@ -121,11 +123,12 @@ class DashboardOrchestrator:
         except ImportError:
             self.daemon_integration = None
 
-    def run(self, live_mode: bool = False) -> Dict[str, Any]:
+    def run(self, live_mode: bool = False, web_mode: bool = False) -> Dict[str, Any]:
         """Run dashboard launcher.
 
         Args:
             live_mode: If True, launch terminal dashboard; else web UI
+            web_mode: If True, launch browser-based web dashboard
 
         Returns:
             Result dictionary with success status and daemon status
@@ -133,9 +136,18 @@ class DashboardOrchestrator:
         # Phase 2.2: Check daemon status before launch
         daemon_status = self.check_daemon_status()
 
-        launcher = self.terminal_launcher if live_mode else self.web_launcher
+        if web_mode:
+            launcher = self.browser_launcher
+            mode = "web"
+        elif live_mode:
+            launcher = self.terminal_launcher
+            mode = "live"
+        else:
+            launcher = self.web_launcher
+            mode = "workflow"
+
         result = launcher.launch()
-        result["mode"] = "live" if live_mode else "web"
+        result["mode"] = mode
 
         # Phase 2.2: Include daemon status in result
         result["daemon_status"] = daemon_status
@@ -172,8 +184,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  inneros dashboard              Launch web UI dashboard
+  inneros dashboard              Launch workflow dashboard (terminal UI)
   inneros dashboard --live       Launch live terminal dashboard
+  inneros dashboard --web        Launch browser web dashboard
   
 Dashboard provides real-time system monitoring and quick workflow actions.
         """,
@@ -193,6 +206,12 @@ Dashboard provides real-time system monitoring and quick workflow actions.
     )
 
     parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Launch browser-based web dashboard",
+    )
+
+    parser.add_argument(
         "--daemon-url",
         default="http://localhost:8080",
         help="Daemon URL for live mode (default: http://localhost:8080)",
@@ -208,7 +227,7 @@ Dashboard provides real-time system monitoring and quick workflow actions.
         orchestrator.terminal_launcher.daemon_url = args.daemon_url
 
     # Run appropriate launcher
-    result = orchestrator.run(live_mode=args.live)
+    result = orchestrator.run(live_mode=args.live, web_mode=args.web)
 
     # Display results using OutputFormatter
     if result.get("success"):
