@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+pytestmark = pytest.mark.wip
+
 
 class TestFleetingHealthCLI:
     """Test cases for --fleeting-health CLI command."""

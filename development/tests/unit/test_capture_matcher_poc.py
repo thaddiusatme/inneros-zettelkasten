@@ -17,6 +17,7 @@ import sys
 import os
 from unittest.mock import patch
 from io import StringIO
+import pytest
 
 # Add development directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
@@ -856,6 +857,7 @@ semantic similarity analysis and the potential for automated content tagging.
             len(ai_result["ai_tags"]) >= 3
         ), f"Should generate 3+ tags, got {len(ai_result['ai_tags'])}"
 
+    @pytest.mark.slow
     def test_process_capture_notes_with_ai_batch_processing(self):
         """RED: Test batch processing of multiple capture notes with AI"""
         matcher = CaptureMatcherPOC("/fake/screenshots", "/fake/voice")

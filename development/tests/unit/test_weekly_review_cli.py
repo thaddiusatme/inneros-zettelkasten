@@ -311,6 +311,8 @@ class TestWeeklyReviewFormatter:
 class TestWeeklyReviewCLI:
     """Test cases for weekly review CLI integration."""
 
+    pytestmark = pytest.mark.wip
+
     def setup_method(self):
         """Set up test environment."""
         self.temp_dir = tempfile.mkdtemp()

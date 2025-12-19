@@ -11,6 +11,8 @@ import pytest
 from pathlib import Path
 from src.config.vault_config_loader import VaultConfig, get_vault_config, get_inbox_dir
 
+pytestmark = pytest.mark.ci
+
 
 class TestVaultConfig:
     """Test vault configuration loading and path resolution."""

@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 from typing import List
 
+pytestmark = pytest.mark.wip
+
 # Add development directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 

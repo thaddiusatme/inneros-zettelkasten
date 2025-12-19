@@ -12,10 +12,13 @@ Manager: WorkflowManager (has all core methods)
 """
 
 import unittest
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 import tempfile
 import shutil
+
+pytestmark = pytest.mark.ci
 
 
 class TestCoreWorkflowCLI(unittest.TestCase):

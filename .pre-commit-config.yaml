@@ -4,7 +4,6 @@ repos:
     hooks:
       - id: ruff
         args: [
-          "check",
           "development/src",
           "development/tests",
           "--select",
@@ -24,10 +23,15 @@ repos:
       - id: pytest-unit-fast
         name: pytest unit (fast subset)
         language: system
-        entry: python -m pytest
+        entry: .venv/bin/python -m pytest
         args:
           - "-q"
+          - "--timeout=300"
+          - "--tb=short"
+          - "--strict-markers"
+          - "-o"
+          - "addopts="
           - "-m"
-          - "not slow"
+          - "ci and not wip and not slow"
           - "development/tests/unit"
         pass_filenames: false

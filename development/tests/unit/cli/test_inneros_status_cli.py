@@ -11,8 +11,11 @@ RED Phase Goals (TDD Iteration 1):
 """
 
 from typing import Any, Dict
+import pytest
 
 from src.cli.inneros_status_cli import main
+
+pytestmark = pytest.mark.ci
 
 
 # =============================================================================

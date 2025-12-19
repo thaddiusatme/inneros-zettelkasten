@@ -93,9 +93,10 @@ class TestAutomationScriptsInvokeDedicatedCLIs:
             if "workflow_demo.py" in line:
                 actual_invocations.append(line.strip())
 
-        assert not actual_invocations, (
-            f"{script_name} still calls workflow_demo.py:\n"
-            + "\n".join(actual_invocations)
+        assert (
+            not actual_invocations
+        ), f"{script_name} still calls workflow_demo.py:\n" + "\n".join(
+            actual_invocations
         )
 
     # -------------------------------------------------------------------------
@@ -117,9 +118,10 @@ class TestAutomationScriptsInvokeDedicatedCLIs:
             if not re.search(pattern, content):
                 missing_patterns.append(pattern)
 
-        assert not missing_patterns, (
-            f"{script_name} missing expected CLI references:\n"
-            + "\n".join(f"  - {p}" for p in missing_patterns)
+        assert (
+            not missing_patterns
+        ), f"{script_name} missing expected CLI references:\n" + "\n".join(
+            f"  - {p}" for p in missing_patterns
         )
 
     # -------------------------------------------------------------------------
@@ -136,9 +138,9 @@ class TestAutomationScriptsInvokeDedicatedCLIs:
 
         # Look for the standard comment marker
         adr_pattern = r"ADR-004.*CLI.*Layer.*Extraction|Issue\s*#39"
-        assert re.search(adr_pattern, content, re.IGNORECASE), (
-            f"{script_name} missing ADR-004/Issue #39 comment marker"
-        )
+        assert re.search(
+            adr_pattern, content, re.IGNORECASE
+        ), f"{script_name} missing ADR-004/Issue #39 comment marker"
 
     # -------------------------------------------------------------------------
     # P1: Validate CLI variable definitions follow standard pattern
@@ -157,9 +159,9 @@ class TestAutomationScriptsInvokeDedicatedCLIs:
         cli_definitions = re.findall(cli_def_pattern, content, re.MULTILINE)
 
         # Should have at least one CLI definition using $PYTHON
-        assert cli_definitions, (
-            f"{script_name} should define CLI variables using $PYTHON pattern"
-        )
+        assert (
+            cli_definitions
+        ), f"{script_name} should define CLI variables using $PYTHON pattern"
 
 
 class TestAutomationScriptsExist:
@@ -178,6 +180,7 @@ class TestAutomationScriptsExist:
         if script_path.exists():
             # Check if file has execute permission
             import os
-            assert os.access(script_path, os.X_OK), (
-                f"{script_name} should be executable (chmod +x)"
-            )
+
+            assert os.access(
+                script_path, os.X_OK
+            ), f"{script_name} should be executable (chmod +x)"

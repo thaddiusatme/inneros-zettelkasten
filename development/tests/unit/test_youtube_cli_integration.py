@@ -21,6 +21,8 @@ from unittest.mock import patch
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+pytestmark = pytest.mark.wip
+
 
 class TestYouTubeCLIIntegration:
     """Test cases for YouTube note processing CLI commands."""

@@ -134,7 +134,9 @@ class ScreenshotCLI:
                         "onedrive_path": self.onedrive_path,
                         "processed_count": 0,
                     },
-                    errors=["Screenshot processor not initialized - OneDrive path not found"],
+                    errors=[
+                        "Screenshot processor not initialized - OneDrive path not found"
+                    ],
                     cli_name="screenshot_cli",
                     subcommand="process",
                 )
@@ -202,10 +204,12 @@ class ScreenshotCLI:
                 print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("SCREENSHOT PROCESSING COMPLETE")
-                print(f"✅ Screenshots processed: {response['data']['processed_count']}")
+                print(
+                    f"✅ Screenshots processed: {response['data']['processed_count']}"
+                )
                 print(f"📄 Daily note: {response['data']['daily_note_path']}")
                 print(f"⏱️  Processing time: {response['data']['processing_time']:.1f}s")
-                if response['data'].get("backup_path"):
+                if response["data"].get("backup_path"):
                     print(f"💾 Backup: {response['data']['backup_path']}")
 
             return 0

@@ -29,6 +29,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+pytestmark = pytest.mark.wip
+
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 

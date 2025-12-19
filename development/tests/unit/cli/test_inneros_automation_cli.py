@@ -18,6 +18,8 @@ from typing import List
 
 import pytest
 
+pytestmark = pytest.mark.ci
+
 
 class DummyResult:
     """Simple stand-in object for subprocess.run return value.
