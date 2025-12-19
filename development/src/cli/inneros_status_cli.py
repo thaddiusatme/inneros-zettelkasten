@@ -24,14 +24,16 @@ def _format_automation(automation: Dict[str, Any]) -> str:
     """Format a single automation entry for terminal output.
 
     Args:
-        automation: Dictionary with keys: name, running, last_run_status, error_message
+        automation: Dictionary with keys: name, running, last_run_status,
+            last_run_timestamp, error_message
 
     Returns:
-        Formatted string like "- daemon_name: running, last run: success"
+        Formatted string like "- daemon_name: running, last run: success (2025-12-18 21:35)"
     """
     name = automation.get("name", "unknown")
     running = bool(automation.get("running", False))
     last_status = automation.get("last_run_status", "unknown")
+    last_timestamp = automation.get("last_run_timestamp")
     error_message = automation.get("error_message")
 
     status_parts: List[str] = []
@@ -41,7 +43,10 @@ def _format_automation(automation: Dict[str, Any]) -> str:
         status_parts.append("not running")
 
     if last_status:
-        status_parts.append(f"last run: {last_status}")
+        if last_timestamp:
+            status_parts.append(f"last run: {last_status} ({last_timestamp})")
+        else:
+            status_parts.append(f"last run: {last_status}")
 
     line = f"- {name}: " + ", ".join(status_parts)
 

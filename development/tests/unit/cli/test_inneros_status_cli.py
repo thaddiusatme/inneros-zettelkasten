@@ -303,6 +303,153 @@ class TestExitCodeSemantics:
         ), "Should exit non-zero when any daemon is in warning state"
 
 
+# =============================================================================
+# RED Phase Tests: TDD Iteration 2 - Production-Accurate Daemon Status
+# =============================================================================
+
+
+class TestProductionAccurateDaemonStatus:
+    """Tests verifying status accurately reflects production reality.
+
+    Issue #50: inneros-status output is misleading because daemon registry
+    expectations don't match actual log naming / daemon state detection.
+
+    Production reality:
+    - Single 'automation_daemon' in registry
+    - Logs are written to handler-specific files (youtube_handler_*, etc.)
+    - Status should aggregate handler log activity, not just daemon.log
+    """
+
+    def test_status_shows_automation_daemon_name(self, monkeypatch, capsys) -> None:
+        """Production uses 'automation_daemon' not legacy 3-daemon names."""
+
+        def fake_check_all(repo_root=None):  # type: ignore[no-untyped-def]
+            return {
+                "overall_status": "OK",
+                "automations": [
+                    {
+                        "name": "automation_daemon",
+                        "running": True,
+                        "last_run_status": "success",
+                        "last_run_timestamp": "2025-12-18 21:00:00",
+                        "error_message": None,
+                    }
+                ],
+            }
+
+        monkeypatch.setattr(
+            "src.cli.inneros_status_cli.check_all", fake_check_all, raising=True
+        )
+
+        exit_code = main([])
+        captured = capsys.readouterr()
+
+        # Production reality: single automation_daemon
+        assert "automation_daemon" in captured.out
+        assert exit_code == 0
+
+    def test_status_reflects_handler_activity_not_just_daemon_log(
+        self, monkeypatch, capsys
+    ) -> None:
+        """Status should reflect recent handler activity, not stale daemon.log.
+
+        Real scenario: daemon.log shows Dec 2 start, but youtube_handler ran today.
+        Status should show the most recent activity across all handler logs.
+        """
+
+        def fake_check_all(repo_root=None):  # type: ignore[no-untyped-def]
+            # Simulates aggregated handler activity detection
+            return {
+                "overall_status": "OK",
+                "automations": [
+                    {
+                        "name": "automation_daemon",
+                        "running": False,  # Daemon process not running
+                        "last_run_status": "success",
+                        "last_run_timestamp": "2025-12-18 21:35:00",  # Recent handler activity
+                        "error_message": None,
+                        "handler_activity": {
+                            "youtube_handler": "2025-12-18 21:35:00",
+                            "smart_link_handler": "2025-12-18 21:34:00",
+                        },
+                    }
+                ],
+            }
+
+        monkeypatch.setattr(
+            "src.cli.inneros_status_cli.check_all", fake_check_all, raising=True
+        )
+
+        main([])
+        captured = capsys.readouterr()
+
+        # Should show recent activity timestamp, not old daemon.log timestamp
+        assert "2025-12-18" in captured.out or "21:35" in captured.out
+
+    def test_warning_exit_code_when_daemon_stopped_but_recent_success(
+        self, monkeypatch, capsys
+    ) -> None:
+        """Exit code should be non-zero (WARNING) when daemon not running.
+
+        Even if last handler run was successful, a stopped daemon is a warning
+        state because automation is not actively processing.
+        """
+
+        def fake_check_all(repo_root=None):  # type: ignore[no-untyped-def]
+            return {
+                "overall_status": "WARNING",
+                "automations": [
+                    {
+                        "name": "automation_daemon",
+                        "running": False,
+                        "last_run_status": "success",
+                        "last_run_timestamp": "2025-12-18 21:35:00",
+                        "error_message": None,
+                    }
+                ],
+            }
+
+        monkeypatch.setattr(
+            "src.cli.inneros_status_cli.check_all", fake_check_all, raising=True
+        )
+
+        exit_code = main([])
+        captured = capsys.readouterr()
+
+        # WARNING should produce non-zero exit for shell script safety
+        assert exit_code != 0
+        assert "WARNING" in captured.out
+
+    def test_daemons_count_reflects_single_daemon_architecture(
+        self, monkeypatch, capsys
+    ) -> None:
+        """Summary should show 1/1 for single daemon architecture."""
+
+        def fake_check_all(repo_root=None):  # type: ignore[no-untyped-def]
+            return {
+                "overall_status": "OK",
+                "automations": [
+                    {
+                        "name": "automation_daemon",
+                        "running": True,
+                        "last_run_status": "success",
+                        "last_run_timestamp": "2025-12-18 21:35:00",
+                        "error_message": None,
+                    }
+                ],
+            }
+
+        monkeypatch.setattr(
+            "src.cli.inneros_status_cli.check_all", fake_check_all, raising=True
+        )
+
+        main([])
+        captured = capsys.readouterr()
+
+        # Should show "1/1 running" for single daemon
+        assert "1/1" in captured.out or "Daemons: 1" in captured.out
+
+
 class TestMachineParseable:
     """Tests for machine-parseable output format."""
 
