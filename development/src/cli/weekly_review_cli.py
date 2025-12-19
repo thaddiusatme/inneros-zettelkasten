@@ -39,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
+from src.cli.cli_output_contract import build_json_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
@@ -119,7 +120,14 @@ class WeeklyReviewCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(recommendations, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=recommendations,
+                    errors=[],
+                    cli_name="weekly_review_cli",
+                    subcommand="weekly-review",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("WEEKLY REVIEW CHECKLIST")
                 checklist = self.formatter.format_checklist(recommendations)
@@ -147,7 +155,17 @@ class WeeklyReviewCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error generating weekly review: {e}", file=sys.stderr)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="weekly_review_cli",
+                    subcommand="weekly-review",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error generating weekly review: {e}", file=sys.stderr)
             logger.exception("Error in weekly_review")
             return 1
 
@@ -176,7 +194,14 @@ class WeeklyReviewCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(metrics, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=metrics,
+                    errors=[],
+                    cli_name="weekly_review_cli",
+                    subcommand="enhanced-metrics",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("ENHANCED METRICS REPORT")
                 metrics_report = self.formatter.format_enhanced_metrics(metrics)
@@ -207,7 +232,17 @@ class WeeklyReviewCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error generating enhanced metrics: {e}", file=sys.stderr)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="weekly_review_cli",
+                    subcommand="enhanced-metrics",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error generating enhanced metrics: {e}", file=sys.stderr)
             logger.exception("Error in enhanced_metrics")
             return 1
 

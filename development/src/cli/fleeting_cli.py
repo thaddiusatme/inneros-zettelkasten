@@ -44,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.fleeting_formatter import FleetingFormatter
+from src.cli.cli_output_contract import build_json_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
@@ -117,7 +118,14 @@ class FleetingCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(health_report, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=health_report,
+                    errors=[],
+                    cli_name="fleeting_cli",
+                    subcommand="fleeting-health",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("FLEETING NOTES HEALTH REPORT")
                 print(self.formatter.display_health_report(health_report))
@@ -137,7 +145,17 @@ class FleetingCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error generating fleeting health report: {e}", file=sys.stderr)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="fleeting_cli",
+                    subcommand="fleeting-health",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error generating fleeting health report: {e}", file=sys.stderr)
             logger.exception("Error in fleeting_health")
             return 1
 
@@ -184,7 +202,14 @@ class FleetingCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(triage_report, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=triage_report,
+                    errors=[],
+                    cli_name="fleeting_cli",
+                    subcommand="fleeting-triage",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("FLEETING NOTES TRIAGE REPORT")
                 print(self.formatter.display_triage_report(triage_report))
@@ -203,7 +228,17 @@ class FleetingCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error generating triage report: {e}", file=sys.stderr)
+            if quiet:
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="fleeting_cli",
+                    subcommand="fleeting-triage",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error generating triage report: {e}", file=sys.stderr)
             logger.exception("Error in fleeting_triage")
             return 1
 

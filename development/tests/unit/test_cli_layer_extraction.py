@@ -86,9 +86,10 @@ class TestBackupCLICreateCommand:
 
         assert exit_code == 0, "backup should return 0 on success"
         output = mock_stdout.getvalue()
-        # Should be valid JSON with backup_path
+        # Should be valid JSON following CLI contract with backup_path in data
         backup_result = json.loads(output)
-        assert "backup_path" in backup_result, "JSON output should include backup_path"
+        assert "data" in backup_result, "JSON output should follow CLI contract"
+        assert "backup_path" in backup_result["data"], "JSON data should include backup_path"
 
 
 class TestScreenshotCLI:

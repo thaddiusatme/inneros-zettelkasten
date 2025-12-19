@@ -20,6 +20,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
+from src.cli.cli_output_contract import build_json_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
@@ -144,7 +145,14 @@ class CoreWorkflowCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(report, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=report,
+                    errors=[],
+                    cli_name="core_workflow_cli",
+                    subcommand="status",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("WORKFLOW STATUS REPORT")
 
@@ -176,7 +184,17 @@ class CoreWorkflowCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error generating status: {e}", file=sys.stderr)
+            if self._is_quiet_mode(output_format):
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="core_workflow_cli",
+                    subcommand="status",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error generating status: {e}", file=sys.stderr)
             logger.exception("Error in status command")
             return 1
 
@@ -205,7 +223,14 @@ class CoreWorkflowCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(results, indent=2, default=str))
+                response = build_json_response(
+                    success=True,
+                    data=results,
+                    errors=[],
+                    cli_name="core_workflow_cli",
+                    subcommand="process-inbox",
+                )
+                print(json.dumps(response, indent=2, default=str))
             else:
                 self._print_header("INBOX PROCESSING RESULTS")
 
@@ -232,7 +257,17 @@ class CoreWorkflowCLI:
             return 0
 
         except Exception as e:
-            print(f"❌ Error processing inbox: {e}", file=sys.stderr)
+            if self._is_quiet_mode(output_format):
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="core_workflow_cli",
+                    subcommand="process-inbox",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error processing inbox: {e}", file=sys.stderr)
             logger.exception("Error in process_inbox command")
             return 1
 
