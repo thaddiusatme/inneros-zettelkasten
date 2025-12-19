@@ -107,6 +107,7 @@ class FleetingCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
+        logger.info(f"cli=fleeting_cli subcommand=fleeting-health vault={self.vault_path} format={output_format}")
 
         try:
             # Display header
@@ -189,6 +190,8 @@ class FleetingCLI:
                 file=sys.stderr,
             )
             return 1
+
+        logger.info(f"cli=fleeting_cli subcommand=fleeting-triage vault={self.vault_path} format={output_format} quality_threshold={quality_threshold} fast={fast}")
 
         try:
             # Display header

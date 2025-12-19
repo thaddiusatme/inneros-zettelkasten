@@ -136,6 +136,7 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
+            logger.info(f"cli=core_workflow_cli subcommand=status vault={self.vault_path} format={output_format}")
 
             if not quiet:
                 print("📊 Generating workflow status...")
@@ -213,6 +214,7 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
+            logger.info(f"cli=core_workflow_cli subcommand=process-inbox vault={self.vault_path} format={output_format} fast_mode={fast_mode}")
 
             if not quiet:
                 mode_str = " (fast mode - skipping AI)" if fast_mode else ""
