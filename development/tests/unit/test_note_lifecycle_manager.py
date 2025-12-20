@@ -20,6 +20,8 @@ import shutil
 
 from src.ai.note_lifecycle_manager import NoteLifecycleManager
 
+pytestmark = pytest.mark.ci
+
 
 class TestNoteLifecycleManager:
     """Test suite for NoteLifecycleManager class."""

@@ -26,6 +26,8 @@ from src.ai.promotion_engine import PromotionEngine
 from src.ai.note_lifecycle_manager import NoteLifecycleManager
 from src.utils.frontmatter import parse_frontmatter
 
+pytestmark = pytest.mark.ci
+
 
 class TestPromotionEngineInitialization:
     """Test PromotionEngine initialization and configuration."""

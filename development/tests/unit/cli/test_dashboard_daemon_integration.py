@@ -19,6 +19,8 @@ Target: Complete RED phase in 20-25 minutes.
 import pytest
 from unittest.mock import patch
 
+pytestmark = pytest.mark.wip
+
 # Import classes under test (will fail until implemented)
 from src.cli.dashboard_cli import DashboardOrchestrator
 

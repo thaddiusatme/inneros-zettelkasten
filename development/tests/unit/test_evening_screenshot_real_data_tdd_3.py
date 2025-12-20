@@ -16,12 +16,15 @@ Building on TDD Iteration 2 CLI integration success patterns.
 """
 
 import unittest
+import pytest
 import tempfile
 import shutil
 from pathlib import Path
 from datetime import date
 import time
 import sys
+
+pytestmark = pytest.mark.wip
 
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

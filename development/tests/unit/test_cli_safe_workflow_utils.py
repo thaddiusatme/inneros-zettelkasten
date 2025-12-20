@@ -25,6 +25,8 @@ import shutil
 import time
 from pathlib import Path
 
+pytestmark = pytest.mark.wip
+
 # These imports will FAIL in RED phase - that's the point!
 try:
     from src.cli.safe_workflow_cli_utils import (

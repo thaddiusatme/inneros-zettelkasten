@@ -107,7 +107,9 @@ class FleetingCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        logger.info(f"cli=fleeting_cli subcommand=fleeting-health vault={self.vault_path} format={output_format}")
+        logger.info(
+            f"cli=fleeting_cli subcommand=fleeting-health vault={self.vault_path} format={output_format}"
+        )
 
         try:
             # Display header
@@ -156,7 +158,9 @@ class FleetingCLI:
                 )
                 print(json.dumps(response, indent=2, default=str))
             else:
-                print(f"❌ Error generating fleeting health report: {e}", file=sys.stderr)
+                print(
+                    f"❌ Error generating fleeting health report: {e}", file=sys.stderr
+                )
             logger.exception("Error in fleeting_health")
             return 1
 
@@ -191,7 +195,9 @@ class FleetingCLI:
             )
             return 1
 
-        logger.info(f"cli=fleeting_cli subcommand=fleeting-triage vault={self.vault_path} format={output_format} quality_threshold={quality_threshold} fast={fast}")
+        logger.info(
+            f"cli=fleeting_cli subcommand=fleeting-triage vault={self.vault_path} format={output_format} quality_threshold={quality_threshold} fast={fast}"
+        )
 
         try:
             # Display header

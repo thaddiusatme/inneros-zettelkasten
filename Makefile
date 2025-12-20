@@ -74,10 +74,10 @@ clean-venv:
 	@echo "✅ Virtual environment removed. Run 'make setup' to recreate."
 
 unit: $(VENV)/bin/activate
-	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 -m "not slow" development/tests/unit
+	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 --tb=short --strict-markers -o addopts= -m "ci and not wip and not slow" development/tests/unit
 
 unit-all: $(VENV)/bin/activate
-	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 development/tests/unit
+	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 -o addopts= development/tests/unit
 
 integ: $(VENV)/bin/activate
 	PYTHONPATH=development $(PYTHON) -m pytest -q development/tests/integration

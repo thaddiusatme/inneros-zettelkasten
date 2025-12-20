@@ -110,19 +110,52 @@ class CoreWorkflowCLI:
         # Show skipped notes
         if results.get("skipped_notes"):
             self._print_section("SKIPPED NOTES")
-            # skipped_notes is dict: {filename: reason}
-            for filename, reason in list(results["skipped_notes"].items())[
-                :5
-            ]:  # Show first 5
-                print(f"   📄 {filename}")
-                print(f"      Reason: {reason}")
+            skipped_notes = results["skipped_notes"]
+            # Support both legacy dict format and newer list-of-dicts format
+            if isinstance(skipped_notes, dict):
+                for filename, reason in list(skipped_notes.items())[:5]:  # Show first 5
+                    print(f"   📄 {filename}")
+                    print(f"      Reason: {reason}")
+            elif isinstance(skipped_notes, list):
+                for item in skipped_notes[:5]:  # Show first 5
+                    if isinstance(item, dict):
+                        note_path = item.get("path") or item.get("note") or "Unknown"
+                        note_type = item.get("type")
+                        quality = item.get("quality")
+                        reason = item.get("reason")
+                        print(f"   📄 {note_path}")
+                        if note_type is not None:
+                            print(f"      Type: {note_type}")
+                        if quality is not None:
+                            try:
+                                print(f"      Quality: {float(quality):.2f}")
+                            except (TypeError, ValueError):
+                                print(f"      Quality: {quality}")
+                        if reason is not None:
+                            print(f"      Reason: {reason}")
+                    else:
+                        print(f"   📄 {item}")
+            else:
+                print(f"   📄 {skipped_notes}")
 
         # Show errors
         if results.get("errors"):
             self._print_section("ERRORS")
-            # errors is dict: {filename: error_message}
-            for filename, error_msg in results["errors"].items():
-                print(f"   🚨 {filename}: {error_msg}")
+            errors = results["errors"]
+            # Support both dict and list formats
+            if isinstance(errors, dict):
+                for filename, error_msg in errors.items():
+                    print(f"   🚨 {filename}: {error_msg}")
+            elif isinstance(errors, list):
+                for err in errors[:10]:
+                    if isinstance(err, dict):
+                        filename = err.get("path") or err.get("note") or "Unknown"
+                        error_msg = err.get("error") or err.get("message") or str(err)
+                        print(f"   🚨 {filename}: {error_msg}")
+                    else:
+                        print(f"   🚨 {err}")
+            else:
+                print(f"   🚨 {errors}")
 
     def status(self, output_format: str = "normal") -> int:
         """

@@ -98,7 +98,9 @@ class WeeklyReviewCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        logger.info(f"cli=weekly_review_cli subcommand=weekly-review vault={self.vault_path} format={output_format} preview={preview}")
+        logger.info(
+            f"cli=weekly_review_cli subcommand=weekly-review vault={self.vault_path} format={output_format} preview={preview}"
+        )
 
         try:
             # Display header
@@ -184,7 +186,9 @@ class WeeklyReviewCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
-        logger.info(f"cli=weekly_review_cli subcommand=enhanced-metrics vault={self.vault_path} format={output_format}")
+        logger.info(
+            f"cli=weekly_review_cli subcommand=enhanced-metrics vault={self.vault_path} format={output_format}"
+        )
 
         try:
             # Display header

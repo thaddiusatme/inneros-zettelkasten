@@ -14,6 +14,8 @@ from src.cli.automation_status_cli import (
     StatusFormatter,
 )
 
+pytestmark = pytest.mark.ci
+
 
 @pytest.fixture
 def mock_daemon_registry(tmp_path):

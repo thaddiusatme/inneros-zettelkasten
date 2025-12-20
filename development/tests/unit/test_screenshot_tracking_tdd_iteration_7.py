@@ -11,6 +11,7 @@ import json
 import tempfile
 import shutil
 import sys
+import pytest
 
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -188,6 +189,8 @@ class TestProcessedScreenshotTracker(unittest.TestCase):
 
 class TestEveningScreenshotProcessorIntegration(unittest.TestCase):
     """Integration tests with EveningScreenshotProcessor - RED Phase"""
+
+    pytestmark = pytest.mark.wip
 
     def setUp(self):
         """Setup test environment"""

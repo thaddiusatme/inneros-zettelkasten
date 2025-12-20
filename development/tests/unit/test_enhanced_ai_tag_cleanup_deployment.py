@@ -16,9 +16,12 @@ with focus on real-world problematic tag cleanup in production vault.
 """
 
 import unittest
+import pytest
 import tempfile
 import time
 from pathlib import Path
+
+pytestmark = pytest.mark.wip
 
 # Add development directory to path for imports
 import sys

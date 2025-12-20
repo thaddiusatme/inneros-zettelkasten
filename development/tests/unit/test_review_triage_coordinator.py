@@ -13,6 +13,10 @@ from datetime import datetime
 from unittest.mock import Mock
 import tempfile
 
+import pytest
+
+pytestmark = pytest.mark.ci
+
 
 class TestReviewTriageCoordinatorInitialization:
     """Test ReviewTriageCoordinator initialization and configuration."""

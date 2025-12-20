@@ -176,7 +176,9 @@ class BackupCLI:
 
             # Format and display output
             if quiet:
-                print(json.dumps(response, indent=2, default=str))
+                response_out = dict(response)
+                response_out.update(response.get("data", {}))
+                print(json.dumps(response_out, indent=2, default=str))
             else:
                 self._print_header("BACKUP PRUNING RESULT")
                 print(f"📊 Total backups found: {response['data']['total_backups']}")
@@ -207,7 +209,9 @@ class BackupCLI:
                     cli_name="backup_cli",
                     subcommand="prune-backups",
                 )
-                print(json.dumps(response, indent=2, default=str))
+                response_out = dict(response)
+                response_out.update(response.get("data", {}))
+                print(json.dumps(response_out, indent=2, default=str))
             else:
                 print(f"❌ Error pruning backups: {e}", file=sys.stderr)
             logger.exception("Error in prune_backups")

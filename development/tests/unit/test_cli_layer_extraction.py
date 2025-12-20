@@ -89,7 +89,9 @@ class TestBackupCLICreateCommand:
         # Should be valid JSON following CLI contract with backup_path in data
         backup_result = json.loads(output)
         assert "data" in backup_result, "JSON output should follow CLI contract"
-        assert "backup_path" in backup_result["data"], "JSON data should include backup_path"
+        assert (
+            "backup_path" in backup_result["data"]
+        ), "JSON data should include backup_path"
 
 
 class TestScreenshotCLI:

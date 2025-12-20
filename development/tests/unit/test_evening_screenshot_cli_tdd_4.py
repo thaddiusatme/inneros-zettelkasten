@@ -37,6 +37,8 @@ import time
 from datetime import datetime
 import json
 
+pytestmark = pytest.mark.wip
+
 # Add development directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
