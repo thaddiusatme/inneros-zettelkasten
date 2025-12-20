@@ -180,6 +180,7 @@ class TestDashboardHealthMonitor:
         assert isinstance(health["daemon"], dict)
         assert isinstance(health["dashboard"], dict)
 
+    @pytest.mark.slow
     def test_integration_orchestrator_checks_status_before_launch(self):
         """Orchestrator should check daemon status before launching dashboard."""
         # RED: NotImplementedError expected
