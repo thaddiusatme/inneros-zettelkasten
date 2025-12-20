@@ -11,6 +11,8 @@ import pytest
 
 pytestmark = pytest.mark.wip
 
+import pytest
+
 
 # RED Phase Tests
 
@@ -105,11 +107,15 @@ def test_status_table_shows_handler_metrics():
     assert table is not None
 
 
+@pytest.mark.network
 def test_dashboard_refreshes_every_second():
     """
     Given: Dashboard running
     When: Multiple seconds elapse
     Then: Status fetched multiple times
+
+    Marked @pytest.mark.network: This test involves polling behavior that can
+    hang if mocks don't intercept all network calls. Excluded from fast pre-commit.
     """
     from src.cli.terminal_dashboard import run_dashboard
 

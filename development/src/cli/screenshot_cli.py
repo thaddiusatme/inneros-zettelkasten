@@ -38,11 +38,11 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.cli.cli_output_contract import build_json_response
+from src.cli.cli_logging import configure_cli_logging, log_cli_context
 from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
-logger = logging.getLogger(__name__)
+# Configure logging to stderr (not stdout) for JSON purity
+logger = configure_cli_logging("screenshot_cli")
 
 # Default OneDrive screenshot path for Samsung S23
 DEFAULT_ONEDRIVE_PATH = str(
@@ -85,8 +85,6 @@ class ScreenshotCLI:
             logger.warning(f"Could not initialize processor: {e}")
             self.processor = None
 
-        logger.info(f"Screenshot CLI initialized with vault: {self.vault_path}")
-
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
         print("\n" + "=" * 60)
@@ -117,6 +115,14 @@ class ScreenshotCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
+        log_cli_context(
+            logger=logger,
+            cli_name="screenshot_cli",
+            subcommand="process",
+            vault_path=self.vault_path,
+            dry_run=dry_run,
+            output_format=output_format,
+        )
 
         try:
             if not quiet:

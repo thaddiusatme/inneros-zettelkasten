@@ -4,13 +4,12 @@ repos:
     hooks:
       - id: ruff
         args: [
-          "development/src",
-          "development/tests",
           "--select",
           "E,F,W",
           "--ignore",
           "E402,E501,E712,W291,W293,F401,F841",
         ]
+        files: ^development/(src|tests)/
 
   - repo: https://github.com/psf/black
     rev: 24.4.2
@@ -29,9 +28,10 @@ repos:
           - "--timeout=300"
           - "--tb=short"
           - "--strict-markers"
+          - "-x"
           - "-o"
           - "addopts="
           - "-m"
-          - "ci and not wip and not slow"
+          - "ci and not wip and not slow and not network"
           - "development/tests/unit"
         pass_filenames: false
