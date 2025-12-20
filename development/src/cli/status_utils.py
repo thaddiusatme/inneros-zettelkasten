@@ -184,7 +184,8 @@ class LogTimestampReader:
     """Reads activity timestamps from log files.
 
     Methods:
-    - get_last_activity(): Get most recent log timestamp
+    - get_last_activity(): Get most recent log timestamp across all sources
+    - iter_activity_log_paths(): Enumerate all activity log file paths
     """
 
     def __init__(self, logs_subpath: str = ".automation/logs"):
@@ -196,28 +197,58 @@ class LogTimestampReader:
         self.logs_subpath = logs_subpath
 
     def get_last_activity(self, vault_root: str) -> Optional[datetime]:
-        """Get timestamp of most recent activity.
+        """Get timestamp of most recent activity across all log sources.
+
+        Aggregates timestamps from:
+        - Main logs directory (.automation/logs/*.log)
+        - Handler subdirectories (.automation/logs/handlers/**/*.log)
 
         Args:
             vault_root: Path to vault root directory
 
         Returns:
-            Datetime of last activity, None if no logs
+            Datetime of last activity (max mtime), None if no logs
         """
         logs_dir = Path(vault_root) / self.logs_subpath
 
         if not logs_dir.exists():
             return None
 
-        log_files = list(logs_dir.glob("*.log"))
+        # Collect all log files from main dir and handler subdirectories
+        all_log_files = list(self.iter_activity_log_paths(logs_dir))
 
-        if not log_files:
+        if not all_log_files:
             return None
 
-        # Get most recent by modification time
-        most_recent = max(log_files, key=lambda f: f.stat().st_mtime)
+        # Get most recent by modification time (aggregated max)
+        most_recent = max(all_log_files, key=lambda f: f.stat().st_mtime)
 
         return datetime.fromtimestamp(most_recent.stat().st_mtime)
+
+    def iter_activity_log_paths(self, logs_dir: Path) -> List[Path]:
+        """Enumerate all activity log file paths.
+
+        Discovers logs from:
+        - Direct children: logs_dir/*.log
+        - Handler subdirectories: logs_dir/handlers/**/*.log
+
+        Args:
+            logs_dir: Root logs directory
+
+        Returns:
+            List of Path objects for all discovered .log files
+        """
+        log_files: List[Path] = []
+
+        # Main logs directory
+        log_files.extend(logs_dir.glob("*.log"))
+
+        # Handler subdirectories (recursive)
+        handlers_dir = logs_dir / "handlers"
+        if handlers_dir.exists():
+            log_files.extend(handlers_dir.rglob("*.log"))
+
+        return log_files
 
 
 class InboxAnalyzer:

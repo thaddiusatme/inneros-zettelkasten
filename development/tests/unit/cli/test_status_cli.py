@@ -131,6 +131,61 @@ class TestCronStatusParsing:
 class TestActivityTimestamps:
     """Test activity timestamp extraction from logs."""
 
+    def test_aggregates_handler_logs_for_last_activity(self):
+        """Test that last-activity aggregates across all handler log directories.
+
+        Issue #67: inneros-status should compute true last activity by
+        aggregating handler logs (screenshot processor, smart link, health monitor, etc.)
+
+        Acceptance Criteria:
+        - Scans multiple handler log directories, not just .automation/logs/
+        - Returns max(mtime) across all discovered log files
+        - Handler dirs: .automation/logs/handlers/{screenshot,smart_link,health_monitor}/
+        - Deterministic: uses temp dirs with explicit mtimes
+        """
+        from src.cli.status_utils import LogTimestampReader
+
+        reader = LogTimestampReader()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+
+            # Create main logs directory with older log
+            main_logs = root / ".automation" / "logs"
+            main_logs.mkdir(parents=True)
+            old_main_log = main_logs / "daemon_20251219_100000.log"
+            old_main_log.write_text("Old daemon log")
+            older_mtime = 1734600000  # Dec 19, 2024 10:00:00 UTC
+            os.utime(old_main_log, (older_mtime, older_mtime))
+
+            # Create handler log directories with NEWER log
+            handlers_dir = main_logs / "handlers"
+            screenshot_handler = handlers_dir / "screenshot"
+            screenshot_handler.mkdir(parents=True)
+            newer_handler_log = screenshot_handler / "screenshot_20251219_180000.log"
+            newer_handler_log.write_text("Newer screenshot handler log")
+            newer_mtime = 1734638400  # Dec 19, 2024 20:40:00 UTC (8+ hours newer)
+            os.utime(newer_handler_log, (newer_mtime, newer_mtime))
+
+            # Also add a smart_link handler log (older than screenshot but newer than main)
+            smart_link_handler = handlers_dir / "smart_link"
+            smart_link_handler.mkdir(parents=True)
+            mid_handler_log = smart_link_handler / "smart_link_20251219_140000.log"
+            mid_handler_log.write_text("Middle-aged smart link log")
+            mid_mtime = 1734616800  # Dec 19, 2024 14:40:00 UTC
+            os.utime(mid_handler_log, (mid_mtime, mid_mtime))
+
+            # get_last_activity should return the NEWEST timestamp (screenshot handler)
+            last_activity = reader.get_last_activity(str(root))
+
+            assert last_activity is not None, "Should find activity from handler logs"
+            # The newest log is the screenshot handler log
+            expected_newest = datetime.fromtimestamp(newer_mtime)
+            assert last_activity == expected_newest, (
+                f"Expected newest handler timestamp {expected_newest}, "
+                f"got {last_activity}. Handler logs must be aggregated."
+            )
+
     def test_read_last_activity_timestamp(self):
         """Test extraction of most recent log timestamp.
 
@@ -160,7 +215,8 @@ class TestActivityTimestamps:
             os.utime(older_log, (1697284800, 1697284800))  # Older
             os.utime(newer_log, (1697371200, 1697371200))  # Newer
 
-            last_activity = reader.get_last_activity(str(logs_dir.parent))
+            # Pass vault root (tmpdir), not logs_dir.parent (.automation)
+            last_activity = reader.get_last_activity(tmpdir)
 
             assert last_activity is not None
             assert isinstance(last_activity, datetime)
