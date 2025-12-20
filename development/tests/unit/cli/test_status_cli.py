@@ -160,7 +160,9 @@ class TestActivityTimestamps:
             os.utime(older_log, (1697284800, 1697284800))  # Older
             os.utime(newer_log, (1697371200, 1697371200))  # Newer
 
-            last_activity = reader.get_last_activity(str(logs_dir.parent))
+            # Pass vault root (tmpdir), not logs_dir.parent
+            # LogTimestampReader appends ".automation/logs" to vault_root
+            last_activity = reader.get_last_activity(tmpdir)
 
             assert last_activity is not None
             assert isinstance(last_activity, datetime)

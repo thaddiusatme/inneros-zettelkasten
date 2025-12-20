@@ -65,13 +65,18 @@ class TestContractValidation:
         assert "subcommand" in output["meta"], "meta must contain 'subcommand'"
         assert "timestamp" in output["meta"], "meta must contain 'timestamp'"
         assert isinstance(output["meta"]["cli"], str), "meta.cli must be a string"
-        assert isinstance(output["meta"]["subcommand"], str), "meta.subcommand must be a string"
-        assert isinstance(output["meta"]["timestamp"], str), "meta.timestamp must be a string"
+        assert isinstance(
+            output["meta"]["subcommand"], str
+        ), "meta.subcommand must be a string"
+        assert isinstance(
+            output["meta"]["timestamp"], str
+        ), "meta.timestamp must be a string"
 
     def _extract_json_output(self, mock_print) -> dict[str, Any]:
         """Extract JSON output from mocked print calls."""
         json_calls = [
-            call for call in mock_print.call_args_list
+            call
+            for call in mock_print.call_args_list
             if call[0] and "{" in str(call[0][0])
         ]
         assert len(json_calls) >= 1, "Should output JSON"
@@ -132,8 +137,9 @@ class TestCoreWorkflowCLIJsonContract(TestContractValidation):
 
         # Mock generate_workflow_report to raise an exception
         with patch.object(
-            cli.workflow_manager, "generate_workflow_report",
-            side_effect=Exception("Simulated status failure")
+            cli.workflow_manager,
+            "generate_workflow_report",
+            side_effect=Exception("Simulated status failure"),
         ):
             with patch("builtins.print") as mock_print:
                 exit_code = cli.status(output_format="json")
@@ -251,8 +257,9 @@ class TestFleetingCLIJsonContract(TestContractValidation):
         cli = FleetingCLI(vault_path=str(vault_path))
 
         with patch.object(
-            cli.workflow, "generate_fleeting_health_report",
-            side_effect=Exception("Simulated health check failure")
+            cli.workflow,
+            "generate_fleeting_health_report",
+            side_effect=Exception("Simulated health check failure"),
         ):
             with patch("builtins.print") as mock_print:
                 exit_code = cli.fleeting_health(output_format="json")
@@ -341,8 +348,9 @@ class TestWeeklyReviewCLIJsonContract(TestContractValidation):
         cli = WeeklyReviewCLI(vault_path=str(vault_path))
 
         with patch.object(
-            cli.workflow, "scan_review_candidates",
-            side_effect=Exception("Simulated weekly review failure")
+            cli.workflow,
+            "scan_review_candidates",
+            side_effect=Exception("Simulated weekly review failure"),
         ):
             with patch("builtins.print") as mock_print:
                 exit_code = cli.weekly_review(output_format="json")
