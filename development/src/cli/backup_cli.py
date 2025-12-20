@@ -38,11 +38,11 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.cli.cli_output_contract import build_json_response
+from src.cli.cli_logging import configure_cli_logging, log_cli_context
 from src.utils.directory_organizer import DirectoryOrganizer
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
-logger = logging.getLogger(__name__)
+# Configure logging to stderr (not stdout) for JSON purity
+logger = configure_cli_logging("backup_cli")
 
 
 class BackupCLI:
@@ -66,7 +66,6 @@ class BackupCLI:
         """
         self.vault_path = vault_path or "."
         self.organizer = DirectoryOrganizer(vault_root=self.vault_path)
-        logger.info(f"Backup CLI initialized with vault: {self.vault_path}")
 
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
@@ -89,6 +88,13 @@ class BackupCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
+        log_cli_context(
+            logger=logger,
+            cli_name="backup_cli",
+            subcommand="backup",
+            vault_path=self.vault_path,
+            output_format=output_format,
+        )
 
         try:
             if not quiet:
@@ -147,6 +153,14 @@ class BackupCLI:
             Exit code (0 for success, 1 for failure)
         """
         quiet = self._is_quiet_mode(output_format)
+        log_cli_context(
+            logger=logger,
+            cli_name="backup_cli",
+            subcommand="prune-backups",
+            vault_path=self.vault_path,
+            dry_run=dry_run,
+            output_format=output_format,
+        )
 
         try:
             if not quiet:
