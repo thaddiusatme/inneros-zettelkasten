@@ -136,7 +136,9 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
-            logger.info(f"cli=core_workflow_cli subcommand=status vault={self.vault_path} format={output_format}")
+            logger.info(
+                f"cli=core_workflow_cli subcommand=status vault={self.vault_path} format={output_format}"
+            )
 
             if not quiet:
                 print("📊 Generating workflow status...")
@@ -214,7 +216,9 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
-            logger.info(f"cli=core_workflow_cli subcommand=process-inbox vault={self.vault_path} format={output_format} fast_mode={fast_mode}")
+            logger.info(
+                f"cli=core_workflow_cli subcommand=process-inbox vault={self.vault_path} format={output_format} fast_mode={fast_mode}"
+            )
 
             if not quiet:
                 mode_str = " (fast mode - skipping AI)" if fast_mode else ""
@@ -723,11 +727,27 @@ def main() -> int:
         parser.print_help()
         return 1
 
+    # Initialize CLI
     try:
-        # Initialize CLI
         cli = CoreWorkflowCLI(vault_path=args.vault_path)
+    except Exception as e:
+        # Emit contract JSON on initialization failure if in JSON mode
+        if getattr(args, "format", "normal") == "json":
+            response = build_json_response(
+                success=False,
+                data={},
+                errors=[str(e)],
+                cli_name="core_workflow_cli",
+                subcommand=args.command or "unknown",
+            )
+            print(json.dumps(response, indent=2, default=str))
+        else:
+            print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
+        logger.exception("Error initializing CLI")
+        return 1
 
-        # Execute command
+    # Execute command
+    try:
         if args.command == "status":
             return cli.status(output_format=args.format)
         elif args.command == "process-inbox":
@@ -757,7 +777,18 @@ def main() -> int:
         print("\n⚠️ Operation cancelled by user")
         return 130
     except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        # Emit contract JSON on execution failure if in JSON mode
+        if getattr(args, "format", "normal") == "json":
+            response = build_json_response(
+                success=False,
+                data={},
+                errors=[str(e)],
+                cli_name="core_workflow_cli",
+                subcommand=args.command or "unknown",
+            )
+            print(json.dumps(response, indent=2, default=str))
+        else:
+            print(f"❌ Error: {e}", file=sys.stderr)
         logger.exception("Unexpected error during execution")
         return 1
 

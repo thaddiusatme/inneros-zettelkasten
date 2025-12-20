@@ -60,7 +60,7 @@ class TestDashboardLauncher:
             assert "already running" in result.get("message", "").lower()
 
     def test_launch_provides_dashboard_url(self):
-        """RED: Should provide dashboard URL in result."""
+        """RED: Default workflow dashboard is terminal UI (no URL)."""
         launcher = DashboardLauncher(vault_path=".")
 
         with patch("subprocess.Popen") as mock_popen:
@@ -70,8 +70,8 @@ class TestDashboardLauncher:
 
             result = launcher.launch()
 
-            assert "url" in result or "message" in result
-            # URL should be in result or message
+            assert result["success"] is True
+            assert "url" not in result
 
     def test_launch_handles_missing_dashboard_file(self):
         """RED: Should handle gracefully if workflow_dashboard.py is missing."""
@@ -135,7 +135,7 @@ class TestDashboardOrchestrator:
     """Test suite for dashboard command orchestration."""
 
     def test_default_launches_web_dashboard(self):
-        """RED: Default command should launch web UI dashboard."""
+        """RED: Default command should launch workflow (terminal) dashboard."""
         orchestrator = DashboardOrchestrator(vault_path=".")
 
         with patch("subprocess.Popen") as mock_popen:
@@ -147,9 +147,27 @@ class TestDashboardOrchestrator:
 
             assert result["success"] is True
             assert (
-                result.get("mode") == "web"
+                result.get("mode") == "workflow"
                 or "workflow" in result.get("message", "").lower()
             )
+
+            # Terminal workflow dashboard should not claim a browser URL
+            assert "url" not in result
+
+    def test_web_flag_launches_browser_dashboard(self):
+        """RED: --web flag should launch browser web UI and provide URL."""
+        orchestrator = DashboardOrchestrator(vault_path=".")
+
+        with patch("subprocess.Popen") as mock_popen:
+            mock_process = Mock()
+            mock_process.poll.return_value = None
+            mock_popen.return_value = mock_process
+
+            result = orchestrator.run(live_mode=False, web_mode=True)
+
+            assert result["success"] is True
+            assert result.get("mode") == "web"
+            assert "url" in result
 
     def test_live_flag_launches_terminal_dashboard(self):
         """RED: --live flag should launch terminal dashboard."""

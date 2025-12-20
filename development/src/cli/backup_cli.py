@@ -161,7 +161,9 @@ class BackupCLI:
             response = build_json_response(
                 success=True,
                 data={
-                    "total_backups": prune_result.get("found", prune_result.get("total_backups", 0)),
+                    "total_backups": prune_result.get(
+                        "found", prune_result.get("total_backups", 0)
+                    ),
                     "keep": keep,
                     "dry_run": dry_run,
                     "to_prune": prune_result.get("to_prune", []),
@@ -181,9 +183,9 @@ class BackupCLI:
                 print(f"✅ Backups to keep: {keep}")
                 print(f"🗑️  Backups to prune: {len(response['data']['to_prune'])}")
 
-                if response['data']['to_prune']:
+                if response["data"]["to_prune"]:
                     print("\nBackups marked for deletion:")
-                    for backup in response['data']['to_prune']:
+                    for backup in response["data"]["to_prune"]:
                         print(f"  - {backup}")
 
                     if dry_run:
@@ -296,7 +298,18 @@ def main():
     try:
         cli = BackupCLI(vault_path=args.vault)
     except Exception as e:
-        print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
+        # Emit contract JSON on initialization failure if in JSON mode
+        if getattr(args, "format", "normal") == "json":
+            response = build_json_response(
+                success=False,
+                data={},
+                errors=[str(e)],
+                cli_name="backup_cli",
+                subcommand=args.command or "unknown",
+            )
+            print(json.dumps(response, indent=2, default=str))
+        else:
+            print(f"❌ Error initializing CLI: {e}", file=sys.stderr)
         return 1
 
     # Execute command
