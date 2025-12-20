@@ -21,10 +21,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.cli_output_contract import build_json_response
+from src.cli.cli_logging import configure_cli_logging, log_cli_context
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
-logger = logging.getLogger(__name__)
+# Configure logging to stderr (not stdout) for JSON purity
+logger = configure_cli_logging("core_workflow_cli")
 
 
 class CoreWorkflowCLI:
@@ -47,7 +47,6 @@ class CoreWorkflowCLI:
         """
         self.vault_path = vault_path or "."
         self.workflow_manager = WorkflowManager(base_directory=self.vault_path)
-        logger.info(f"Core Workflow CLI initialized with vault: {self.vault_path}")
 
     def _print_header(self, title: str) -> None:
         """Print a formatted section header."""
@@ -169,8 +168,12 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
-            logger.info(
-                f"cli=core_workflow_cli subcommand=status vault={self.vault_path} format={output_format}"
+            log_cli_context(
+                logger=logger,
+                cli_name="core_workflow_cli",
+                subcommand="status",
+                vault_path=self.vault_path,
+                output_format=output_format,
             )
 
             if not quiet:
@@ -249,8 +252,13 @@ class CoreWorkflowCLI:
         """
         try:
             quiet = self._is_quiet_mode(output_format)
-            logger.info(
-                f"cli=core_workflow_cli subcommand=process-inbox vault={self.vault_path} format={output_format} fast_mode={fast_mode}"
+            log_cli_context(
+                logger=logger,
+                cli_name="core_workflow_cli",
+                subcommand="process-inbox",
+                vault_path=self.vault_path,
+                output_format=output_format,
+                fast_mode=fast_mode,
             )
 
             if not quiet:
