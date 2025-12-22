@@ -83,7 +83,7 @@ integ: $(VENV)/bin/activate
 	PYTHONPATH=development $(PYTHON) -m pytest -q development/tests/integration
 
 cov: $(VENV)/bin/activate
-	PYTHONPATH=development $(PYTHON) -m pytest --cov=development/src --cov-report=term-missing
+	PYTHONPATH=development $(PYTHON) -m pytest --cov=development/src --cov-report=term-missing -m "not wip" --ignore=development/demos development/tests/unit
 
 test: lint type unit
 

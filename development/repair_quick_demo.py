@@ -15,20 +15,20 @@ if inbox_dir.exists():
     print("Finding orphaned notes...")
     orphaned = engine.find_orphaned_notes()
     print(f"Found {len(orphaned)} orphaned notes")
-    
+
     if len(orphaned) > 0:
         print("\nFirst 3 orphaned notes:")
         for note in orphaned[:3]:
             print(f"  - {note.relative_to(inbox_dir.parent)}")
-    
+
     print("\nGenerating report (dry-run)...")
     report = engine.repair_all(dry_run=True)
-    
+
     print(f"\nReport Summary:")
     print(f"  Total scanned: {report['total_scanned']}")
     print(f"  Orphaned found: {report['orphaned_found']}")
     print(f"  Would repair: {report['orphaned_found']}")
-    
+
     print("\n✅ Validation complete - repair engine works!")
 else:
     print("❌ Inbox directory not found")

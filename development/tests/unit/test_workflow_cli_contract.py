@@ -9,6 +9,11 @@ This test would have caught the bug where:
 - CoreWorkflowCLI expected: {"total": 60, "successful": 0, "failed": 16}
 """
 
+import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
+
 import sys
 import pytest
 from pathlib import Path

@@ -1,5 +1,13 @@
 """
 TDD RED Phase: Tests for Auto-Promotion System (PBI-004)
+"""
+
+import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
+
+"""
 
 Implements quality-gated automatic promotion of notes from Inbox to appropriate
 directories based on type and quality score.
