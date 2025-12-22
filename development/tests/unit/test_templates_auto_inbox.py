@@ -16,9 +16,17 @@ def _has_tp_move(content: str) -> bool:
     return bool(pattern.search(content))
 
 
+# Trigger templates process other notes but don't need to relocate themselves
+TRIGGER_TEMPLATES = {"simple-youtube-trigger.md"}
+
+
 @pytest.mark.parametrize("template_path", sorted(TEMPLATES_DIR.glob("*.md")))
 def test_template_auto_moves_out_of_templates(template_path: Path):
     """Ensure every Obsidian template auto-moves generated note to Inbox/."""
+    if template_path.name in TRIGGER_TEMPLATES:
+        pytest.skip(
+            f"Trigger template {template_path.name} processes other notes, doesn't need tp.file.move()"
+        )
     content = template_path.read_text(encoding="utf-8")
     assert _has_tp_move(
         content

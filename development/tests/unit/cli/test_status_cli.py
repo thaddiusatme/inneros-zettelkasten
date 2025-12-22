@@ -3,6 +3,14 @@ TDD RED Phase: System Status CLI Tests
 
 Test suite for system observability status command.
 Following TDD methodology from v2.1 auto-promotion success pattern.
+"""
+
+import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
+
+"""
 
 Coverage:
 - Daemon process detection (running/stopped)

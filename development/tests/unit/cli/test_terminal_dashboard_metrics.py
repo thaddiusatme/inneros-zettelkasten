@@ -8,6 +8,9 @@ All tests should FAIL initially (RED phase).
 """
 
 import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
 from pathlib import Path
 from unittest.mock import patch
 

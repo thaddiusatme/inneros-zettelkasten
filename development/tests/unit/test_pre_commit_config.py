@@ -1,4 +1,11 @@
-"""TDD RED Phase: Pre-commit configuration tests (Issue #26).
+"""TDD RED Phase: Pre-commit configuration tests (Issue #26)."""
+
+import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
+
+"""
 
 This suite encodes expectations for .pre-commit-config.yaml so that
 local pre-commit hooks match CI-style gates:

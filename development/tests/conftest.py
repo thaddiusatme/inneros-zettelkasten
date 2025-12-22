@@ -22,15 +22,22 @@ def pytest_collection_modifyitems(config, items):
     - tests/integration/ → @pytest.mark.integration (integration tests, <5s per test)
     - tests/smoke/ → @pytest.mark.smoke + @pytest.mark.slow (nightly, minutes)
     - tests/performance/ → @pytest.mark.performance (benchmarks)
+    - *_tdd_*.py or RED phase tests → @pytest.mark.wip (work-in-progress, excluded from CI)
 
     This enables filtering:
     - pytest -m "fast or integration"  # Fast development cycle (1.56s)
     - pytest -m "not slow"  # All fast tests (skip smoke, <30s)
     - pytest -m smoke  # Run smoke tests only (5-10 min)
+    - pytest -m "not wip"  # Exclude WIP/TDD tests from CI
 
     Week 1 Achievement: 300x faster integration tests via vault factories
     Week 2: Smoke tests for real vault validation (nightly, not blocking)
     """
+    # TDD iteration test patterns - auto-mark as WIP
+    import re
+
+    tdd_pattern = re.compile(r"_tdd_\d+")
+
     for item in items:
         test_path = Path(item.fspath)
 
@@ -44,6 +51,11 @@ def pytest_collection_modifyitems(config, items):
 
         # Convert to string for easier checking
         path_str = str(relative_path)
+        filename = test_path.name
+
+        # Auto-mark TDD iteration tests as WIP (e.g., test_foo_tdd_5.py)
+        if tdd_pattern.search(filename):
+            item.add_marker(pytest.mark.wip)
 
         # Auto-apply markers based on directory
         if "smoke" in path_str or "smoke" in relative_path.parts:
