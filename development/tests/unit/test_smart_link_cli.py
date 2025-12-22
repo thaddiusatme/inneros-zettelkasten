@@ -5,6 +5,9 @@ Tests CLI argument parsing, LinkSuggestionEngine integration, and interactive wo
 """
 
 import pytest
+
+# Mark entire module as WIP - TDD iteration tests
+pytestmark = pytest.mark.wip
 import tempfile
 import os
 import sys

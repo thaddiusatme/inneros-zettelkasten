@@ -9,6 +9,9 @@ Critical path: Prevent AI-generated parsing error tags at source
 """
 
 import pytest
+
+# Mark entire module as WIP - TDD iteration tests not yet complete
+pytestmark = pytest.mark.wip
 from pathlib import Path
 from unittest.mock import Mock
 

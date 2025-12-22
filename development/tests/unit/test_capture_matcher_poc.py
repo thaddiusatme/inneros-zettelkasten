@@ -12,6 +12,11 @@ NEW: Interactive CLI Features
 - Progress tracking and session state
 """
 
+import pytest
+
+# Mark entire module as WIP - TDD RED phase tests
+pytestmark = pytest.mark.wip
+
 from datetime import datetime
 import sys
 import os

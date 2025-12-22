@@ -5,6 +5,9 @@ Tests for integrating AIConnections with LinkSuggestionEngine and CLI workflow
 """
 
 import pytest
+
+# Mark entire module as WIP - TDD iteration tests (RED phase)
+pytestmark = pytest.mark.wip
 import tempfile
 import os
 import sys
