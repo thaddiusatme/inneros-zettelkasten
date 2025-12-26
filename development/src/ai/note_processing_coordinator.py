@@ -272,6 +272,7 @@ class NoteProcessingCoordinator:
             ai_processing_errors.append(("quality", str(e)))
 
         # Find potential connections
+        suggested_links = []
         try:
             if corpus_dir:
                 connections = self.connection_coordinator.discover_connections(
@@ -296,6 +297,9 @@ class NoteProcessingCoordinator:
                             "details": connections[:3],
                         }
                     )
+
+                    # Compute suggested_links for persistence (Phase 2)
+                    suggested_links = self._compute_suggested_links(connections, body)
         except Exception as e:
             results["processing"]["connections"] = {"error": str(e)}
 
@@ -309,7 +313,10 @@ class NoteProcessingCoordinator:
         if results["recommendations"]:
             primary_recommendation = results["recommendations"][0].get("action")
 
-        if needs_ai_update or any_template_fixed:
+        # Determine if we have suggested links to persist
+        has_suggested_links = len(suggested_links) > 0
+
+        if needs_ai_update or any_template_fixed or has_suggested_links:
             if dry_run:
                 if needs_ai_update:
                     frontmatter["ai_processed"] = datetime.now().isoformat()
@@ -333,8 +340,22 @@ class NoteProcessingCoordinator:
                                 primary_recommendation
                             )
 
+                    # Persist suggested_links to frontmatter (Phase 2 feature)
+                    if has_suggested_links:
+                        frontmatter["suggested_links"] = suggested_links
+
+                    # Update body with ## Suggested Connections section (Phase 3 feature)
+                    updated_body = body
+                    if has_suggested_links:
+                        section_content = self._build_suggested_connections_section(
+                            suggested_links
+                        )
+                        updated_body = self._replace_or_append_section(
+                            body, "## Suggested Connections", section_content
+                        )
+
                     # Rebuild content using centralized utility
-                    updated_content = build_frontmatter(frontmatter, body)
+                    updated_content = build_frontmatter(frontmatter, updated_body)
                     safe_write(note_file, updated_content)
                     results["file_updated"] = True
                 except Exception as e:
@@ -472,3 +493,110 @@ class NoteProcessingCoordinator:
 
         merged = sorted(list(existing_set | new_set))
         return merged[: self.config["max_tags_per_note"]]
+
+    def _extract_wikilinks_from_body(self, body: str) -> set:
+        """
+        Extract all wikilinks from note body.
+
+        Args:
+            body: Note body text
+
+        Returns:
+            Set of note names (without .md extension) found in [[wikilinks]]
+        """
+        if not body:
+            return set()
+        # Match [[note-name]] or [[note-name|alias]] patterns
+        pattern = r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]"
+        matches = re.findall(pattern, body)
+        return set(matches)
+
+    def _compute_suggested_links(
+        self, connections: List[Dict], body: str, max_links: int = 5
+    ) -> List[str]:
+        """
+        Compute suggested links from connection discoveries.
+
+        Args:
+            connections: List of connection results with 'filename' and 'similarity'
+            body: Note body for deduplication against existing links
+            max_links: Maximum number of suggested links (default 5)
+
+        Returns:
+            List of wikilink strings like ["[[note-name]]", ...]
+        """
+        if not connections:
+            return []
+
+        # Extract existing links from body for deduplication
+        existing_links = self._extract_wikilinks_from_body(body)
+
+        suggested = []
+        seen = set()
+
+        for conn in connections:
+            filename = conn.get("filename", "")
+            if not filename:
+                continue
+
+            # Remove .md extension for wikilink format
+            note_name = filename.replace(".md", "")
+
+            # Deduplicate: skip if already in body or already suggested
+            if note_name in existing_links or note_name in seen:
+                continue
+
+            seen.add(note_name)
+            suggested.append(f"[[{note_name}]]")
+
+            if len(suggested) >= max_links:
+                break
+
+        return suggested
+
+    def _replace_or_append_section(self, body: str, header: str, new_block: str) -> str:
+        """
+        Replace an existing section or append a new one to note body.
+
+        Args:
+            body: Current note body
+            header: Section header (e.g., "## Suggested Connections")
+            new_block: New content for the section (including header)
+
+        Returns:
+            Updated body with section replaced or appended
+        """
+        if not body:
+            return new_block
+
+        # Check if section exists - find header and everything after until next ## or end
+        pattern = rf"({re.escape(header)}.*?)(?=\n## |\Z)"
+        if re.search(pattern, body, re.DOTALL):
+            # Replace existing section
+            updated = re.sub(pattern, new_block.rstrip(), body, flags=re.DOTALL)
+            return updated
+        else:
+            # Append new section at end
+            return body.rstrip() + "\n\n" + new_block
+
+    def _build_suggested_connections_section(self, suggested_links: List[str]) -> str:
+        """
+        Build the ## Suggested Connections section content.
+
+        Args:
+            suggested_links: List of wikilink strings
+
+        Returns:
+            Formatted section string with header, timestamp, and links
+        """
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        lines = [
+            "## Suggested Connections",
+            "",
+            f"> Auto-generated by InnerOS on {timestamp}",
+            "",
+        ]
+        for link in suggested_links:
+            lines.append(f"- {link}")
+
+        return "\n".join(lines)

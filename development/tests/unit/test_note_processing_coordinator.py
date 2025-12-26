@@ -694,3 +694,364 @@ tags: [tag1, tag2, tag3]
         # Fast mode should also persist
         updated_content = note_path.read_text()
         assert "triage_recommendation:" in updated_content
+
+
+class TestSuggestedLinksPersistence:
+    """Test persistence of suggested_links to frontmatter (Phase 2)."""
+
+    @pytest.fixture
+    def coordinator_with_connections(self):
+        """Create coordinator that returns connection discoveries."""
+        tagger = Mock()
+        tagger.generate_tags = Mock(return_value=["test-tag"])
+
+        enhancer = Mock()
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.8, "suggestions": []}
+        )
+
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": "related-note-1.md", "similarity": 0.92},
+                {"filename": "related-note-2.md", "similarity": 0.85},
+                {"filename": "related-note-3.md", "similarity": 0.78},
+            ]
+        )
+
+        return NoteProcessingCoordinator(
+            tagger=tagger,
+            summarizer=Mock(),
+            enhancer=enhancer,
+            connection_coordinator=connection_coordinator,
+        )
+
+    def test_process_note_persists_suggested_links_frontmatter(
+        self, coordinator_with_connections, tmp_path
+    ):
+        """Test suggested_links is written to frontmatter from connection discoveries."""
+        note_path = tmp_path / "test-links.md"
+        note_path.write_text(
+            """---
+title: Test Links Note
+tags: []
+---
+
+Content for testing suggested links persistence.
+"""
+        )
+
+        # Create corpus dir for connection discovery
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        result = coordinator_with_connections.process_note(
+            str(note_path), dry_run=False, corpus_dir=corpus_dir
+        )
+
+        # Verify suggested_links in file
+        updated_content = note_path.read_text()
+        assert "suggested_links:" in updated_content
+        assert "[[related-note-1]]" in updated_content
+
+    def test_suggested_links_max_five(self, tmp_path):
+        """Test suggested_links is limited to max 5 entries."""
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": f"note-{i}.md", "similarity": 0.9 - (i * 0.05)}
+                for i in range(10)  # Return 10 connections
+            ]
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.8, "suggestions": []}
+                )
+            ),
+            connection_coordinator=connection_coordinator,
+        )
+
+        note_path = tmp_path / "many-links.md"
+        note_path.write_text(
+            """---
+title: Many Links Test
+tags: []
+---
+
+Content.
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator.process_note(str(note_path), dry_run=False, corpus_dir=corpus_dir)
+
+        updated_content = note_path.read_text()
+        # Parse frontmatter to check suggested_links array length
+        from src.utils.frontmatter import parse_frontmatter
+
+        fm, _ = parse_frontmatter(updated_content)
+        suggested = fm.get("suggested_links", [])
+        assert len(suggested) <= 5, f"Expected max 5 links, got {len(suggested)}"
+
+    def test_suggested_links_deduplicates_existing_body_links(self, tmp_path):
+        """Test suggested_links excludes links already in note body."""
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": "already-linked.md", "similarity": 0.95},
+                {"filename": "new-suggestion.md", "similarity": 0.85},
+            ]
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.8, "suggestions": []}
+                )
+            ),
+            connection_coordinator=connection_coordinator,
+        )
+
+        note_path = tmp_path / "existing-links.md"
+        note_path.write_text(
+            """---
+title: Existing Links Test
+tags: []
+---
+
+This note already has [[already-linked]] in the body.
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator.process_note(str(note_path), dry_run=False, corpus_dir=corpus_dir)
+
+        updated_content = note_path.read_text()
+        # Should have new-suggestion but not duplicate already-linked
+        assert "[[new-suggestion]]" in updated_content
+        # The frontmatter suggested_links should not include already-linked
+        # Count occurrences - already-linked should appear only once (in body)
+        assert updated_content.count("[[already-linked]]") == 1
+
+    def test_suggested_links_overwrites_on_reprocess(self, tmp_path):
+        """Test suggested_links is overwritten on re-processing (idempotent)."""
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": "new-connection.md", "similarity": 0.9},
+            ]
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.8, "suggestions": []}
+                )
+            ),
+            connection_coordinator=connection_coordinator,
+        )
+
+        note_path = tmp_path / "reprocess-links.md"
+        note_path.write_text(
+            """---
+title: Reprocess Links Test
+tags: []
+suggested_links:
+  - "[[old-link-1]]"
+  - "[[old-link-2]]"
+---
+
+Content.
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator.process_note(str(note_path), dry_run=False, corpus_dir=corpus_dir)
+
+        updated_content = note_path.read_text()
+        assert "[[new-connection]]" in updated_content
+        # Old links should be replaced, not accumulated
+        assert "[[old-link-1]]" not in updated_content
+
+
+class TestSuggestedConnectionsSection:
+    """Test appending/replacing ## Suggested Connections section (Phase 3)."""
+
+    @pytest.fixture
+    def coordinator_with_connections(self):
+        """Create coordinator that returns connection discoveries."""
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": "related-note.md", "similarity": 0.88},
+            ]
+        )
+
+        return NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.8, "suggestions": []}
+                )
+            ),
+            connection_coordinator=connection_coordinator,
+        )
+
+    def test_process_note_appends_suggested_connections_section(
+        self, coordinator_with_connections, tmp_path
+    ):
+        """Test ## Suggested Connections section is appended to note body."""
+        note_path = tmp_path / "append-section.md"
+        note_path.write_text(
+            """---
+title: Append Section Test
+tags: []
+---
+
+# Main Content
+
+This is the original note body.
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator_with_connections.process_note(
+            str(note_path), dry_run=False, corpus_dir=corpus_dir
+        )
+
+        updated_content = note_path.read_text()
+        assert "## Suggested Connections" in updated_content
+        assert "[[related-note]]" in updated_content
+        assert "> Auto-generated by InnerOS" in updated_content
+
+    def test_process_note_replaces_existing_suggested_connections_section(
+        self, tmp_path
+    ):
+        """Test existing ## Suggested Connections section is replaced, not duplicated."""
+        connection_coordinator = Mock()
+        connection_coordinator.discover_connections = Mock(
+            return_value=[
+                {"filename": "new-related.md", "similarity": 0.9},
+            ]
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=Mock(
+                enhance_note=Mock(
+                    return_value={"quality_score": 0.8, "suggestions": []}
+                )
+            ),
+            connection_coordinator=connection_coordinator,
+        )
+
+        note_path = tmp_path / "replace-section.md"
+        note_path.write_text(
+            """---
+title: Replace Section Test
+tags: []
+---
+
+# Main Content
+
+This is the original body.
+
+## Suggested Connections
+
+> Auto-generated by InnerOS on 2025-01-01
+
+- [[old-related]]
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator.process_note(str(note_path), dry_run=False, corpus_dir=corpus_dir)
+
+        updated_content = note_path.read_text()
+        # Should have exactly one section
+        assert updated_content.count("## Suggested Connections") == 1
+        # Old link should be gone, new link present
+        assert "[[old-related]]" not in updated_content
+        assert "[[new-related]]" in updated_content
+
+    def test_suggested_connections_preserves_user_content(
+        self, coordinator_with_connections, tmp_path
+    ):
+        """Test user-authored content before the section is preserved."""
+        note_path = tmp_path / "preserve-content.md"
+        note_path.write_text(
+            """---
+title: Preserve Content Test
+tags: []
+---
+
+# My Important Notes
+
+This is user-authored content that must be preserved.
+
+## My Custom Section
+
+More user content here.
+"""
+        )
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator_with_connections.process_note(
+            str(note_path), dry_run=False, corpus_dir=corpus_dir
+        )
+
+        updated_content = note_path.read_text()
+        # Original user content preserved
+        assert "# My Important Notes" in updated_content
+        assert "user-authored content that must be preserved" in updated_content
+        assert "## My Custom Section" in updated_content
+        assert "More user content here" in updated_content
+        # And new section added
+        assert "## Suggested Connections" in updated_content
+
+    def test_dry_run_does_not_persist_section(
+        self, coordinator_with_connections, tmp_path
+    ):
+        """Test dry-run mode does not add the section to the file."""
+        note_path = tmp_path / "dry-run-section.md"
+        original_content = """---
+title: Dry Run Section Test
+tags: []
+---
+
+Content.
+"""
+        note_path.write_text(original_content)
+
+        corpus_dir = tmp_path / "corpus"
+        corpus_dir.mkdir()
+
+        coordinator_with_connections.process_note(
+            str(note_path), dry_run=True, corpus_dir=corpus_dir
+        )
+
+        # File should not be modified
+        updated_content = note_path.read_text()
+        assert "## Suggested Connections" not in updated_content
