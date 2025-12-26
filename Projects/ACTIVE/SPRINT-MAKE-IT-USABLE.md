@@ -239,6 +239,21 @@ lint:    ...
 
 ---
 
+## 🧩 Usability Track: Persist `process-note` Outputs (Phases 1–5)
+
+**Goal**: Remove the "groundhog day" effect by persisting actionable `process-note` results into the note so they are visible/queryable in Obsidian.
+
+- Phase 1 (Complete): Persist `triage_recommendation`
+  - Commit: `0a7d3b3`
+  - Prompt: `Projects/ACTIVE/prompt-phase-1-persist-triage-recommendation.md`
+  - Lessons learned: `Projects/COMPLETED-2025-12/persist-triage-recommendation-phase-1-lessons-learned.md`
+- Phase 2–3 (Next): Persist `suggested_links` + replaceable `## Suggested Connections` section
+  - Prompt: `Projects/ACTIVE/prompt-phase-2-3-persist-links-and-body-section.md`
+- Phase 4–5 (After): Batch inbox processing (`make inbox` / `make inbox-safe`)
+  - Prompt: `Projects/ACTIVE/prompt-phase-4-5-batch-inbox-processing.md`
+
+---
+
 ## 🔗 Related Issues
 
 - [#50](https://github.com/thaddiusatme/inneros-zettelkasten/issues/50) - Automation CLI and status UX epic
