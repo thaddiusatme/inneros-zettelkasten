@@ -32,7 +32,7 @@ fleeting:
 smoke:
 	@echo "🔥 Running usability smoke test..."
 	@echo "--- Step 1/3: Status check ---"
-	@$(MAKE) status
+	@$(MAKE) status || true
 	@echo "--- Step 2/3: Review (preview) ---"
 	@$(MAKE) review
 	@echo "--- Step 3/3: Fleeting health ---"

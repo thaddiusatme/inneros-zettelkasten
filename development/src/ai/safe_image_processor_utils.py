@@ -202,6 +202,35 @@ class AtomicOperationEngine:
         operation_id = str(uuid.uuid4())
         session_id = f"{operation_name}_{operation_id[:8]}"
 
+        if not images:
+            try:
+                operation_result = operation_func(*args, **kwargs)
+                execution_time = (datetime.now() - start_time).total_seconds()
+
+                success = self._validate_operation_success(operation_result, images)
+                result = AtomicOperationResult(
+                    success=success,
+                    operation_id=operation_id,
+                    files_affected=images,
+                    backup_session_id="",
+                    execution_time=execution_time,
+                    error_details=None if success else "Operation validation failed",
+                )
+                self.operation_history.append(result)
+                return result
+            except Exception as e:
+                execution_time = (datetime.now() - start_time).total_seconds()
+                result = AtomicOperationResult(
+                    success=False,
+                    operation_id=operation_id,
+                    files_affected=images,
+                    backup_session_id="",
+                    execution_time=execution_time,
+                    error_details=str(e),
+                )
+                self.operation_history.append(result)
+                return result
+
         try:
             # Create backup
             backup_metadata = self.backup_manager.create_session_backup(
@@ -229,7 +258,9 @@ class AtomicOperationEngine:
                 self.operation_history.append(result)
                 return result
             else:
-                raise RuntimeError("Operation validation failed")
+                raise RuntimeError(
+                    self._build_validation_failure_message(operation_result, images)
+                )
 
         except Exception as e:
             # Failure - rollback
@@ -264,6 +295,30 @@ class AtomicOperationEngine:
                 return False
 
         return True
+
+    def _build_validation_failure_message(
+        self, operation_result, images: List[Path]
+    ) -> str:
+        details: List[str] = []
+
+        if isinstance(operation_result, dict):
+            direct_error = operation_result.get("error")
+            if direct_error:
+                details.append(str(direct_error))
+
+            workflow_result = operation_result.get("workflow_result")
+            if isinstance(workflow_result, dict):
+                workflow_error = workflow_result.get("error")
+                if workflow_error:
+                    details.append(str(workflow_error))
+
+        missing_images = [str(p) for p in images if not p.exists()]
+        if missing_images:
+            details.append(f"Missing images: {', '.join(missing_images)}")
+
+        if details:
+            return "Operation validation failed: " + " | ".join(details)
+        return "Operation validation failed"
 
     def get_operation_stats(self) -> Dict:
         """Get statistics about atomic operations"""
@@ -386,6 +441,8 @@ class ImageExtractor:
 
     def _is_valid_image(self, image_path: Path) -> bool:
         """Check if path represents a valid image file"""
+        if not image_path.exists() or not image_path.is_file():
+            return False
         if image_path.suffix.lower() not in self.image_extensions:
             return False
 

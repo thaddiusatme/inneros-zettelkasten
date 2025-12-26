@@ -12,6 +12,7 @@ This module is intended to be used by:
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.automation.log_aggregator import LogAggregator
 from src.cli.automation_status_cli import DaemonDetector, DaemonRegistry, LogParser
 
 
@@ -47,12 +48,17 @@ def _build_automation_entry(
     parser: LogParser,
     repo_root: Path,
     daemon_config: Dict[str, Any],
+    log_aggregator: Optional[LogAggregator] = None,
 ) -> Dict[str, Any]:
     """Build a single automation status entry from daemon and log state.
 
     Detection strategy:
     1. If daemon_config has a pid_file field, use PID file detection
     2. Otherwise fall back to ps aux script path matching
+
+    Log aggregation (Issue #67):
+    - Uses LogAggregator to find most recent activity across handler logs
+    - Falls back to single log file if aggregator not available
 
     This allows the Python daemon (which uses PID files) to be detected
     alongside legacy shell script daemons (which use ps aux matching).
@@ -74,17 +80,45 @@ def _build_automation_entry(
         # Fall back to ps aux script path matching for shell scripts
         status = detector.check_daemon_status(name, script_path)
 
-    log_rel_path = daemon_config.get("log_path", f".automation/logs/{name}.log")
-    log_path = repo_root / log_rel_path
-    last_run = parser.parse_last_run(log_path)
+    # Get last run info - prefer aggregated handler logs for true last-activity
+    last_run: Dict[str, Any] = {}
+    handler_activity: Dict[str, Any] = {}
 
-    return {
+    if log_aggregator:
+        # Use aggregated handler logs for accurate last-activity (Issue #67)
+        overall_activity = log_aggregator.get_overall_last_activity()
+        if overall_activity.get("last_timestamp"):
+            last_run = {
+                "status": overall_activity.get("status", "unknown"),
+                "timestamp": overall_activity.get("last_timestamp"),
+                "error_message": overall_activity.get("error_snippet"),
+            }
+        # Also get per-handler activity for detailed reporting
+        handler_activity = log_aggregator.get_all_handler_activity()
+
+    # Fallback to single log file if aggregator didn't find anything
+    if not last_run.get("timestamp"):
+        log_rel_path = daemon_config.get("log_path", f".automation/logs/{name}.log")
+        log_path = repo_root / log_rel_path
+        last_run = parser.parse_last_run(log_path)
+
+    result: Dict[str, Any] = {
         "name": name,
         "running": bool(status.get("running", False)),
         "last_run_status": last_run.get("status", "unknown"),
         "last_run_timestamp": last_run.get("timestamp"),
         "error_message": last_run.get("error_message"),
     }
+
+    # Include handler activity if available (for detailed status output)
+    if handler_activity:
+        result["handler_activity"] = {
+            h: a.get("last_timestamp")
+            for h, a in handler_activity.items()
+            if a.get("last_timestamp")
+        }
+
+    return result
 
 
 def _derive_overall_status(automations: List[Dict[str, Any]]) -> str:
@@ -142,6 +176,10 @@ def check_all(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     detector = DaemonDetector()
     parser = LogParser()
 
+    # Initialize LogAggregator for handler log aggregation (Issue #67)
+    logs_dir = repo_root / ".automation" / "logs"
+    log_aggregator = LogAggregator(logs_dir) if logs_dir.exists() else None
+
     automations: List[Dict[str, Any]] = []
     for daemon in daemons:
         automations.append(
@@ -150,6 +188,7 @@ def check_all(repo_root: Optional[Path] = None) -> Dict[str, Any]:
                 parser=parser,
                 repo_root=repo_root,
                 daemon_config=daemon,
+                log_aggregator=log_aggregator,
             )
         )
 

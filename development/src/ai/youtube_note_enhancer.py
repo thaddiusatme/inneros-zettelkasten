@@ -183,10 +183,12 @@ class YouTubeNoteEnhancer:
 
             # 2. Check if already processed
             frontmatter, _ = parse_frontmatter(original_content)
-            if frontmatter.get("ai_processed") and not force:
+            if frontmatter.get("youtube_ai_processed") and not force:
                 result.success = False
                 result.skipped = True
-                result.message = "Note already processed (use force=True to reprocess)"
+                result.message = (
+                    "YouTube quotes already inserted (use force=True to reprocess)"
+                )
                 return result
 
             # 3. Create backup
@@ -212,10 +214,10 @@ class YouTubeNoteEnhancer:
             )
 
             metadata = {
-                "ai_processed": True,
-                "processed_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "quote_count": quote_count,
-                "processing_time_seconds": round(processing_time, 2),
+                "youtube_ai_processed": True,
+                "youtube_processed_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "youtube_quote_count": quote_count,
+                "youtube_processing_time_seconds": round(processing_time, 2),
             }
 
             enhanced_content = self.update_frontmatter(enhanced_content, metadata)

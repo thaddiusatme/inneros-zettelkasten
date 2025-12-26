@@ -37,6 +37,16 @@
 
 **Critical Finding**: Core CLIs work but require `--vault knowledge` flag. Default path is wrong.
 
+**Update (2025-12-22)**:
+- Makefile now includes user-friendly targets: `make up`, `make down`, `make status`, `make review`, `make fleeting`.
+- Remaining daily UX gap: add one-command Inbox processing (`make inbox` / `make inbox-safe`) (Issue #77).
+- Output hygiene gap: tag/prompt artifacts in review output require sanitization (Issue #75).
+- Entry-point gap: `inneros` wrapper should route workflow commands to dedicated CLIs (Issue #78; #76 is duplicate).
+
+**Update (2025-12-25)**:
+- YouTube workflow has been validated via CLI and can be triggered from Obsidian Shell Commands for the active note.
+- YouTube quote insertion is now decoupled from the core workflow `ai_processed` flag via YouTube-specific frontmatter fields.
+
 ---
 
 ## ✅ Working CLIs
@@ -146,6 +156,8 @@ down:    # Stop automation
 status:  # Check health
 review:  # Run weekly review
 ```
+
+**Update (2025-12-22)**: `up/down/status/review/fleeting` exist. Next addition should be `inbox` / `inbox-safe` (Issue #77).
 
 ---
 
