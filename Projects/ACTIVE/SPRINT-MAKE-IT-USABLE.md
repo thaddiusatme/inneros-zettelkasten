@@ -137,8 +137,8 @@ status:
 # 3. Check: Quotes extracted?
 # Note: May be blocked by IP ban
 ```
-- [ ] Test passes OR document IP ban status
-- [ ] If blocked, skip for now
+- [x] Test passes (validated via CLI + Obsidian Shell Commands integration)
+- [x] Notes: see `Projects/ACTIVE/obsidian-shell-commands-inneros-integration-notes-2025-12-25.md`
 
 #### Step 2.4: Weekly Review Workflow Test ✅ COMPLETE (2025-12-02)
 ```bash
@@ -169,6 +169,7 @@ make status      # Verify healthy
 - Drop screenshots → auto-processed
 - Create notes → auto-linked
 - Add YouTube URLs → run `make youtube` when ready
+- In Obsidian: run your Shell Commands command palette entry to process the currently active note
 
 ## Weekly Review
 make review      # Get promotion recommendations

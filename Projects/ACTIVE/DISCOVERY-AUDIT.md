@@ -43,6 +43,10 @@
 - Output hygiene gap: tag/prompt artifacts in review output require sanitization (Issue #75).
 - Entry-point gap: `inneros` wrapper should route workflow commands to dedicated CLIs (Issue #78; #76 is duplicate).
 
+**Update (2025-12-25)**:
+- YouTube workflow has been validated via CLI and can be triggered from Obsidian Shell Commands for the active note.
+- YouTube quote insertion is now decoupled from the core workflow `ai_processed` flag via YouTube-specific frontmatter fields.
+
 ---
 
 ## ✅ Working CLIs

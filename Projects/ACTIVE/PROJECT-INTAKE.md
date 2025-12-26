@@ -55,6 +55,7 @@ Date: 2025-10-26
 - `make status`
 - `make review`
 - `make fleeting`
+- In Obsidian: run your Shell Commands command palette entry to process the currently active note
 
 **Planned daily-use addition**:
 - `make inbox` / `make inbox-safe` (see Issue #77)

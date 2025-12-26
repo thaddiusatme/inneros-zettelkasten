@@ -2,7 +2,7 @@
 
 **Purpose**: Single source of truth for the AI assistant and for current execution.  
 **Audience**: You (now) → future contributors/users (later).  
-**Last Updated**: 2025-12-22
+**Last Updated**: 2025-12-25
 
 ---
 
@@ -19,6 +19,7 @@ InnerOS is a local-first, automation-driven knowledge operating system for Obsid
 - `make review` runs weekly review in preview mode with actionable recommendations.
 - `make fleeting` runs fleeting health reporting against `knowledge/`.
 - Dedicated CLIs exist (ADR-004 direction) and core flows generally work when `--vault knowledge` is provided.
+- Obsidian Shell Commands can trigger processing for the currently active note (core workflow + conditional YouTube processing).
 - CI-lite / pre-commit quality gates and CLI logging/JSON contract work are in place.
 
 ### Known friction / blockers
@@ -36,6 +37,7 @@ InnerOS is a local-first, automation-driven knowledge operating system for Obsid
 
 - `make inbox` (to be added; Issue #77)
 - `make status` (optional; check health)
+- In Obsidian: run your Shell Commands command palette entry to process the currently active note.
 
 ### Weekly
 
@@ -72,6 +74,7 @@ InnerOS is a local-first, automation-driven knowledge operating system for Obsid
 ---
 
 ## AI assistant focus contract
+
 When context is limited, prioritize:
 
 - This manifest
