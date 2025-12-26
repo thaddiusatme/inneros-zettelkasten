@@ -247,14 +247,20 @@ lint:    ...
   - Commit: `0a7d3b3`
   - Prompt: `Projects/ACTIVE/prompt-phase-1-persist-triage-recommendation.md`
   - Lessons learned: `Projects/COMPLETED-2025-12/persist-triage-recommendation-phase-1-lessons-learned.md`
-- Phase 2–3 (Next): Persist `suggested_links` + replaceable `## Suggested Connections` section
-  - Prompt: `Projects/ACTIVE/prompt-phase-2-3-persist-links-and-body-section.md`
-- Phase 4–5 (After): Batch inbox processing (`make inbox` / `make inbox-safe`)
+- Phase 2–3 (Complete): Persist `suggested_links` + replaceable `## Suggested Connections` section
+  - Code committed: `e3c13e4`
+  - Lessons learned: `Projects/COMPLETED-2025-12/persist-processing-results-phase-2-3-lessons-learned.md`
+  - GitHub issue: #79 (closed)
+  - Prompt (archived): `Projects/COMPLETED-2025-12/prompt-phase-2-3-persist-links-and-body-section.md`
+- Phase 4–5 (Complete): Batch inbox processing (`make inbox` / `make inbox-safe`)
   - Prompt: `Projects/ACTIVE/prompt-phase-4-5-batch-inbox-processing.md`
+  - Code committed: `78c29e9`
+  - Lessons learned: `Projects/COMPLETED-2025-12/batch-inbox-phase-4-5-tdd-lessons-learned.md`
+  - GitHub issue: #80 (ready to close)
 
 ---
 
-## 🔗 Related Issues
+## Related Issues
 
 - [#50](https://github.com/thaddiusatme/inneros-zettelkasten/issues/50) - Automation CLI and status UX epic
 - [#51](https://github.com/thaddiusatme/inneros-zettelkasten/issues/51) - Make inneros-up default profile healthy

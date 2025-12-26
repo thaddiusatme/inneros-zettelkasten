@@ -61,7 +61,7 @@ ai_processed: true
             """---
 title: Test Note
 type: fleeting
-ai_processed: true
+ai_processed: 2025-12-26T21:16:15Z
 triage_recommendation: promote_to_permanent
 ---
 # Content
@@ -71,6 +71,26 @@ triage_recommendation: promote_to_permanent
         from src.ai.batch_inbox_processor import is_note_eligible_for_processing
 
         assert is_note_eligible_for_processing(note) is False
+
+    def test_note_with_ai_processed_timestamp_and_no_triage_is_eligible(
+        self, tmp_path: Path
+    ):
+        """A note with ai_processed timestamp but missing triage_recommendation should be eligible."""
+        note = tmp_path / "Inbox" / "test-note.md"
+        note.parent.mkdir(parents=True, exist_ok=True)
+        note.write_text(
+            """---
+title: Test Note
+type: fleeting
+ai_processed: 2025-12-26T21:16:15Z
+---
+# Content
+"""
+        )
+
+        from src.ai.batch_inbox_processor import is_note_eligible_for_processing
+
+        assert is_note_eligible_for_processing(note) is True
 
     def test_note_with_ai_processed_false_is_eligible(self, tmp_path: Path):
         """A note with ai_processed: false should be eligible."""

@@ -251,6 +251,8 @@ cov      # Coverage report
 test     # lint + type + unit
 run      # Weekly review (deprecated path)
 ui       # Web UI
+inbox    # Process unprocessed inbox notes
+inbox-safe # Dry-run inbox scan (no changes)
 ```
 
 ---

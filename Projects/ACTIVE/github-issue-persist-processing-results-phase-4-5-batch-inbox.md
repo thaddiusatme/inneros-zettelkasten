@@ -57,10 +57,12 @@ This issue adds:
 
 ### Acceptance Criteria
 
-- [ ] `make inbox` processes all eligible notes and persists outputs
-- [ ] `make inbox-safe` performs the same scan but performs no writes
-- [ ] Skip logic works reliably and is idempotent on re-run
-- [ ] Tests cover selection + skip logic and a tmp_path integration scenario
+- [x] `make inbox` exists and processes eligible notes (skip logic enforced)
+- [x] `make inbox-safe` exists and performs the same scan with no writes
+- [x] Skip logic is idempotent on re-run
+- [x] Unit tests cover selection + skip logic, triage breakdown, and error handling
+- [ ] Follow-up: dedicated CLI entry point (prefer `core_workflow_cli.py`) with explicit exit codes
+- [ ] Follow-up: consider recursive Inbox scanning
 
 ### Implementation Notes
 
@@ -71,6 +73,8 @@ This issue adds:
 
 - Prompt: `Projects/ACTIVE/prompt-phase-4-5-batch-inbox-processing.md`
 - Phase 2–3 prompt: `Projects/ACTIVE/prompt-phase-2-3-persist-links-and-body-section.md`
+- Commit: `78c29e9`
+- Lessons learned: `Projects/COMPLETED-2025-12/batch-inbox-phase-4-5-tdd-lessons-learned.md`
 
 ---
 

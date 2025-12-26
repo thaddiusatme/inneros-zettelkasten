@@ -100,6 +100,10 @@ pyright development/src || true
 make test
 make cov
 
+# Batch inbox processing
+make inbox-safe  # dry-run (no changes)
+make inbox       # process eligible Inbox/*.md notes
+
 # Web UI
 python3 web_ui/app.py  # http://localhost:8081
 ```

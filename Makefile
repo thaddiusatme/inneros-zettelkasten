@@ -31,11 +31,11 @@ fleeting:
 
 inbox:
 	@echo "📥 Processing unprocessed inbox notes..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json; r = batch_process_unprocessed_inbox(Path('Inbox')); print(json.dumps(r, indent=2))"
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('Inbox')); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
 
 inbox-safe:
 	@echo "📥 [DRY-RUN] Scanning inbox (no changes will be made)..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json; r = batch_process_unprocessed_inbox(Path('Inbox'), dry_run=True); print(json.dumps(r, indent=2))"
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('Inbox'), dry_run=True); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
 
 smoke:
 	@echo "🔥 Running usability smoke test..."

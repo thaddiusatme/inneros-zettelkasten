@@ -59,9 +59,10 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 ## Task Tracker
 
 - **[Completed]** Phase 1 — Persist `triage_recommendation`
-- **[Pending]** Phase 2 — Persist `suggested_links`
-- **[Pending]** Phase 3 — Append/replace `## Suggested Connections` section
-- **[Pending]** Phase 4 — Batch inbox processing + `make inbox`
+- **[Completed]** Phase 2 — Persist `suggested_links` (commit `e3c13e4`, issue #79 closed)
+- **[Completed]** Phase 3 — Append/replace `## Suggested Connections` section (commit `e3c13e4`, issue #79 closed)
+- **[Completed]** Phase 4 — Batch inbox processing + `make inbox` / `make inbox-safe` (commit `78c29e9`, issue #80 ready to close)
+- **[Completed]** Phase 5 — Make targets + docs updates (commit `78c29e9`, issue #80 ready to close)
 
 ---
 
@@ -89,4 +90,4 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 ## Next Action
 
 - Phase 1 is complete (commit `0a7d3b3`).
-- Next: proceed to Phase 2/3 prompt: `Projects/ACTIVE/prompt-phase-2-3-persist-links-and-body-section.md`.
+- Next: close Phase 4–5 issue (#80) and follow up on dedicated CLI integration.

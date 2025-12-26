@@ -59,11 +59,11 @@ Phase 1 persisted `triage_recommendation` (commit `0a7d3b3`). Phase 2–3 persis
 
 ### Acceptance Criteria
 
-- [ ] After `process-note`, frontmatter includes `suggested_links` (max 5, deduped)
-- [ ] After `process-note`, the body contains **exactly one** `## Suggested Connections` section
-- [ ] Re-processing is idempotent (frontmatter overwritten/updated, section replaced)
-- [ ] Dry-run mode computes but does not persist changes
-- [ ] Unit tests cover:
+- [x] After `process-note`, frontmatter includes `suggested_links` (max 5, deduped)
+- [x] After `process-note`, the body contains **exactly one** `## Suggested Connections` section
+- [x] Re-processing is idempotent (frontmatter overwritten/updated, section replaced)
+- [x] Dry-run mode computes but does not persist changes
+- [x] Unit tests cover:
   - `suggested_links` persistence
   - section append
   - section replacement
@@ -78,6 +78,12 @@ Phase 1 persisted `triage_recommendation` (commit `0a7d3b3`). Phase 2–3 persis
 
 - Prompt: `Projects/ACTIVE/prompt-phase-2-3-persist-links-and-body-section.md`
 - Phase 1 lessons learned: `Projects/COMPLETED-2025-12/persist-triage-recommendation-phase-1-lessons-learned.md`
+
+### Completion
+
+- Code committed: `e3c13e4`
+- Lessons learned: `Projects/COMPLETED-2025-12/persist-processing-results-phase-2-3-lessons-learned.md`
+- GitHub issue: #79 (closed)
 
 ---
 

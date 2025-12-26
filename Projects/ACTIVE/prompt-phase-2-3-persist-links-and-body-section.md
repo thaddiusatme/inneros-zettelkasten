@@ -13,7 +13,7 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
   - `.windsurf/rules/updated-development-workflow.md` (TDD + test tier discipline)
   - `.windsurf/rules/architectural-constraints.md` (avoid god classes / extract utilities)
   - `.windsurf/guides/ai-integration-patterns.md` (graceful degradation + idempotency)
-- **Critical path / current blocker**: Connections are computed but not persisted; recommendations aren’t actionable inside Obsidian.
+- **Critical path / current blocker**: Resolved by Phase 2–3 persistence (commit `e3c13e4`).
 
 ### Current Status
 
@@ -21,9 +21,11 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
   - Phase 1: `triage_recommendation` persisted in frontmatter.
     - Code committed: `0a7d3b3`
     - Lessons learned: `Projects/COMPLETED-2025-12/persist-triage-recommendation-phase-1-lessons-learned.md`
-- **In progress**:
-  - Phase 2: Persist `suggested_links` to frontmatter.
-  - Phase 3: Append/replace `## Suggested Connections` section in note body.
+  - Phase 2–3: `suggested_links` frontmatter + `## Suggested Connections` body section.
+    - Code committed: `e3c13e4`
+    - GitHub issue: #79 (closed)
+    - Lessons learned: `Projects/COMPLETED-2025-12/persist-processing-results-phase-2-3-lessons-learned.md`
+    - Prompt (archived canonical copy): `Projects/COMPLETED-2025-12/prompt-phase-2-3-persist-links-and-body-section.md`
 
 ### Lessons from last iteration
 
@@ -72,9 +74,9 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 ## Task Tracker
 
-- **[In progress]** Phase 2 — Persist `suggested_links`
-- **[Pending]** Phase 3 — `## Suggested Connections` section replacement
-- **[Pending]** Phase 4 — Batch inbox processing + `make inbox`
+- **[Complete]** Phase 2 — Persist `suggested_links`
+- **[Complete]** Phase 3 — `## Suggested Connections` section replacement
+- **[Next]** Phase 4–5 — Batch inbox processing (`make inbox` / `make inbox-safe`)
 
 ---
 
@@ -105,11 +107,5 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 ## Next Action (for this session)
 
-1. Open:
-   - `development/src/ai/note_processing_coordinator.py`
-   - `development/tests/unit/test_note_processing_coordinator.py`
-2. Implement Phase 2/3 Red → Green → Refactor.
-3. Commit with a focused message.
-4. Write lessons learned in `Projects/COMPLETED-2025-12/` for this iteration.
-
-Would you like me to implement Phase 2/3 now in small, reviewable commits?
+1. See archived prompt: `Projects/COMPLETED-2025-12/prompt-phase-2-3-persist-links-and-body-section.md`.
+2. Proceed to Phase 4–5 prompt: `Projects/ACTIVE/prompt-phase-4-5-batch-inbox-processing.md`.

@@ -8,7 +8,7 @@ Skip logic: Notes with BOTH ai_processed=true AND triage_recommendation present 
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.utils.frontmatter import parse_frontmatter
 
@@ -39,10 +39,21 @@ def is_note_eligible_for_processing(note_path: Path) -> bool:
         if frontmatter is None:
             return True
 
-        ai_processed = frontmatter.get("ai_processed", False)
+        ai_processed = frontmatter.get("ai_processed")
         triage_recommendation = frontmatter.get("triage_recommendation")
 
-        if ai_processed is True and triage_recommendation is not None:
+        processed = False
+        if isinstance(ai_processed, bool):
+            processed = ai_processed
+        elif ai_processed is None:
+            processed = False
+        elif isinstance(ai_processed, str):
+            normalized = ai_processed.strip().lower()
+            processed = normalized not in {"", "false", "no", "0", "none", "null"}
+        else:
+            processed = True
+
+        if processed is True and triage_recommendation is not None:
             logger.debug(f"Skipping already processed note: {note_path.name}")
             return False
 
@@ -78,7 +89,7 @@ def scan_eligible_notes(inbox_dir: Path) -> List[Path]:
 
 def process_single_note(
     note_path: Path,
-    workflow_manager: Optional[object] = None,
+    workflow_manager: Optional[Any] = None,
 ) -> Dict:
     """
     Process a single note using the workflow manager.
@@ -115,7 +126,7 @@ def process_single_note(
 def batch_process_unprocessed_inbox(
     inbox_dir: Path,
     dry_run: bool = False,
-    workflow_manager: Optional[object] = None,
+    workflow_manager: Optional[Any] = None,
     show_progress: bool = True,
 ) -> Dict:
     """

@@ -13,17 +13,19 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
   - `.windsurf/rules/updated-development-workflow.md` (TDD + test tiers)
   - `.windsurf/rules/architectural-constraints.md` (avoid new CLI sprawl unless necessary)
   - `.windsurf/rules/privacy-security.md` (no leaking secrets; safe defaults)
-- **Critical path / current blocker**: There’s no one-command daily Inbox processing loop; users must manually run per-note commands.
+- **Critical path / current blocker**: Resolved by `make inbox` / `make inbox-safe`.
 
 ### Current Status
 
 - **Completed**:
   - Phase 1: Persist `triage_recommendation`.
-- **Pending (depends on Phases 2–3)**:
-  - Phase 2: Persist `suggested_links`.
-  - Phase 3: Append/replace `## Suggested Connections` section.
-  - Phase 4: Batch processing over `Inbox/` with skip logic.
-  - Phase 5: Make targets + docs updates.
+  - Phase 2–3: Persist `suggested_links` + replaceable `## Suggested Connections` section.
+  - Phase 4–5: Batch inbox processing + `make inbox` / `make inbox-safe`.
+    - Code committed: `78c29e9`
+    - Lessons learned: `Projects/COMPLETED-2025-12/batch-inbox-phase-4-5-tdd-lessons-learned.md`
+- **Follow-ups**:
+  - Integrate batch inbox processing into an existing dedicated CLI (prefer `core_workflow_cli.py`) with explicit exit codes.
+  - Consider recursive inbox scanning if needed.
 
 ### Lessons from last iteration
 
@@ -51,7 +53,7 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 - `make inbox` processes all eligible notes and persists outputs.
 - `make inbox-safe` performs the same scan but performs no writes.
-- JSON output is available for automation (`--format json`).
+- Output is JSON so it can be consumed by automation.
 
 ---
 
@@ -59,6 +61,9 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 - Prefer extending `development/src/cli/core_workflow_cli.py` rather than creating a brand new CLI, unless forced.
 - Ensure exit codes: 0 success, 1 if any errors.
+- Add progress bar / improved terminal UX.
+- Add configurable ignore patterns.
+- Add batch size / concurrency controls (only if safe).
 
 ---
 
@@ -72,8 +77,8 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 ## Task Tracker
 
-- **[In progress]** Phase 4 — Batch inbox processing
-- **[Pending]** Phase 5 — Make targets + docs updates
+- **[Complete]** Phase 4 — Batch inbox processing
+- **[Complete]** Phase 5 — Make targets + docs updates
 
 ---
 
@@ -103,8 +108,6 @@ We want to perform **TDD** with **Red → Green → Refactor**, followed by **gi
 
 ## Next Action (for this session)
 
-1. Inspect existing batch processing entry points (`WorkflowManager.batch_process_inbox`, safe batch APIs).
-2. Implement `make inbox` / `make inbox-safe` end-to-end with tests.
-3. Commit and document lessons learned.
-
-Would you like me to implement Phase 4/5 now in small, reviewable commits?
+1. Run `make inbox-safe` to confirm eligibility scan.
+2. Run `make inbox` when ready to persist results.
+3. Create follow-up issue(s) for CLI integration + explicit exit codes.
