@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv smoke
+.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv smoke inbox inbox-safe
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -28,6 +28,14 @@ review:
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
 	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault knowledge fleeting-health
+
+inbox:
+	@echo "📥 Processing unprocessed inbox notes..."
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json; r = batch_process_unprocessed_inbox(Path('Inbox')); print(json.dumps(r, indent=2))"
+
+inbox-safe:
+	@echo "📥 [DRY-RUN] Scanning inbox (no changes will be made)..."
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json; r = batch_process_unprocessed_inbox(Path('Inbox'), dry_run=True); print(json.dumps(r, indent=2))"
 
 smoke:
 	@echo "🔥 Running usability smoke test..."
