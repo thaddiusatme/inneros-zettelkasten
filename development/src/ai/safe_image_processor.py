@@ -243,11 +243,15 @@ class SafeImageProcessor:
         # Define workflow operation wrapper
         def workflow_wrapper():
             workflow_result = workflow_operation(note_path)
+            workflow_success = bool(
+                workflow_result.get("success", True)
+                and not workflow_result.get("error")
+            )
             # Validate both workflow success and image preservation
             return {
-                "success": workflow_result.get("success", False)
-                and all(img.exists() for img in images),
+                "success": workflow_success and all(img.exists() for img in images),
                 "workflow_result": workflow_result,
+                "error": workflow_result.get("error"),
             }
 
         # Execute atomically using modular engine

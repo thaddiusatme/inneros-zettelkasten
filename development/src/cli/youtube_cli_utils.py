@@ -515,12 +515,26 @@ class YouTubeNoteValidator:
             >>> if url:
             ...     print(f"Processing: {url}")
         """
-        url = metadata.get("url", None)
+        url = (
+            metadata.get("url")
+            or metadata.get("video_url")
+            or metadata.get("source_url")
+        )
         if url:
             logger.debug(f"Extracted video URL: {url}")
-        else:
-            logger.warning("No URL found in metadata")
-        return url
+            return url
+
+        video_id = metadata.get("video_id")
+        if video_id:
+            # Fallback: many vault notes store `video_id` but not `url`
+            constructed = f"https://www.youtube.com/watch?v={video_id}"
+            logger.debug(
+                f"Constructed video URL from video_id '{video_id}': {constructed}"
+            )
+            return constructed
+
+        logger.warning("No URL or video_id found in metadata")
+        return None
 
 
 class CLIOutputFormatter:

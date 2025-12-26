@@ -11,7 +11,6 @@ Manager: WorkflowManager (has all core workflow methods)
 import sys
 import json
 import argparse
-import logging
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -235,6 +234,157 @@ class CoreWorkflowCLI:
             else:
                 print(f"❌ Error generating status: {e}", file=sys.stderr)
             logger.exception("Error in status command")
+            return 1
+
+    def process_note(
+        self,
+        note_path: str,
+        output_format: str = "normal",
+        fast_mode: bool = False,
+        preserve_images: bool = True,
+    ) -> int:
+        try:
+            quiet = self._is_quiet_mode(output_format)
+
+            if not quiet:
+                mode_str = " (fast mode - skipping AI)" if fast_mode else ""
+                print(f"🧠 Processing note{mode_str}...")
+                print(f"   Note: {note_path}")
+
+            candidate = Path(note_path)
+            resolved_path = None
+
+            try:
+                if candidate.is_absolute() and candidate.exists():
+                    resolved_path = candidate
+                if resolved_path is None and not candidate.is_absolute():
+                    cwd_path = Path.cwd() / candidate
+                    if cwd_path.exists():
+                        resolved_path = cwd_path
+                if resolved_path is None:
+                    vault_path = Path(self.vault_path) / candidate
+                    if vault_path.exists():
+                        resolved_path = vault_path
+                if resolved_path is None:
+                    name_only = candidate.name
+                    inbox_candidate = self.workflow_manager.inbox_dir / name_only
+                    fleeting_candidate = self.workflow_manager.fleeting_dir / name_only
+
+                    if inbox_candidate.exists():
+                        resolved_path = inbox_candidate
+                    elif fleeting_candidate.exists():
+                        resolved_path = fleeting_candidate
+            except Exception:
+                resolved_path = None
+
+            if resolved_path is None or not resolved_path.exists():
+                if quiet:
+                    response = build_json_response(
+                        success=False,
+                        data={},
+                        errors=[f"File not found: {note_path}"],
+                        cli_name="core_workflow_cli",
+                        subcommand="process-note",
+                    )
+                    print(json.dumps(response, indent=2, default=str))
+                else:
+                    print(f"❌ Error: File not found: {note_path}", file=sys.stderr)
+                return 1
+
+            if resolved_path.is_dir():
+                msg = (
+                    "Expected a note file path but got a directory: " f"{resolved_path}"
+                )
+                if quiet:
+                    response = build_json_response(
+                        success=False,
+                        data={"path": str(resolved_path)},
+                        errors=[msg],
+                        cli_name="core_workflow_cli",
+                        subcommand="process-note",
+                    )
+                    print(json.dumps(response, indent=2, default=str))
+                else:
+                    print(f"❌ Error: {msg}", file=sys.stderr)
+                return 2
+
+            if resolved_path.suffix.lower() != ".md":
+                msg = "Expected a markdown note (.md) but got: " f"{resolved_path.name}"
+                if quiet:
+                    response = build_json_response(
+                        success=False,
+                        data={"path": str(resolved_path)},
+                        errors=[msg],
+                        cli_name="core_workflow_cli",
+                        subcommand="process-note",
+                    )
+                    print(json.dumps(response, indent=2, default=str))
+                else:
+                    print(f"❌ Error: {msg}", file=sys.stderr)
+                return 2
+
+            results = self.workflow_manager.safe_process_inbox_note(
+                str(resolved_path),
+                preserve_images=preserve_images,
+                dry_run=False,
+                fast=fast_mode,
+            )
+
+            if quiet:
+                response = build_json_response(
+                    success=True,
+                    data=results,
+                    errors=[],
+                    cli_name="core_workflow_cli",
+                    subcommand="process-note",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                self._print_header("NOTE PROCESSING RESULTS")
+                print(f"   📄 File: {resolved_path}")
+                if results.get("error"):
+                    print(f"   ❌ Error: {results.get('error')}")
+                    return 1
+
+                quality_score = results.get("quality_score")
+                if quality_score is not None:
+                    try:
+                        print(f"   ✨ Quality score: {float(quality_score):.2f}")
+                    except (TypeError, ValueError):
+                        print(f"   ✨ Quality score: {quality_score}")
+
+                if results.get("file_updated"):
+                    print("   ✅ Note updated")
+                else:
+                    print("   ⚠️  No changes written")
+
+                recs = results.get("recommendations") or []
+                if recs:
+                    self._print_section("RECOMMENDATIONS")
+                    for rec in recs[:5]:
+                        if isinstance(rec, dict):
+                            action = rec.get("action", "unknown")
+                            reason = rec.get("reason", "")
+                            confidence = rec.get("confidence")
+                            conf_str = f" ({confidence})" if confidence else ""
+                            print(f"   - {action}{conf_str}: {reason}")
+                        else:
+                            print(f"   - {rec}")
+
+            return 0
+        except Exception as e:
+            if self._is_quiet_mode(output_format):
+                response = build_json_response(
+                    success=False,
+                    data={},
+                    errors=[str(e)],
+                    cli_name="core_workflow_cli",
+                    subcommand="process-note",
+                )
+                print(json.dumps(response, indent=2, default=str))
+            else:
+                print(f"❌ Error processing note: {e}", file=sys.stderr)
+            logger.exception("Error in process_note command")
             return 1
 
     def process_inbox(
@@ -688,6 +838,24 @@ Examples:
         help="Skip AI processing for faster execution (basic metadata only)",
     )
 
+    process_note_parser = subparsers.add_parser(
+        "process-note", help="Process a single note (writes updates back)"
+    )
+    process_note_parser.add_argument("note_path", help="Path to note to process")
+    process_note_parser.add_argument(
+        "--format", choices=["normal", "json"], default="normal", help="Output format"
+    )
+    process_note_parser.add_argument(
+        "--fast",
+        action="store_true",
+        help="Skip AI processing for faster execution (basic metadata only)",
+    )
+    process_note_parser.add_argument(
+        "--no-preserve-images",
+        action="store_true",
+        help="Disable image preservation protections during processing",
+    )
+
     # Promote command
     promote_parser = subparsers.add_parser("promote", help="Promote a note")
     promote_parser.add_argument("note_path", help="Path to note to promote")
@@ -794,6 +962,13 @@ def main() -> int:
         elif args.command == "process-inbox":
             return cli.process_inbox(
                 output_format=args.format, fast_mode=getattr(args, "fast", False)
+            )
+        elif args.command == "process-note":
+            return cli.process_note(
+                note_path=args.note_path,
+                output_format=args.format,
+                fast_mode=getattr(args, "fast", False),
+                preserve_images=not getattr(args, "no_preserve_images", False),
             )
         elif args.command == "promote":
             return cli.promote(

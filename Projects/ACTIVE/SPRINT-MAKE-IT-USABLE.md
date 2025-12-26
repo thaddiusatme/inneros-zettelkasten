@@ -46,9 +46,16 @@
 ```
 
 **Key Findings**:
+
 - CLIs work but require `--vault knowledge` flag
 - Makefile now has: `make up`, `make down`, `make status`, `make review`, `make fleeting`
 - 3 CLIs have import errors needing fixes
+
+**New Findings (2025-12-22)**:
+
+- Weekly review output can include tag/prompt artifacts → requires tag sanitization (Issue #75)
+- Missing one-command daily Inbox processing target → add `make inbox` / `make inbox-safe` (Issue #77)
+- `inneros` wrapper routing is still confusing vs dedicated CLIs → align per ADR-004 (Issue #78)
 
 #### Step 0.2: Documentation Alignment ✅ COMPLETE
 - [x] Archive stale docs (moved FEATURE-STATUS.md to Archive/)
@@ -68,7 +75,7 @@
 #### Step 1.1: Fix `inneros-status` (Issue #50)
 - [ ] Verify `inneros_status_cli.py` runs without errors
 - [ ] Test output shows all 3 daemons
-- [ ] Add to Makefile: `make status`
+- [x] Add to Makefile: `make status`
 - [ ] Verify exit codes work (0 = healthy, 1 = unhealthy)
 
 **Test Command**:
@@ -79,7 +86,7 @@ PYTHONPATH=development python3 development/src/cli/inneros_status_cli.py
 #### Step 1.2: Fix `inneros-up` (Issue #51)
 - [ ] Identify what blocks `screenshot_processor` and `health_monitor`
 - [ ] Fix startup sequence
-- [ ] Add to Makefile: `make up`
+- [x] Add to Makefile: `make up`
 - [ ] Test: Run once, check status, verify daemons running
 
 **Target Makefile Additions**:
@@ -181,6 +188,11 @@ test:    ...
 lint:    ...
 ```
 
+**Update (2025-12-22)**:
+
+- `up/down/status/review/fleeting` exist.
+- Next addition is `inbox` / `inbox-safe` (Issue #77).
+
 #### Step 3.3: Cleanup `Projects/REFERENCE/`
 - [ ] Archive stale docs
 - [ ] Ensure START-HERE.md → DAILY-WORKFLOW.md flow
@@ -246,6 +258,9 @@ lint:    ...
 - [#39](https://github.com/thaddiusatme/inneros-zettelkasten/issues/39) - Migrate automation scripts to CLIs
 - [#47](https://github.com/thaddiusatme/inneros-zettelkasten/issues/47) - CLI syntax mismatch bug
 - [#20](https://github.com/thaddiusatme/inneros-zettelkasten/issues/20) - Automation visibility UX
+- [#75](https://github.com/thaddiusatme/inneros-zettelkasten/issues/75) - Sanitize tags to remove prompt artifacts + malformed tokens
+- [#77](https://github.com/thaddiusatme/inneros-zettelkasten/issues/77) - Add Makefile targets for Inbox processing (one-command daily loop)
+- [#78](https://github.com/thaddiusatme/inneros-zettelkasten/issues/78) - Route `inneros` wrapper workflow commands to dedicated CLIs (ADR-004)
 
 ---
 

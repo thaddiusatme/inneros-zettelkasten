@@ -3,6 +3,8 @@
 Status: Draft (Scope confirmed: Entire InnerOS)
 Date: 2025-10-26
 
+**Canonical current-state doc**: `Projects/ACTIVE/PROJECT-MANIFEST.md`
+
 ---
 
 ## 1) Product and scope
@@ -47,6 +49,16 @@ Date: 2025-10-26
 - Web UI: `python3 web_ui/app.py` (http://localhost:8081)
 - Deploy: local‑first. CI‑Lite on PRs. Rollback = git revert + backups.
 
+**Daily-use commands (current)**:
+- `make up`
+- `make down`
+- `make status`
+- `make review`
+- `make fleeting`
+
+**Planned daily-use addition**:
+- `make inbox` / `make inbox-safe` (see Issue #77)
+
 ## 7) Testing and quality gates
 - CI‑Lite: ruff (E/F/W, ignore E501), black --check, pyright, unit pytest.
 - Local: `make test` mirrors CI. Coverage with `make cov`.
@@ -76,6 +88,11 @@ Date: 2025-10-26
   - Retire legacy `workflow_demo.py` (ADR‑004); enforce dedicated CLIs.
   - Automation hardening: daemon registry coverage + surface health in UI.
   - Evening screenshots integration polish + metrics.
+
+**Current usability sprint focus (Dec 2025)**:
+- One-command Inbox processing (Issue #77)
+- Tag sanitization to prevent prompt artifacts (Issue #75)
+- Route `inneros` wrapper workflow commands to dedicated CLIs (Issue #78)
 - DoD: tests passing (CI‑Lite), docs updated, safety (backup/dry‑run), observability (JSON output/metrics), daemon registered where relevant.
 - Labels: type:feature/bug, area:cli/ui/automation, priority:p0‑p2, status:blocked/ready.
 
