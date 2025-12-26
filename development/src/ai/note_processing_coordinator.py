@@ -184,8 +184,11 @@ class NoteProcessingCoordinator:
             results["recommendations"].append(primary)
             results["quality_score"] = quality_score
 
-            # Persist template fixes even in fast-mode, using atomic write
-            if any_template_fixed and not dry_run:
+            # Persist triage_recommendation to frontmatter (Phase 1 feature)
+            frontmatter["triage_recommendation"] = primary["action"]
+
+            # Persist changes (template fixes + triage_recommendation) in fast-mode
+            if not dry_run:
                 try:
                     updated_content = build_frontmatter(frontmatter, body)
                     safe_write(note_file, updated_content)
@@ -301,6 +304,11 @@ class NoteProcessingCoordinator:
             key in results["processing"] for key in ["tags", "quality"]
         )
 
+        # Extract primary triage recommendation for persistence
+        primary_recommendation = None
+        if results["recommendations"]:
+            primary_recommendation = results["recommendations"][0].get("action")
+
         if needs_ai_update or any_template_fixed:
             if dry_run:
                 if needs_ai_update:
@@ -318,6 +326,12 @@ class NoteProcessingCoordinator:
                             frontmatter["quality_score"] = results["processing"][
                                 "quality"
                             ]["score"]
+
+                        # Persist triage_recommendation (Phase 1 feature)
+                        if primary_recommendation:
+                            frontmatter["triage_recommendation"] = (
+                                primary_recommendation
+                            )
 
                     # Rebuild content using centralized utility
                     updated_content = build_frontmatter(frontmatter, body)

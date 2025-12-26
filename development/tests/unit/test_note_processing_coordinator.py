@@ -495,3 +495,202 @@ Content
         # Processing should have expected structure
         if "quality" in result["processing"]:
             assert "score" in result["processing"]["quality"]
+
+
+class TestTriageRecommendationPersistence:
+    """Test persistence of triage_recommendation to frontmatter (Phase 1)."""
+
+    @pytest.fixture
+    def coordinator(self):
+        """Create coordinator with mocked AI components for triage testing."""
+        tagger = Mock()
+        tagger.generate_tags = Mock(return_value=["test-tag"])
+
+        enhancer = Mock()
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.8, "suggestions": []}
+        )
+
+        return NoteProcessingCoordinator(
+            tagger=tagger,
+            summarizer=Mock(),
+            enhancer=enhancer,
+            connection_coordinator=Mock(discover_connections=Mock(return_value=[])),
+        )
+
+    def test_process_note_persists_triage_recommendation_promote(
+        self, coordinator, tmp_path
+    ):
+        """Test triage_recommendation is written to frontmatter for high quality notes."""
+        note_path = tmp_path / "high-quality-note.md"
+        note_path.write_text(
+            """---
+title: High Quality Note
+tags: []
+---
+
+This is a high quality note with substantial content.
+"""
+        )
+
+        # Process note (non-dry-run)
+        result = coordinator.process_note(str(note_path), dry_run=False)
+
+        # Verify the recommendation was returned
+        assert len(result["recommendations"]) > 0
+        assert result["recommendations"][0]["action"] == "promote_to_permanent"
+
+        # Verify triage_recommendation is persisted in the file
+        updated_content = note_path.read_text()
+        assert "triage_recommendation: promote_to_permanent" in updated_content
+
+    def test_process_note_persists_triage_recommendation_fleeting(self, tmp_path):
+        """Test triage_recommendation for medium quality notes."""
+        # Create coordinator with medium quality score
+        enhancer = Mock()
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.55, "suggestions": []}
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=enhancer,
+            connection_coordinator=Mock(discover_connections=Mock(return_value=[])),
+        )
+
+        note_path = tmp_path / "medium-quality-note.md"
+        note_path.write_text(
+            """---
+title: Medium Quality Note
+tags: []
+---
+
+Medium quality content.
+"""
+        )
+
+        result = coordinator.process_note(str(note_path), dry_run=False)
+
+        assert result["recommendations"][0]["action"] == "move_to_fleeting"
+
+        updated_content = note_path.read_text()
+        assert "triage_recommendation: move_to_fleeting" in updated_content
+
+    def test_process_note_persists_triage_recommendation_improve(self, tmp_path):
+        """Test triage_recommendation for low quality notes."""
+        # Create coordinator with low quality score
+        enhancer = Mock()
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.2, "suggestions": []}
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=enhancer,
+            connection_coordinator=Mock(discover_connections=Mock(return_value=[])),
+        )
+
+        note_path = tmp_path / "low-quality-note.md"
+        note_path.write_text(
+            """---
+title: Low Quality Note
+tags: []
+---
+
+Short.
+"""
+        )
+
+        result = coordinator.process_note(str(note_path), dry_run=False)
+
+        assert result["recommendations"][0]["action"] == "improve_or_archive"
+
+        updated_content = note_path.read_text()
+        assert "triage_recommendation: improve_or_archive" in updated_content
+
+    def test_triage_recommendation_overwrites_on_reprocess(self, tmp_path):
+        """Test triage_recommendation is overwritten on re-processing (idempotent)."""
+        enhancer = Mock()
+        enhancer.enhance_note = Mock(
+            return_value={"quality_score": 0.8, "suggestions": []}
+        )
+
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(generate_tags=Mock(return_value=[])),
+            summarizer=Mock(),
+            enhancer=enhancer,
+            connection_coordinator=Mock(discover_connections=Mock(return_value=[])),
+        )
+
+        note_path = tmp_path / "reprocess-note.md"
+        # Note already has an old triage_recommendation
+        note_path.write_text(
+            """---
+title: Reprocess Note
+tags: []
+triage_recommendation: improve_or_archive
+---
+
+Content that is now high quality.
+"""
+        )
+
+        result = coordinator.process_note(str(note_path), dry_run=False)
+
+        # Should overwrite with new recommendation
+        updated_content = note_path.read_text()
+        assert "triage_recommendation: promote_to_permanent" in updated_content
+        # Should NOT have old value
+        assert "triage_recommendation: improve_or_archive" not in updated_content
+
+    def test_dry_run_does_not_persist_triage_recommendation(
+        self, coordinator, tmp_path
+    ):
+        """Test dry-run mode does not write triage_recommendation to file."""
+        note_path = tmp_path / "dry-run-triage.md"
+        original_content = """---
+title: Dry Run Triage Test
+tags: []
+---
+
+Content.
+"""
+        note_path.write_text(original_content)
+
+        result = coordinator.process_note(str(note_path), dry_run=True)
+
+        # Should still compute recommendation
+        assert len(result["recommendations"]) > 0
+
+        # But file should NOT be modified
+        updated_content = note_path.read_text()
+        assert "triage_recommendation" not in updated_content
+
+    def test_fast_mode_persists_triage_recommendation(self, tmp_path):
+        """Test fast mode (heuristic) also persists triage_recommendation."""
+        coordinator = NoteProcessingCoordinator(
+            tagger=Mock(),
+            summarizer=Mock(),
+            enhancer=Mock(),
+            connection_coordinator=Mock(),
+        )
+
+        note_path = tmp_path / "fast-mode-triage.md"
+        # Long content for high heuristic score
+        note_path.write_text(
+            """---
+title: Fast Mode Triage Test
+tags: [tag1, tag2, tag3]
+---
+
+"""
+            + "This is substantial content. " * 100
+        )
+
+        result = coordinator.process_note(str(note_path), fast=True, dry_run=False)
+
+        # Fast mode should also persist
+        updated_content = note_path.read_text()
+        assert "triage_recommendation:" in updated_content
