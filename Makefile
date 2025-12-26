@@ -6,6 +6,8 @@ PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 SYSTEM_PYTHON ?= python3
 
+VAULT ?= knowledge
+
 # ============================================
 # USER COMMANDS (what you use daily)
 # ============================================
@@ -23,19 +25,19 @@ status:
 
 review:
 	@echo "📋 Generating weekly review..."
-	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview
+	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault $(VAULT) weekly-review --preview
 
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
-	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault knowledge fleeting-health
+	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault $(VAULT) fleeting-health
 
 inbox:
 	@echo "📥 Processing unprocessed inbox notes..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('Inbox')); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('$(VAULT)/Inbox')); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
 
 inbox-safe:
 	@echo "📥 [DRY-RUN] Scanning inbox (no changes will be made)..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('Inbox'), dry_run=True); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
+	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('$(VAULT)/Inbox'), dry_run=True); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
 
 smoke:
 	@echo "🔥 Running usability smoke test..."

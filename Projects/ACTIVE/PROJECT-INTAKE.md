@@ -101,8 +101,8 @@ make test
 make cov
 
 # Batch inbox processing
-make inbox-safe  # dry-run (no changes)
-make inbox       # process eligible Inbox/*.md notes
+make inbox-safe  # dry-run (no changes); uses VAULT=knowledge by default
+make inbox       # process eligible $(VAULT)/Inbox/*.md notes
 
 # Web UI
 python3 web_ui/app.py  # http://localhost:8081

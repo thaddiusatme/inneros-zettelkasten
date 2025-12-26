@@ -253,6 +253,8 @@ run      # Weekly review (deprecated path)
 ui       # Web UI
 inbox    # Process unprocessed inbox notes
 inbox-safe # Dry-run inbox scan (no changes)
+
+# These use VAULT=knowledge by default (override with: make inbox VAULT=knowledge-starter-pack)
 ```
 
 ---
