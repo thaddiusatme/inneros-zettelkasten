@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - CLI Command Reference
  
  > **Complete reference for dedicated CLI tools, automation helper, and the unified `inneros` wrapper**  
- > **Updated**: 2025-11-22 (ADR-004 CLI Layer Extraction Complete)
+ > **Updated**: 2025-12-26 (inneros workflow now routes to dedicated CLIs)
  
  ## 🚀 **Overview**
  
@@ -468,16 +468,16 @@ inneros analytics --format json
 
 ---
 
-## 🔄 **Workflow Command** ⚠️ **DEPRECATED**
+## 🔄 **Workflow Command** ✅ **UPDATED**
 
-> **⚠️ DEPRECATION NOTICE**: The `inneros workflow` wrapper is deprecated as of October 2025 (ADR-004).  
-> **Migration Required**: Use dedicated CLIs listed above for all workflow operations.  
-> **Timeline**: `workflow_demo.py` will be removed November 11, 2025.  
-> **See**: [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for complete migration instructions.
+> **✅ UPDATE (December 2025)**: The `inneros workflow` wrapper now correctly routes to dedicated ADR-004 CLIs.  
+> The underlying `workflow_demo.py` is deprecated, but **the wrapper commands still work** and are now backed by the proper dedicated CLIs.  
+> **Recommended**: Use dedicated CLIs directly for automation and scripts.  
+> **Supported**: `inneros workflow` commands for interactive use.
 
-### **Migration Quick Reference**
+### **Routing Reference**
 
-Instead of `inneros workflow`, use these dedicated CLIs:
+`inneros workflow` commands now route to these dedicated CLIs:
 
 | **Old Workflow Command** | **New Dedicated CLI** |
 |--------------------------|----------------------|
