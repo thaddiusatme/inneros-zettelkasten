@@ -5,7 +5,6 @@ Provides simple access to AI-powered knowledge management tools.
 """
 
 import sys
-import os
 import argparse
 from pathlib import Path
 
@@ -14,10 +13,11 @@ project_root = Path(__file__).parent
 development_path = project_root / "development"
 sys.path.insert(0, str(development_path))
 
+
 def run_analytics(args):
     """Run analytics analysis on knowledge directory."""
     from src.cli.analytics_demo import main as analytics_main
-    
+
     # Prepare arguments for analytics_demo
     analytics_args = [args.path or "knowledge/"]
     if args.format:
@@ -28,15 +28,16 @@ def run_analytics(args):
         analytics_args.append("--interactive")
     if args.section:
         analytics_args.extend(["--section", args.section])
-    
+
     # Override sys.argv for the analytics script
     original_argv = sys.argv
     sys.argv = ["analytics_demo.py"] + analytics_args
-    
+
     try:
         analytics_main()
     finally:
         sys.argv = original_argv
+
 
 def run_notes(args):
     """Create review notes via notes_cli wrapper."""
@@ -72,50 +73,65 @@ def run_notes(args):
     finally:
         sys.argv = original_argv
 
+
 def run_workflow(args):
-    """Run workflow management on knowledge directory."""
-    from src.cli.workflow_demo import main as workflow_main
-    
-    # Prepare arguments for workflow_demo
-    workflow_args = [args.path or "knowledge/"]
-    if args.status:
-        workflow_args.append("--status")
-    if args.process_inbox:
-        workflow_args.append("--process-inbox")
-    if args.report:
-        workflow_args.append("--report")
-    if args.interactive:
-        workflow_args.append("--interactive")
+    """Run workflow management on knowledge directory.
+
+    Routes to ADR-004 dedicated CLIs (Issue #78):
+    - --status, --process-inbox, --report → CoreWorkflowCLI
+    - --weekly-review, --enhanced-metrics → WeeklyReviewCLI
+    """
+    from src.cli.core_workflow_cli import CoreWorkflowCLI
+    from src.cli.weekly_review_cli import WeeklyReviewCLI
+
+    vault_path = args.path or "knowledge/"
+    output_format = "json" if args.format == "json" else "normal"
+
+    # Route to WeeklyReviewCLI for weekly review commands
     if args.weekly_review:
-        workflow_args.append("--weekly-review")
+        cli = WeeklyReviewCLI(vault_path=vault_path)
+        return cli.weekly_review(
+            preview=args.dry_run,
+            output_format=output_format,
+            export_path=args.export_checklist,
+        )
+
     if args.enhanced_metrics:
-        workflow_args.append("--enhanced-metrics")
-    if args.format:
-        workflow_args.extend(["--format", args.format])
-    if args.export:
-        workflow_args.extend(["--export", args.export])
-    if args.export_checklist:
-        workflow_args.extend(["--export-checklist", args.export_checklist])
-    if args.dry_run:
-        workflow_args.append("--dry-run")
-    
-    # Override sys.argv for the workflow script
-    original_argv = sys.argv
-    sys.argv = ["workflow_demo.py"] + workflow_args
-    
-    try:
-        workflow_main()
-    finally:
-        sys.argv = original_argv
+        cli = WeeklyReviewCLI(vault_path=vault_path)
+        return cli.enhanced_metrics(
+            output_format=output_format,
+            export_path=args.export,
+        )
+
+    # Route to CoreWorkflowCLI for core workflow commands
+    cli = CoreWorkflowCLI(vault_path=vault_path)
+
+    if args.status:
+        return cli.status(output_format=output_format)
+
+    if args.process_inbox:
+        return cli.process_inbox(output_format=output_format)
+
+    if args.report:
+        return cli.report(output_format=output_format, export_path=args.export)
+
+    # Default: show status if no specific command
+    if args.interactive:
+        print("Interactive mode not yet supported in dedicated CLIs.")
+        print("Use: inneros workflow --status")
+        return 1
+
+    return cli.status(output_format=output_format)
+
 
 def run_enhance(args):
     """Run AI enhancement on a specific file."""
     from src.cli.enhance_demo import main as enhance_main
-    
+
     if not args.file:
         print("Error: File path is required for enhancement")
         return 1
-    
+
     # Prepare arguments for enhance_demo
     enhance_args = [args.file]
     if args.model:
@@ -128,15 +144,16 @@ def run_enhance(args):
         enhance_args.append("--structure")
     if args.full:
         enhance_args.append("--full")
-    
+
     # Override sys.argv for the enhance script
     original_argv = sys.argv
     sys.argv = ["enhance_demo.py"] + enhance_args
-    
+
     try:
         enhance_main()
     finally:
         sys.argv = original_argv
+
 
 def main():
     """Main CLI entry point."""
@@ -150,78 +167,169 @@ Examples:
   inneros workflow --status                  # Show workflow status
   inneros workflow --weekly-review           # Generate weekly review
   inneros enhance knowledge/Inbox/note.md    # Enhance specific note
-        """
+        """,
     )
-    
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
     # Analytics command
-    analytics_parser = subparsers.add_parser('analytics', help='Analyze knowledge collection')
-    analytics_parser.add_argument('path', nargs='?', default='knowledge/', help='Path to analyze (default: knowledge/)')
-    analytics_parser.add_argument('--format', choices=['text', 'json'], default='text', help='Output format')
-    analytics_parser.add_argument('--export', help='Export report to JSON file')
-    analytics_parser.add_argument('--interactive', action='store_true', help='Run in interactive mode')
-    analytics_parser.add_argument('--section', choices=['overview', 'distributions', 'quality', 'temporal', 'recommendations', 'insights'], help='Show specific section only')
-    
+    analytics_parser = subparsers.add_parser(
+        "analytics", help="Analyze knowledge collection"
+    )
+    analytics_parser.add_argument(
+        "path",
+        nargs="?",
+        default="knowledge/",
+        help="Path to analyze (default: knowledge/)",
+    )
+    analytics_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output format"
+    )
+    analytics_parser.add_argument("--export", help="Export report to JSON file")
+    analytics_parser.add_argument(
+        "--interactive", action="store_true", help="Run in interactive mode"
+    )
+    analytics_parser.add_argument(
+        "--section",
+        choices=[
+            "overview",
+            "distributions",
+            "quality",
+            "temporal",
+            "recommendations",
+            "insights",
+        ],
+        help="Show specific section only",
+    )
+
     # Workflow command
-    workflow_parser = subparsers.add_parser('workflow', help='Manage knowledge workflows')
-    workflow_parser.add_argument('path', nargs='?', default='knowledge/', help='Path to knowledge directory (default: knowledge/)')
-    workflow_parser.add_argument('--status', action='store_true', help='Show workflow status')
-    workflow_parser.add_argument('--process-inbox', action='store_true', help='Process inbox notes')
-    workflow_parser.add_argument('--report', action='store_true', help='Generate workflow report')
-    workflow_parser.add_argument('--interactive', action='store_true', help='Run in interactive mode')
-    workflow_parser.add_argument('--weekly-review', action='store_true', help='Generate weekly review')
-    workflow_parser.add_argument('--enhanced-metrics', action='store_true', help='Enhanced metrics report')
-    workflow_parser.add_argument('--format', choices=['text', 'json'], default='text', help='Output format')
-    workflow_parser.add_argument('--export', help='Export report to JSON file')
-    workflow_parser.add_argument('--export-checklist', help='Export checklist to markdown file')
-    workflow_parser.add_argument('--dry-run', action='store_true', help='Preview without processing')
-    
+    workflow_parser = subparsers.add_parser(
+        "workflow", help="Manage knowledge workflows"
+    )
+    workflow_parser.add_argument(
+        "path",
+        nargs="?",
+        default="knowledge/",
+        help="Path to knowledge directory (default: knowledge/)",
+    )
+    workflow_parser.add_argument(
+        "--status", action="store_true", help="Show workflow status"
+    )
+    workflow_parser.add_argument(
+        "--process-inbox", action="store_true", help="Process inbox notes"
+    )
+    workflow_parser.add_argument(
+        "--report", action="store_true", help="Generate workflow report"
+    )
+    workflow_parser.add_argument(
+        "--interactive", action="store_true", help="Run in interactive mode"
+    )
+    workflow_parser.add_argument(
+        "--weekly-review", action="store_true", help="Generate weekly review"
+    )
+    workflow_parser.add_argument(
+        "--enhanced-metrics", action="store_true", help="Enhanced metrics report"
+    )
+    workflow_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output format"
+    )
+    workflow_parser.add_argument("--export", help="Export report to JSON file")
+    workflow_parser.add_argument(
+        "--export-checklist", help="Export checklist to markdown file"
+    )
+    workflow_parser.add_argument(
+        "--dry-run", action="store_true", help="Preview without processing"
+    )
+
     # Enhance command
-    enhance_parser = subparsers.add_parser('enhance', help='AI-enhance specific notes')
-    enhance_parser.add_argument('file', help='Path to note file to enhance')
-    enhance_parser.add_argument('--model', default='llama3:latest', help='Ollama model to use')
-    enhance_parser.add_argument('--min-score', type=float, default=0.3, help='Minimum quality score threshold')
-    enhance_parser.add_argument('--links', action='store_true', help='Show link suggestions')
-    enhance_parser.add_argument('--structure', action='store_true', help='Show structure suggestions')
-    enhance_parser.add_argument('--full', action='store_true', help='Show full enhancement report')
+    enhance_parser = subparsers.add_parser("enhance", help="AI-enhance specific notes")
+    enhance_parser.add_argument("file", help="Path to note file to enhance")
+    enhance_parser.add_argument(
+        "--model", default="llama3:latest", help="Ollama model to use"
+    )
+    enhance_parser.add_argument(
+        "--min-score", type=float, default=0.3, help="Minimum quality score threshold"
+    )
+    enhance_parser.add_argument(
+        "--links", action="store_true", help="Show link suggestions"
+    )
+    enhance_parser.add_argument(
+        "--structure", action="store_true", help="Show structure suggestions"
+    )
+    enhance_parser.add_argument(
+        "--full", action="store_true", help="Show full enhancement report"
+    )
 
     # Notes command
-    notes_parser = subparsers.add_parser('notes', help='Create review notes from templates')
-    notes_parser.add_argument('path', nargs='?', default='.', help='Repo root or knowledge dir (default: .)')
-    notes_subparsers = notes_parser.add_subparsers(dest='notes_cmd', help='Notes subcommands')
+    notes_parser = subparsers.add_parser(
+        "notes", help="Create review notes from templates"
+    )
+    notes_parser.add_argument(
+        "path", nargs="?", default=".", help="Repo root or knowledge dir (default: .)"
+    )
+    notes_subparsers = notes_parser.add_subparsers(
+        dest="notes_cmd", help="Notes subcommands"
+    )
 
-    notes_new = notes_subparsers.add_parser('new', help='Create a new review note')
+    notes_new = notes_subparsers.add_parser("new", help="Create a new review note")
     kind = notes_new.add_mutually_exclusive_group(required=True)
-    kind.add_argument('--daily', action='store_true', help='Create daily review note')
-    kind.add_argument('--weekly', action='store_true', help='Create weekly review note')
-    kind.add_argument('--sprint-review', dest='sprint_review', action='store_true', help='Create sprint review note')
-    kind.add_argument('--sprint-retro', dest='sprint_retro', action='store_true', help='Create sprint retrospective note')
+    kind.add_argument("--daily", action="store_true", help="Create daily review note")
+    kind.add_argument("--weekly", action="store_true", help="Create weekly review note")
+    kind.add_argument(
+        "--sprint-review",
+        dest="sprint_review",
+        action="store_true",
+        help="Create sprint review note",
+    )
+    kind.add_argument(
+        "--sprint-retro",
+        dest="sprint_retro",
+        action="store_true",
+        help="Create sprint retrospective note",
+    )
 
-    notes_new.add_argument('--sprint-id', dest='sprint_id', help='Sprint ID (e.g., 001)')
-    notes_new.add_argument('--dir', dest='reviews_dir', help='Override Reviews directory path')
-    notes_new.add_argument('--open', dest='open_in_editor', action='store_true', help='Open the created note in your editor')
-    notes_new.add_argument('--editor', dest='editor', help='Editor command to use (overrides $VISUAL/$EDITOR)')
-    notes_new.add_argument('--git', dest='git_commit', action='store_true', help='git add + commit after creation')
-    
+    notes_new.add_argument(
+        "--sprint-id", dest="sprint_id", help="Sprint ID (e.g., 001)"
+    )
+    notes_new.add_argument(
+        "--dir", dest="reviews_dir", help="Override Reviews directory path"
+    )
+    notes_new.add_argument(
+        "--open",
+        dest="open_in_editor",
+        action="store_true",
+        help="Open the created note in your editor",
+    )
+    notes_new.add_argument(
+        "--editor",
+        dest="editor",
+        help="Editor command to use (overrides $VISUAL/$EDITOR)",
+    )
+    notes_new.add_argument(
+        "--git",
+        dest="git_commit",
+        action="store_true",
+        help="git add + commit after creation",
+    )
+
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return 1
-    
+
     try:
-        if args.command == 'analytics':
+        if args.command == "analytics":
             return run_analytics(args)
-        elif args.command == 'workflow':
+        elif args.command == "workflow":
             return run_workflow(args)
-        elif args.command == 'enhance':
+        elif args.command == "enhance":
             return run_enhance(args)
-        elif args.command == 'notes':
-            if args.notes_cmd == 'new':
+        elif args.command == "notes":
+            if args.notes_cmd == "new":
                 return run_notes(args)
             else:
-                print('Error: missing subcommand. Use: inneros notes new [options]')
+                print("Error: missing subcommand. Use: inneros notes new [options]")
                 return 1
         else:
             print(f"Unknown command: {args.command}")
@@ -232,6 +340,7 @@ Examples:
     except Exception as e:
         print(f"Error: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
