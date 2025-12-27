@@ -267,6 +267,15 @@ lint:    ...
 - [#39](https://github.com/thaddiusatme/inneros-zettelkasten/issues/39) - Migrate automation scripts to CLIs
 - [#47](https://github.com/thaddiusatme/inneros-zettelkasten/issues/47) - CLI syntax mismatch bug
 - [#20](https://github.com/thaddiusatme/inneros-zettelkasten/issues/20) - Automation visibility UX
+- [#75](https://github.com/thaddiusatme/inneros-zettelkasten/issues/75) - Tag sanitization + prompt artifact removal (completed 2025-12-26)
+
+**Issue #75 completion notes (2025-12-26)**:
+- Commits:
+  - `a00b60f9` (sanitize_tags hardening + tagger integration + unit tests)
+  - `af37e9e1` (core-workflow `repair-tags` CLI + unit tests)
+- Vault cleanup executed:
+  - Dry-run: scanned 555 files / 397 with tags / 67 repairs needed
+  - Execute: 67 repairs made
 
 ---
 

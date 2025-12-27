@@ -5,6 +5,13 @@
 **Latest Release**: `v0.1.0-beta` ✅  
 **Status**: **Make InnerOS Usable** sprint in progress — persist `process-note` outputs Phases 1–5 complete; closing out issue tracking
 
+**Latest session (2025-12-26)**:
+- Issue #75 completed: tag sanitization + prompt artifact removal
+- Vault cleanup executed via `core_workflow_cli.py repair-tags`:
+  - 555 files scanned
+  - 397 files with tags
+  - 67 files repaired
+
 ---
 
 ## 🎯 PRODUCT VISION
