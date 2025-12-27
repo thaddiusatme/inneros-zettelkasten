@@ -18,6 +18,8 @@ from unittest.mock import patch
 import tempfile
 import shutil
 
+from src.utils.frontmatter import parse_frontmatter
+
 pytestmark = pytest.mark.ci
 
 
@@ -220,6 +222,75 @@ title: Bad Note
         content_after = self.bad_note.read_text()
         self.assertIn("type: literature", content_after)
 
+
+class TestTagRepairCLI(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = Path(tempfile.mkdtemp())
+        self.inbox_dir = self.test_dir / "Inbox"
+        self.inbox_dir.mkdir()
+
+        self.bad_tags_note = (
+            self.inbox_dir / "lit-20251225-1613-prohibition-oversimplified.md"
+        )
+        self.bad_tags_note.write_text(
+            """---
+title: Test Note
+type: literature
+tags:
+  - ai-processing
+  - herearetheextractedrelevanttags
+  - herearetheextractedtagseducation
+  - herearetheextractedtagsinkebab-caseformat
+  - herearetheextractedtagsprohibition
+  - herearetheextractedtagsvideo-content
+---
+
+# Content
+"""
+        )
+
+    def tearDown(self):
+        if self.test_dir.exists():
+            shutil.rmtree(self.test_dir)
+
+    def test_repair_tags_method_exists(self):
+        from src.cli.core_workflow_cli import CoreWorkflowCLI
+
+        cli = CoreWorkflowCLI(vault_path=str(self.test_dir))
+        self.assertTrue(hasattr(cli, "repair_tags"))
+        self.assertTrue(callable(getattr(cli, "repair_tags")))
+
+    def test_repair_tags_default_dry_run(self):
+        from src.cli.core_workflow_cli import CoreWorkflowCLI
+
+        cli = CoreWorkflowCLI(vault_path=str(self.test_dir))
+        exit_code = cli.repair_tags(execute=False, output_format="normal")
+        self.assertEqual(exit_code, 0)
+
+        content_after = self.bad_tags_note.read_text(encoding="utf-8")
+        metadata_after, _ = parse_frontmatter(content_after)
+        self.assertIn(
+            "herearetheextractedrelevanttags",
+            metadata_after.get("tags", []),
+        )
+
+    def test_repair_tags_with_execute_flag(self):
+        from src.cli.core_workflow_cli import CoreWorkflowCLI
+
+        cli = CoreWorkflowCLI(vault_path=str(self.test_dir))
+        exit_code = cli.repair_tags(execute=True, output_format="normal")
+        self.assertEqual(exit_code, 0)
+
+        content_after = self.bad_tags_note.read_text(encoding="utf-8")
+        metadata_after, _ = parse_frontmatter(content_after)
+        tags_after = metadata_after.get("tags", [])
+
+        self.assertIn("ai-processing", tags_after)
+        self.assertIn("education", tags_after)
+        self.assertIn("prohibition", tags_after)
+        self.assertIn("video-content", tags_after)
+        self.assertFalse(any("herearetheextracted" in t for t in tags_after))
+
     def test_repair_metadata_shows_statistics(self):
         """TEST 11 (RED): Verify repair-metadata displays scan statistics"""
         from src.cli.core_workflow_cli import CoreWorkflowCLI
@@ -229,6 +300,8 @@ title: Bad Note
         # Capture output
         with patch("builtins.print") as mock_print:
             exit_code = cli.repair_metadata(execute=False, output_format="normal")
+
+            self.assertEqual(exit_code, 0)
 
             # Should display statistics
             output_text = " ".join(str(call) for call in mock_print.call_args_list)

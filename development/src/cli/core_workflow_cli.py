@@ -11,9 +11,8 @@ Manager: WorkflowManager (has all core workflow methods)
 import sys
 import json
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, Dict
 from datetime import datetime
 
 # Add development directory to path for imports
@@ -22,6 +21,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.ai.workflow_manager import WorkflowManager
 from src.cli.cli_output_contract import build_json_response
 from src.cli.cli_logging import configure_cli_logging, log_cli_context
+from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+from src.utils.tags import sanitize_tags
 
 # Configure logging to stderr (not stdout) for JSON purity
 logger = configure_cli_logging("core_workflow_cli")
@@ -622,6 +623,95 @@ class CoreWorkflowCLI:
             logger.exception("Error in repair_metadata command")
             return 1
 
+    def repair_tags(self, execute: bool = False, output_format: str = "normal") -> int:
+        """Repair malformed/prompt-artifact tags in frontmatter across the vault."""
+        try:
+            quiet = self._is_quiet_mode(output_format)
+            vault_path_obj = Path(self.vault_path)
+            if not vault_path_obj.exists():
+                if not quiet:
+                    print(
+                        f"❌ Error: Vault path does not exist: {self.vault_path}",
+                        file=sys.stderr,
+                    )
+                return 1
+
+            if not quiet:
+                mode_str = " (DRY RUN - Preview Only)" if not execute else ""
+                print(f"🏷️  Repairing frontmatter tags{mode_str}...")
+
+            results: Dict[str, Any] = {
+                "files_scanned": 0,
+                "files_with_tags": 0,
+                "repairs_needed": 0,
+                "repairs_made": 0,
+                "errors": [],
+            }
+
+            for file_path in vault_path_obj.rglob("*.md"):
+                results["files_scanned"] += 1
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                    metadata, body = parse_frontmatter(content)
+
+                    if not metadata or "tags" not in metadata:
+                        continue
+
+                    results["files_with_tags"] += 1
+                    original_tags = metadata.get("tags", [])
+                    cleaned_tags = sanitize_tags(original_tags)
+
+                    needs_repair = not (
+                        isinstance(original_tags, list)
+                        and original_tags == cleaned_tags
+                    )
+                    if not needs_repair:
+                        continue
+
+                    results["repairs_needed"] += 1
+
+                    if execute:
+                        metadata = {**metadata, "tags": cleaned_tags}
+                        updated = build_frontmatter(metadata, body)
+                        file_path.write_text(updated, encoding="utf-8")
+                        results["repairs_made"] += 1
+
+                except Exception as e:
+                    results["errors"].append(
+                        {
+                            "note": str(file_path),
+                            "error": str(e),
+                        }
+                    )
+
+            if quiet:
+                print(json.dumps(results, indent=2, default=str))
+            else:
+                self._print_header("TAG REPAIR RESULTS")
+                print(f"   📊 Files scanned: {results.get('files_scanned', 0)}")
+                print(f"   🏷️  Files with tags: {results.get('files_with_tags', 0)}")
+                print(f"   🔍 Repairs needed: {results.get('repairs_needed', 0)}")
+                if execute:
+                    print(f"   ✅ Repairs made: {results.get('repairs_made', 0)}")
+                else:
+                    print(
+                        f"   📝 Would repair: {results.get('repairs_needed', 0)} files "
+                        "(dry-run mode)"
+                    )
+                if results.get("errors"):
+                    print(f"   🚨 Errors: {len(results['errors'])}")
+                if results.get("repairs_needed", 0) > 0 and not execute:
+                    print("\n💡 Tip: Add --execute flag to apply repairs")
+
+            if len(results.get("errors", [])) > 0:
+                return 1
+            return 0
+
+        except Exception as e:
+            print(f"❌ Error repairing tags: {e}", file=sys.stderr)
+            logger.exception("Error in repair_tags command")
+            return 1
+
 
 def create_parser() -> argparse.ArgumentParser:
     """Create argument parser for core workflow CLI"""
@@ -756,6 +846,23 @@ Examples:
         help="Output format (default: normal)",
     )
 
+    # Repair-tags command
+    tags_parser = subparsers.add_parser(
+        "repair-tags",
+        help="Repair malformed/prompt-artifact tags in frontmatter",
+    )
+    tags_parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="Actually modify files (default is dry-run preview only)",
+    )
+    tags_parser.add_argument(
+        "--format",
+        choices=["normal", "json"],
+        default="normal",
+        help="Output format (default: normal)",
+    )
+
     return parser
 
 
@@ -811,6 +918,8 @@ def main() -> int:
             )
         elif args.command == "repair-metadata":
             return cli.repair_metadata(execute=args.execute, output_format=args.format)
+        elif args.command == "repair-tags":
+            return cli.repair_tags(execute=args.execute, output_format=args.format)
         else:
             parser.print_help()
             return 1
