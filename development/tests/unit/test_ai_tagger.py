@@ -150,6 +150,30 @@ class TestAITagger:
             assert isinstance(tags, list)
             assert len(tags) >= 0  # Could be empty or fallback tags
 
+    def test_ollama_response_sanitizes_prompt_artifacts(self):
+        """Ensure prompt preambles never become tags."""
+        from src.ai.tagger import AITagger
+
+        note_content = "This is a note about prohibition and education."
+        tagger = AITagger()
+
+        response = (
+            "Here are the extracted tags in kebab-case format: "
+            "education, video-content, herearetheextractedtagsprohibition"
+        )
+
+        with patch.object(
+            tagger.ollama_client,
+            "generate_completion",
+            return_value=response,
+        ):
+            tags = tagger.generate_tags(note_content)
+
+        assert "education" in tags
+        assert "video-content" in tags
+        assert "prohibition" in tags
+        assert not any("herearetheextracted" in t for t in tags)
+
     def test_ollama_performance_timing(self):
         """Test that real API calls complete within performance target."""
         import time
@@ -165,7 +189,7 @@ class TestAITagger:
         tagger = AITagger()
 
         start_time = time.time()
-        tags = tagger.generate_tags(note_content)
+        tagger.generate_tags(note_content)
         end_time = time.time()
 
         # Should complete within 2 seconds

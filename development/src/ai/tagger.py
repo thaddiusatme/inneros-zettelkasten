@@ -5,6 +5,7 @@ Uses local LLM to extract relevant tags from note content.
 
 from typing import List, Dict, Any, Optional, Tuple
 from .ollama_client import OllamaClient
+from src.utils.tags import sanitize_tags
 
 
 class AITagger:
@@ -47,12 +48,10 @@ class AITagger:
 
         # Use real Ollama API for tag generation
         tags = self._generate_ollama_tags(processed_content)
-
-        # Remove duplicates and filter by confidence
-        unique_tags = list(set(tags))
+        tags = sanitize_tags(tags)
 
         # Limit to max_tags
-        return unique_tags[:max_tags]
+        return tags[:max_tags]
 
     def _generate_ollama_tags(self, content: str) -> List[str]:
         """
@@ -82,18 +81,13 @@ class AITagger:
                 prompt=user_prompt, system_prompt=system_prompt, max_tokens=100
             )
 
-            # Parse the response
-            tags = [tag.strip().lower() for tag in response.split(",") if tag.strip()]
-
-            # Clean and deduplicate tags
-            unique_tags = list(set(tags))
-
-            return unique_tags
+            # Parse and sanitize the response (prevents prompt artifacts from becoming tags)
+            return sanitize_tags(response)
 
         except Exception as e:
             # Fallback to mock tags if API fails
             print(f"Warning: Ollama API failed, using fallback: {e}")
-            return self._generate_mock_tags(content)
+            return sanitize_tags(self._generate_mock_tags(content))
 
     def _strip_yaml_frontmatter(self, content: str) -> str:
         """

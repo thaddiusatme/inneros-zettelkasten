@@ -22,6 +22,8 @@ def clean_tag(tag: str) -> str:
     """
     if not isinstance(tag, str):
         return ""
+    if ":" in tag and "tag" in tag.lower().split(":", 1)[0]:
+        tag = tag.split(":", 1)[1]
     # remove leading '#', trim and collapse whitespace
     cleaned = tag.strip().lstrip("#").strip()
     # normalize spaces (tags should be single tokens already after splitting)
@@ -31,6 +33,19 @@ def clean_tag(tag: str) -> str:
     cleaned = cleaned.strip(",;:.")
     # lowercase for consistency
     cleaned = cleaned.lower()
+    cleaned = cleaned.replace(" ", "-")
+    cleaned = cleaned.replace("_", "-")
+    cleaned = re.sub(r"-+", "-", cleaned).strip("-")
+    if "kebab" in cleaned and "extracted" in cleaned:
+        return ""
+    cleaned = re.sub(r"^andthemes+", "", cleaned)
+    cleaned = re.sub(r"^andtheme+", "", cleaned)
+    cleaned = re.sub(r"^herearetheextractedrelevanttags", "", cleaned)
+    cleaned = re.sub(r"^herearetherelevanttagsextractedfromthecontent", "", cleaned)
+    cleaned = re.sub(r"^herearetheextractedtags", "", cleaned)
+    cleaned = cleaned.strip("-")
+    if cleaned in {"tag", "tags"}:
+        return ""
     # discard tokens without any alphanumeric character (e.g., '-', '/', ':', '[')
     if not any(c.isalnum() for c in cleaned):
         return ""
@@ -60,12 +75,24 @@ def sanitize_tags(tags_input: Any) -> List[str]:
     tokens: List[str] = []
 
     if isinstance(tags_input, str):
-        # Handle common separators
-        normalized = tags_input.replace(",", " ").replace(";", " ")
-        tokens = [t for t in normalized.split() if t]
+        raw = tags_input
+        if ":" in raw and "tag" in raw.lower().split(":", 1)[0]:
+            raw = raw.split(":", 1)[1]
+        tokens = [t for t in re.split(r"[\s,;\n]+", raw) if t]
     elif isinstance(tags_input, Iterable):
-        # Already a collection; filter to strings only
-        tokens = [t for t in tags_input if isinstance(t, str)]
+        expanded: List[str] = []
+        for t in tags_input:
+            if not isinstance(t, str):
+                continue
+            raw = t
+            if ":" in raw and "tag" in raw.lower().split(":", 1)[0]:
+                raw = raw.split(":", 1)[1]
+            if re.search(r"[,;\n]", raw):
+                parts = [p.strip() for p in re.split(r"[,;\n]+", raw) if p.strip()]
+                expanded.extend(parts)
+            else:
+                expanded.append(raw)
+        tokens = expanded
     else:
         return []
 
