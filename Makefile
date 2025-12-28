@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting clean-venv smoke inbox inbox-safe
+.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting review-links clean-venv smoke inbox inbox-safe
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -30,6 +30,10 @@ review:
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
 	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault $(VAULT) fleeting-health
+
+review-links:
+	@echo "🔗 Launching smart link review CLI..."
+	PYTHONPATH=development python3 development/src/cli/smart_link_review_cli.py --vault $(VAULT)
 
 inbox:
 	@echo "📥 Processing unprocessed inbox notes..."
