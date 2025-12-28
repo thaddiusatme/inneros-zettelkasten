@@ -73,6 +73,7 @@ class DaemonConfig:
 
     check_interval: int = 60
     log_level: str = "INFO"
+    pid_file: str = ".automation/daemon.pid"
     jobs: List[JobConfig] = field(default_factory=list)
     file_watching: Optional[FileWatchConfig] = None
     screenshot_handler: Optional[ScreenshotHandlerConfig] = None

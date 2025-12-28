@@ -24,6 +24,7 @@ from .health import HealthCheckManager
 from .file_watcher import FileWatcher
 from .event_handler import AutomationEventHandler
 from .config import DaemonConfig
+from .pid_lock import PIDLock, PIDLockError
 from .feature_handlers import (
     ScreenshotEventHandler,
     SmartLinkEventHandler,
@@ -78,6 +79,9 @@ class AutomationDaemon:
         self._job_definitions = []  # Store job definitions for restart
         self._config = config or DaemonConfig()
 
+        # Initialize PID lock for process management
+        self._pid_lock: Optional[PIDLock] = None
+
         # Initialize logging first
         self._setup_logging()
 
@@ -102,7 +106,7 @@ class AutomationDaemon:
         Start daemon with scheduler initialization.
 
         Raises:
-            DaemonError: If daemon is already running
+            DaemonError: If daemon is already running or another instance holds the lock
         """
         if self._state == DaemonState.RUNNING:
             raise DaemonError("Daemon is already running")
@@ -111,6 +115,15 @@ class AutomationDaemon:
         self.logger.info("Starting AutomationDaemon...")
 
         try:
+            # Acquire PID lock to prevent duplicate daemons
+            self._pid_lock = PIDLock(Path(self._config.pid_file))
+            try:
+                self._pid_lock.acquire()
+                self.logger.info(f"Acquired PID lock: {self._config.pid_file}")
+            except PIDLockError as e:
+                self._state = DaemonState.ERROR
+                self.logger.error(f"Failed to acquire PID lock: {e}")
+                raise DaemonError(f"Daemon already running: {e}")
             # Create and start BackgroundScheduler
             self._scheduler = BackgroundScheduler()
             self._scheduler.start()
@@ -192,6 +205,13 @@ class AutomationDaemon:
 
             self.scheduler = None
             # Health manager stays available for status checks even when stopped
+
+            # Release PID lock
+            if self._pid_lock:
+                self._pid_lock.release()
+                self.logger.info("Released PID lock")
+                self._pid_lock = None
+
             self._state = DaemonState.STOPPED
             self.logger.info("Daemon stopped successfully")
 
