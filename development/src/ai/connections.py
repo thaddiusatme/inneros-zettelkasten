@@ -133,17 +133,27 @@ class AIConnections:
 
     def _extract_content(self, note_content: str) -> str:
         """
-        Extract main content from note, removing YAML frontmatter.
+        Extract main content from note, removing YAML frontmatter and wiki links.
 
         Args:
             note_content: Raw note content
 
         Returns:
-            Cleaned content without metadata
+            Cleaned content without metadata or link syntax
         """
         # Remove YAML frontmatter
         yaml_pattern = r"^---\s*\n.*?\n---\s*\n"
         content = re.sub(yaml_pattern, "", note_content, flags=re.DOTALL)
+
+        # Remove wiki links but keep display text: [[target|display]] -> display, [[target]] -> target
+        content = re.sub(
+            r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content
+        )  # [[target|display]]
+        content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)  # [[target]]
+
+        # Remove embedded links: ![[image.png]] -> empty
+        content = re.sub(r"!\[\[[^\]]+\]\]", "", content)
+
         return content.strip()
 
     def _normalize_text(self, text: str) -> str:
