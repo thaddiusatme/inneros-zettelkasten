@@ -12,8 +12,11 @@ Following ADR-001: <200 LOC, single responsibility
 """
 
 import argparse
+import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
+
+from src.automation.feature_handler_utils import SmartLinkEngineIntegrator
 
 
 class SmartLinkReviewCLI:
@@ -34,6 +37,13 @@ class SmartLinkReviewCLI:
             vault_path: Path to knowledge vault
         """
         self.vault_path = Path(vault_path)
+        self.logger = logging.getLogger(__name__)
+        self.integrator = SmartLinkEngineIntegrator(
+            vault_path=self.vault_path,
+            logger=self.logger,
+            similarity_threshold=0.5,
+            max_suggestions=10,
+        )
 
     def format_suggestion(self, suggestion: Dict[str, Any]) -> str:
         """
@@ -155,9 +165,30 @@ class SmartLinkReviewCLI:
         Returns:
             List of suggestion dicts
         """
-        # This would integrate with SmartLinkEngineIntegrator
-        # For now, return empty list (mocked in tests)
-        return []
+        full_path = self.vault_path / note_path
+        if not full_path.exists():
+            return []
+
+        result = self.integrator.process_note_for_links(full_path)
+
+        if not result.get("success") or not result.get("similar_notes"):
+            return []
+
+        suggestions = []
+        for target, similarity in result["similar_notes"]:
+            # Skip dismissed links
+            if self.is_link_dismissed(note_path, target):
+                continue
+
+            suggestions.append(
+                {
+                    "source": note_path,
+                    "target": target,
+                    "similarity": similarity,
+                }
+            )
+
+        return suggestions
 
     def get_pending_suggestions(self, note_path: str) -> List[Dict[str, Any]]:
         """
@@ -348,8 +379,33 @@ def main():
     if args.note:
         suggestions = cli.get_pending_suggestions(args.note)
     else:
-        # TODO: Get all pending suggestions across vault
+        # Scan vault for notes and gather suggestions
+        print("🔍 Scanning vault for link suggestions...")
         suggestions = []
+
+        # Find all markdown files
+        md_files = list(vault_path.glob("**/*.md"))
+        total = len(md_files)
+
+        for i, note_path in enumerate(
+            md_files[:20], 1
+        ):  # Limit to 20 notes for performance
+            rel_path = str(note_path.relative_to(vault_path))
+            print(
+                f"\r  Analyzing {i}/{min(total, 20)}: {rel_path[:40]}...",
+                end="",
+                flush=True,
+            )
+
+            note_suggestions = cli.get_pending_suggestions(rel_path)
+            suggestions.extend(note_suggestions)
+
+            if len(suggestions) >= 10:  # Cap at 10 suggestions for review
+                break
+
+        print(
+            f"\r  Found {len(suggestions)} suggestions from {min(total, 20)} notes.        "
+        )
 
     if not suggestions:
         print("No pending suggestions to review.")
@@ -357,7 +413,19 @@ def main():
 
     results = cli.review_suggestions(suggestions)
 
-    # Return success if any accepted
+    # Apply accepted suggestions
+    if any(r["action"] == "accept" for r in results):
+        print("\n📝 Applying accepted suggestions...")
+        apply_result = cli.apply_accepted_suggestions(results)
+        print(f"✅ Inserted {apply_result['links_inserted']} links")
+
+    # Persist dismissed suggestions
+    if any(r["action"] == "dismiss" for r in results):
+        cli.persist_dismissed_suggestions(results)
+        dismissed_count = sum(1 for r in results if r["action"] == "dismiss")
+        print(f"💾 Saved {dismissed_count} dismissed links to frontmatter")
+
+    # Summary
     accepted = sum(1 for r in results if r["action"] == "accept")
     return 0 if accepted > 0 else 1
 
