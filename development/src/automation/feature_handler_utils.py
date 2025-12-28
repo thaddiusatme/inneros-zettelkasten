@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from collections import deque
 import logging
+import glob
 
 try:
     from src.cli.screenshot_processor import ScreenshotProcessor
@@ -169,6 +170,41 @@ class SmartLinkEngineIntegrator:
         self.similarity_threshold = similarity_threshold
         self.max_suggestions = max_suggestions
         self.ai_connections = None
+        self._corpus_cache: Optional[Dict[str, str]] = None
+
+    def _load_vault_corpus(self, exclude_file: Optional[Path] = None) -> Dict[str, str]:
+        """
+        Load all markdown files from vault directory.
+
+        Args:
+            exclude_file: Optional file path to exclude from corpus (typically the target note)
+
+        Returns:
+            Dictionary mapping relative file paths to note content
+        """
+        corpus: Dict[str, str] = {}
+
+        # Find all markdown files recursively
+        md_pattern = str(self.vault_path / "**" / "*.md")
+        md_files = glob.glob(md_pattern, recursive=True)
+
+        for file_path_str in md_files:
+            file_path = Path(file_path_str)
+
+            # Skip excluded file
+            if exclude_file and file_path.resolve() == exclude_file.resolve():
+                continue
+
+            try:
+                content = file_path.read_text(encoding="utf-8")
+                # Use relative path as key
+                rel_path = str(file_path.relative_to(self.vault_path))
+                corpus[rel_path] = content
+            except Exception as e:
+                self.logger.warning(f"Could not read {file_path}: {e}")
+
+        self.logger.debug(f"Loaded {len(corpus)} notes from vault corpus")
+        return corpus
 
     def process_note_for_links(self, file_path: Path) -> Dict[str, Any]:
         """
@@ -212,12 +248,13 @@ class SmartLinkEngineIntegrator:
             # Read note content
             note_content = file_path.read_text(encoding="utf-8")
 
-            # Find similar notes
-            # Note: In GREEN phase, we use empty corpus for minimal implementation
-            # P1 enhancement: Build full vault corpus for real similarity analysis
+            # Load vault corpus (excluding the target note)
+            note_corpus = self._load_vault_corpus(exclude_file=file_path)
+
+            # Find similar notes using real vault corpus
             similar_notes = self.ai_connections.find_similar_notes(
                 target_note=note_content,
-                note_corpus={},  # Empty corpus for minimal GREEN implementation
+                note_corpus=note_corpus,
             )
 
             suggestions_count = len(similar_notes)
