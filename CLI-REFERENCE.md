@@ -271,6 +271,45 @@ python3 development/src/cli/interactive_cli.py interactive --vault /path/to/vaul
 
 ---
 
+### **Smart Link Review CLI** (`smart_link_review_cli.py`)
+
+Interactive review of AI-suggested wiki links between notes.
+
+**Commands:**
+```bash
+# Interactive link review (recommended)
+make review-links
+
+# Or directly with vault path
+python3 development/src/cli/smart_link_review_cli.py --vault knowledge
+
+# Review specific note
+python3 development/src/cli/smart_link_review_cli.py --vault knowledge --note "Inbox/my-note.md"
+```
+
+**Options:**
+- `--vault PATH` - Path to knowledge vault (required)
+- `--note PATH` - Specific note to review (optional, scans vault if omitted)
+
+**Interactive Commands:**
+- `[A]ccept` - Insert wiki link into source note
+- `[D]ismiss` - Reject and save to frontmatter (won't suggest again)
+- `[S]kip` - Move to next suggestion
+- `[Q]uit` - Exit review session
+
+**Features:**
+- Scans vault for semantic similarity using AI embeddings
+- Auto-inserts accepted links into "## Related Notes" section
+- Persists dismissed links to YAML frontmatter
+- Filters previously dismissed suggestions
+
+**Use Cases:**
+- Weekly connection discovery
+- Building knowledge graph organically
+- Reviewing AI-suggested relationships
+
+---
+
 ### **YouTube CLI** (`youtube_cli.py`)
 
 YouTube transcript processing and note generation.

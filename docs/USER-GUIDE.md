@@ -179,26 +179,42 @@ When you create or modify a note, the Smart Link handler:
 2. Finds similar notes in your vault
 3. Suggests wiki-links to add
 
+#### Quick Start (Recommended)
+
+```bash
+# Interactive review of AI-suggested links
+make review-links
+
+# Or with a specific vault path
+make review-links VAULT=../knowledge
+```
+
 #### Using Smart Link CLI
 
 ```bash
 cd development
 
-# Discover connections for a note
+# Interactive link review (scans vault, presents suggestions)
+PYTHONPATH=. python3 src/cli/smart_link_review_cli.py --vault ../knowledge
+
+# Discover connections for a specific note
 PYTHONPATH=. python3 src/cli/connections_demo.py "../knowledge/Inbox/my-note.md"
 
 # Discover connections across your vault
 PYTHONPATH=. python3 src/cli/connections_demo.py "../knowledge" --scan-all
 ```
 
-#### Interactive Mode
+#### Interactive Review Mode
 
-The CLI offers an interactive workflow:
-- **[A]ccept** - Add the suggested link to your note
-- **[R]eject** - Skip this suggestion
+The `make review-links` command offers an interactive workflow:
+- **[A]ccept** - Add the suggested link to your note (auto-inserts `[[wiki-link]]`)
+- **[D]ismiss** - Reject and remember (won't suggest again)
 - **[S]kip** - Move to next without deciding
-- **[D]etails** - See why this connection was suggested
-- **[Q]uit** - Exit
+- **[Q]uit** - Exit review session
+
+**After review:**
+- Accepted links are automatically inserted into your notes
+- Dismissed links are saved to frontmatter to prevent re-suggestion
 
 ---
 
@@ -395,6 +411,7 @@ Check that your note has:
 | `make down` | Stop automation daemon |
 | `make review` | Generate weekly review |
 | `make fleeting` | Check fleeting notes health |
+| `make review-links` | Interactive smart link review |
 
 ### Development Commands
 

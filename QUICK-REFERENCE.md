@@ -68,6 +68,7 @@ python3 development/src/cli/connections_demo.py map knowledge/
 |----------|-------------|
 | **Daily inbox check** | `python3 development/src/cli/core_workflow_cli.py process-inbox` |
 | **Weekly review** | `python3 development/src/cli/weekly_review_cli.py weekly-review` |
+| **Smart link review** | `make review-links` |
 | **Fleeting note health** | `python3 development/src/cli/fleeting_cli.py fleeting-health` |
 | **Safe batch processing** | `python3 development/src/cli/safe_workflow_cli.py batch-process-safe` |
 | **Create backup** | `python3 development/src/cli/safe_workflow_cli.py backup` |
