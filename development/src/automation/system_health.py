@@ -164,7 +164,10 @@ def check_all(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     Returns:
         Dictionary with keys:
         - overall_status: "OK" | "WARNING" | "ERROR"
+        - overall_healthy: bool (True if overall_status == "OK")
         - automations: list of automation status entries
+        - checks: dict mapping check names to bool results
+        - errors: list of error messages from failed checks
     """
 
     if repo_root is None:
@@ -181,20 +184,36 @@ def check_all(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     log_aggregator = LogAggregator(logs_dir) if logs_dir.exists() else None
 
     automations: List[Dict[str, Any]] = []
+    errors: List[str] = []
+
     for daemon in daemons:
-        automations.append(
-            _build_automation_entry(
-                detector=detector,
-                parser=parser,
-                repo_root=repo_root,
-                daemon_config=daemon,
-                log_aggregator=log_aggregator,
-            )
+        entry = _build_automation_entry(
+            detector=detector,
+            parser=parser,
+            repo_root=repo_root,
+            daemon_config=daemon,
+            log_aggregator=log_aggregator,
         )
+        automations.append(entry)
+
+        # Collect errors from failed automations
+        if entry.get("error_message"):
+            errors.append(f"{entry['name']}: {entry['error_message']}")
+        elif not entry.get("running") and entry.get("last_run_status") == "failed":
+            errors.append(f"{entry['name']}: daemon not running, last run failed")
 
     overall_status = _derive_overall_status(automations)
 
+    # Build checks dict from automation status
+    checks: Dict[str, bool] = {}
+    for automation in automations:
+        name = automation.get("name", "unknown")
+        checks[name] = bool(automation.get("running", False))
+
     return {
         "overall_status": overall_status,
+        "overall_healthy": overall_status == "OK",
         "automations": automations,
+        "checks": checks,
+        "errors": errors,
     }
