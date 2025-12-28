@@ -28,7 +28,9 @@ class DaemonStarter:
     def __init__(
         self, pid_file_path: Optional[Path] = None, daemon_script: Optional[str] = None
     ):
-        self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
+        # Use .automation/daemon.pid to match daemon's internal PIDLock location
+        # This prevents zombie processes from CLI/daemon PID file mismatch
+        self.pid_file = pid_file_path or (Path.cwd() / ".automation" / "daemon.pid")
         # Default to the actual daemon location in development
         if daemon_script is None:
             # Find daemon relative to this file: cli/daemon_cli_utils.py -> automation/daemon.py
@@ -94,7 +96,8 @@ class DaemonStopper:
     """Stops the automation daemon gracefully."""
 
     def __init__(self, pid_file_path: Optional[Path] = None):
-        self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
+        # Use .automation/daemon.pid to match daemon's internal PIDLock location
+        self.pid_file = pid_file_path or (Path.cwd() / ".automation" / "daemon.pid")
 
     def stop(self) -> Dict:
         """Stop the daemon process gracefully."""
@@ -128,7 +131,8 @@ class EnhancedDaemonStatus:
     """Enhanced daemon status checking."""
 
     def __init__(self, pid_file_path: Optional[Path] = None):
-        self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
+        # Use .automation/daemon.pid to match daemon's internal PIDLock location
+        self.pid_file = pid_file_path or (Path.cwd() / ".automation" / "daemon.pid")
 
     def get_status(self) -> Dict:
         """Get enhanced daemon status."""
