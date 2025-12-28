@@ -21,6 +21,34 @@ InnerOS provides three tiers of automation to transform your knowledge capture w
 
 ---
 
+## 🔧 Quick Commands: inneros.sh Helper Script
+
+For quick command-line access, use the `inneros.sh` helper script at the repository root:
+
+```bash
+# Check automation status
+./inneros.sh status
+
+# Start the automation daemon
+./inneros.sh up
+
+# Stop the automation daemon  
+./inneros.sh down
+
+# View daemon logs
+./inneros.sh logs
+
+# Run AI inbox sweep
+./inneros.sh ai inbox-sweep
+
+# Show all available commands
+./inneros.sh help
+```
+
+> **Note**: `inneros.sh` is a convenience wrapper around `make` commands. For production use, prefer `make status`, `make up`, etc. The Makefile is the canonical interface.
+
+---
+
 ## 🔧 Preferred Manual Control: Automation Helper CLI
 
 For day-to-day manual control of automation, prefer the **Automation Helper CLI** over calling individual Python modules directly. This keeps your commands stable as automation internals evolve.
