@@ -232,6 +232,23 @@ visibility: private | shared | team
 
 ## 🤖 AI & Automation
 
+### **Quick Commands** (Developer Helper Script)
+```bash
+# Check automation status
+./inneros.sh status
+
+# Start automation daemon
+./inneros.sh up
+
+# Run AI inbox sweep
+./inneros.sh ai inbox-sweep
+
+# Show all available commands
+./inneros.sh help
+```
+
+> **Note**: `inneros.sh` wraps `make` commands for convenience. For production use, prefer `make status`, `make up`, etc.
+
 ### **Development Tools** (in `development/`)
 ```bash
 # Run AI analytics on knowledge base

@@ -1,8 +1,16 @@
-# TDD Iteration 1: Shared Health Module Enhancement
+# Issue #50: TDD Iterations 1 & 2 - Shared Health Module & Developer Helper
 
 **Date**: 2025-12-27  
-**Duration**: ~20 minutes  
+**Duration**: ~35 minutes total  
 **Branch**: `feat/issue-50-shared-health-module`  
+**Commits**: `60ddcc4` (Iteration 1), `d23aec5` (Iteration 2)  
+**Status**: ✅ **COMPLETE** - P0 + P1 Delivered
+
+---
+
+## TDD Iteration 1: Shared Health Module Enhancement
+
+**Duration**: ~20 minutes  
 **Commit**: `60ddcc4`  
 **Status**: ✅ **COMPLETE** - P0 Critical Path Delivered
 
@@ -108,3 +116,63 @@ development/src/automation/system_health.py (modified, +20 lines)
 TDD Iteration 1 successfully enhanced the shared health module with a structured result format. The implementation maintains full backward compatibility while providing new keys (`overall_healthy`, `checks`, `errors`) for programmatic use by CLI and Web UI components.
 
 **Key Achievement**: P0 Critical Path (FR4 Shared Health Logic) complete with 100% test coverage and zero regressions.
+
+---
+
+## TDD Iteration 2: inneros.sh Developer Helper Script
+
+**Duration**: ~15 minutes  
+**Commit**: `d23aec5`  
+**Status**: ✅ **COMPLETE** - P1 Developer Convenience Delivered
+
+### 🎯 Objective
+
+Create `inneros.sh` helper script at repo root for quick command-line access to common InnerOS operations (Issue #50 FR5).
+
+### 🏆 TDD Success Metrics
+
+| Phase | Result |
+|-------|--------|
+| **RED** | 9 integration tests written, all failing |
+| **GREEN** | 9/9 tests passing |
+| **REFACTOR** | Script self-documented, clean bash |
+| **REGRESSION** | All tests passing |
+
+### 📊 Technical Deliverables
+
+**New Script**: `inneros.sh` (121 lines)
+- `status`, `up`, `down`, `logs` commands
+- `ai inbox-sweep`, `ai repair-metadata` subcommands
+- Automatic venv activation
+- Self-documenting `help` command
+
+**New Tests**: `development/tests/integration/test_inneros_sh.py` (9 tests)
+
+**Updated Docs**: `docs/HOWTO/automation-user-guide.md`
+
+### 💡 Key Insights
+
+1. **Integration tests for shell scripts**: Using Python subprocess module works well for testing bash scripts
+2. **Wrapper pattern**: Script wraps `make` targets, ensuring parity with canonical interface
+3. **Self-documentation**: Script explicitly states it's temporary, directing users to Makefile
+4. **Venv activation**: Automatic activation improves developer experience
+
+### ✅ Acceptance Criteria Validation
+
+| Criterion | Status |
+|-----------|--------|
+| `./inneros.sh status` same as `make status` | ✅ |
+| `./inneros.sh help` self-documenting | ✅ |
+| Venv activation if present | ✅ |
+
+---
+
+## 🎉 Issue #50 Summary
+
+Both P0 (Shared Health Module) and P1 (Developer Helper Script) completed in a single session using strict TDD methodology.
+
+**Total Time**: ~35 minutes  
+**Tests Added**: 16 (7 unit + 9 integration)  
+**Files Created**: 3 (`inneros.sh`, 2 test files)  
+**Files Modified**: 2 (`system_health.py`, `automation-user-guide.md`)  
+**Zero Regressions**: All existing tests continue to pass
