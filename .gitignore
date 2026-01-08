@@ -64,6 +64,8 @@ analytics_report.json
 *.pkl
 *.joblib
 
+knowledge_census.json
+
 # IDE
 .vscode/
 .idea/
