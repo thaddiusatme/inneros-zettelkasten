@@ -919,7 +919,7 @@ class TestDaemonLoggingInfrastructure:
             r.exc_info is not None for r in error_records
         ), "Should log with exc_info=True for stack traces"
 
-    def test_log_file_created_in_automation_logs(self):
+    def test_log_file_created_in_automation_logs(self, tmp_path):
         """
         P1.4.5: Log file created in .automation/logs/ directory.
 
@@ -932,10 +932,17 @@ class TestDaemonLoggingInfrastructure:
         Will fail: Log file not created (logging not implemented)
         """
         from src.automation.daemon import AutomationDaemon
+        from src.automation.config import DaemonConfig
 
-        daemon = AutomationDaemon()
-        daemon.start()
-        daemon.stop()
+        # Use unique PID file to avoid conflicts
+        pid_file = tmp_path / "daemon_log_test.pid"
+        config = DaemonConfig(pid_file=str(pid_file))
+
+        daemon = AutomationDaemon(config=config)
+        try:
+            daemon.start()
+        finally:
+            daemon.stop()
 
         # Check log file exists
         log_dir = Path(".automation/logs")

@@ -47,35 +47,30 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
 
     def test_all_required_templates_present(self):
         """
-        RED: All 13 required templates should be present in fixtures
-
-        Currently FAILS because templates haven't been copied yet
+        RED: All required templates should be present in fixtures
         """
         fixtures_dir = Path(__file__).parent.parent / "fixtures"
         templates_dir = fixtures_dir / "templates"
 
-        # Required templates based on CI failure analysis
+        # Updated templates based on consolidation
         required_templates = [
-            "youtube-video.md",  # Primary blocker (65+ failures)
-            "daily.md",
-            "weekly-review.md",
-            "fleeting.md",
-            "literature.md",
-            "permanent.md",
-            "content-idea.md",
-            "content-idea-raw.md",
-            "chatgpt-prompt.md",
-            "simple-youtube-trigger.md",
-            "sprint-retro.md",
-            "sprint-review.md",
-            "permanent Note Morning Check In Template.md",
+            "Utility/youtube.md",
+            "Core/daily.md",
+            "Reviews/weekly.md",
+            "Core/fleeting.md",
+            "Core/literature.md",
+            "Core/permanent.md",
+            "Content/idea.md",
+            "Utility/chatgpt-prompt.md",
+            "Reviews/sprint-retro.md",
+            "Reviews/sprint-review.md",
         ]
 
         missing_templates = []
-        for template_name in required_templates:
-            template_path = templates_dir / template_name
+        for template_rel_path in required_templates:
+            template_path = templates_dir / template_rel_path
             if not template_path.exists():
-                missing_templates.append(template_name)
+                missing_templates.append(template_rel_path)
 
         self.assertEqual(
             [], missing_templates, f"Missing templates: {missing_templates}"
@@ -122,9 +117,9 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
 
         # Sample of critical templates to validate
         critical_templates = [
-            "youtube-video.md",  # Templater template
-            "daily.md",  # YAML template
-            "weekly-review.md",  # YAML template
+            "Utility/youtube.md",  # Templater template
+            "Core/daily.md",  # YAML template
+            "Reviews/weekly.md",  # YAML template
         ]
 
         for template_name in critical_templates:

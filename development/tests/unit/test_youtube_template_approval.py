@@ -22,7 +22,7 @@ class TestYouTubeTemplateApproval:
     @pytest.fixture
     def template_content(self):
         """Load template content from fixtures."""
-        return get_template_content("youtube-video.md")
+        return get_template_content("youtube.md")
 
     def test_template_has_ready_for_processing_field(self, template_content):
         """RED: Template should include ready_for_processing: false in frontmatter."""
@@ -31,21 +31,21 @@ class TestYouTubeTemplateApproval:
             "ready_for_processing: false" in template_content
         ), "Template must include 'ready_for_processing: false' in frontmatter"
 
-    def test_template_uses_draft_status(self, template_content):
-        """RED: Template should use status: draft instead of status: inbox."""
-        # Check that status: draft exists in frontmatter
+    def test_template_uses_inbox_status(self, template_content):
+        """RED: Template should use status: inbox for new YouTube notes."""
+        # Check that status: inbox exists in frontmatter
         assert (
-            "status: draft" in template_content
-        ), "Template must use 'status: draft' for new YouTube notes"
+            "status: inbox" in template_content
+        ), "Template must use 'status: inbox' for new YouTube notes"
 
-        # Verify the status line contains draft (accounting for Templater format)
+        # Verify the status line contains inbox (accounting for Templater format)
         import re
 
         status_match = re.search(r"status:\s*(\w+)", template_content)
         assert status_match, "Template must have status field in frontmatter"
         assert (
-            status_match.group(1) == "draft"
-        ), f"Status must be 'draft', not '{status_match.group(1)}'"
+            status_match.group(1) == "inbox"
+        ), f"Status must be 'inbox', not '{status_match.group(1)}'"
 
     def test_template_has_approval_checkbox_section(self, template_content):
         """RED: Template should include checkbox approval section."""
@@ -142,11 +142,11 @@ class TestTemplateStateTransitions:
     @pytest.fixture
     def template_content(self):
         """Load template content from fixtures."""
-        return get_template_content("youtube-video.md")
+        return get_template_content("youtube.md")
 
-    def test_initial_state_is_draft(self, template_content):
-        """RED: New notes should start in 'draft' state."""
-        assert "status: draft" in template_content
+    def test_initial_state_is_inbox(self, template_content):
+        """RED: New notes should start in 'inbox' state."""
+        assert "status: inbox" in template_content
 
     def test_initial_approval_is_false(self, template_content):
         """RED: New notes should have ready_for_processing: false."""
