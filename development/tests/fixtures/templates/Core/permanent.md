@@ -4,6 +4,8 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: draft
 tags: [permanent, zettelkasten]
 visibility: private
+template_id: core-permanent
+template_version: 1.0.0
 ---
 <%*
 /*------------------------------------------------------------------

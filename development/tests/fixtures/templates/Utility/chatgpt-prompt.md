@@ -4,6 +4,8 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
 tags: [prompt, chatgpt, inbox]
 visibility: private
+template_id: util-chatgpt-prompt
+template_version: 1.0.0
 ---
 <%*
 /*------------------------------------------------------------------

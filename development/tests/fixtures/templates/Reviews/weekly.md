@@ -4,8 +4,10 @@ week_id: <% tp.date.now("YYYY-[W]WW") %>
 period_start: <% tp.date.now("YYYY-MM-DD", -7) %>
 period_end: <% tp.date.now("YYYY-MM-DD") %>
 status: promoted
-tags: [weekly, review, retrospective, scrum]
+tags: [weekly-review, review]
 visibility: private
+template_id: core-weekly-review
+template_version: 1.0.0
 ---
 <%*
 const folder = "Reviews"; // optional — change or remove if you don’t want a folder

@@ -3,27 +3,29 @@
   YOUTUBE VIDEO CAPTURE TEMPLATE - API POWERED
   Uses YouTube oEmbed API to auto-fetch metadata
   Total prompts: 2 (URL + reason why)
-  
-  Note: If you want more metadata (description, tags, category),
-  add YouTube Data API v3 key to this template
 ------------------------------------------------------------------*/
 
 // 1. Get YouTube URL (required) - PROMPT 1
 const youtubeUrl = await tp.system.prompt("YouTube URL");
 if (!youtubeUrl) {
-  await tp.system.alert("Cancelled – no YouTube URL given.");
+  new Notice("Cancelled – no YouTube URL given.");
   return;
 }
 
 // 2. Extract video ID from various YouTube URL formats
 let videoId = "";
 const patterns = [
-  /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\s]+)/,
-  /youtube\.com\/watch\?.*v=([^&?\s]+)/
+  /(?:youtube\.com|m\.youtube\.com)\/watch\?v=([a-zA-Z0-9_-]{11})/,
+  /(?:youtube\.com|m\.youtube\.com)\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+  /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+  /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/,
+  /^([a-zA-Z0-9_-]{11})$/  // Just the video ID itself
 ];
 
 for (const pattern of patterns) {
-  const match = youtubeUrl.match(pattern);
+  const match = youtubeUrl.trim().match(pattern);
   if (match) {
     videoId = match[1];
     break;
@@ -31,33 +33,25 @@ for (const pattern of patterns) {
 }
 
 if (!videoId) {
-  await tp.system.alert("Could not extract video ID from URL. Please check the URL format.");
+  new Notice("Could not extract video ID from URL. Please check the URL format.");
   return;
 }
 
-// 3. Fetch video metadata from YouTube oEmbed API (no API key needed)
+// 3. Fetch video metadata via user script (handles CORS properly)
 let videoTitle = "Loading...";
 let channelName = "Unknown";
-let thumbnailUrl = "";
+let thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-try {
-  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
-  const response = await fetch(oembedUrl);
-  
-  if (response.ok) {
-    const data = await response.json();
-    videoTitle = data.title || "Unknown Video";
-    channelName = data.author_name || "Unknown Channel";
-    thumbnailUrl = data.thumbnail_url || "";
-  } else {
-    await tp.system.alert("Could not fetch video metadata. Using manual entry fallback.");
-    videoTitle = await tp.system.prompt("Video title (manual entry)");
-    channelName = await tp.system.prompt("Channel name (manual entry)");
-  }
-} catch (error) {
-  await tp.system.alert("API fetch failed: " + error.message + ". Using manual entry.");
-  videoTitle = await tp.system.prompt("Video title (manual entry)");
-  channelName = await tp.system.prompt("Channel name (manual entry)");
+const metadata = await tp.user.fetch_youtube_metadata(youtubeUrl);
+
+if (metadata) {
+  videoTitle = metadata.title;
+  channelName = metadata.author_name;
+  if (metadata.thumbnail_url) thumbnailUrl = metadata.thumbnail_url;
+} else {
+  // Manual entry - copy title from YouTube page
+  videoTitle = await tp.system.prompt("Video title (copy from YouTube)") || "Untitled Video";
+  channelName = await tp.system.prompt("Channel name") || "Unknown Channel";
 }
 
 // 4. Ask why they're saving this - PROMPT 2
@@ -76,31 +70,25 @@ const target = `Inbox/YouTube/${fname}`;
 // 6. Default tags
 const allTags = ["youtube", "video-content"];
 
-try {
-  await tp.file.rename(fname);
-  await tp.file.move(target);
-} catch (e) {
-  await tp.system.alert("Rename/Move failed – " + e.message);
-  return;
-}
-
 // 7. Output frontmatter with populated fields
 tR += `---
 type: literature
 created: ${tp.date.now("YYYY-MM-DD HH:mm")}
-status: draft
+status: inbox
 ready_for_processing: false
 tags: [youtube, video-content]
 visibility: private
 source: youtube
+url: ${youtubeUrl}
 author: ${channelName}
 video_id: ${videoId}
 channel: ${channelName}
+template_id: literature-youtube
+template_version: 1.0.0
 ---
 
 `;
 %>
-
 # <% videoTitle %>
 
 ## Video Information

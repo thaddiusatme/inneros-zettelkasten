@@ -43,6 +43,11 @@ def get_template_path(template_name: str) -> Path:
     template_path = TEMPLATES_DIR / template_name
 
     if not template_path.exists():
+        # Try finding it recursively if simple path fails
+        found = list(TEMPLATES_DIR.rglob(template_name))
+        if found:
+            return found[0]
+
         available = list_available_templates()
         raise FileNotFoundError(
             f"Template '{template_name}' not found in fixtures.\n"
@@ -54,19 +59,21 @@ def get_template_path(template_name: str) -> Path:
 
 def list_available_templates() -> List[str]:
     """
-    List all available template files in fixtures
+    List all available template files in fixtures (recursive)
 
     Returns:
-        List of template filenames
+        List of template filenames (relative to templates dir)
 
     Example:
         >>> templates = list_available_templates()
-        >>> assert "youtube-video.md" in templates
+        >>> assert "Utility/youtube.md" in templates
     """
     if not TEMPLATES_DIR.exists():
         return []
 
-    return sorted([f.name for f in TEMPLATES_DIR.glob("*.md")])
+    return sorted(
+        [str(f.relative_to(TEMPLATES_DIR)) for f in TEMPLATES_DIR.rglob("*.md")]
+    )
 
 
 def get_template_content(template_name: str) -> str:

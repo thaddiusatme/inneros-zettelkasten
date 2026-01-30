@@ -14,10 +14,12 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: draft
 tags: ["#review", "#sprint"]
 tz: America/Los_Angeles
+template_id: core-sprint-review
+template_version: 1.0.0
 ---
 
 # 🚀 Sprint <% sprint %> Review — <% date %>
-
+ 
 ## 📈 MVP Metrics
 - Content published:
 - Leads created:

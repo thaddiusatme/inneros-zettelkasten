@@ -6,6 +6,8 @@ tags: [literature]
 visibility: private
 source: 
 author: 
+template_id: core-literature
+template_version: 1.0.0
 ---
 <%*
 /*------------------------------------------------------------------

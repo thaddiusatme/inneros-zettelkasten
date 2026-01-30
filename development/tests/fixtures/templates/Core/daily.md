@@ -4,6 +4,8 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: promoted
 tags: [daily, zettelkasten, scrum]
 visibility: private
+template_id: core-daily
+template_version: 1.0.0
 sprint_id: <% tp.date.now("YYYY-[W]WW") %>
 ---
 <%*

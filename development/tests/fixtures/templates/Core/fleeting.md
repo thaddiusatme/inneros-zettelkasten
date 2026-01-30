@@ -4,6 +4,8 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: inbox
 tags: [fleeting, inbox]
 visibility: private
+template_id: core-fleeting
+template_version: 1.0.0
 ---
 <%*
 /*------------------------------------------------------------------

@@ -13,6 +13,8 @@ created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: draft
 tags: ["#retrospective", "#sprint"]
 tz: America/Los_Angeles
+template_id: core-sprint-retro
+template_version: 1.0.0
 ---
 
 # 🔁 Sprint <% sprint %> Retrospective

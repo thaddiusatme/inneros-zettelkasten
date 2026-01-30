@@ -2,22 +2,24 @@
 type: content
 created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
 status: idea
-pillar: 
-channel: 
+pillar: "<%* /* set later via suggester */ _ = null; %>"
+channel: "<%* /* set later via suggester */ _ = null; %>"
 tags: [content, idea]
+template_id: project-content-idea
+template_version: 1.0.0
 ---
 <%*
 /*------------------------------------------------------------------
-  1. Capture Idea Title
+  1. Capture Title
 ------------------------------------------------------------------*/
-const rawTitle = await tp.system.prompt("Content idea title (required)");
+const rawTitle = await tp.system.prompt("Idea title (required)");
 if (!rawTitle) {
-  await tp.system.alert("Cancelled – no idea title given.");
+  await tp.system.alert("Cancelled – no title given.");
   return;
 }
 
 /*------------------------------------------------------------------
-  2. Pick Pillar and Channel (Optional for Raw Ideas)
+  2. Pick Pillar and Channel
 ------------------------------------------------------------------*/
 const pillars  = ["AI Automation","Productivity","Personal Story",
                   "Marketing Strategy","Other","Skip for now"];
@@ -42,7 +44,8 @@ const slug   = rawTitle.toLowerCase()
                        .replace(/[^a-z0-9]+/g,"-")
                        .replace(/(^-|-$)/g,"");
 const stamp  = tp.date.now("YYYYMMDD-HHmm");
-const fname  = `content-raw-${stamp}-${slug}.md`;
+const fname  = `${stamp}-${slug}.md`;
+// Default to Inbox for triage, or move to pipeline if mature
 const target = `Inbox/${fname}`;
 
 /*------------------------------------------------------------------
@@ -56,34 +59,24 @@ try {
   return;
 }
 %>
+<!-- Dynamic fields pillar/channel populated below -->
+
+> **Pillar**: <% pillar %>
+> **Channel**: <% channel %>
 
 # <% rawTitle %>
 
-## Initial Idea
-<!-- Capture the raw idea quickly -->
+## Core Concept
+<!-- What is the single main idea? -->
 
-## Potential Angles
-<!-- Different ways to approach this topic -->
-- 
+## Outline / Angle
+- **Hook**:
+- **Key Points**:
+- **CTA/Takeaway**:
 
-## Target Audience
-<!-- Who would this resonate with? -->
+## Research & Notes
+<!-- Links, voice memos, loose thoughts -->
 
-## Why Now?
-<!-- Why is this relevant/timely? -->
-
-## Quick Notes
-<!-- Any additional thoughts, links, inspiration -->
-
----
-
-## Workflow Notes
-- **Status**: Raw idea - needs development and triage
-- **Next Steps**: 
-  - [ ] Develop concept further
-  - [ ] Research audience/market fit
-  - [ ] Move to Content Pipeline when ready
-  - [ ] Update status to 'promoted' when processed
-
-## Pillar: <% pillar %>
-## Channel: <% channel %>
+## Next Steps
+- [ ] Refine concept
+- [ ] Move to Content Pipeline
