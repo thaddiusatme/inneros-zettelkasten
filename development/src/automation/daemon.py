@@ -23,6 +23,7 @@ from .scheduler import SchedulerManager
 from .health import HealthCheckManager
 from .file_watcher import FileWatcher
 from .event_handler import AutomationEventHandler
+from .agent_handler import AgentEventHandler
 from .config import DaemonConfig
 from .pid_lock import PIDLock, PIDLockError
 from .feature_handlers import (
@@ -95,6 +96,7 @@ class AutomationDaemon:
         self.screenshot_handler: Optional[ScreenshotEventHandler] = None
         self.smart_link_handler: Optional[SmartLinkEventHandler] = None
         self.youtube_handler: Optional[YouTubeFeatureHandler] = None
+        self.agent_handler: Optional[AgentEventHandler] = None
 
     @property
     def state(self) -> DaemonState:
@@ -305,6 +307,10 @@ class AutomationDaemon:
             elif hasattr(self.youtube_handler, "get_health"):
                 handlers["youtube"] = self.youtube_handler.get_health()
 
+        if self.agent_handler is not None:
+            # Simple health check for now since AgentHandler doesn't have complex metrics yet
+            handlers["agent"] = {"status": "enabled", "type": "agent_handler"}
+
         return {"daemon": daemon_info, "handlers": handlers}
 
     def export_handler_metrics(self) -> dict:
@@ -469,6 +475,15 @@ class AutomationDaemon:
                     "processing_timeout": yt_cfg.processing_timeout,
                 }
 
+        elif handler_type == "agent":
+            ah_cfg = self._config.agent_handler
+            if ah_cfg and ah_cfg.enabled:
+                return {
+                    "enabled": ah_cfg.enabled,
+                    "watch_path": ah_cfg.watch_path,
+                    "processing_timeout": ah_cfg.processing_timeout,
+                }
+
         return None
 
     def _setup_feature_handlers(self, vault_path: Optional[Path] = None) -> None:
@@ -512,6 +527,14 @@ class AutomationDaemon:
             self.youtube_handler = YouTubeFeatureHandler(config=yt_config)
             self.file_watcher.register_callback(self.youtube_handler.process)
             self.logger.info("YouTube handler registered successfully")
+
+        # Initialize agent handler if configured
+        ah_config = self._build_handler_config_dict("agent", vault_path)
+        if ah_config:
+            self.logger.info(f"Initializing agent handler: {ah_config['watch_path']}")
+            self.agent_handler = AgentEventHandler(config=ah_config)
+            self.file_watcher.register_callback(self.agent_handler.process)
+            self.logger.info("Agent handler registered successfully")
 
     def _on_file_event(self, file_path: Path, event_type: str) -> None:
         """
