@@ -30,8 +30,24 @@ class DaemonOrchestrator:
     def __init__(
         self, pid_file_path: Optional[Path] = None, logs_dir: Optional[Path] = None
     ):
-        self.pid_file = pid_file_path or (Path.home() / ".inneros" / "daemon.pid")
-        self.logs_dir = logs_dir or (Path.home() / ".automation" / "logs")
+        # Prioritize local .inneros/.automation if they exist (dev mode), fallback to home
+        cwd = Path.cwd()
+        local_automation = cwd / ".automation"
+
+        default_pid = (
+            (local_automation / "daemon.pid")
+            if local_automation.exists()
+            else (Path.home() / ".inneros" / "daemon.pid")
+        )
+
+        default_logs = (
+            (local_automation / "logs")
+            if local_automation.exists()
+            else (Path.home() / ".automation" / "logs")
+        )
+
+        self.pid_file = pid_file_path or default_pid
+        self.logs_dir = logs_dir or default_logs
 
     def start(self) -> Dict:
         """Route to start command."""

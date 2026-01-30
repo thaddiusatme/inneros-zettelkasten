@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, Any
 from collections import deque
 
-from src.ai.workflow_manager_adapter import LegacyWorkflowManagerAdapter
+from ..ai.workflow_manager_adapter import LegacyWorkflowManagerAdapter
 
 
 class AutomationEventHandler:

@@ -68,6 +68,15 @@ class YouTubeHandlerConfig:
 
 
 @dataclass
+class AgentHandlerConfig:
+    """Agent handler configuration"""
+
+    enabled: bool = False
+    watch_path: str = "knowledge/Inbox"
+    processing_timeout: int = 300
+
+
+@dataclass
 class DaemonConfig:
     """Daemon configuration"""
 
@@ -79,6 +88,7 @@ class DaemonConfig:
     screenshot_handler: Optional[ScreenshotHandlerConfig] = None
     smart_link_handler: Optional[SmartLinkHandlerConfig] = None
     youtube_handler: Optional[YouTubeHandlerConfig] = None
+    agent_handler: Optional[AgentHandlerConfig] = None
 
 
 class ConfigurationLoader:
@@ -244,6 +254,16 @@ class ConfigurationLoader:
                 processing_timeout=yt_data.get("processing_timeout", 300),
             )
 
+        # Parse agent_handler section
+        agent_handler = None
+        if "agent_handler" in raw_config:
+            ah_data = raw_config["agent_handler"]
+            agent_handler = AgentHandlerConfig(
+                enabled=ah_data.get("enabled", False),
+                watch_path=ah_data.get("watch_path", "knowledge/Inbox"),
+                processing_timeout=ah_data.get("processing_timeout", 300),
+            )
+
         return DaemonConfig(
             check_interval=check_interval,
             log_level=log_level,
@@ -252,4 +272,5 @@ class ConfigurationLoader:
             screenshot_handler=screenshot_handler,
             smart_link_handler=smart_link_handler,
             youtube_handler=youtube_handler,
+            agent_handler=agent_handler,
         )

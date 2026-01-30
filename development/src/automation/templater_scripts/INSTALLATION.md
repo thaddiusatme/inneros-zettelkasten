@@ -25,7 +25,7 @@ cp development/src/automation/templater_scripts/trigger_youtube_processing.js .o
 
 ## Step 3: Modify YouTube Template
 
-Add the following code to your YouTube template at `knowledge/Templates/youtube-video.md`.
+Add the following code to your YouTube template at `knowledge/Templates/Utility/youtube.md`.
 
 ### Where to Add
 

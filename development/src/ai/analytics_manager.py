@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Union
 import re
 
-from src.ai.types import AnalyticsResult, ConfigDict, WorkflowReport, ReviewCandidate
+from .types import AnalyticsResult, ConfigDict, WorkflowReport, ReviewCandidate
 
 
 class AnalyticsManager:

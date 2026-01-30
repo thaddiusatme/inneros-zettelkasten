@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-from src.ai.types import ConnectionResult, ConfigDict, LinkFeedback
+from .types import ConnectionResult, ConfigDict, LinkFeedback
 
 
 class ConnectionManager:

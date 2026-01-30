@@ -23,8 +23,8 @@ Design Principles:
 from pathlib import Path
 from typing import Any, List, Optional
 
-from src.ai.types import AIEnhancementResult, ConfigDict
-from src.utils.bug_reporter import BugReporter
+from .types import AIEnhancementResult, ConfigDict
+from ..utils.bug_reporter import BugReporter
 
 
 class AIEnhancementManager:

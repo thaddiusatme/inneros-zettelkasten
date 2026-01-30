@@ -24,12 +24,12 @@ from typing import Dict, Any, List, Optional, Tuple
 import logging
 import yaml
 
-from src.ai.core_workflow_manager import CoreWorkflowManager
-from src.ai.analytics_manager import AnalyticsManager
-from src.ai.ai_enhancement_manager import AIEnhancementManager
-from src.ai.connection_manager import ConnectionManager
-from src.ai.note_lifecycle_manager import NoteLifecycleManager
-from src.utils.vault_path import get_default_vault_path
+from .core_workflow_manager import CoreWorkflowManager
+from .analytics_manager import AnalyticsManager
+from .ai_enhancement_manager import AIEnhancementManager
+from .connection_manager import ConnectionManager
+from .note_lifecycle_manager import NoteLifecycleManager
+from ..utils.vault_path import get_default_vault_path
 
 logger = logging.getLogger(__name__)
 

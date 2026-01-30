@@ -13,8 +13,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-from src.utils.frontmatter import parse_frontmatter, build_frontmatter
-from src.utils.io import safe_write
+from ..utils.frontmatter import parse_frontmatter, build_frontmatter
+from ..utils.io import safe_write
 
 
 @dataclass

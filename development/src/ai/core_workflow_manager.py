@@ -17,14 +17,14 @@ Design Principles:
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from src.ai.types import WorkflowResult, ConfigDict
-from src.utils.bug_reporter import BugReporter
-from src.utils.result_validator import ResultValidator
+from .types import WorkflowResult, ConfigDict
+from ..utils.bug_reporter import BugReporter
+from ..utils.result_validator import ResultValidator
 
 if TYPE_CHECKING:
-    from src.ai.analytics_manager import AnalyticsManager
-    from src.ai.ai_enhancement_manager import AIEnhancementManager
-    from src.ai.connection_manager import ConnectionManager
+    from .analytics_manager import AnalyticsManager
+    from .ai_enhancement_manager import AIEnhancementManager
+    from .connection_manager import ConnectionManager
 
 
 class CoreWorkflowManager:
