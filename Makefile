@@ -23,6 +23,9 @@ down:
 status:
 	@PYTHONPATH=development python3 development/src/cli/inneros_status_cli.py
 
+logs:
+	@PYTHONPATH=development python3 -m src.cli.daemon_cli logs
+
 review:
 	@echo "📋 Generating weekly review..."
 	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault $(VAULT) weekly-review --preview

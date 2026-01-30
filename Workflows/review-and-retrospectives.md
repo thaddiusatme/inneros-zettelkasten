@@ -31,10 +31,10 @@ Minimalist, on-demand reviews with clear naming, YAML schema, and simple automat
 
 ## Templates
 Located in `knowledge/Templates/`:
-- `daily.md`
-- `weekly-review.md`
-- `sprint-review.md`
-- `sprint-retro.md`
+- `Core/daily.md`
+- `Reviews/weekly.md`
+- `Reviews/sprint-review.md`
+- `Reviews/sprint-retro.md`
 
 All templates use Obsidian Templater to:
 - Name the file to the convention above

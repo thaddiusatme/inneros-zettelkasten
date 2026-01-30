@@ -651,7 +651,7 @@ inneros analytics --export weekly-analytics.json
 ```
 
 ### **Review Templates (Obsidian Templater — optional)**
-- Templates live in `knowledge/Templates/`: `daily.md`, `weekly-review.md`, `sprint-review.md`, `sprint-retro.md`.
+- Templates live in `knowledge/Templates/`: `Core/daily.md`, `Reviews/weekly.md`, `Reviews/sprint-review.md`, `Reviews/sprint-retro.md`.
 - Obsidian: Command Palette → “Templater: Insert template”, then select a template.
 - Behavior: renames to canonical name, moves into `Reviews/`, and stamps `created` in America/Los_Angeles.
 - Sprint templates prompt for `sprint_id` (e.g., 001).

@@ -68,19 +68,19 @@ python3 src/cli/connections_demo.py .
 
 ### Directory Workflow
 
-| Stage | Directory | Status | AI Features |
-|------|-----------|--------|-------------|
-| Capture | `Inbox/` | `status: inbox` | Auto-tagging, quality assessment |
-| Process | `Fleeting Notes/` | `inbox → promoted` | Semantic analysis, connections |
-| Permanent | `Permanent Notes/` | `draft → published` | Summarization, link prediction |
-| Archive | `Archive/` | `archived` | Compression, historical analysis |
+| Stage     | Directory          | Status              | AI Features                      |
+| :-------- | :----------------- | :------------------ | :------------------------------- |
+| Capture   | `Inbox/`           | `status: inbox`     | Auto-tagging, quality assessment |
+| Process   | `Fleeting Notes/`  | `inbox → promoted`  | Semantic analysis, connections   |
+| Permanent | `Permanent Notes/` | `draft → published` | Summarization, link prediction   |
+| Archive   | `Archive/`         | `archived`          | Compression, historical analysis |
 
 ### Templates (Obsidian Templater)
 
-- `knowledge/Templates/fleeting.md` — quick capture
-- `knowledge/Templates/permanent.md` — structured permanent
-- `knowledge/Templates/literature.md` — literature/reference
-- Rituals: `daily.md`, `weekly-review.md`, `sprint-review.md`, `sprint-retro.md`
+- `knowledge/Templates/Core/fleeting.md` — quick capture
+- `knowledge/Templates/Core/permanent.md` — structured permanent
+- `knowledge/Templates/Core/literature.md` — literature/reference
+- Rituals: `Core/daily.md`, `Reviews/weekly.md`, `Reviews/sprint-review.md`, `Reviews/sprint-retro.md`
 
 Usage:
 

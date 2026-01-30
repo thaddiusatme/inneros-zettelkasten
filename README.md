@@ -220,7 +220,7 @@ visibility: private | shared | team
   - The `fleeting.md` template (and others) now include workflow guidance comments to reinforce this process.
 
 ## Templates: ChatGPT Prompt (Templater)
-- File: `knowledge/Templates/chatgpt-prompt.md`
+- File: `knowledge/Templates/Utility/chatgpt-prompt.md`
 - Purpose: Quickly scaffold a high-quality ChatGPT prompt for a fresh session.
 - How it works:
   - Uses Obsidian Templater (EJS) tokens like `<% tp.date.now("YYYY-MM-DD HH:mm") %>`

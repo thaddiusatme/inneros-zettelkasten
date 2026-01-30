@@ -34,3 +34,8 @@ rich==13.7.0
 
 # System monitoring
 psutil==5.9.8
+
+# RAG & Embeddings
+sentence-transformers==3.0.0
+sqlite-vec==0.1.0  # Python wrapper for sqlite-vec extension
+numpy>=1.26.0

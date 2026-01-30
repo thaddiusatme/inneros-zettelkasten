@@ -111,6 +111,8 @@ class NoteRecord:
     unresolved_links: List[str]
     tags_frontmatter: List[str]
     tags_body: List[str]
+    template_id: Optional[str]
+    template_version: Optional[str]
     file_stats: Dict[str, Any]
 
 
@@ -135,6 +137,13 @@ def _build_note_record(
 
     fm_tags = sanitize_tags(metadata.get("tags"))
     body_tags = sanitize_tags(_extract_body_hashtags(body))
+
+    template_id = metadata.get("template_id")
+    template_version = metadata.get("template_version")
+    if template_id is not None:
+        template_id = str(template_id)
+    if template_version is not None:
+        template_version = str(template_version)
 
     outgoing_raw = _extract_wikilinks(body)
 
@@ -162,6 +171,8 @@ def _build_note_record(
         unresolved_links=sorted(set(unresolved)),
         tags_frontmatter=fm_tags,
         tags_body=body_tags,
+        template_id=template_id,
+        template_version=template_version,
         file_stats={
             "size_bytes": st.st_size,
             "mtime_utc": _iso(st.st_mtime),
@@ -224,6 +235,8 @@ def generate_census(vault_root: Path, repo_root: Path) -> Dict[str, Any]:
                 "unresolved_links": n.unresolved_links,
                 "tags_frontmatter": n.tags_frontmatter,
                 "tags_body": n.tags_body,
+                "template_id": n.template_id,
+                "template_version": n.template_version,
                 "incoming_link_count": incoming_counts.get(n.key, 0),
                 "file_stats": n.file_stats,
             }

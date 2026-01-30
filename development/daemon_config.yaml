@@ -55,3 +55,9 @@ youtube_handler:
     base_delay: 30           # 30 seconds initial (was 5)
     max_delay: 180           # 3 minutes max (was 60)
     backoff_multiplier: 3    # More aggressive (was 2)
+
+# AI Agent Handler
+agent_handler:
+  enabled: true
+  watch_path: ../knowledge/Inbox
+  processing_timeout: 300
