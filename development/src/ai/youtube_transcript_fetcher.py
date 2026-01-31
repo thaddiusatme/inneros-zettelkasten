@@ -26,7 +26,9 @@ Version: 1.0.0 (TDD Iteration 1 REFACTOR Phase)
 """
 import re
 import logging
-from typing import Dict, List, Any
+import time
+from typing import Dict, List, Any, Optional
+from xml.etree.ElementTree import ParseError as XMLParseError
 from youtube_transcript_api import YouTubeTranscriptApi
 
 # Import available exceptions, with fallbacks for older versions
@@ -81,6 +83,12 @@ class RateLimitError(Exception):
     pass
 
 
+class TranscriptParseError(Exception):
+    """Raised when transcript XML parsing fails (transient API issue)"""
+
+    pass
+
+
 class YouTubeTranscriptFetcher:
     """
     Fetches YouTube video transcripts using youtube-transcript-api.
@@ -97,14 +105,38 @@ class YouTubeTranscriptFetcher:
         >>> print(f"Fetched {len(result['transcript'])} entries")
     """
 
-    def __init__(self):
+    # Default retry configuration for transient errors
+    DEFAULT_MAX_RETRIES = 3
+    DEFAULT_RETRY_DELAY = 1.0  # seconds
+    DEFAULT_RETRY_BACKOFF = 2.0  # exponential backoff multiplier
+
+    def __init__(
+        self,
+        max_retries: Optional[int] = None,
+        retry_delay: Optional[float] = None,
+        retry_backoff: Optional[float] = None,
+    ):
         """
         Initialize transcript fetcher.
 
         Creates a YouTubeTranscriptApi instance for transcript fetching.
         No external dependencies or API keys required.
+
+        Args:
+            max_retries: Maximum retry attempts for transient errors (default: 3)
+            retry_delay: Initial delay between retries in seconds (default: 1.0)
+            retry_backoff: Exponential backoff multiplier (default: 2.0)
         """
-        self.api = YouTubeTranscriptApi()
+        self.api = YouTubeTranscriptApi()  # Create instance for v1.2.3+ API
+        self.max_retries = (
+            max_retries if max_retries is not None else self.DEFAULT_MAX_RETRIES
+        )
+        self.retry_delay = (
+            retry_delay if retry_delay is not None else self.DEFAULT_RETRY_DELAY
+        )
+        self.retry_backoff = (
+            retry_backoff if retry_backoff is not None else self.DEFAULT_RETRY_BACKOFF
+        )
         logger.info("YouTubeTranscriptFetcher initialized successfully")
 
     def _convert_transcript_to_dict(
@@ -126,6 +158,58 @@ class YouTubeTranscriptFetcher:
             {"text": entry.text, "start": entry.start, "duration": entry.duration}
             for entry in transcript_data
         ]
+
+    def _fetch_transcript_with_retry(
+        self,
+        transcript,
+        video_id: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch transcript data with retry logic for transient XML parse errors.
+
+        Some YouTube videos have malformed caption XML that causes ParseError.
+        This is often a transient issue that resolves on retry. This method
+        implements exponential backoff retry for such errors.
+
+        Args:
+            transcript: Transcript object from list_transcripts()
+            video_id: Video ID for logging purposes
+
+        Returns:
+            List of transcript entry dicts with 'text', 'start', 'duration' keys
+
+        Raises:
+            TranscriptParseError: If all retries fail due to XML parsing issues
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                transcript_data = transcript.fetch()
+                return self._convert_transcript_to_dict(transcript_data)
+
+            except XMLParseError as e:
+                last_error = e
+                if attempt < self.max_retries:
+                    delay = self.retry_delay * (self.retry_backoff**attempt)
+                    logger.warning(
+                        f"XML ParseError fetching transcript for {video_id} "
+                        f"(attempt {attempt + 1}/{self.max_retries + 1}): {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(
+                        f"All {self.max_retries + 1} attempts failed for {video_id} "
+                        f"due to XML ParseError: {e}"
+                    )
+
+        # All retries exhausted
+        raise TranscriptParseError(
+            f"Failed to parse transcript XML for video {video_id} after "
+            f"{self.max_retries + 1} attempts. This may be a video-specific issue "
+            f"with malformed captions. Error: {last_error}"
+        )
 
     def fetch_transcript(
         self,
@@ -185,7 +269,7 @@ class YouTubeTranscriptFetcher:
             raise InvalidVideoIdError(error_msg)
 
         try:
-            # Fetch transcript using youtube-transcript-api v1.2.3+
+            # Fetch transcript using youtube-transcript-api (v1.2.3+ uses list())
             transcript_list = self.api.list(video_id)
 
             if prefer_manual:
@@ -199,10 +283,8 @@ class YouTubeTranscriptFetcher:
                             not transcript.is_generated
                             and transcript.language_code.startswith(lang)
                         ):
-                            transcript_data = transcript.fetch()
-                            # youtube-transcript-api >=1.2.3 returns list directly
-                            transcript_entries = self._convert_transcript_to_dict(
-                                transcript_data
+                            transcript_entries = self._fetch_transcript_with_retry(
+                                transcript, video_id
                             )
                             logger.info(
                                 f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -220,10 +302,8 @@ class YouTubeTranscriptFetcher:
                 )
                 for transcript in transcript_list:
                     if not transcript.is_generated:
-                        transcript_data = transcript.fetch()
-                        # youtube-transcript-api >=1.2.3 returns list directly
-                        transcript_entries = self._convert_transcript_to_dict(
-                            transcript_data
+                        transcript_entries = self._fetch_transcript_with_retry(
+                            transcript, video_id
                         )
                         logger.info(
                             f"Found manual transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -245,10 +325,8 @@ class YouTubeTranscriptFetcher:
                             transcript.is_generated
                             and transcript.language_code.startswith(lang)
                         ):
-                            transcript_data = transcript.fetch()
-                            # youtube-transcript-api >=1.2.3 returns list directly
-                            transcript_entries = self._convert_transcript_to_dict(
-                                transcript_data
+                            transcript_entries = self._fetch_transcript_with_retry(
+                                transcript, video_id
                             )
                             logger.info(
                                 f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -264,10 +342,8 @@ class YouTubeTranscriptFetcher:
                 logger.debug("Using any available auto-generated transcript")
                 for transcript in transcript_list:
                     if transcript.is_generated:
-                        transcript_data = transcript.fetch()
-                        # youtube-transcript-api >=1.2.3 returns list directly
-                        transcript_entries = self._convert_transcript_to_dict(
-                            transcript_data
+                        transcript_entries = self._fetch_transcript_with_retry(
+                            transcript, video_id
                         )
                         logger.info(
                             f"Using auto-generated transcript: {len(transcript_entries)} entries, language: {transcript.language_code}"
@@ -284,10 +360,8 @@ class YouTubeTranscriptFetcher:
                     f"Fetching first available transcript for video: {video_id}"
                 )
                 for transcript in transcript_list:
-                    transcript_data = transcript.fetch()
-                    # youtube-transcript-api >=1.2.3 returns list directly
-                    transcript_entries = self._convert_transcript_to_dict(
-                        transcript_data
+                    transcript_entries = self._fetch_transcript_with_retry(
+                        transcript, video_id
                     )
                     is_manual = not transcript.is_generated
                     logger.info(
@@ -314,11 +388,20 @@ class YouTubeTranscriptFetcher:
             )
         except ConnectionError as e:
             raise Exception(f"Network connection error: {str(e)}")
+        except TranscriptParseError:
+            # Re-raise TranscriptParseError as-is (already has detailed message)
+            raise
         except Exception as e:
             # Check if it's a rate limit error in disguise
             if "too many requests" in str(e).lower():
                 raise RateLimitError(
                     f"Rate limit exceeded. Please retry later. Details: {str(e)}"
+                )
+            # Check if it's an XML parse error not caught by retry logic
+            if "no element found" in str(e).lower() or "parseerror" in str(e).lower():
+                raise TranscriptParseError(
+                    f"XML parsing failed for video {video_id}: {str(e)}. "
+                    "This may be a video-specific issue with malformed captions."
                 )
             # Re-raise other exceptions
             raise

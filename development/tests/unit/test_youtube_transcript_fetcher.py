@@ -20,6 +20,7 @@ from ai.youtube_transcript_fetcher import (
     TranscriptNotAvailableError,
     InvalidVideoIdError,
     RateLimitError,
+    TranscriptParseError,
 )
 
 
@@ -301,9 +302,116 @@ class TestYouTubeTranscriptFetcherIntegration:
         assert estimated_tokens < 8000, f"Output too long: ~{estimated_tokens} tokens"
 
 
+class TestYouTubeTranscriptFetcherParseErrorHandling:
+    """Test ParseError handling with retry logic (GitHub Issue #81)"""
+
+    def test_parse_error_raises_transcript_parse_error_after_retries(self):
+        """
+        Test that XMLParseError raises TranscriptParseError after retry exhaustion.
+
+        GitHub Issue #81: ParseError when fetching transcripts for certain videos.
+        The system should retry with exponential backoff, then raise a clear error.
+        """
+        from xml.etree.ElementTree import ParseError as XMLParseError
+
+        fetcher = YouTubeTranscriptFetcher(max_retries=2, retry_delay=0.01)
+
+        video_id = "PARSE_ERROR_TEST"
+
+        # Mock transcript object that always raises ParseError
+        mock_transcript = Mock()
+        mock_transcript.is_generated = False
+        mock_transcript.language_code = "en"
+        mock_transcript.fetch.side_effect = XMLParseError(
+            "no element found: line 1, column 0"
+        )
+
+        # Mock transcript list
+        mock_transcript_list = Mock()
+        mock_transcript_list.__iter__ = Mock(return_value=iter([mock_transcript]))
+
+        with patch.object(fetcher.api, "list") as mock_list:
+            mock_list.return_value = mock_transcript_list
+
+            with pytest.raises(TranscriptParseError) as exc_info:
+                fetcher.fetch_transcript(video_id)
+
+            # Should have helpful error message
+            assert "parse" in str(exc_info.value).lower()
+            assert video_id in str(exc_info.value)
+            assert "3 attempts" in str(exc_info.value)  # max_retries + 1
+
+    def test_parse_error_retry_succeeds_on_second_attempt(self):
+        """
+        Test that transient ParseError succeeds on retry.
+
+        ParseError can be transient - the system should retry and succeed
+        if the error resolves.
+        """
+        from xml.etree.ElementTree import ParseError as XMLParseError
+
+        fetcher = YouTubeTranscriptFetcher(max_retries=2, retry_delay=0.01)
+
+        video_id = "TRANSIENT_ERROR_TEST"
+
+        # Create mock transcript entry
+        mock_entry = Mock()
+        mock_entry.text = "Transcript text after retry"
+        mock_entry.start = 0.0
+        mock_entry.duration = 2.0
+
+        # Mock transcript object that fails once, then succeeds
+        mock_transcript = Mock()
+        mock_transcript.is_generated = False
+        mock_transcript.language_code = "en"
+        mock_transcript.fetch.side_effect = [
+            XMLParseError("no element found: line 1, column 0"),  # First call fails
+            [mock_entry],  # Second call succeeds
+        ]
+
+        # Mock transcript list
+        mock_transcript_list = Mock()
+        mock_transcript_list.__iter__ = Mock(return_value=iter([mock_transcript]))
+
+        with patch.object(fetcher.api, "list") as mock_list:
+            mock_list.return_value = mock_transcript_list
+
+            result = fetcher.fetch_transcript(video_id)
+
+            # Should succeed after retry
+            assert result is not None
+            assert result["video_id"] == video_id
+            assert len(result["transcript"]) == 1
+            assert result["transcript"][0]["text"] == "Transcript text after retry"
+
+    def test_parse_error_configurable_retry_settings(self):
+        """
+        Test that retry settings are configurable.
+
+        Users should be able to configure max_retries, retry_delay, and retry_backoff.
+        """
+        # Test custom configuration
+        fetcher = YouTubeTranscriptFetcher(
+            max_retries=5,
+            retry_delay=0.5,
+            retry_backoff=3.0,
+        )
+
+        assert fetcher.max_retries == 5
+        assert fetcher.retry_delay == 0.5
+        assert fetcher.retry_backoff == 3.0
+
+        # Test default configuration
+        default_fetcher = YouTubeTranscriptFetcher()
+
+        assert default_fetcher.max_retries == 3
+        assert default_fetcher.retry_delay == 1.0
+        assert default_fetcher.retry_backoff == 2.0
+
+
 # RED Phase Summary
 """
-TDD Iteration 1 RED Phase Complete: 10 Failing Tests
+TDD Iteration 1 RED Phase Complete: 10 Failing Tests + 3 ParseError Tests
 
 Test Coverage:
 - P0 Core Functionality: 3 tests (fetch, error handling, preference logic)
@@ -311,6 +419,7 @@ Test Coverage:
 - P0 Error Handling: 3 tests (invalid ID, rate limits, network)
 - P0 Performance: 1 test (<30s requirement)
 - P1 Integration: 1 test (Ollama LLM compatibility)
+- P1 ParseError Handling: 3 tests (GitHub Issue #81 fix)
 
 All tests should FAIL until GREEN Phase implementation.
 
