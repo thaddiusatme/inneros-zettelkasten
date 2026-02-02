@@ -70,7 +70,10 @@ const target = `Inbox/YouTube/${fname}`;
 // 6. Default tags
 const allTags = ["youtube", "video-content"];
 
-// 7. Output frontmatter with populated fields
+// 7. Rename file to use video title (fixes issue #82)
+await tp.file.move(target);
+
+// 8. Output frontmatter with populated fields
 tR += `---
 type: literature
 created: ${tp.date.now("YYYY-MM-DD HH:mm")}
