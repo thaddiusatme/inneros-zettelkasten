@@ -1,0 +1,57 @@
+name: Security - Dependency Audit
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Mondays at 11:00 UTC (after CodeQL at 10:00)
+    - cron: '0 11 * * 1'
+
+jobs:
+  pip-audit:
+    name: pip-audit Dependency Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+          
+      - name: Install pip-audit
+        run: pip install pip-audit
+        
+      - name: Audit requirements.txt
+        run: |
+          echo "🔍 Scanning requirements.txt for vulnerabilities..."
+          pip-audit -r requirements.txt --strict --desc on
+          
+      - name: Audit dev-requirements.txt
+        if: hashFiles('dev-requirements.txt') != ''
+        run: |
+          echo "🔍 Scanning dev-requirements.txt for vulnerabilities..."
+          pip-audit -r dev-requirements.txt --strict --desc on
+        continue-on-error: true  # Dev deps are less critical
+        
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [pip-audit]
+    if: always()
+    
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.pip-audit.result }}" == "failure" ]; then
+            echo "❌ Security vulnerabilities detected - see pip-audit output above"
+            exit 1
+          else
+            echo "✅ No high/critical vulnerabilities found"
+          fi
