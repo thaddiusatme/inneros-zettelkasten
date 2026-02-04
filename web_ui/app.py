@@ -151,40 +151,53 @@ def weekly_review():
         # Simple review data without expensive AI processing
         # Convert notes to simple recommendation format for template
         # Read actual quality_score from frontmatter (Issue #87 fix)
-        inbox_items = []
-        for n in inbox_notes[:20]:
-            score = extract_quality_score_from_note(n)
-            inbox_items.append(
-                {
-                    "filename": n.name,
-                    "title": n.stem,
-                    "reason": "In inbox",
-                    "quality_score": score,  # Actual score from frontmatter, or None
-                    "confidence": 0.7 if score is not None else None,
-                }
-            )
+        # Categorize by quality score thresholds
+        promote_items = []
+        keep_items = []
+        improve_items = []
 
-        fleeting_items = []
-        for n in fleeting_notes[:20]:
-            score = extract_quality_score_from_note(n)
-            fleeting_items.append(
-                {
-                    "filename": n.name,
-                    "title": n.stem,
-                    "reason": "Fleeting note",
-                    "quality_score": score,  # Actual score from frontmatter, or None
-                    "confidence": 0.6 if score is not None else None,
-                }
-            )
+        all_notes = [(n, "Inbox") for n in inbox_notes[:20]] + [
+            (n, "Fleeting Notes") for n in fleeting_notes[:20]
+        ]
+
+        for note_path, source in all_notes:
+            score = extract_quality_score_from_note(note_path)
+            item = {
+                "filename": note_path.name,
+                "title": note_path.stem,
+                "reason": f"From {source}",
+                "quality_score": score,
+                "confidence": 0.7 if score is not None else None,
+            }
+
+            # Categorize based on quality score thresholds
+            if score is None:
+                # Unscored notes need improvement (scoring)
+                item["reason"] = f"From {source} - needs quality scoring"
+                improve_items.append(item)
+            elif score >= 0.7:
+                # High quality -> ready for promotion
+                item["reason"] = (
+                    f"High quality ({int(score * 100)}%) - ready to promote"
+                )
+                promote_items.append(item)
+            elif score >= 0.4:
+                # Medium quality -> keep developing
+                item["reason"] = (
+                    f"Medium quality ({int(score * 100)}%) - keep developing"
+                )
+                keep_items.append(item)
+            else:
+                # Low quality -> needs improvement
+                item["reason"] = f"Low quality ({int(score * 100)}%) - needs work"
+                improve_items.append(item)
 
         review_data = {
             "candidates_count": len(inbox_notes) + len(fleeting_notes),
             "recommendations": {
-                "promote": inbox_items[
-                    :10
-                ],  # Show first 10 inbox notes as promotion candidates
-                "keep": fleeting_items[:10],  # Show first 10 fleeting notes
-                "improve": [],  # Empty for now
+                "promote": promote_items[:10],
+                "keep": keep_items[:10],
+                "improve": improve_items[:10],
             },
             "vault_path": vault_path,
             "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
