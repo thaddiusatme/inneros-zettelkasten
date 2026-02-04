@@ -169,10 +169,14 @@
                                     <span class="badge action-badge action-promote text-white">PROMOTE</span>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
-                                    <div class="confidence-bar">
-                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
-                                    </div>
+                                    {% if item.quality_score is not none %}
+                                        <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round | int }}%</div>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round | int }}%"></div>
+                                        </div>
+                                    {% else %}
+                                        <div class="small text-muted mb-1">Quality: <span class="badge bg-secondary">Not scored</span></div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-1">
                                     <button class="btn btn-sm btn-success" onclick="processNote('{{ item.filename }}', 'promote')">
@@ -219,10 +223,14 @@
                                     <span class="badge action-badge action-keep text-white">KEEP</span>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
-                                    <div class="confidence-bar">
-                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
-                                    </div>
+                                    {% if item.quality_score is not none %}
+                                        <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round | int }}%</div>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round | int }}%"></div>
+                                        </div>
+                                    {% else %}
+                                        <div class="small text-muted mb-1">Quality: <span class="badge bg-secondary">Not scored</span></div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-1">
                                     <button class="btn btn-sm btn-warning" onclick="processNote('{{ item.filename }}', 'keep')">
@@ -265,10 +273,14 @@
                                     <span class="badge action-badge action-improve text-white">IMPROVE</span>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round }}%</div>
-                                    <div class="confidence-bar">
-                                        <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round }}%"></div>
-                                    </div>
+                                    {% if item.quality_score is not none %}
+                                        <div class="small text-muted mb-1">Quality: {{ (item.quality_score * 100) | round | int }}%</div>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: {{ (item.confidence * 100) | round | int }}%"></div>
+                                        </div>
+                                    {% else %}
+                                        <div class="small text-muted mb-1">Quality: <span class="badge bg-secondary">Not scored</span></div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-md-1">
                                     <button class="btn btn-sm btn-danger" onclick="processNote('{{ item.filename }}', 'improve')">
