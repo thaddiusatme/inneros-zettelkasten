@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
+import yaml
 from datetime import datetime
 
 # Add the src directory to the Python path
@@ -149,26 +150,32 @@ def weekly_review():
 
         # Simple review data without expensive AI processing
         # Convert notes to simple recommendation format for template
-        inbox_items = [
-            {
-                "filename": n.name,
-                "title": n.stem,
-                "reason": "In inbox",
-                "quality_score": 0.5,  # Default placeholder
-                "confidence": 0.7,  # Default placeholder
-            }
-            for n in inbox_notes[:20]
-        ]
-        fleeting_items = [
-            {
-                "filename": n.name,
-                "title": n.stem,
-                "reason": "Fleeting note",
-                "quality_score": 0.4,  # Default placeholder
-                "confidence": 0.6,  # Default placeholder
-            }
-            for n in fleeting_notes[:20]
-        ]
+        # Read actual quality_score from frontmatter (Issue #87 fix)
+        inbox_items = []
+        for n in inbox_notes[:20]:
+            score = extract_quality_score_from_note(n)
+            inbox_items.append(
+                {
+                    "filename": n.name,
+                    "title": n.stem,
+                    "reason": "In inbox",
+                    "quality_score": score,  # Actual score from frontmatter, or None
+                    "confidence": 0.7 if score is not None else None,
+                }
+            )
+
+        fleeting_items = []
+        for n in fleeting_notes[:20]:
+            score = extract_quality_score_from_note(n)
+            fleeting_items.append(
+                {
+                    "filename": n.name,
+                    "title": n.stem,
+                    "reason": "Fleeting note",
+                    "quality_score": score,  # Actual score from frontmatter, or None
+                    "confidence": 0.6 if score is not None else None,
+                }
+            )
 
         review_data = {
             "candidates_count": len(inbox_notes) + len(fleeting_notes),
@@ -258,6 +265,41 @@ def settings():
 def onboarding():
     """Onboarding flow for new users."""
     return render_template("onboarding.html", title="Welcome to InnerOS Zettelkasten")
+
+
+def extract_quality_score_from_note(note_path: Path) -> float | None:
+    """Extract quality_score from note frontmatter.
+
+    Args:
+        note_path: Path to the markdown note file
+
+    Returns:
+        The quality_score as float if present, None otherwise
+    """
+    try:
+        content = note_path.read_text(encoding="utf-8")
+        if not content.startswith("---"):
+            return None
+
+        # Find frontmatter boundaries
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            return None
+
+        frontmatter_text = parts[1].strip()
+        if not frontmatter_text:
+            return None
+
+        frontmatter = yaml.safe_load(frontmatter_text)
+        if not isinstance(frontmatter, dict):
+            return None
+
+        quality_score = frontmatter.get("quality_score")
+        if quality_score is not None:
+            return float(quality_score)
+        return None
+    except Exception:
+        return None
 
 
 def _calculate_quality_distribution(stats):
