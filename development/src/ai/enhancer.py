@@ -273,62 +273,185 @@ class AIEnhancer:
             return self._basic_structure_suggestion(content)
 
     def _basic_quality_analysis(self, content: str) -> Dict[str, Any]:
-        """Fallback basic quality analysis when API fails."""
-        content_lower = content.lower().strip()
+        """Fallback basic quality analysis when API fails.
 
-        # Simple heuristics for quality assessment
+        Uses weighted scoring: structural (30%), content_quality (40%), zettelkasten (30%)
+        """
+        # Detect template placeholders
+        placeholder_patterns = [
+            r"where did this come from\?",
+            r"TODO:",
+            r"\[insert .+?\]",
+            r"\[add .+?\]",
+            r"<insert .+?>",
+            r"FIXME:",
+        ]
+        has_placeholders = any(
+            re.search(pattern, content, re.IGNORECASE)
+            for pattern in placeholder_patterns
+        )
+
+        # Structural analysis (30% weight)
         has_heading = bool(re.search(r"^#+\s+.+$", content, re.MULTILINE))
         has_sections = bool(re.search(r"^##+\s+.+$", content, re.MULTILINE))
         has_lists = bool(re.search(r"^\s*[-*+]\s+.+$", content, re.MULTILINE))
-        has_links = bool(re.search(r"\[\[.+?\]\]", content))
-        word_count = len(content.split())
 
-        # Calculate basic quality score
-        score = 0.0
+        structural_score = 0.0
+        if has_heading:
+            structural_score += 0.4
+        if has_sections:
+            structural_score += 0.3
+        if has_lists:
+            structural_score += 0.3
+
+        # Content quality analysis (40% weight)
+        word_count = len(content.split())
+        content_score = 0.0
+
+        if word_count > 100:
+            content_score += 0.4
+        elif word_count > 50:
+            content_score += 0.25
+        elif word_count > 20:
+            content_score += 0.1
+
+        # Penalize placeholders heavily
+        if has_placeholders:
+            content_score = max(0, content_score - 0.3)
+        else:
+            content_score += 0.3  # Bonus for complete content
+
+        # Check for substantive content (not just structure)
+        sentences = re.split(r"[.!?]+", content)
+        substantive_sentences = [s for s in sentences if len(s.split()) > 5]
+        if len(substantive_sentences) >= 3:
+            content_score += 0.3
+
+        # Zettelkasten compliance analysis (30% weight)
+        has_links = bool(re.search(r"\[\[.+?\]\]", content))
+        link_count = len(re.findall(r"\[\[.+?\]\]", content))
+
+        # Check for source/reference indicators
+        has_source = bool(
+            re.search(
+                r"(source:|from:|reference:|see:|cited from|according to|\d{4})",
+                content,
+                re.IGNORECASE,
+            )
+        )
+
+        # Check atomicity - penalize notes with too many h2 sections on different topics
+        h2_sections = re.findall(r"^##\s+(.+)$", content, re.MULTILINE)
+        is_atomic = len(h2_sections) <= 4  # More than 4 h2s suggests kitchen-sink
+
+        zettelkasten_score = 0.0
+        if is_atomic:
+            zettelkasten_score += 0.4
+        else:
+            # Strong penalty for kitchen-sink notes
+            content_score = max(0, content_score - 0.3)
+            structural_score = max(
+                0, structural_score - 0.2
+            )  # Sections don't count if not atomic
+
+        content_score = min(content_score, 1.0)
+
+        if has_links:
+            zettelkasten_score += 0.2
+            if link_count >= 2:
+                zettelkasten_score += 0.1
+            if link_count >= 4:
+                zettelkasten_score += 0.1
+        if has_source:
+            zettelkasten_score += 0.2
+
+        # Build suggestions and missing elements
         suggestions = []
         missing_elements = []
 
-        if word_count > 50:
-            score += 0.2
-        else:
-            suggestions.append("Expand the content with more detail")
-            missing_elements.append(
-                {"type": "content", "description": "Content appears too brief"}
-            )
-
-        if has_heading:
-            score += 0.2
-        else:
+        if not has_heading:
             suggestions.append("Add a clear main heading")
             missing_elements.append(
                 {"type": "structure", "description": "Missing main heading"}
             )
 
-        if has_sections:
-            score += 0.2
-        else:
+        if not has_sections and word_count > 100:
             suggestions.append("Break content into logical sections")
             missing_elements.append(
                 {"type": "structure", "description": "Content lacks clear sections"}
             )
 
-        if has_lists:
-            score += 0.2
-        else:
-            suggestions.append("Consider using bullet points for clarity")
+        if word_count < 50:
+            suggestions.append("Expand the content with more detail")
+            missing_elements.append(
+                {"type": "content", "description": "Content appears too brief"}
+            )
 
-        if has_links:
-            score += 0.2
-        else:
+        if has_placeholders:
+            suggestions.append(
+                "Fill in template placeholders (TODO, 'Where did this come from?')"
+            )
+            missing_elements.append(
+                {
+                    "type": "placeholder",
+                    "description": "Contains unfilled template placeholders",
+                }
+            )
+
+        if not has_links:
             suggestions.append("Add internal links to related notes")
             missing_elements.append(
                 {"type": "links", "description": "No internal links found"}
             )
 
+        if not has_source:
+            suggestions.append("Add source attribution or context")
+            missing_elements.append(
+                {"type": "source", "description": "Missing source or reference"}
+            )
+
+        if not is_atomic:
+            suggestions.append("Consider breaking into separate atomic notes")
+            missing_elements.append(
+                {
+                    "type": "atomicity",
+                    "description": "Note covers multiple distinct topics",
+                }
+            )
+
+        # Calculate weighted final score
+        final_score = (
+            structural_score * 0.3 + content_score * 0.4 + zettelkasten_score * 0.3
+        )
+
         return {
-            "quality_score": min(score, 1.0),
+            "quality_score": min(final_score, 1.0),
             "suggestions": suggestions,
             "missing_elements": missing_elements,
+            "grammar_issues": [],  # Placeholder - would need NLP library for real detection
+            "has_placeholders": has_placeholders,
+            "zettelkasten_compliance": {
+                "atomic": is_atomic,
+                "connected": has_links,
+                "sourced": has_source,
+            },
+            "score_breakdown": {
+                "structural": {
+                    "score": structural_score,
+                    "weight": 0.3,
+                    "details": f"Heading: {has_heading}, Sections: {has_sections}, Lists: {has_lists}",
+                },
+                "content_quality": {
+                    "score": content_score,
+                    "weight": 0.4,
+                    "details": f"Words: {word_count}, Placeholders: {has_placeholders}",
+                },
+                "zettelkasten": {
+                    "score": zettelkasten_score,
+                    "weight": 0.3,
+                    "details": f"Atomic: {is_atomic}, Links: {link_count}, Sourced: {has_source}",
+                },
+            },
         }
 
     def _basic_structure_suggestion(self, content: str) -> Dict[str, Any]:
