@@ -2,6 +2,7 @@
 Pytest configuration for test suite with auto-marker tagging
 """
 
+import socket
 import sys
 from pathlib import Path
 import pytest
@@ -74,3 +75,25 @@ def pytest_collection_modifyitems(config, items):
         else:
             # Tests in root tests/ directory or demos/ get fast marker
             item.add_marker(pytest.mark.fast)
+
+        # Auto-apply tiered timeouts based on directory
+        # Unit tests use the default 10s from pytest.ini
+        # Integration tests get 60s, smoke tests get 300s
+        if "integration" in path_str or "integration" in relative_path.parts:
+            if not any(m.name == "timeout" for m in item.iter_markers()):
+                item.add_marker(pytest.mark.timeout(60))
+        elif "smoke" in path_str or "smoke" in relative_path.parts:
+            if not any(m.name == "timeout" for m in item.iter_markers()):
+                item.add_marker(pytest.mark.timeout(300))
+
+
+@pytest.fixture
+def ollama_available():
+    """Skip test if Ollama is not reachable on localhost:11434 (2s timeout)."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)
+    try:
+        sock.connect(("localhost", 11434))
+        sock.close()
+    except (ConnectionRefusedError, OSError, socket.timeout):
+        pytest.skip("Ollama not available on localhost:11434")

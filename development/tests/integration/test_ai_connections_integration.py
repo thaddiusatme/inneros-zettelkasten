@@ -19,6 +19,7 @@ from ai.ollama_client import OllamaClient
 
 @pytest.mark.integration
 @pytest.mark.slow_integration  # AI API calls
+@pytest.mark.network  # Requires Ollama on localhost:11434
 class TestAIConnectionsIntegration:
     """Integration tests for AIConnections with real API."""
 
