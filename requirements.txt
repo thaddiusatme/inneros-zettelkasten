@@ -33,7 +33,7 @@ watchdog==3.0.0  # Required by file_watcher.py for filesystem monitoring
 rich==13.7.0
 
 # System monitoring
-psutil==5.9.8
+psutil==7.1.2
 
 # RAG & Embeddings
 sentence-transformers==3.0.0
