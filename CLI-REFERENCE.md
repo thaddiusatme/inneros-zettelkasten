@@ -1,7 +1,7 @@
 # InnerOS Zettelkasten - CLI Command Reference
  
  > **Complete reference for dedicated CLI tools, automation helper, and the unified `inneros` wrapper**  
- > **Updated**: 2025-12-26 (inneros workflow now routes to dedicated CLIs)
+ > **Updated**: 2026-02-16 (removed workflow_demo.py references; all examples use dedicated CLIs per ADR-004)
  
  ## 🚀 **Overview**
  
@@ -58,12 +58,12 @@
 
 # Available commands  
 inneros analytics    # Analyze knowledge collection
-inneros workflow     # Manage knowledge workflows (⚠️ see migration guide)
+inneros workflow     # Legacy wrapper (⚠️ deprecated — use dedicated CLIs)
 inneros enhance      # AI-enhance specific notes
 inneros notes        # Create review notes from templates
 ```
 
-> **Migration Note**: The monolithic `workflow_demo.py` is deprecated. See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for transition to dedicated CLIs.
+> **Migration Note**: The monolithic workflow CLI is deprecated. All examples below use **dedicated CLIs** per ADR-004. See [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md) for the full transition guide.
 
 ---
 
@@ -509,10 +509,9 @@ inneros analytics --format json
 
 ## 🔄 **Workflow Command** ✅ **UPDATED**
 
-> **✅ UPDATE (December 2025)**: The `inneros workflow` wrapper now correctly routes to dedicated ADR-004 CLIs.  
-> The underlying `workflow_demo.py` is deprecated, but **the wrapper commands still work** and are now backed by the proper dedicated CLIs.  
-> **Recommended**: Use dedicated CLIs directly for automation and scripts.  
-> **Supported**: `inneros workflow` commands for interactive use.
+> **⚠️ DEPRECATED**: The `inneros workflow` wrapper is deprecated. Use the **dedicated CLIs** listed above.  
+> The wrapper still routes to dedicated CLIs under the hood, but **all new scripts and documentation should reference dedicated CLIs directly**.  
+> The routing table below is provided as a migration reference only.
 
 ### **Routing Reference**
 
@@ -626,10 +625,10 @@ inneros enhance knowledge/Literature/book-notes.md --structure
 ### **Daily Knowledge Work**
 ```bash
 # Morning routine: check system health
-inneros workflow --status
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py status
 
 # Process any new inbox items
-inneros workflow --process-inbox
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py process-inbox
 
 # Enhance a specific note you're working on
 inneros enhance knowledge/Inbox/todays-idea.md --full
@@ -638,10 +637,14 @@ inneros enhance knowledge/Inbox/todays-idea.md --full
 ### **Weekly Review**
 ```bash
 # Generate comprehensive weekly metrics
-inneros workflow --enhanced-metrics
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge enhanced-metrics
 
-# Create weekly review checklist
-inneros workflow --weekly-review --export-checklist this-week.md
+# Create weekly review checklist (quick preview mode)
+make review
+# Or: PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview
+
+# Export checklist to file
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge weekly-review --preview --export this-week.md
 
 # Create a weekly review note file (template + frontmatter)
 inneros notes new --weekly --open
@@ -664,7 +667,7 @@ inneros analytics --export weekly-analytics.json
 inneros analytics --interactive
 
 # Find orphaned and stale notes
-inneros workflow --enhanced-metrics
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault knowledge enhanced-metrics
 
 # Quality assessment across collection
 inneros analytics --section quality
@@ -674,7 +677,7 @@ inneros analytics --section quality
 ```bash
 # JSON outputs for scripting
 inneros analytics --format json > analytics.json
-inneros workflow --report --format json > workflow.json
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py report --format json > workflow.json
 
 # Batch processing
 find knowledge/Inbox -name "*.md" -exec inneros enhance {} \;
@@ -724,7 +727,7 @@ The CLI expects this directory structure:
 ```bash
 # Work with different knowledge directories
 inneros analytics ~/Documents/MyNotes
-inneros workflow ~/Research/Papers --status
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py --vault ~/Research/Papers status
 inneros enhance ~/Projects/idea.md
 ```
 
@@ -736,10 +739,10 @@ inneros enhance ~/Projects/idea.md
 echo "🌅 Daily Knowledge System Check"
 
 # Health check
-inneros workflow --status
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py status
 
 # Process new items
-inneros workflow --process-inbox --dry-run
+PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py process-inbox --dry-run
 
 # Quick analytics
 inneros analytics --section overview
@@ -751,7 +754,7 @@ inneros analytics --section overview
 inneros analytics --format json | jq '.quality_metrics'
 
 # Use with git hooks
-git add -A && inneros workflow --status && git commit -m "Knowledge update"
+git add -A && PYTHONPATH=development python3 development/src/cli/core_workflow_cli.py status && git commit -m "Knowledge update"
 
 # Combine with find for bulk operations
 find knowledge/Inbox -name "*.md" -newer yesterday \
@@ -809,7 +812,8 @@ inneros --help
 
 # Command-specific help
 inneros analytics --help
-inneros workflow --help
+# Dedicated CLI help (example)
+PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --help
 inneros enhance --help
 ```
 
