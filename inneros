@@ -124,6 +124,62 @@ def run_workflow(args):
     return cli.status(output_format=output_format)
 
 
+def run_status(args):
+    """Show system and automation status.
+
+    Routes to system_health.check_all() for automation health.
+    """
+    import json as _json
+    from src.automation.system_health import check_all
+
+    result = check_all(repo_root=project_root)
+    output_format = getattr(args, "format", "text")
+    show_automation = getattr(args, "automation", False)
+
+    if output_format == "json":
+        print(_json.dumps(result, indent=2, default=str))
+        return 0 if result.get("overall_status") == "OK" else 1
+
+    # Text output
+    automations = result.get("automations", [])
+    overall = result.get("overall_status", "UNKNOWN")
+    running = sum(1 for a in automations if a.get("running"))
+    total = len(automations)
+
+    print("InnerOS Status")
+    print(f"Daemons: {running}/{total} running")
+    print(f"Overall status: {overall}")
+
+    if show_automation and automations:
+        print(f"\n{'='*60}")
+        print("Automation Details")
+        print(f"{'='*60}")
+        for a in automations:
+            indicator = "\U0001f7e2" if a.get("running") else "\U0001f534"
+            state = "running" if a.get("running") else "stopped"
+            line = f"{indicator} {a['name']}: {state}"
+            last_status = a.get("last_run_status", "unknown")
+            last_ts = a.get("last_run_timestamp")
+            if last_ts:
+                line += f", last run: {last_status} ({last_ts})"
+            elif last_status != "unknown":
+                line += f", last run: {last_status}"
+            err = a.get("error_message")
+            if err:
+                line += f" - {err}"
+            print(line)
+
+        errors = result.get("errors", [])
+        if errors:
+            print(f"\nErrors ({len(errors)}):")
+            for e in errors:
+                print(f"  - {e}")
+    elif not show_automation:
+        print("\nUse --automation for detailed daemon health.")
+
+    return 0 if overall == "OK" else 1
+
+
 def run_enhance(args):
     """Run AI enhancement on a specific file."""
     from src.cli.enhance_demo import main as enhance_main
@@ -171,6 +227,22 @@ Examples:
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Status command
+    status_parser = subparsers.add_parser(
+        "status", help="Show system and automation status"
+    )
+    status_parser.add_argument(
+        "--automation",
+        action="store_true",
+        help="Show detailed automation daemon health",
+    )
+    status_parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
 
     # Analytics command
     analytics_parser = subparsers.add_parser(
@@ -319,7 +391,9 @@ Examples:
         return 1
 
     try:
-        if args.command == "analytics":
+        if args.command == "status":
+            return run_status(args)
+        elif args.command == "analytics":
             return run_analytics(args)
         elif args.command == "workflow":
             return run_workflow(args)
