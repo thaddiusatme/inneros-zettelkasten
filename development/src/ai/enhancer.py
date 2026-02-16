@@ -467,3 +467,148 @@ class AIEnhancer:
             ],
             "reasoning": "Standard zettelkasten note structure for comprehensive coverage",
         }
+
+    def analyze_note_quality_deep(
+        self, content: str, use_llm: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Deep quality analysis with optional LLM-based scoring.
+
+        Args:
+            content: The note content to analyze
+            use_llm: If True, use Ollama LLM for deep analysis; if False, use heuristic
+
+        Returns:
+            Dictionary with quality_score, coherence_score, grammar_issues, and feedback
+        """
+        if not content or not content.strip():
+            return {
+                "quality_score": 0.0,
+                "coherence_score": 0.0,
+                "grammar_issues": [],
+                "zettelkasten_feedback": {},
+                "mode": "heuristic",
+            }
+
+        content_to_analyze = self._strip_yaml_frontmatter(content)
+
+        if not use_llm:
+            # Fast heuristic mode
+            heuristic_result = self._basic_quality_analysis(content_to_analyze)
+            return {
+                "quality_score": heuristic_result["quality_score"],
+                "coherence_score": heuristic_result["quality_score"],  # Approximate
+                "grammar_issues": heuristic_result.get("grammar_issues", []),
+                "zettelkasten_feedback": heuristic_result.get(
+                    "zettelkasten_compliance", {}
+                ),
+                "mode": "heuristic",
+                "suggestions": heuristic_result.get("suggestions", []),
+                "score_breakdown": heuristic_result.get("score_breakdown", {}),
+            }
+
+        # LLM-based deep analysis
+        try:
+            prompt = self._build_deep_analysis_prompt(content_to_analyze)
+            response = self.ollama_client.generate(prompt)
+            result = self._parse_deep_analysis_response(response)
+            result["mode"] = "llm"
+            return result
+        except Exception:
+            # Fallback to heuristic on LLM failure
+            heuristic_result = self._basic_quality_analysis(content_to_analyze)
+            return {
+                "quality_score": heuristic_result["quality_score"],
+                "coherence_score": heuristic_result["quality_score"],
+                "grammar_issues": [],
+                "zettelkasten_feedback": heuristic_result.get(
+                    "zettelkasten_compliance", {}
+                ),
+                "mode": "heuristic_fallback",
+            }
+
+    def _build_deep_analysis_prompt(self, content: str) -> str:
+        """Build the LLM prompt for deep quality analysis with grammar/coherence."""
+        return f"""Analyze this zettelkasten note for quality, grammar, coherence, and Zettelkasten methodology compliance.
+
+Content to analyze:
+{content}
+
+Provide a JSON response with:
+1. "quality_score": Overall quality score from 0-1 (0 = poor, 1 = excellent)
+2. "coherence_score": Semantic coherence and logical flow score from 0-1
+3. "grammar_issues": List of grammar/spelling issues with line numbers
+4. "zettelkasten_feedback": Feedback on atomic note principles, connections, and sources
+
+Evaluation criteria:
+- Grammar and spelling correctness
+- Semantic coherence - does the note flow logically?
+- Zettelkasten atomicity - is it focused on a single concept?
+- Link density - are there connections to related notes?
+- Source attribution - is the origin of ideas credited?
+
+Response format (JSON only):
+{{
+    "quality_score": 0.75,
+    "coherence_score": 0.82,
+    "grammar_issues": [
+        {{"line": 3, "issue": "Description of grammar issue"}}
+    ],
+    "zettelkasten_feedback": {{
+        "atomicity": "Assessment of atomic note principle",
+        "connections": "Assessment of linking to other notes",
+        "sources": "Assessment of source attribution"
+    }}
+}}"""
+
+    def _parse_deep_analysis_response(self, response: str) -> Dict[str, Any]:
+        """Parse LLM response for deep analysis, extracting JSON."""
+        default_result = {
+            "quality_score": 0.5,
+            "coherence_score": 0.5,
+            "grammar_issues": [],
+            "zettelkasten_feedback": {},
+        }
+
+        try:
+            # Try to find JSON in code blocks first
+            code_block_match = re.search(
+                r"```(?:json)?\s*(\{.*?\})\s*```", response, re.DOTALL
+            )
+            if code_block_match:
+                return json.loads(code_block_match.group(1))
+
+            # Try to find bare JSON
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
+            if json_match:
+                try:
+                    return json.loads(json_match.group())
+                except json.JSONDecodeError:
+                    # JSON might be truncated - extract what we can
+                    pass
+
+            # Fallback: extract scores using regex patterns for truncated JSON
+            result = default_result.copy()
+
+            quality_match = re.search(r'"quality_score"\s*:\s*([\d.]+)', response)
+            if quality_match:
+                result["quality_score"] = float(quality_match.group(1))
+
+            coherence_match = re.search(r'"coherence_score"\s*:\s*([\d.]+)', response)
+            if coherence_match:
+                result["coherence_score"] = float(coherence_match.group(1))
+
+            # Extract grammar issues array if present
+            grammar_match = re.search(
+                r'"grammar_issues"\s*:\s*\[(.*?)\]', response, re.DOTALL
+            )
+            if grammar_match:
+                try:
+                    issues_str = "[" + grammar_match.group(1) + "]"
+                    result["grammar_issues"] = json.loads(issues_str)
+                except json.JSONDecodeError:
+                    pass
+
+            return result
+        except (json.JSONDecodeError, ValueError):
+            return default_result
