@@ -28,6 +28,7 @@ DEFAULT_FEATURE_FLAGS: Dict[str, bool] = {
     "api_metrics": True,
     "settings": True,
     "onboarding": True,
+    "automation_health": True,
 }
 
 

@@ -37,6 +37,9 @@ from web_metrics_utils import (
 # Import feature flag utilities
 from feature_flags import require_feature
 
+# Import automation health
+from src.automation.system_health import check_all
+
 app = Flask(__name__)
 app.secret_key = "inneros-zettelkasten-demo-key"  # Change in production
 
@@ -278,6 +281,39 @@ def settings():
 def onboarding():
     """Onboarding flow for new users."""
     return render_template("onboarding.html", title="Welcome to InnerOS Zettelkasten")
+
+
+@app.route("/automation/health")
+@require_feature("automation_health")
+def automation_health():
+    """Automation health dashboard showing daemon status (read-only)."""
+    try:
+        health_data = check_all()
+        return render_template(
+            "automation_health.html",
+            data=health_data,
+            title="Automation Health",
+            current_time=datetime.now().strftime("%Y-%m-%d %H:%M"),
+        )
+    except Exception as e:
+        return render_template(
+            "error.html",
+            error=f"Error loading automation health: {str(e)}",
+            title="Automation Health Error",
+        )
+
+
+@app.route("/api/automation/health")
+@require_feature("automation_health")
+def api_automation_health():
+    """JSON API for automation health status."""
+    try:
+        health_data = check_all()
+        is_healthy = health_data.get("overall_status") == "OK"
+        status_code = 200 if is_healthy else 503
+        return jsonify(health_data), status_code
+    except Exception as e:
+        return jsonify({"error": str(e), "overall_status": "ERROR"}), 503
 
 
 def extract_quality_score_from_note(note_path: Path) -> float | None:
