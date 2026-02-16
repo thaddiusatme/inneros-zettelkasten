@@ -37,5 +37,5 @@ psutil==7.1.2
 
 # RAG & Embeddings
 sentence-transformers==3.0.0
-sqlite-vec==0.1.0  # Python wrapper for sqlite-vec extension
+sqlite-vec==0.1.6  # Python wrapper for sqlite-vec extension
 numpy>=1.26.0
