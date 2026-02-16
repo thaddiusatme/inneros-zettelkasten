@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test unit integ cov run ui up down status review fleeting review-links clean-venv smoke inbox inbox-safe
+.PHONY: setup lint format type test test-fast test-unit unit unit-all integ cov run ui up down status review fleeting review-links clean-venv smoke inbox inbox-safe
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -89,6 +89,12 @@ clean-venv:
 	@echo "🧹 Removing virtual environment..."
 	rm -rf $(VENV)
 	@echo "✅ Virtual environment removed. Run 'make setup' to recreate."
+
+test-fast: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest -n auto -q --timeout=300 --tb=short --strict-markers -o addopts= -m "ci and not wip and not slow" development/tests/unit
+
+test-unit: $(VENV)/bin/activate
+	PYTHONPATH=development $(PYTHON) -m pytest -n auto -q --timeout=300 -o addopts= -m "not wip and not slow" development/tests/unit
 
 unit: $(VENV)/bin/activate
 	PYTHONPATH=development $(PYTHON) -m pytest -q --timeout=300 --tb=short --strict-markers -o addopts= -m "ci and not wip and not slow" development/tests/unit
