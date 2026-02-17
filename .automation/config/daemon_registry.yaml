@@ -28,5 +28,5 @@ daemons:
   - name: automation_daemon
     script_path: src.automation.daemon
     log_path: .automation/logs/daemon.log
-    pid_file: ~/.inneros/daemon.pid
+    pid_file: development/.automation/daemon.pid
     description: Main InnerOS automation daemon (handles screenshots, smart links, YouTube, reviews)
