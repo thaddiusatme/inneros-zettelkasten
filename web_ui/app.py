@@ -306,14 +306,85 @@ def automation_health():
 @app.route("/api/automation/health")
 @require_feature("automation_health")
 def api_automation_health():
-    """JSON API for automation health status."""
+    """JSON API for automation health status with impact context."""
     try:
         health_data = check_all()
         is_healthy = health_data.get("overall_status") == "OK"
         status_code = 200 if is_healthy else 503
+
+        # Enrich with impact context
+        health_data["context"] = _build_health_context(health_data)
+        health_data["checked_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         return jsonify(health_data), status_code
     except Exception as e:
         return jsonify({"error": str(e), "overall_status": "ERROR"}), 503
+
+
+def _build_health_context(health_data):
+    """Build impact context: inbox count, time since last run, suggestions."""
+    from datetime import datetime as dt
+
+    context = {"inbox_count": 0, "fleeting_count": 0, "suggestions": []}
+
+    # Count inbox and fleeting notes
+    vault_root = Path(os.path.expanduser("~/repos/inneros-zettelkasten"))
+    inbox_dir = vault_root / "Inbox"
+    fleeting_dir = vault_root / "Fleeting Notes"
+    if inbox_dir.exists():
+        context["inbox_count"] = len(
+            [f for f in inbox_dir.iterdir() if f.suffix == ".md"]
+        )
+    if fleeting_dir.exists():
+        context["fleeting_count"] = len(
+            [f for f in fleeting_dir.iterdir() if f.suffix == ".md"]
+        )
+
+    # Time since last automation run
+    for a in health_data.get("automations", []):
+        ts = a.get("last_run_timestamp")
+        if ts:
+            try:
+                last_dt = dt.strptime(ts, "%Y-%m-%d %H:%M:%S")
+                delta = dt.now() - last_dt
+                hours = delta.total_seconds() / 3600
+                if hours < 1:
+                    a["time_since"] = f"{int(delta.total_seconds() / 60)}m ago"
+                elif hours < 24:
+                    a["time_since"] = f"{hours:.1f}h ago"
+                else:
+                    a["time_since"] = f"{hours / 24:.1f}d ago"
+            except (ValueError, TypeError):
+                a["time_since"] = "unknown"
+
+        # Actionable suggestions
+        if not a.get("running"):
+            context["suggestions"].append(
+                {
+                    "daemon": a["name"],
+                    "action": "Start the daemon",
+                    "command": "cd ~/repos/inneros-zettelkasten && make up",
+                }
+            )
+        if a.get("error_message"):
+            context["suggestions"].append(
+                {
+                    "daemon": a["name"],
+                    "action": "Check recent logs",
+                    "command": "tail -50 .automation/logs/automation_daemon.log",
+                }
+            )
+
+    if context["inbox_count"] > 5:
+        context["suggestions"].append(
+            {
+                "daemon": "system",
+                "action": f"{context['inbox_count']} notes waiting in Inbox",
+                "command": "./inneros workflow --process-inbox",
+            }
+        )
+
+    return context
 
 
 def extract_quality_score_from_note(note_path: Path) -> float | None:

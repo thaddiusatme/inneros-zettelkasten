@@ -44,28 +44,22 @@ class TestAutomationHealthEndpoint:
             response = web_client.get("/automation/health")
             assert response.status_code == 200
 
-    def test_endpoint_renders_html(self, web_client):
-        """/automation/health should return HTML with daemon info."""
+    def test_endpoint_renders_dashboard_skeleton(self, web_client):
+        """/automation/health should return the live dashboard HTML skeleton."""
         with patch("web_ui.app.check_all") as mock_check:
             mock_check.return_value = {
                 "overall_status": "OK",
                 "overall_healthy": True,
-                "automations": [
-                    {
-                        "name": "inneros_daemon",
-                        "running": True,
-                        "last_run_status": "success",
-                        "last_run_timestamp": "2026-02-16 14:00",
-                        "error_message": None,
-                    },
-                ],
-                "checks": {"inneros_daemon": True},
+                "automations": [],
+                "checks": {},
                 "errors": [],
             }
             response = web_client.get("/automation/health")
             html = response.data.decode()
-            assert "inneros_daemon" in html
-            assert "Automation" in html or "automation" in html
+            assert "Automation Health" in html
+            assert "health-dashboard" in html
+            assert "/api/automation/health" in html
+            assert "POLL_INTERVAL" in html
 
     def test_endpoint_shows_errors(self, web_client):
         """/automation/health should display errors when daemons unhealthy."""
