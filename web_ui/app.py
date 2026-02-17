@@ -327,35 +327,61 @@ def _build_health_context(health_data):
 
     context = {"inbox_count": 0, "fleeting_count": 0, "suggestions": []}
 
-    # Count inbox and fleeting notes
+    # Count inbox and fleeting notes (knowledge/ is the vault root)
     vault_root = Path(os.path.expanduser("~/repos/inneros-zettelkasten"))
-    inbox_dir = vault_root / "Inbox"
-    fleeting_dir = vault_root / "Fleeting Notes"
-    if inbox_dir.exists():
-        context["inbox_count"] = len(
-            [f for f in inbox_dir.iterdir() if f.suffix == ".md"]
-        )
-    if fleeting_dir.exists():
-        context["fleeting_count"] = len(
-            [f for f in fleeting_dir.iterdir() if f.suffix == ".md"]
-        )
+    inbox_candidates = [vault_root / "knowledge" / "Inbox", vault_root / "Inbox"]
+    fleeting_candidates = [
+        vault_root / "knowledge" / "Fleeting Notes",
+        vault_root / "Fleeting Notes",
+    ]
+    for inbox_dir in inbox_candidates:
+        if inbox_dir.exists():
+            context["inbox_count"] = len(
+                [f for f in inbox_dir.iterdir() if f.suffix == ".md"]
+            )
+            break
+    for fleeting_dir in fleeting_candidates:
+        if fleeting_dir.exists():
+            context["fleeting_count"] = len(
+                [f for f in fleeting_dir.iterdir() if f.suffix == ".md"]
+            )
+            break
 
-    # Time since last automation run
+    # Find most recent daemon activity: check health monitor logs + handler logs
+    logs_dir = vault_root / ".automation" / "logs"
+    latest_activity_dt = None
+    if logs_dir.exists():
+        log_files = sorted(logs_dir.glob("health_monitor_*.log"), reverse=True)
+        if log_files:
+            # Use the most recent health monitor file's mtime as daemon heartbeat
+            latest_mtime = log_files[0].stat().st_mtime
+            latest_activity_dt = dt.fromtimestamp(latest_mtime)
+
+    # Time since last automation run (per-daemon)
     for a in health_data.get("automations", []):
+        # Use the more recent of: handler last_run_timestamp or daemon heartbeat
         ts = a.get("last_run_timestamp")
+        best_dt = None
         if ts:
             try:
-                last_dt = dt.strptime(ts, "%Y-%m-%d %H:%M:%S")
-                delta = dt.now() - last_dt
-                hours = delta.total_seconds() / 3600
-                if hours < 1:
-                    a["time_since"] = f"{int(delta.total_seconds() / 60)}m ago"
-                elif hours < 24:
-                    a["time_since"] = f"{hours:.1f}h ago"
-                else:
-                    a["time_since"] = f"{hours / 24:.1f}d ago"
+                best_dt = dt.strptime(ts, "%Y-%m-%d %H:%M:%S")
             except (ValueError, TypeError):
-                a["time_since"] = "unknown"
+                pass
+
+        if latest_activity_dt and (best_dt is None or latest_activity_dt > best_dt):
+            best_dt = latest_activity_dt
+
+        if best_dt:
+            delta = dt.now() - best_dt
+            hours = delta.total_seconds() / 3600
+            if hours < 1:
+                a["time_since"] = f"{int(delta.total_seconds() / 60)}m ago"
+            elif hours < 24:
+                a["time_since"] = f"{hours:.1f}h ago"
+            else:
+                a["time_since"] = f"{hours / 24:.1f}d ago"
+        else:
+            a["time_since"] = "unknown"
 
         # Actionable suggestions
         if not a.get("running"):
