@@ -168,6 +168,7 @@ def weekly_review():
             item = {
                 "filename": note_path.name,
                 "title": note_path.stem,
+                "source": source,
                 "reason": f"From {source}",
                 "quality_score": score,
                 "confidence": 0.7 if score is not None else None,
@@ -219,6 +220,50 @@ def weekly_review():
         return render_template(
             "error.html", error=error_message, title="Weekly Review Error"
         )
+
+
+@app.route("/api/note-content")
+@require_feature("weekly_review")
+def note_content():
+    """API endpoint to fetch note content for preview."""
+    filename = request.args.get("filename")
+    source = request.args.get("source", "Inbox")
+    vault_path = request.args.get("path", DEFAULT_VAULT_PATH)
+
+    if not filename:
+        return jsonify({"error": "filename parameter is required"}), 400
+
+    # Path traversal guard
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return jsonify({"error": "Invalid filename"}), 400
+
+    note_path = Path(vault_path) / source / filename
+    resolved = note_path.resolve()
+    vault_resolved = Path(vault_path).resolve()
+
+    if not str(resolved).startswith(str(vault_resolved)):
+        return jsonify({"error": "Invalid path"}), 400
+
+    if not resolved.exists():
+        return jsonify({"error": "Note not found"}), 404
+
+    try:
+        content = resolved.read_text(encoding="utf-8")
+        frontmatter, body = parse_note_content(content)
+        title = (
+            frontmatter.get("title", resolved.stem) if frontmatter else resolved.stem
+        )
+
+        return jsonify(
+            {
+                "title": title,
+                "frontmatter": frontmatter or {},
+                "body": body,
+                "path": str(resolved),
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": f"Error reading note: {str(e)}"}), 500
 
 
 @app.route("/api/process-note", methods=["POST"])
@@ -411,6 +456,35 @@ def _build_health_context(health_data):
         )
 
     return context
+
+
+def parse_note_content(content: str) -> tuple:
+    """Parse markdown note into frontmatter dict and body string.
+
+    Args:
+        content: Raw markdown file content
+
+    Returns:
+        Tuple of (frontmatter_dict or None, body_string)
+    """
+    if not content.startswith("---"):
+        return None, content
+
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return None, content
+
+    frontmatter_text = parts[1].strip()
+    if not frontmatter_text:
+        return None, parts[2].strip()
+
+    try:
+        frontmatter = yaml.safe_load(frontmatter_text)
+        if not isinstance(frontmatter, dict):
+            return None, parts[2].strip()
+        return frontmatter, parts[2].strip()
+    except Exception:
+        return None, parts[2].strip()
 
 
 def extract_quality_score_from_note(note_path: Path) -> float | None:

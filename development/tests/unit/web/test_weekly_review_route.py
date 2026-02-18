@@ -241,5 +241,29 @@ class TestWeeklyReviewRegressionPrevention:
         assert "is undefined" not in html
 
 
+class TestNotePreviewIntegration:
+    """Tests for note preview UI integration in weekly review."""
+
+    def test_review_items_have_source_field(self, client):
+        """Review items should include data-source attribute for API calls."""
+        response = client.get("/weekly-review")
+        html = response.data.decode()
+
+        if response.status_code == 200 and "review-item" in html:
+            assert (
+                "data-source=" in html
+            ), "Review items should have data-source attribute"
+
+    def test_note_titles_are_clickable(self, client):
+        """Note titles should be rendered as clickable elements."""
+        response = client.get("/weekly-review")
+        html = response.data.decode()
+
+        if response.status_code == 200 and "review-item" in html:
+            assert (
+                "previewNote(" in html
+            ), "Note titles should have previewNote() click handler"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+<!-- Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
     .review-item {
         border-left: 4px solid #e2e8f0;
@@ -39,6 +41,33 @@
         height: 100%;
         background: linear-gradient(90deg, var(--danger-color) 0%, var(--warning-color) 50%, var(--success-color) 100%);
         transition: width 0.3s ease;
+    }
+
+    .note-preview-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .note-preview-body h1, .note-preview-body h2, .note-preview-body h3 {
+        margin-top: 1rem;
+    }
+
+    .note-preview-body pre {
+        background: #f1f5f9;
+        padding: 0.75rem;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+
+    .note-preview-meta .badge {
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .review-item a.fw-bold:hover {
+        text-decoration: underline !important;
+        color: var(--primary-color);
     }
 </style>
 {% endblock %}
@@ -145,7 +174,7 @@
                     </div>
                     <div class="card-body p-0">
                         {% for item in data.recommendations.promote %}
-                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="promote">
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-source="{{ item.source }}" data-action="promote">
                             <div class="row align-items-center">
                                 <div class="col-md-1">
                                     <div class="form-check">
@@ -155,7 +184,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <a href="#" class="fw-bold text-decoration-none" onclick="previewNote('{{ item.filename }}', '{{ item.source }}'); return false;">{{ item.filename }}</a>
                                     <div class="small text-muted">{{ item.rationale }}</div>
                                     {% if item.tags %}
                                         <div class="mt-1">
@@ -199,7 +228,7 @@
                     </div>
                     <div class="card-body p-0">
                         {% for item in data.recommendations.keep %}
-                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="keep">
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-source="{{ item.source }}" data-action="keep">
                             <div class="row align-items-center">
                                 <div class="col-md-1">
                                     <div class="form-check">
@@ -209,7 +238,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <a href="#" class="fw-bold text-decoration-none" onclick="previewNote('{{ item.filename }}', '{{ item.source }}'); return false;">{{ item.filename }}</a>
                                     <div class="small text-muted">{{ item.rationale }}</div>
                                     {% if item.tags %}
                                         <div class="mt-1">
@@ -253,7 +282,7 @@
                     </div>
                     <div class="card-body p-0">
                         {% for item in data.recommendations.improve %}
-                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-action="improve">
+                        <div class="review-item border-bottom p-3" data-filename="{{ item.filename }}" data-source="{{ item.source }}" data-action="improve">
                             <div class="row align-items-center">
                                 <div class="col-md-1">
                                     <div class="form-check">
@@ -263,7 +292,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="fw-bold">{{ item.filename }}</div>
+                                    <a href="#" class="fw-bold text-decoration-none" onclick="previewNote('{{ item.filename }}', '{{ item.source }}'); return false;">{{ item.filename }}</a>
                                     <div class="small text-muted">{{ item.rationale }}</div>
                                     {% if item.suggestions %}
                                         <div class="small text-info mt-1">💡 {{ item.suggestions[:100] }}...</div>
@@ -332,6 +361,35 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Note Preview Modal -->
+<div class="modal fade" id="notePreviewModal" tabindex="-1" aria-labelledby="notePreviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notePreviewLabel">Note Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="notePreviewLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading note content...</p>
+                </div>
+                <div id="notePreviewContent" style="display: none;">
+                    <div id="notePreviewMeta" class="note-preview-meta mb-3 p-2 bg-light rounded"></div>
+                    <hr>
+                    <div id="notePreviewBody" class="note-preview-body"></div>
+                </div>
+                <div id="notePreviewError" style="display: none;" class="alert alert-danger"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <small id="notePreviewPath" class="text-muted" style="word-break: break-all;"></small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -433,6 +491,76 @@ function updateProgress() {
     if (completed === total && total > 0) {
         showToast('🎉 All notes reviewed!', 'success');
     }
+}
+
+function previewNote(filename, source) {
+    const modal = new bootstrap.Modal(document.getElementById('notePreviewModal'));
+    const loading = document.getElementById('notePreviewLoading');
+    const content = document.getElementById('notePreviewContent');
+    const error = document.getElementById('notePreviewError');
+    const title = document.getElementById('notePreviewLabel');
+    const meta = document.getElementById('notePreviewMeta');
+    const body = document.getElementById('notePreviewBody');
+    const pathEl = document.getElementById('notePreviewPath');
+
+    // Reset state
+    loading.style.display = 'block';
+    content.style.display = 'none';
+    error.style.display = 'none';
+    title.textContent = filename;
+    pathEl.textContent = '';
+
+    modal.show();
+
+    const vaultPath = '{{ data.vault_path }}';
+    const url = `/api/note-content?filename=${encodeURIComponent(filename)}&source=${encodeURIComponent(source)}&path=${encodeURIComponent(vaultPath)}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { throw new Error(data.error || 'Failed to load note'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            loading.style.display = 'none';
+            content.style.display = 'block';
+
+            title.textContent = data.title || filename;
+            pathEl.textContent = data.path || '';
+
+            // Render frontmatter metadata
+            let metaHtml = '';
+            const fm = data.frontmatter || {};
+            if (fm.quality_score !== undefined) {
+                const pct = Math.round(fm.quality_score * 100);
+                metaHtml += `<span class="badge bg-info">Quality: ${pct}%</span> `;
+            }
+            if (fm.type) {
+                metaHtml += `<span class="badge bg-secondary">${fm.type}</span> `;
+            }
+            if (fm.tags && Array.isArray(fm.tags)) {
+                fm.tags.forEach(tag => {
+                    metaHtml += `<span class="badge bg-outline-secondary border">${tag}</span> `;
+                });
+            }
+            if (fm.created) {
+                metaHtml += `<br><small class="text-muted">Created: ${fm.created}</small>`;
+            }
+            meta.innerHTML = metaHtml || '<span class="text-muted">No metadata</span>';
+
+            // Render markdown body
+            if (typeof marked !== 'undefined' && marked.parse) {
+                body.innerHTML = marked.parse(data.body || '');
+            } else {
+                body.innerHTML = '<pre>' + (data.body || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+            }
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            error.style.display = 'block';
+            error.textContent = err.message || 'Failed to load note content';
+        });
 }
 
 function showToast(message, type) {
