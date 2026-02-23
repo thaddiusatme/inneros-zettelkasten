@@ -25,7 +25,7 @@ flask==3.1.2
 
 # Utilities
 python-dateutil==2.9.0
-requests==2.31.0  # Required by ollama_client.py for AI API calls
+requests==2.32.5  # Required by ollama_client.py for AI API calls
 apscheduler==3.10.4  # Required by automation daemon for scheduled tasks
 watchdog==3.0.0  # Required by file_watcher.py for filesystem monitoring
 
