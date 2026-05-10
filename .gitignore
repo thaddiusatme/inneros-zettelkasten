@@ -125,6 +125,8 @@ tag-cleanup-backup-*/
 # Exception: Keep Templater scripts for automation
 !knowledge/scripts/
 knowledge/
+# Exception: assistant operating guide travels with the repo
+!knowledge/CLAUDE.md
 
 # Test artifacts and output
 development/demos/**/test_output/
