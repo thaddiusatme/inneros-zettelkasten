@@ -1,248 +1,118 @@
-# 🚀 START HERE - InnerOS Daily Use
+# START HERE — InnerOS Zettelkasten
 
-**Updated**: 2025-12-01  
-**Status**: Automation running via cron since Nov 1, 2025
-
----
-
-## ✅ The Good News
-
-**Your system WORKS.** You have:
-- ✅ **253 notes** in a working knowledge system
-- ✅ **AI engine functional** (WorkflowManager loaded successfully)  
-- ✅ **13 CLI tools** operational
-- ✅ **Subdirectory scanning** works (finds all 82 inbox notes including YouTube/)
-- ✅ **Auto-promotion** ready (13-14 notes can be promoted right now)
-
-**The problem isn't the code. The problem is visibility and simplicity.**
+**Status**: Simplified to maintained Zettelkasten (May 2026)
+**Recovery anchor**: git tag `pre-simplification-v1.0` on `main` holds the previous full-featured system
 
 ---
 
-## 🎯 Daily Commands (memorize these 5)
+## What this project is
+
+A personal Zettelkasten in `knowledge/` (Obsidian vault), with a small Python toolkit in `development/` for AI-assisted inbox triage and weekly review.
+
+**It is not**: a RAG system, an agent runtime, a YouTube transcript pipeline, a screenshot processor, a multi-user platform, or a web dashboard. All of that lives in `legacy/` and is preserved but not maintained.
+
+---
+
+## Daily loop
+
+1. **Read** — Open `knowledge/` in Obsidian. Browse, link, think.
+2. **Capture** — Drop new notes in `knowledge/Inbox/` with frontmatter `type: fleeting`, `status: inbox`.
+3. **Review weekly** — Run `python3 development/src/cli/workflow_demo.py knowledge --weekly-review` to get promotion candidates.
+4. **Promote** — Move ready notes to `Permanent Notes/` (the directory organizer can help if `type:` and folder are mismatched).
+5. **Maintain** — Use the maintenance CLIs (below) sparingly.
+
+---
+
+## Maintenance toolkit (the surviving CLIs)
+
+All paths run from repo root with `PYTHONPATH=development`:
 
 ```bash
-make status    # Check system health
-make review    # See notes needing attention (55 pending)
-make fleeting  # Check fleeting notes health (80 notes, 68% critical)
-make up        # Start automation daemon
-make down      # Stop automation daemon
+# Vault overview / analytics
+python3 development/src/cli/analytics_demo.py knowledge --interactive
+
+# Generate weekly review (promotion candidates)
+python3 development/src/cli/workflow_demo.py knowledge --weekly-review
+
+# Process inbox with AI (auto-tag, quality, link suggestions)
+python3 development/src/cli/workflow_demo.py knowledge --process-inbox
+
+# Find semantic connections between notes
+python3 development/src/cli/connections_demo.py knowledge
+
+# Summarize a long note
+python3 development/src/cli/summarizer_demo.py knowledge
+
+# Fix type/folder mismatches (the "stranded promoted notes" bug)
+# See development/src/utils/directory_organizer.py
 ```
 
-Run `make status` first - shows you everything at a glance.
+The repo also has a `Makefile` with `make review`, etc. — but verify each target works against current code (some still reference legacy/ paths and will be slimmed in the Phase 6 final sweep).
 
 ---
 
-## 📥 How to Send Notes to Your System (3 Methods)
+## Vault structure
 
-### **Method 1: Drop File in Inbox/** (Simplest)
+See `knowledge/CLAUDE.md` for the full assistant-facing guide. Quick version:
 
-```bash
-# Create a note
-cat > knowledge/Inbox/my-idea-$(date +%Y%m%d-%H%M).md << 'EOF'
+| Folder | What lives there |
+|---|---|
+| `Inbox/` | Staging only. Should stay small (< 30). |
+| `Fleeting Notes/` | Quick captures, in-progress thoughts. |
+| `Literature Notes/` | Notes ON a source (book, article, video). |
+| `Permanent Notes/` | Atomic, evergreen, your own words. |
+| `Content Pipeline/` | Drafts and campaign content. |
+| `Reviews/` | Daily / weekly / sprint reviews. Includes `Reviews/Daily-Screenshots/`. |
+| `Projects/` | Active work and the sprint board. |
+| `Archive/` | Retired content. |
+| `Media/` | Images, transcripts. |
+| `Templates/` | Obsidian Templater templates. |
+
+The invariant: a note's `type:` frontmatter field must match its folder. Anything else is drift.
+
 ---
-type: fleeting
-created: $(date '+%Y-%m-%d %H:%M')
-status: inbox
-tags: [idea]
----
 
-# My New Idea
+## Repo structure
 
-This is my thought...
-EOF
-
-# Then process it
-cd development
-python3 src/cli/core_workflow_cli.py ../knowledge process-inbox
 ```
-
----
-
-### **Method 2: Use Obsidian** (If you prefer GUI)
-
-1. Open Obsidian with this vault
-2. Create new note in Inbox/
-3. Add frontmatter (or use Templater)
-4. Run `status.sh` to see it
-5. Process with CLI
-
----
-
-### **Method 3: YouTube Video** (Automated)
-
-```bash
-cd development
-python3 src/cli/youtube_cli.py batch-process --preview
-```
-
-This shows what YouTube notes you have ready to process.
-
----
-
-## 🔍 Get Visibility (See What's Working)
-
-### **1. Quick Status** (30 sec)
-
-```bash
-./status.sh
-```
-
-Shows: Note counts, what's ready, quick actions
-
----
-
-### **2. See What Can Be Promoted** (1 min)
-
-```bash
-cd development
-python3 validate_auto_promotion.py
-```
-
-Shows: Which notes are ready to move from Inbox → Permanent/Literature/Fleeting
-
----
-
-### **3. Analytics Overview** (2 min)
-
-```bash
-cd development
-python3 ../src/cli/analytics_demo.py ../knowledge --section overview
-```
-
-Shows: Quality scores, tag distribution, patterns
-
----
-
-## 💡 The Real Problem (And Solution)
-
-### **What's Wrong:**
-
-❌ **Too complex**: 13 CLIs, 796-line docs, confusing paths  
-❌ **No visibility**: Can't see what's working  
-❌ **Unclear workflow**: Don't know order of operations  
-❌ **Documentation overload**: Multiple guides, conflicting info
-
-### **The Fix (Simple):**
-
-1. **Use `status.sh`** - See everything at a glance
-2. **Use 3 core commands**:
-   - Process inbox: `cd development && python3 src/cli/core_workflow_cli.py ../knowledge process-inbox`
-   - Check promotions: `cd development && python3 validate_auto_promotion.py`  
-   - Get analytics: `cd development && python3 ../src/cli/analytics_demo.py ../knowledge --section overview`
-3. **Ignore the rest** for now
-
----
-
-## 🎯 Your Daily Workflow (5 Minutes)
-
-```bash
-# 1. Check status
-./status.sh
-
-# 2. Process new notes
-cd development
-python3 src/cli/core_workflow_cli.py ../knowledge process-inbox --dry-run
-# If looks good:
-python3 src/cli/core_workflow_cli.py ../knowledge process-inbox
-
-# 3. Check what can be promoted
-python3 validate_auto_promotion.py
-# To promote:
-python3 validate_auto_promotion.py --execute
-
-# Done!
+inneros-zettelkasten/
+├── knowledge/             # the vault (gitignored except CLAUDE.md)
+├── development/           # surviving Python toolkit
+│   ├── src/ai/            # tagger, summarizer, connections, enhancer, workflow_manager
+│   ├── src/cli/           # 33 CLIs (only ~5 are used regularly; rest to be slimmed)
+│   └── src/utils/         # directory_organizer, frontmatter helpers
+├── legacy/                # frozen, deprecated subsystems (see legacy/README.md)
+├── Projects/
+│   ├── ACTIVE/            # current sprint only
+│   ├── REFERENCE/         # this file and a few essentials
+│   └── Archive/           # everything else
+└── README.md              # repo intro
 ```
 
 ---
 
-## 📊 What Each Tool Actually Does
+## Active work
 
-| **Command** | **What It Does** | **Use When** |
-|-------------|------------------|--------------|
-| `status.sh` | Shows system overview | Every time you start |
-| `process-inbox` | AI analyzes notes, adds tags | After adding new notes |
-| `validate_auto_promotion.py` | Shows notes ready to promote | Weekly |
-| `analytics_demo.py` | Shows quality scores, patterns | Monthly check-in |
-| `weekly_review_cli.py` | Lists orphaned/stale notes | Weekly |
+See `Projects/ACTIVE/SIMPLIFICATION-PLAN.md` for the in-flight refactor and `Projects/ACTIVE/SIMPLIFICATION-PHASE-LOG.md` for what's been done.
+
+When the refactor merges, this file becomes the steady-state guide. Any new "what's next" doc should be named `PROJECT-STATUS-<MONTH>.md` and live in `ACTIVE/`. There should never be more than one.
 
 ---
 
-## 🆘 Troubleshooting
+## Open questions / known issues
 
-### **"Nothing happens when I run commands"**
-- Make sure you're in right directory
-- Check `./status.sh` shows "✓ AI engine functional"
-- Try adding `--dry-run` flag to preview
-
-### **"I don't see my notes"**
-- Check they're in `knowledge/Inbox/` (or subdirectories)
-- Verify frontmatter has `status: inbox`
-- Run `./status.sh` to see counts
-
-### **"Too many errors"**
-- Start with `--dry-run` to preview
-- Check one note at a time first
-- Look for malformed YAML frontmatter
+- **Fleeting triage CLI** (`--fleeting-triage`) uses a word-count heuristic that is unreliable for atomic notes. Filed as **#110**.
+- **Dead CLI flags** still in `workflow_demo.py` (`--screenshots`, `--evening-screenshots`, `--process-youtube-*`, `--*-safe`, `--*-session`) will fail at runtime — to be removed in Phase 6.
+- **Pre-commit pytest** breaks on `legacy/` tests — full test sweep deferred to Phase 6.
 
 ---
 
-## 🎁 What I Created For You Today
+## Recovery
 
-1. **`USABILITY-DASHBOARD.md`** - Complete guide to using your system
-2. **`status.sh`** - One-command system overview
-3. **`START-HERE.md`** (this file) - Quick start guide
-4. **Auto-promotion proof** - Showed the subdirectory scanning works (82 notes found!)
+If you need anything from the pre-simplification era:
 
----
+```bash
+git checkout pre-simplification-v1.0  # full system snapshot
+```
 
-## 💭 Next Steps (If You Want to Simplify More)
-
-### **Would Help A LOT:**
-
-1. **Create unified `inneros` command**
-   ```bash
-   inneros status        # Instead of ./status.sh
-   inneros process       # Instead of long path to CLI
-   inneros promote       # Instead of validate_auto_promotion.py
-   inneros analyze       # Instead of analytics_demo.py
-   ```
-
-2. **Build HTML dashboard** - Visual web interface showing everything
-
-3. **Merge the 13 CLIs** into 3-5 core commands
-
-4. **Add progress indicators** - Show what's happening in real-time
-
-5. **Create auto-reports** - Daily/weekly HTML reports generated automatically
-
-### **For Now:**
-
-**Just use these 3 things:**
-1. `./status.sh`
-2. `validate_auto_promotion.py`  
-3. `USABILITY-DASHBOARD.md` for reference
-
----
-
-## 🎯 Bottom Line
-
-You built a powerful system. It works. You just couldn't see it or use it easily.
-
-**Now you can:**
-- ✅ See your system status: `./status.sh`
-- ✅ Send notes: Drop in Inbox/, then process
-- ✅ Get visibility: 3 simple commands show everything
-- ✅ Build confidence: The code works, you have 253 notes!
-
-**The auto-promotion feature you just merged?**  
-It finds **82 notes in Inbox/ (including 63 YouTube notes in subdirectories)**  
-**vs the old code that only found 16 root notes.**  
-That's a **+66 note increase** - the enhancement WORKS!
-
----
-
-**Start here**: `./status.sh`  
-**Read this**: `USABILITY-DASHBOARD.md`  
-**Daily use**: Process inbox → Check promotions → Done!
-
-You got this! 🚀
+Or browse `legacy/` for code that's still in this branch but inert.

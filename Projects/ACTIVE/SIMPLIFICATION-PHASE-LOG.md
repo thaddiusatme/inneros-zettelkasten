@@ -130,6 +130,48 @@ Pre-commit pytest was skipped (`--no-verify`) on phase3 commits because legacy/ 
 
 ---
 
-## Phase 4 — Slim the docs ⏳ pending
+## Phase 4 — Slim the docs ✅ 2026-05-10
+
+### Counts
+
+| | Before | After | Target |
+|---|---|---|---|
+| `Projects/ACTIVE/` | 38 | 3 | ≤5 ✅ |
+| `Projects/REFERENCE/` | 30 | 8 | – |
+| `.windsurf/rules/` | 10 | 4 | – |
+| repo root `*.md` | 17 (incl. 2 broken symlinks) | 5 | – |
+| Files archived to `Projects/Archive/2026-05-superseded/` | 0 | 113 | – |
+
+### Operations
+
+1. ✅ Rewrote `Projects/REFERENCE/START-HERE.md` as the new single source of truth (118 lines, reflects simplified state).
+2. ✅ Archived 35 stale items from `Projects/ACTIVE/` → `Projects/Archive/2026-05-superseded/active-cruft/` (kept only: this log, `SIMPLIFICATION-PLAN.md`, `GAP-ANALYSIS-2026-05-10.md`).
+3. ✅ Archived 24 stale items from `Projects/REFERENCE/` → `Projects/Archive/2026-05-superseded/reference-stale/` (kept: `START-HERE.md`, `DAILY-WORKFLOW.md`, `GETTING-STARTED.md`, `QUICK-REFERENCE.md`, `CONNECTION-DISCOVERY-DFD.md`, `windsurf-project-changelog.md`, `developer-quickstart.md`, `README.md`).
+4. ✅ Archived 6 rules from `.windsurf/rules/` → `Projects/Archive/2026-05-superseded/windsurf-rules-archived/` (kept: `README.md`, `content-standards.md`, `privacy-security.md`, `updated-file-organization.md`).
+5. ✅ Archived 13 root session artifacts + duplicates → `Projects/Archive/2026-05-superseded/root-session-artifacts/` (CONSOLIDATION-COMPLETE, MIGRATION-GUIDE, SESSION-RECAP-*, git-branch-cleanup-*, etc.).
+6. ✅ Deleted 2 broken symlinks at root (`QUICK-START-PROMOTION.md`, `USABILITY-DASHBOARD.md` — pointed at REFERENCE files we just archived).
+
+### Surviving doc layout (steady state)
+
+```
+inneros-zettelkasten/
+├── README.md, INSTALLATION.md, CONTRIBUTING.md, CLAUDE.md, CLI-REFERENCE.md
+├── Projects/
+│   ├── ACTIVE/ (3 files: SIMPLIFICATION-PLAN, SIMPLIFICATION-PHASE-LOG, GAP-ANALYSIS)
+│   ├── REFERENCE/ (8 files: START-HERE + essentials)
+│   └── Archive/2026-05-superseded/ (113 archived items)
+├── knowledge/CLAUDE.md (assistant vault guide)
+└── .windsurf/rules/ (4 files: README + content-standards + privacy + file-organization)
+```
+
+### Deferred to Phase 6
+
+- Rewrite `README.md` (still references pre-refactor paths)
+- Rewrite `CLI-REFERENCE.md` (lists commands that now fail)
+- Decide if root duplicates (`CLAUDE.md` business-context vs `knowledge/CLAUDE.md` vault-context) should reconcile
+
+---
+
+## Phase 5 — Vault P2 + Content Pipeline cleanup ⏳ pending
 
 (See `SIMPLIFICATION-PLAN.md §8`)
