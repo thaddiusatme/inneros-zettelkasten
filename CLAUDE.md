@@ -1,0 +1,106 @@
+# CLAUDE.md — InnerOS Zettelkasten
+
+This is Thaddius's personal Zettelkasten knowledge base, managed in Obsidian. The active working directory is `knowledge/`. All note paths below are relative to `knowledge/`.
+
+## Who This Is For
+
+Thaddius is building **AHS (AI Humble Servant)**, an AI automation business targeting small businesses with a $10K/month MRR goal. The knowledge base supports his:
+- Business strategy and client acquisition (Upwork, freelancing)
+- AI automation project development
+- Content creation pipeline (Threads, Instagram)
+- Personal knowledge management
+
+## Directory Structure
+
+```
+knowledge/
+├── Permanent Notes/        # Evergreen, atomic notes — the core knowledge base
+├── Fleeting Notes/         # Quick captures, rough ideas, temporary
+├── Content Pipeline/
+│   ├── Idea Backlog/       # Raw content ideas (timestamped slugs)
+│   ├── Pre-Production/     # Content being developed
+│   └── mustaphas-harissa-campaign/  # Client campaign — Moroccan food brand
+├── Projects/               # Active project documents
+├── Reviews/                # Weekly and daily review notes
+├── Archive/                # Deprecated notes, old projects, templates
+│   ├── Projects-Archive/
+│   └── Templates/
+├── People/                 # Notes about people
+└── [MOC files]             # Maps of Content at the root level
+```
+
+## MOC Navigation (Maps of Content)
+
+Top-level MOCs link the knowledge graph together:
+- `AHS MOC.md` — AI Humble Servant business hub (revenue, tools, scaling)
+- `Projects MOC.md` — Active and archived projects
+- `Career & Entrepreneurship MOC.md` — Freelancing, Upwork, financial planning
+- `Concepts MOC.md` — Stub; not yet populated
+- `Books MOC.md` — Stub; not yet populated
+- `Permanent Notes/Zettelkasten MOC.md` — Knowledge system documentation
+
+## Active Projects & Key Themes
+
+- **AHS Business**: AI automation services for SMBs. Revenue model: $100–1000/month per client via recurring automation (missed-call systems, content pipelines, CRM tagging).
+- **Pharmacy Scraper**: `Permanent Notes/Project - Pharmacy Scraper MOC.md` — Technical scraper using Perplexity AI.
+- **Freelancing / Upwork**: Client acquisition strategy documented in `Career & Entrepreneurship MOC.md`.
+- **Voice-to-Task Pipeline**: Whisper + Make.com + Notion for client async communication (`Async Task Clarity Through AI Voice Parsing.md`).
+- **TDD / Vibe Coding**: Development workflow principles scattered across several permanent notes.
+
+## Note Frontmatter Convention
+
+```yaml
+---
+type: permanent | fleeting | MOC | weekly | daily
+created: YYYY-MM-DD
+modified: YYYY-MM-DD
+status: inbox | draft | published | promoted | archived
+visibility: private | public
+tags: [tag1, tag2]
+---
+```
+
+## Note Lifecycle
+
+`Fleeting Notes/` (raw capture) → processed via triage prompt in `Fleeting Note Triage Workflow for Evergreen Note Promotion.md` → `Permanent Notes/` (evergreen) → `Archive/` (deprecated)
+
+Triage criteria: strategic fit, uniqueness, concrete next actions, reusable reference value. Three of four = promote to permanent.
+
+## Known Issues in the Knowledge Base
+
+- Several notes in `Permanent Notes/` still have `status: inbox` — they haven't been fully processed.
+- Some notes in `Permanent Notes/` are empty or near-empty (e.g., `TDD Ritual for AI Tools.md`).
+- Some files in `Content Pipeline/Idea Backlog/` have double extensions (`.md.md`) — likely a capture automation bug.
+- `Concepts MOC.md` and `Books MOC.md` are auto-generated stubs with no real content.
+- `Questions about.md` at the root is unclear/junk.
+- `Permanent Notes/qr link.md` appears to be a junk note.
+- Internal `[[wiki-links]]` reference notes that don't always exist in the `knowledge/` directory (some were moved or renamed).
+
+## Content Pipeline File Naming
+
+Idea Backlog uses: `YYYYMMDD-HHMM-slug.md`
+Pre-Production uses: descriptive kebab-case filenames
+
+## Common Tasks Claude May Be Asked to Help With
+
+- Triaging fleeting notes into permanent notes (use the triage prompt in `Fleeting Note Triage Workflow...`)
+- Drafting or expanding permanent notes
+- Updating or creating MOC links
+- Reviewing and improving content pipeline notes
+- Identifying orphaned notes or broken wiki-links
+- Processing weekly reviews
+- Building content for the Mustapha's Harissa campaign or AHS business
+
+## Key Reference Notes
+
+- `Permanent Notes/inbox-processing-guidelines.md` — inbox triage process
+- `Permanent Notes/Fleeting Note Triage Workflow for Evergreen Note Promotion.md` — triage prompt and criteria
+- `Permanent Notes/bridge-ai-automation-patterns-for-small-business-revenue.md` — core business strategy synthesis
+- `Permanent Notes/bridge-content-to-revenue-pipeline-strategy.md` — content-to-revenue strategy
+
+## Automation Scripts (Repo-Level)
+
+Located in `../.automation/` and `../development/` (outside `knowledge/`):
+- `validate_notes.py` — validates note frontmatter
+- `migrate_templates.py` — template migration
+- Backups stored in `.automation/backups/`

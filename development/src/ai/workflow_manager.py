@@ -36,7 +36,8 @@ from .workflow_integration_utils import (
 )
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.io import safe_write
-from .workflow_metrics_coordinator import WorkflowMetricsCoordinator
+# Metrics coordinator moved to legacy/daemons/ in Phase 3 simplification refactor.
+# Removed because metrics persistence belongs to daemon ops, not Zettelkasten maintenance.
 
 
 class WorkflowManager:
@@ -130,7 +131,7 @@ class WorkflowManager:
 
         # ADR-002 Phase 13: Metrics coordination extraction
         # Phase 3.1: Real-time metrics collection via coordinator
-        self.metrics_coordinator = WorkflowMetricsCoordinator()
+        # metrics_coordinator removed (moved to legacy/daemons/)
 
         # ADR-002 Phase 7: Safe image processing coordinator extraction
         self.safe_image_processing_coordinator = SafeImageProcessingCoordinator(
@@ -241,10 +242,8 @@ class WorkflowManager:
             corpus_dir=self.permanent_dir,
         )
 
-        # ADR-002 Phase 13: Record metrics via coordinator
-        # Phase 3.1: Real-time metrics collection
-        elapsed_ms = (time.time() - start_time) * 1000
-        self.metrics_coordinator.record_note_processing(elapsed_ms, success=True)
+        # Metrics recording removed (moved to legacy/daemons/ in Phase 3 simplification refactor)
+        _ = (time.time() - start_time) * 1000  # elapsed_ms, intentionally unused
 
         # P0-1.3: Update status to 'promoted' after successful AI processing
         # Only update status when:
