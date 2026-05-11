@@ -52,6 +52,35 @@ Per-phase outcomes for the simplification refactor (see `SIMPLIFICATION-PLAN.md`
 
 ---
 
-## Phase 2 — Vault P1 cleanup ⏳ pending
+## Phase 2 — Vault P1 cleanup ✅ 2026-05-10
+
+**Closes**: issue #107
+
+### Vault metrics
+
+| | Before | After | Delta |
+|---|---|---|---|
+| `Fleeting Notes/` | 190 | 150 | -40 (daily-screenshots out) |
+| `Reviews/Daily-Screenshots/` | 0 | 40 | +40 (new home) |
+| Stray vault dirs (`Test-Inbox`, `temp_workflow_diagrams`, `Users`, `scripts`, `perplexity_outputs_real`) | 5 | 0 | -5 |
+| `legacy/youtube-templater-scripts/` | – | 8 files | +8 (preserved for revival) |
+
+### Operations
+
+1. ✅ Moved 40 `daily-screenshots-*.md` → `Reviews/Daily-Screenshots/`
+2. ✅ Archived `temp_workflow_diagrams/` (workflow-index pointer) → `Archive/phase2-cleanup-2026-05-10/`
+3. ✅ Archived `Test-Inbox/` (2 test fixtures) → `Archive/phase2-cleanup-2026-05-10/`
+4. ✅ Archived `Users/thaddius/` (accidental nested screenshot pipeline artifacts) → `Archive/phase2-cleanup-2026-05-10/Users-accidental/`
+5. ✅ Moved `knowledge/scripts/` (8 YouTube Templater JS files) → `legacy/youtube-templater-scripts/`
+6. ✅ Deleted `perplexity_outputs_real/` (single malformed filename with `[[brackets]]`, no content)
+7. ⏭️ **Skipped**: fleeting-triage CLI run (see issue #110 — word-count heuristic deemed untrustworthy)
+
+### Deviations from plan
+
+- Fleeting-triage step from `SIMPLIFICATION-PLAN.md §8 Phase 2 step 5` was skipped; finding filed as #110 for post-merge review.
+
+---
+
+## Phase 3 — Code repivot: move to `legacy/` ⏳ pending
 
 (See `SIMPLIFICATION-PLAN.md §8`)
