@@ -172,6 +172,31 @@ inneros-zettelkasten/
 
 ---
 
-## Phase 5 — Vault P2 + Content Pipeline cleanup ⏳ pending
+## Phase 5 — Vault P2 + Content Pipeline cleanup ✅ 2026-05-10
+
+**Closes**: issue #108 (Vault P2 cleanup)
+
+### Operations
+
+1. ✅ **Frontmatter normalization**: 47/75 `Permanent Notes/` had `type: permanent` but `status: inbox` — fixed to `status: published`. Backups at `Archive/phase5-frontmatter-backup-20260510-173031/`. 2 files have no frontmatter (deferred, flagged):
+   - `Async Task Clarity Through AI Voice Parsing.md`
+   - `fleeting note whisper ai.md`
+2. ✅ **Home Note.md rewritten**: 98 → 76 lines. Removed stale "Recently Fixed Links" (May 2025), auto-accumulated "Linked Notes" dump, broken stub references. New version: clean nav hub with daily flow, MOC links, folder table, maintenance commands. Old version preserved in backup dir.
+3. ⏭️ **Tag cleanup**: deferred. Sampled 696 tags; obvious problems (workflow-state tags as topics, AI-noise adjectives like `comprehensive`/`detailed`, synonym sprawl). Filed as **#111** for manual + mechanical pass post-merge. Same skepticism as #110.
+4. ✅ **Content Pipeline**: already lean (32 files across `Pre-Prooduction/` and `Idea Backlog/`). No action needed. Minor cosmetic: typo `Pre-Prooduction` → `Pre-Production` deferred.
+
+### Deviations from plan
+
+- Tag cleanup step from `SIMPLIFICATION-PLAN.md §8 Phase 5` deferred to issue #111. Rationale: AI bulk-mutation on 696 tags is the same trust problem as #110; needs a redesign first.
+
+### Deferred to Phase 6 / post-merge
+
+- Manual review of 2 no-frontmatter `Permanent Notes/` files
+- Tag cleanup (#111)
+- Typo rename `Content Pipeline/Pre-Prooduction/`
+
+---
+
+## Phase 6 — README + Makefile slim ⏳ pending
 
 (See `SIMPLIFICATION-PLAN.md §8`)
