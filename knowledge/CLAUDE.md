@@ -27,6 +27,7 @@ Never delete anything silently. Always propose moves/edits as a checklist the us
 | `Templates/` | Templater templates (`Core/`, `Content/`, `Reviews/`, `Utility/`). | n/a | Don't edit unless asked. |
 | `Archive/` | Deprecated/old content kept for reference. | any | Where decluttered items go. |
 | `Media/` | Images, transcripts (`Media/Transcripts/` for YouTube). | n/a | Attachments live here, not in vault root. |
+| `Prompts/` | Reusable operational prompts (triage, writing, research, etc.). Created 2026-05-10. | n/a | ~32 files. Not knowledge notes — treat as a reference library. |
 | `Clippings/`, `People/`, `attachments/` | Self-explanatory. | varies | |
 | **MOC files** at root | Maps of Content (`Home Note.md`, `Projects MOC.md`, `Concepts MOC.md`, `Books MOC.md`, `AHS MOC.md`) | n/a | Navigation hubs. Keep them current. |
 
@@ -119,6 +120,10 @@ A note with `type: permanent` belongs in `Permanent Notes/`. A note with `status
 
 Use this section to drive concrete cleanup conversations. Numbers will drift; re-count when needed.
 
+### Completed ✓
+- **`Fleeting Notes/` triage** — reduced from 151 → 15 files (2026-05-10). 136 files triaged: 16 deleted, 35 archived, 29 moved to `Prompts/`, 25 promoted to `Permanent Notes/`, 9 to `Projects/`, 3 to `Content Pipeline/`. The 15 remaining are legitimate in-progress captures.
+- **`Prompts/` folder created** — 32 reusable operational prompts consolidated here from Fleeting Notes.
+
 ### P0 — Safe, mechanical (no judgement required)
 1. **124 `Inbox/` files with `status: promoted`** — they should move to the folder matching their `type:` field (`permanent`, `literature`, `fleeting`). Suggest running the directory organizer dry-run first.
 2. **15 `.bak*` files in `Permanent Notes/`** and 2 `Home Note.md.bak.*` in root — move to `Archive/` or delete.
@@ -129,15 +134,21 @@ Use this section to drive concrete cleanup conversations. Numbers will drift; re
 7. **Files with `.md.md`** double extension — rename to `.md`.
 
 ### P1 — Light judgement
-8. **38 `daily-screenshots-YYYY-MM-DD.md`** in `Inbox/` — these are auto-generated rollups. Move to `Reviews/` (or a new `Reviews/Daily-Screenshots/` subdir) and stop landing them in Inbox going forward.
+8. **38 `daily-screenshots-YYYY-MM-DD.md`** in `Inbox/` — auto-generated rollups. Move to `Reviews/` (or `Reviews/Daily-Screenshots/`) and stop landing them in Inbox.
 9. **`Test-Inbox/`**, **`temp_workflow_diagrams/`**, **`scripts/`**, **`perplexity_outputs_real/`** — relocate or remove. `scripts/` should not be in the vault.
 10. **`Users/thaddius/`** — appears accidental; inspect and remove.
-11. **107 `Fleeting Notes/`** — large. Run weekly-review triage; archive low-quality, promote high-quality, link the middle.
 
 ### P2 — Real judgement (always ask before acting)
-12. **Frontmatter drift** in `Permanent Notes/` (e.g., `type: permanent` with `status: inbox` and `tags: [fleeting, inbox]`). Normalize on next pass through.
-13. **Tag sprawl** (historic count ~698, ~300 problematic). Defer to the existing tag-cleanup tooling rather than ad-hoc fixes.
-14. **MOC accuracy**: `Home Note.md` still references "broken links output.md" and stub work from 2025-07. Refresh to reflect today's vault.
+11. **Frontmatter drift** in `Permanent Notes/` (e.g., `type: permanent` with `status: inbox` and `tags: [fleeting, inbox]`). Normalize on next pass through. ~100 files now in Permanent Notes — worth a sweep.
+12. **Tag sprawl** (historic count ~698, ~300 problematic). Defer to the existing tag-cleanup tooling rather than ad-hoc fixes.
+13. **MOC accuracy**: `Home Note.md` still references "broken links output.md" and stub work from 2025-07. Refresh to reflect today's vault.
+
+### Triage heuristics learned (do not re-litigate)
+- `quality_score` is AI-generated and **unreliable** — always read actual file content.
+- `promoted_to:` field set → safe to archive immediately.
+- `status: published` + `promoted_date:` set → safe to archive immediately.
+- `[x]` checked on "Convert to permanent note?" → safe to archive immediately.
+- Empty body / "Write the idea that just popped into your head" placeholder → delete, not archive.
 
 ---
 

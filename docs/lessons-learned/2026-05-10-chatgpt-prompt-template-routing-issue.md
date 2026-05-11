@@ -2,11 +2,11 @@
 
 ## What we shipped
 
-We created GitHub issue #112, `[FEATURE] Route ChatGPT prompt template output to Prompts folder`, to track updating `knowledge/Templates/Utility/chatgpt-prompt.md` so Obsidian Templater-generated prompt files move to `knowledge/Prompts` instead of `knowledge/Inbox`. The issue documents the current implementation line `const target = "Inbox/${fname}";`, the desired destination `Prompts/${fname}`, related documentation in `README.md`, and the mirrored fixture at `development/tests/fixtures/templates/Utility/chatgpt-prompt.md`.
+We created GitHub issue #112, `[FEATURE] Route ChatGPT prompt template output to Prompts folder`, to track updating `knowledge/Templates/Utility/chatgpt-prompt.md` so Obsidian Templater-generated prompt files move to `knowledge/Prompts` instead of `knowledge/Inbox`. The implementation now uses `Prompts/${fname}` in both the production template and mirrored fixture at `development/tests/fixtures/templates/Utility/chatgpt-prompt.md`.
 
 ## What went well
 
-- Using `code_search` first quickly found the authoritative template, the mirrored fixture, and the README section documenting the current `Inbox/prompt-YYYYMMDD-HHmm.md` behavior.
+- Using `code_search` first quickly found the authoritative template, the mirrored fixture, and the README section documenting the prompt routing behavior.
 - Creating a GitHub issue before changing the template preserved the requested work as a tracked feature with acceptance criteria instead of making an unplanned code change.
 - The issue body included concrete implementation targets: `knowledge/Templates/Utility/chatgpt-prompt.md`, `README.md`, and `development/tests/fixtures/templates/Utility/chatgpt-prompt.md`.
 
@@ -23,5 +23,4 @@ We created GitHub issue #112, `[FEATURE] Route ChatGPT prompt template output to
 
 ## Technical debt or risks introduced
 
-- GitHub issue #112 is created, but the actual template behavior has not been implemented yet. Proper fix: update `knowledge/Templates/Utility/chatgpt-prompt.md`, `development/tests/fixtures/templates/Utility/chatgpt-prompt.md`, and the README template section, then validate no stale `Inbox/${fname}` or `Inbox/prompt-YYYYMMDD-HHmm.md` references remain.
-- README.md still documents the current `Inbox/prompt-YYYYMMDD-HHmm.md` behavior until issue #112 is implemented. Proper fix: update that line only when the template target actually changes to `Prompts/${fname}`.
+- GitHub issue #112 has been implemented in the production template, mirrored fixture, and README template section. Future template-routing changes should keep the fixture and production template synchronized in the same TDD iteration.

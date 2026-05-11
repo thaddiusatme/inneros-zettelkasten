@@ -225,9 +225,9 @@ visibility: private | shared | team
 - How it works:
   - Uses Obsidian Templater (EJS) tokens like `<% tp.date.now("YYYY-MM-DD HH:mm") %>`
   - Prompts once for a feature/branch name (single prompt)
-  - Renames and moves the file to `Inbox/prompt-YYYYMMDD-HHmm.md`
+  - Renames and moves the file to `Prompts/prompt-YYYYMMDD-HHmm.md`
   - YAML includes `type: fleeting`, `status: inbox` and tags `[prompt, chatgpt, inbox]`
-- Planned improvement: GitHub issue #112 tracks moving generated prompt files to `Prompts/prompt-YYYYMMDD-HHmm.md`.
+- GitHub issue #112 shipped the routing update so generated prompt files now land in `Prompts/`.
 - When to use:
   - Before starting a new coding/chat iteration to set scope and acceptance criteria
 
