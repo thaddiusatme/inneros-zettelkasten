@@ -197,6 +197,55 @@ inneros-zettelkasten/
 
 ---
 
-## Phase 6 — README + Makefile slim ⏳ pending
+## Phase 6 — README + Makefile slim + test sweep ✅ 2026-05-11
+
+Four commits, end-to-end docs + Makefile + workflow_demo prune + test sweep.
+
+### Counts
+
+| | Before | After |
+|---|---|---|
+| `README.md` | 513 lines | **109 lines** |
+| `CLI-REFERENCE.md` | 880 lines | **190 lines** |
+| `Makefile` targets | 23 (incl. `up`, `down`, `status`, `logs`, `review-links`, `ui`) | **18** |
+| `workflow_demo.py` | 2386 lines | **1640 lines** (−727) |
+| `.automation/` | tracked at repo root | moved to `legacy/automation-infra/` |
+| Test collection | 1976 (35 collection errors) | **1469 (0 errors)** |
+| Test pass rate | 866/901 ≈ 96% (5 errors, 90 fails) | **853/854 ≈ 99.9%** (1 pre-existing flaky perf test) |
+
+### Commits
+
+- **`(phase6-1)`** — `test(phase6-1): relocate legacy-targeting tests + scope root pytest`. Moved ~95 test files mirroring legacy/ source layout. Updated root `pytest.ini` with `testpaths = development/tests` + `norecursedirs = legacy`. Collection: 1976 errors→1469 clean.
+- **`(phase6-2)`** — `test(phase6-2): clean test suite after legacy moves`. Moved 7 more legacy-targeting tests + 1 surviving CLI (`smart_link_review_cli.py`, depended on `src.automation`). Surgically removed legacy methods from 4 surviving test files (test_test_infrastructure, test_cli_layer_extraction, test_cli_json_output_contract, test_fast_subset_boundary).
+- **`(phase6-3)`** — `refactor(phase6-3): slim Makefile, strip dead workflow_demo flags, move .automation`. Slimmed Makefile to 18 targets. Stripped 12 argparse flags, 10 handler blocks, 6 helper functions from workflow_demo.py (727 lines). Moved entire `.automation/` directory (74 tracked files) to `legacy/automation-infra/`.
+- **`(phase6-4)`** — `docs(phase6): rewrite README.md and CLI-REFERENCE.md` (this commit).
+
+### Verification
+
+```bash
+# All surviving CLIs --help cleanly
+for cli in workflow_demo analytics_demo connections_demo summarizer_demo enhance_demo \
+           weekly_review_cli fleeting_cli notes_cli backup_cli; do
+  PYTHONPATH=development python3 development/src/cli/${cli}.py --help >/dev/null && echo "OK $cli"
+done
+
+# ai_assistant.py runs as module (relative imports, pre-existing)
+PYTHONPATH=development python3 -m src.cli.ai_assistant status
+
+# Full unit suite
+PYTHONPATH=development .venv/bin/pytest --no-header -m "not wip and not slow" -n auto development/tests/unit
+# → 853 passed, 1 flaky (pre-existing test_ai_tagger perf timing), 4 skipped
+```
+
+### Known carry-overs (not refactor regressions)
+
+- `test_ai_tagger.py::test_ollama_performance_timing` is flaky — passes alone, fails under parallel load. Pre-existed; not introduced by Phase 6.
+- `ai_assistant.py` uses package-relative imports and must be run as a module (`python -m src.cli.ai_assistant`). Pre-existing quirk; documented in `CLI-REFERENCE.md`.
+- 2 `Permanent Notes/` files still lack frontmatter (flagged in Phase 5).
+- `Content Pipeline/Pre-Prooduction/` typo not renamed (deferred).
+
+---
+
+## Phase 7 — Open PR + merge + tag ⏳ pending
 
 (See `SIMPLIFICATION-PLAN.md §8`)
