@@ -12,7 +12,7 @@ template_version: 1.0.0
   ChatGPT Prompt Template — Interactive Setup (fleeting pattern)
   1) Gather context via prompts
   2) Build file name and path
-  3) Rename & move to Inbox/
+  3) Rename & move to Prompts/
 ------------------------------------------------------------------*/
 // One-time execution guard to avoid double-run after rename/move
 if (tp.file.title && tp.file.title.startsWith("prompt-")) {
@@ -38,7 +38,7 @@ const learnings = "";
 /* Filename + path */
 const stamp  = tp.date.now("YYYYMMDD-HHmm");
 const fname  = `prompt-${stamp}.md`;
-const target = `Inbox/${fname}`;
+const target = `Prompts/${fname}`;
 
 /* Rename & move */
 try {

@@ -70,49 +70,11 @@ def test_psutil_dependency_available():
         ) from e
 
 
-def test_evening_screenshot_utils_exports():
-    """
-    SKIPPED: Evening screenshot utilities not yet implemented.
-
-    These are in separate TDD iteration - tests are properly marked as skipped.
-    Validated by checking test file contents for pytest.mark.skip markers.
-    """
-    # Check that test files have skip markers
-    test_file_1 = Path(__file__).parent / "test_evening_screenshot_processor_tdd_1.py"
-    test_file_2 = (
-        Path(__file__).parent / "test_evening_screenshot_processor_green_phase.py"
-    )
-
-    assert test_file_1.exists(), f"Test file not found: {test_file_1}"
-    assert test_file_2.exists(), f"Test file not found: {test_file_2}"
-
-    # Verify files contain skip markers
-    content_1 = test_file_1.read_text()
-    content_2 = test_file_2.read_text()
-
-    assert "pytestmark = pytest.mark.skip" in content_1, "Missing skip marker in tdd_1"
-    assert (
-        "pytestmark = pytest.mark.skip" in content_2
-    ), "Missing skip marker in green_phase"
-
-
-def test_automation_modules_exist():
-    """
-    SKIPPED: Automation repair module not yet implemented.
-
-    This is in separate TDD iteration - tests are properly marked as skipped.
-    Validated by checking test file contents for pytest.mark.skip markers.
-    """
-    # Check that test file has skip marker
-    test_file = Path(__file__).parent / "automation" / "test_repair_orphaned_notes.py"
-
-    assert test_file.exists(), f"Test file not found: {test_file}"
-
-    # Verify file contains skip marker
-    content = test_file.read_text()
-    assert (
-        "pytestmark = pytest.mark.skip" in content
-    ), "Missing skip marker in automation test"
+# Note: prior meta-tests `test_evening_screenshot_utils_exports` and
+# `test_automation_modules_exist` were removed during the Phase 3 simplification
+# refactor (#109). The evening-screenshot and automation/daemon subsystems they
+# guarded have been moved to legacy/ along with their tests. See
+# Projects/ACTIVE/SIMPLIFICATION-PHASE-LOG.md.
 
 
 def test_no_duplicate_test_files():

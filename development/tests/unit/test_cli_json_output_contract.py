@@ -175,76 +175,6 @@ class TestCLIJsonOutputContract:
     # Screenshot CLI Contract Tests
     # =========================================================================
 
-    def test_screenshot_cli_process_dryrun_json_contract(self, tmp_path):
-        """
-        Test that screenshot_cli.py process --dry-run --format json returns valid contract.
-        """
-        from src.cli.screenshot_cli import ScreenshotCLI
-
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
-
-        # Use tmp_path as fake OneDrive (empty is fine for dry-run)
-        cli = ScreenshotCLI(vault_path=str(vault_path), onedrive_path=str(tmp_path))
-
-        with patch("builtins.print") as mock_print:
-            exit_code = cli.process_evening_screenshots(
-                dry_run=True, output_format="json"
-            )
-
-        json_calls = [
-            call
-            for call in mock_print.call_args_list
-            if call[0] and "{" in str(call[0][0])
-        ]
-        assert len(json_calls) >= 1, "Should output JSON"
-
-        output = json.loads(json_calls[0][0][0])
-
-        self._validate_contract(output)
-        assert output["success"] is True
-        assert output["errors"] == []
-        assert exit_code == 0
-
-    def test_screenshot_cli_unavailable_processor_json_contract(self, tmp_path):
-        """
-        Test JSON contract when screenshot processor is unavailable.
-
-        This is NOT a failure - it's a valid state (no screenshots to process).
-        """
-        from src.cli.screenshot_cli import ScreenshotCLI
-
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
-
-        # Non-existent OneDrive path - processor won't initialize
-        cli = ScreenshotCLI(
-            vault_path=str(vault_path), onedrive_path="/nonexistent/onedrive/path"
-        )
-
-        with patch("builtins.print") as mock_print:
-            exit_code = cli.process_evening_screenshots(
-                dry_run=False, output_format="json"
-            )
-
-        json_calls = [
-            call
-            for call in mock_print.call_args_list
-            if call[0] and "{" in str(call[0][0])
-        ]
-        assert len(json_calls) >= 1, "Should output JSON"
-
-        output = json.loads(json_calls[0][0][0])
-
-        # Validate contract - even this edge case must follow it
-        self._validate_contract(output)
-        # Note: success could be True (no work to do) or False (config issue)
-        # The key is the contract is followed
-
-    # =========================================================================
-    # Exit Code Contract Tests
-    # =========================================================================
-
     def test_exit_code_matches_success_field(self, tmp_path):
         """
         Test that exit codes are consistent with success field.
@@ -338,27 +268,6 @@ class TestCLILoggingContext:
         assert (
             "vault" in log_text or str(vault_path).lower() in log_text
         ), "Should log vault path context"
-
-    def test_screenshot_cli_logs_context_on_init(self, tmp_path, caplog):
-        """
-        Test that screenshot CLI logs context information on initialization.
-
-        Should log: CLI name, vault path
-        """
-        import logging
-        from src.cli.screenshot_cli import ScreenshotCLI
-
-        vault_path = tmp_path / "vault"
-        vault_path.mkdir()
-
-        with caplog.at_level(logging.INFO):
-            cli = ScreenshotCLI(vault_path=str(vault_path), onedrive_path=str(tmp_path))
-
-        log_text = caplog.text.lower()
-        assert (
-            "vault" in log_text or str(vault_path).lower() in log_text
-        ), "Should log vault path context"
-
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

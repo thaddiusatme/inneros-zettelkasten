@@ -145,6 +145,18 @@ class TestTemplateFixturesInfrastructure(unittest.TestCase):
                 f"Template should be YAML or Templater format: {template_name}",
             )
 
+    def test_chatgpt_prompt_template_targets_prompts_directory(self):
+        """
+        RED: ChatGPT prompt fixture should route generated prompts to Prompts/
+        """
+        fixtures_dir = Path(__file__).parent.parent / "fixtures"
+        template_path = fixtures_dir / "templates" / "Utility" / "chatgpt-prompt.md"
+
+        content = template_path.read_text(encoding="utf-8")
+
+        self.assertIn("const target = `Prompts/${fname}`;", content)
+        self.assertNotIn("const target = `Inbox/${fname}`;", content)
+
 
 if __name__ == "__main__":
     unittest.main()

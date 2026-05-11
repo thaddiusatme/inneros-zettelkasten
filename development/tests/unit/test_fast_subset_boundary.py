@@ -51,26 +51,3 @@ class TestFastSubsetBoundary:
         for marker in expected_exclusions:
             assert f"not {marker}" in fast_marker_expression
 
-    def test_dashboard_refresh_test_is_marked_network(self):
-        """
-        Given: test_terminal_dashboard.py::test_dashboard_refreshes_every_second
-        When: Collecting test markers
-        Then: It should have @pytest.mark.network (excludes from fast subset)
-
-        This test ensures the problematic dashboard test that polls localhost:8080
-        is properly excluded from the fast pre-commit subset.
-        """
-        # Import the test module to check its markers
-        from tests.unit.cli import test_terminal_dashboard
-
-        # Get the test function
-        test_func = test_terminal_dashboard.test_dashboard_refreshes_every_second
-
-        # Check for network marker
-        markers = getattr(test_func, "pytestmark", [])
-        marker_names = [m.name for m in markers]
-
-        assert "network" in marker_names, (
-            f"test_dashboard_refreshes_every_second must be marked @pytest.mark.network "
-            f"to exclude it from fast pre-commit subset. Found markers: {marker_names}"
-        )
