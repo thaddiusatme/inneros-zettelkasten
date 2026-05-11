@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test test-fast test-unit unit unit-all integ cov run ui up down status review fleeting review-links clean-venv smoke inbox inbox-safe
+.PHONY: setup lint format type test test-fast test-unit unit unit-all integ cov run review fleeting inbox inbox-safe smoke clean-venv
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -9,22 +9,8 @@ SYSTEM_PYTHON ?= python3
 VAULT ?= knowledge
 
 # ============================================
-# USER COMMANDS (what you use daily)
+# USER COMMANDS (daily vault maintenance)
 # ============================================
-
-up:
-	@echo "🚀 Starting InnerOS automation daemon..."
-	PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon start
-
-down:
-	@echo "🛑 Stopping InnerOS automation daemon..."
-	PYTHONPATH=development python3 development/src/cli/inneros_automation_cli.py daemon stop
-
-status:
-	@PYTHONPATH=development python3 development/src/cli/inneros_status_cli.py
-
-logs:
-	@PYTHONPATH=development python3 -m src.cli.daemon_cli logs
 
 review:
 	@echo "📋 Generating weekly review..."
@@ -33,10 +19,6 @@ review:
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
 	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault $(VAULT) fleeting-health
-
-review-links:
-	@echo "🔗 Launching smart link review CLI..."
-	PYTHONPATH=development python3 development/src/cli/smart_link_review_cli.py --vault $(VAULT)
 
 inbox:
 	@echo "📥 Processing unprocessed inbox notes..."
@@ -48,13 +30,11 @@ inbox-safe:
 
 smoke:
 	@echo "🔥 Running usability smoke test..."
-	@echo "--- Step 1/3: Status check ---"
-	@$(MAKE) status
-	@echo "--- Step 2/3: Review (preview) ---"
+	@echo "--- Step 1/2: Weekly review preview ---"
 	@$(MAKE) review
-	@echo "--- Step 3/3: Fleeting health ---"
+	@echo "--- Step 2/2: Fleeting health ---"
 	@$(MAKE) fleeting
-	@echo "✅ Smoke test complete. All core commands working."
+	@echo "✅ Smoke test complete."
 
 # ============================================
 # DEV COMMANDS (for development only)
@@ -112,6 +92,3 @@ test: lint type unit
 
 run:
 	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py weekly-review
-
-ui:
-	python3 web_ui/app.py
