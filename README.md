@@ -227,6 +227,7 @@ visibility: private | shared | team
   - Prompts once for a feature/branch name (single prompt)
   - Renames and moves the file to `Inbox/prompt-YYYYMMDD-HHmm.md`
   - YAML includes `type: fleeting`, `status: inbox` and tags `[prompt, chatgpt, inbox]`
+- Planned improvement: GitHub issue #112 tracks moving generated prompt files to `Prompts/prompt-YYYYMMDD-HHmm.md`.
 - When to use:
   - Before starting a new coding/chat iteration to set scope and acceptance criteria
 
