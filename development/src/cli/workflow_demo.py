@@ -23,14 +23,28 @@ from src.ai.import_manager import (
     JSONImportAdapter,
     NoteWriter,
 )
-from src.cli.screenshot_cli_utils import (
-    ScreenshotCLIOrchestrator,
-    CLIProgressReporter,
-    ConfigurationManager,
-    CLIOutputFormatter,
-    CLIExportManager,
-)
-from src.cli.evening_screenshot_processor import EveningScreenshotProcessor
+# Screenshot/evening-screenshot integration moved to legacy/screenshots/ in Phase 3 simplification refactor.
+# Import wrapped in try/except so workflow_demo.py keeps loading even after move.
+# The --screenshots and --evening-screenshots CLI commands will fail at runtime
+# with a clear deprecation message; full removal deferred to Phase 3 final sweep.
+try:
+    from src.cli.screenshot_cli_utils import (  # type: ignore[import-not-found]
+        ScreenshotCLIOrchestrator,
+        CLIProgressReporter,
+        ConfigurationManager,
+        CLIOutputFormatter,
+        CLIExportManager,
+    )
+    from src.cli.evening_screenshot_processor import EveningScreenshotProcessor  # type: ignore[import-not-found]
+    _SCREENSHOT_AVAILABLE = True
+except ImportError:
+    ScreenshotCLIOrchestrator = None  # type: ignore[assignment,misc]
+    CLIProgressReporter = None  # type: ignore[assignment,misc]
+    ConfigurationManager = None  # type: ignore[assignment,misc]
+    CLIOutputFormatter = None  # type: ignore[assignment,misc]
+    CLIExportManager = None  # type: ignore[assignment,misc]
+    EveningScreenshotProcessor = None  # type: ignore[assignment,misc]
+    _SCREENSHOT_AVAILABLE = False
 
 
 # TDD ITERATION 2 REFACTOR: Evening Screenshot Helper Methods
