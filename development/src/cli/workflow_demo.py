@@ -23,6 +23,7 @@ from src.ai.import_manager import (
     JSONImportAdapter,
     NoteWriter,
 )
+
 # Screenshot/evening-screenshot integration was removed in the Phase 3 simplification refactor (#109).
 # The associated CLI flags (--screenshots, --evening-screenshots) and helpers
 # have been stripped from this file. Source lives at legacy/screenshots/.

@@ -269,5 +269,6 @@ class TestCLILoggingContext:
             "vault" in log_text or str(vault_path).lower() in log_text
         ), "Should log vault path context"
 
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

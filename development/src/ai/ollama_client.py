@@ -22,7 +22,7 @@ class OllamaClient:
 
         self.base_url = config.get("base_url", "http://localhost:11434")
         self.timeout = config.get("timeout", 30)
-        self.model = config.get("model", "llama3:latest")
+        self.model = config.get("model", "gemma4:latest")
 
     def health_check(self) -> bool:
         """
@@ -57,7 +57,7 @@ class OllamaClient:
             return False
 
     def generate_completion(
-        self, prompt: str, system_prompt: str = "", max_tokens: int = 150
+        self, prompt: str, system_prompt: str = "", max_tokens: int = -1
     ) -> str:
         """
         Generate text completion using Ollama API.
@@ -65,7 +65,7 @@ class OllamaClient:
         Args:
             prompt: The user prompt to complete
             system_prompt: Optional system prompt for context
-            max_tokens: Maximum tokens in response
+            max_tokens: Max tokens (-1 = unlimited; needed for thinking models like gemma4)
 
         Returns:
             str: Generated text response
@@ -74,15 +74,16 @@ class OllamaClient:
             Exception: If API call fails
         """
         try:
+            options: dict = {"temperature": 0.3}
+            if max_tokens != -1:
+                options["num_predict"] = max_tokens
+
             payload = {
                 "model": self.model,
                 "prompt": prompt,
                 "system": system_prompt,
                 "stream": False,
-                "options": {
-                    "temperature": 0.3,
-                    "num_predict": max_tokens,  # Ollama uses num_predict, not max_tokens
-                },
+                "options": options,
             }
 
             response = requests.post(
@@ -103,7 +104,7 @@ class OllamaClient:
             raise Exception(f"Unexpected error: {str(e)}")
 
     def generate(
-        self, prompt: str, system_prompt: str = "", max_tokens: int = 150
+        self, prompt: str, system_prompt: str = "", max_tokens: int = -1
     ) -> str:
         """Alias for generate_completion for backward compatibility."""
         return self.generate_completion(prompt, system_prompt, max_tokens)

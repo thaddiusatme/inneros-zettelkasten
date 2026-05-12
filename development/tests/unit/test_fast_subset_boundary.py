@@ -50,4 +50,3 @@ class TestFastSubsetBoundary:
         # Verify the expression parses correctly
         for marker in expected_exclusions:
             assert f"not {marker}" in fast_marker_expression
-

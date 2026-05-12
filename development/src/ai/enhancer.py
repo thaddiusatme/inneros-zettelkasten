@@ -24,7 +24,7 @@ class AIEnhancer:
     """
 
     def __init__(
-        self, model_name: str = "llama3:latest", min_quality_score: float = 0.6
+        self, model_name: str = "gemma4:latest", min_quality_score: float = 0.6
     ):
         """
         Initialize the AI enhancer with Ollama client.

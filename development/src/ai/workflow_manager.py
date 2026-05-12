@@ -36,6 +36,7 @@ from .workflow_integration_utils import (
 )
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.io import safe_write
+
 # Metrics coordinator moved to legacy/daemons/ in Phase 3 simplification refactor.
 # Removed because metrics persistence belongs to daemon ops, not Zettelkasten maintenance.
 

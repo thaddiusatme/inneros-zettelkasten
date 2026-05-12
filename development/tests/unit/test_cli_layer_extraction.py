@@ -232,4 +232,3 @@ class TestCLIJSONOutputContract:
         assert (
             "output_format" in params
         ), "backup method should accept output_format parameter"
-

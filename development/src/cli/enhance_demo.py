@@ -21,7 +21,7 @@ def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(description="AI Content Enhancement Demo")
     parser.add_argument("file", help="Path to markdown file to analyze")
-    parser.add_argument("--model", default="llama3:latest", help="Ollama model to use")
+    parser.add_argument("--model", default="gemma4:latest", help="Ollama model to use")
     parser.add_argument(
         "--min-score", type=float, default=0.6, help="Minimum quality score threshold"
     )
