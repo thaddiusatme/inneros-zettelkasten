@@ -122,11 +122,12 @@ tag-cleanup-backup-*/
 # Exclude entire personal knowledge directory
 # Exception: Keep starter pack for public distribution
 !knowledge-starter-pack/
-# Exception: Keep Templater scripts for automation
-!knowledge/scripts/
-knowledge/
-# Exception: assistant operating guide travels with the repo
+knowledge/*
+# Exceptions within knowledge/
 !knowledge/CLAUDE.md
+!knowledge/scripts/
+!knowledge/Templates/
+!knowledge/Templates/**
 
 # Test artifacts and output
 development/demos/**/test_output/
