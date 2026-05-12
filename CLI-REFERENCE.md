@@ -2,7 +2,7 @@
 
 All commands run from the repo root with `PYTHONPATH=development`. The `Makefile` wraps the most common ones.
 
-> **Scope**: this reference covers only the surviving CLIs after the May 2026 simplification refactor. The full pre-refactor command set (daemons, YouTube, screenshots, dashboards, RAG, agents) lives in `legacy/` and is preserved at git tag `pre-simplification-v1.0`.
+> **Scope**: this reference covers only the surviving CLIs after the May 2026 simplification refactor. The full pre-refactor command set (daemons, YouTube, screenshots, dashboards, RAG, agents) is preserved at git tag `pre-simplification-v1.0`.
 
 ---
 
@@ -55,7 +55,7 @@ PYTHONPATH=development python3 development/src/cli/workflow_demo.py <vault> [fla
 | `--format {text,json}` | Output format for most actions |
 | `--export FILE` | Save report/metrics to file |
 
-**Removed flags** (Phase 6 simplification): `--screenshots`, `--evening-screenshots`, `--process-youtube-*`, `--process-inbox-safe`, `--batch-process-safe`, `--performance-report`, `--integrity-report`, `--start-safe-session`, `--process-in-session`, `--onedrive-path`, `--max-screenshots`. The underlying code is in `legacy/screenshots/` and `legacy/youtube/`.
+**Removed flags** (Phase 6 simplification): `--screenshots`, `--evening-screenshots`, `--process-youtube-*`, `--process-inbox-safe`, `--batch-process-safe`, `--performance-report`, `--integrity-report`, `--start-safe-session`, `--process-in-session`, `--onedrive-path`, `--max-screenshots`. The underlying code is preserved at git tag `pre-simplification-v1.0`.
 
 ---
 
@@ -178,7 +178,7 @@ Exit code matches `success` (`0` on true, `1` on false). Use this for shell-scri
 
 ## What was removed
 
-The following CLIs are in `legacy/` and no longer ship with the active repo. They are preserved at git tag `pre-simplification-v1.0` and in `legacy/*/cli/` directories:
+The following CLIs no longer ship with the active repo. They are preserved at git tag `pre-simplification-v1.0`:
 
 - **Daemons / orchestration**: `inneros_automation_cli.py`, `inneros_up_cli.py`, `inneros_status_cli.py`, `automation_status_cli.py`, `daemon_cli.py`
 - **Dashboards / web UI**: `dashboard_cli.py`, `terminal_dashboard.py`, `workflow_dashboard.py`
@@ -187,4 +187,4 @@ The following CLIs are in `legacy/` and no longer ship with the active repo. The
 - **Smart-link review queue**: `smart_link_review_cli.py` (depended on the deprecated automation daemon)
 - **Quality scoring epic**: `batch_score_ui.py`
 
-If you need any of them, check out the recovery tag or import from `legacy/`.
+If you need any of them, check out the recovery tag: `git checkout pre-simplification-v1.0`.

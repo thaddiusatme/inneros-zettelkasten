@@ -1,3 +1,0 @@
-pyyaml
-pytest
-requests>=2.25.0

@@ -2,7 +2,7 @@
 
 A personal Zettelkasten in `knowledge/` (Obsidian vault), with a small Python toolkit in `development/` for AI-assisted inbox triage and weekly review.
 
-> **Recovery anchor**: git tag `pre-simplification-v1.0` on `main` holds the previous full-featured system (agents, RAG, daemons, YouTube/screenshot pipelines, web UI). Everything moved out lives in `legacy/`.
+> **Recovery anchor**: git tag `pre-simplification-v1.0` on `main` holds the previous full-featured system (agents, RAG, daemons, YouTube/screenshot pipelines, web UI).
 
 ---
 
@@ -15,7 +15,7 @@ A personal Zettelkasten in `knowledge/` (Obsidian vault), with a small Python to
 | Obsidian-friendly Markdown notes with structured frontmatter | A web dashboard / SaaS product |
 | Backed up locally and to git | A RAG system, transcript pipeline, or OCR processor |
 
-If you need the deprecated pieces, see `legacy/README.md` or check out the recovery tag.
+If you need the deprecated pieces, check out the recovery tag: `git checkout pre-simplification-v1.0`.
 
 ---
 
@@ -49,7 +49,6 @@ inneros-zettelkasten/
 │   ├── src/ai/         # tagger, summarizer, connections, enhancer, workflow_manager
 │   ├── src/cli/        # surviving CLIs (workflow_demo, analytics_demo, connections_demo, ...)
 │   └── src/utils/      # directory_organizer, frontmatter helpers
-├── legacy/             # frozen, deprecated subsystems (see legacy/README.md)
 ├── Projects/
 │   ├── ACTIVE/         # current sprint (≤ 5 files)
 │   ├── REFERENCE/      # START-HERE.md + a few essentials
@@ -90,7 +89,7 @@ make test-unit    # full unit suite, ~4 min
 make cov          # with coverage report
 ```
 
-Pre-commit pytest is configured to scope to `development/tests/` only — `legacy/tests/` is excluded.
+Pre-commit pytest is configured to scope to `development/tests/` only.
 
 ---
 
@@ -101,8 +100,6 @@ If you need anything from the pre-simplification era:
 ```bash
 git checkout pre-simplification-v1.0   # full-featured snapshot
 ```
-
-Or browse `legacy/` for code that's still on this branch but inert.
 
 ---
 

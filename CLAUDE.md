@@ -104,3 +104,47 @@ Located in `../.automation/` and `../development/` (outside `knowledge/`):
 - `validate_notes.py` — validates note frontmatter
 - `migrate_templates.py` — template migration
 - Backups stored in `.automation/backups/`
+
+## Development Approach — Test Driven Development (TDD)
+
+All code changes in this repo follow a strict TDD cycle. Claude must adhere to this when writing or modifying any Python in `development/`.
+
+### The Cycle
+
+1. **Red** — Write a failing test that defines the expected behavior. Do not write implementation code yet.
+2. **Green** — Write the minimal implementation to make the test pass. No extras.
+3. **Refactor** — Clean up the implementation without changing behavior. Tests must stay green.
+
+### Rules
+
+- Never write implementation code before a test exists for it.
+- Test files live in `development/tests/` and mirror the source structure (e.g., `src/ai/tagger.py` → `tests/ai/test_tagger.py`).
+- Each test should cover one behavior. Prefer many small tests over one large test.
+- Run `pytest development/tests/` to verify before declaring a task done.
+- If a module has no tests, write tests for the existing behavior before refactoring it (characterization tests).
+- Mocks are acceptable for Ollama calls and file I/O at unit test boundaries. Integration tests use real fixtures.
+
+### When Designing New Modules (e.g., #119 → #120)
+
+- Draft the public interface (function signatures, class constructors) before writing any implementation.
+- Write tests against that interface first.
+- The test file is the spec — the implementation must conform to it.
+
+## Active Refactor — Issue #116 (as of 2026-05-12)
+
+A wide-sweeping architecture simplification is in progress. **Do not suggest edits to `development/src/ai/` or `development/src/cli/` outside of this sequence** — those files are being eliminated.
+
+### Sub-issue Sequence
+
+| Issue | Scope | Status |
+|---|---|---|
+| #117 | Gitignore `.embedding_cache/` | Done — already in .gitignore, never tracked |
+| #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
+| #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
+| #120 | Collapse `development/src/ai/` ~50 files → 8 modules | Open — blocked on #119 |
+| #121 | Reduce CLI from 34 entry points → 5 commands | Open — blocked on #120 |
+| #122 | Split `development/` into its own repo (or enforce isolation) | Open — blocked on #120, #121 |
+
+### Blocked Work
+
+**#114 (wire LLM triage into CLI)** — do NOT start until #121 is closed. It targets `note_processing_coordinator.py` and `workflow_demo.py`, both of which will be eliminated by #120/#121.
