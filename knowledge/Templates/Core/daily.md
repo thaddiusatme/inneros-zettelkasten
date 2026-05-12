@@ -1,50 +1,49 @@
----
-type: daily
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: promoted
-tags: [daily, zettelkasten, scrum]
-visibility: private
-template_id: core-daily
-template_version: 1.0.0
-sprint_id: <% tp.date.now("YYYY-[W]WW") %>
----
 <%*
-const folder = "Reviews";
-try { await app.vault.createFolder(folder); } catch(e) { /* ignore if exists */ }
+const folder   = "Reviews";
+const date     = tp.date.now("YYYY-MM-DD");
+const sprintId = tp.date.now("YYYY-[W]WW");
 
-const date = tp.date.now("YYYY-MM-DD");
+/*--- One creation prompt ---*/
+const topPriority = await tp.system.prompt("What's the #1 thing that has to happen today?");
+if (!topPriority) { return; }
+
+/*--- Rename & move ---*/
 let fileName = `daily-${date}`;
-let target = `${folder}/${fileName}.md`;
-if (await app.vault.adapter.exists(target)) {
+if (await app.vault.adapter.exists(`${folder}/${fileName}.md`)) {
   fileName = `daily-${date}-${tp.date.now("HHmm")}`;
 }
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
-%>
 
-# Daily Note — <% tp.date.now("YYYY-MM-DD") %>
+tR += `---
+type: daily
+created: ${tp.date.now("YYYY-MM-DD HH:mm")}
+status: promoted
+tags: [daily, zettelkasten, scrum]
+visibility: private
+template_id: core-daily
+template_version: 2.0.0
+sprint_id: ${sprintId}
+---
 
-## Focus
-- <1 to 3 bullets for today’s single theme>
+# Daily — ${date}
 
 ## Standup
 - Yesterday: 
-- Today: 
+- Today: ${topPriority}
 - Blockers: 
 
-## Links Added
-- [[note-id-or-title]] short why it matters
-
 ## Wins
-- <fast wins and tiny proofs>
 
-## Next
-- <top 3 actions, smallest viable steps>
+## Links Added
 
 ## Journal
-- <freeform>
 
-## EOD Micro Retro
-- What moved the needle:
-- What felt hard:
-- What to change tomorrow:
+---
+
+## EOD
+- Best thing that happened:
+- What slowed me down:
+- Tomorrow I'll start with:
+`;
+%>

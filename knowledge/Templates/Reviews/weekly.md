@@ -1,56 +1,61 @@
----
-type: weekly
-week_id: <% tp.date.now("YYYY-[W]WW") %>
-period_start: <% tp.date.now("YYYY-MM-DD", -7) %>
-period_end: <% tp.date.now("YYYY-MM-DD") %>
-status: promoted
-tags: [weekly-review, review]
-visibility: private
-template_id: core-weekly-review
-template_version: 1.0.0
----
 <%*
-const folder = "Reviews"; // optional — change or remove if you don’t want a folder
-try { await app.vault.createFolder(folder); } catch(e) { /* ignore if exists */ }
-
+const folder = "Reviews";
 const weekId = tp.date.now("YYYY-[W]WW");
+
+/*--- One creation prompt ---*/
+const headline = await tp.system.prompt("What's the headline for this week? (one sentence)");
+if (!headline) { return; }
+
+/*--- Rename & move ---*/
 let fileName = `weekly-${weekId}`;
-let target = `${folder}/${fileName}.md`;
-if (await app.vault.adapter.exists(target)) {
+if (await app.vault.adapter.exists(`${folder}/${fileName}.md`)) {
   fileName = `weekly-${weekId}-${tp.date.now("HHmm")}`;
 }
 await tp.file.rename(fileName);
 await tp.file.move(`${folder}/${fileName}`);
-%>
 
-# Weekly Review — <% tp.date.now("YYYY-[W]WW") %>
+const start = tp.date.now("YYYY-MM-DD", -7);
+const end   = tp.date.now("YYYY-MM-DD");
+
+tR += `---
+type: weekly
+week_id: ${weekId}
+period_start: ${start}
+period_end: ${end}
+status: promoted
+tags: [weekly-review, review]
+visibility: private
+template_id: core-weekly-review
+template_version: 2.0.0
+---
+
+# Weekly Review — ${weekId}
 
 ## Highlights
-- <3 to 5 outcomes, not activities>
+- ${headline}
+- 
+- 
 
-## Metrics
-- Notes created: <n>
-- Orphans before → after: <n> → <n>
-- Link density avg: <n>
-- Stale notes touched: <n>
-- Focus days this week: <n>
+## Carry Forward
+*What worked that I want to keep doing?*
+
+## Drop or Change
+*What cost me time or energy without return?*
 
 ## Bridges Created
-- [[note-a]] ↔ [[note-b]] why the link matters
-- [[note-c]] ↔ [[note-d]]
+- [[]] ↔ [[]] — why this connection matters
 
-## What Went Well
-- 
-
-## What I Will Improve
-- 
-
-## Next Week Goals
+## Next Week
 - Outcome 1:
 - Outcome 2:
 - Outcome 3:
 
+---
+
 ## Sprint Reflection
-- Did scope match capacity
-- Top blocker pattern
-- Experiment to try next sprint
+- Did I work on what mattered, or just what felt urgent?
+- What kept showing up as a blocker?
+- One experiment for next sprint:
+- Notes promoted this week: 
+`;
+%>
