@@ -32,7 +32,7 @@ const slug = sourceTitle.toLowerCase()
   .replace(/[^a-z0-9]+/g, "-")
   .replace(/(^-|-$)/g, "");
 const stamp = tp.date.now("YYYYMMDD-HHmm");
-const fname = `lit-${stamp}-${slug}.md`;
+const fname = `lit-${stamp}-${slug}`;
 const target = `Inbox/${fname}`;
 
 try {

@@ -1,12 +1,3 @@
----
-type: fleeting
-created: <% tp.date.now("YYYY-MM-DD HH:mm") %>
-status: inbox
-tags: [prompt, chatgpt, inbox]
-visibility: private
-template_id: util-chatgpt-prompt
-template_version: 1.0.0
----
 <%*
 /* ------------------------------------------------------------------
    LLM Prompt Template — Categorized, Slugged, Outcome-Aware
@@ -93,14 +84,18 @@ ${topic}`
 
 // --- Emit ---
 tR += `---
+type: fleeting
 created: ${date}
-category: ${category}
 status: draft
+tags: [prompt, ${category}]
+visibility: private
+template_id: util-chatgpt-prompt
+template_version: 1.0.0
+category: ${category}
 model: 
 project: 
 source: 
 rating: 
-tags: [prompt, ${category}]
 ---
 
 # ${topic}

@@ -25,7 +25,7 @@ const slug   = rawTopic.toLowerCase()
                        .replace(/[^a-z0-9]+/g,"-")
                        .replace(/(^-|-$)/g,"");
 const stamp  = tp.date.now("YYYYMMDD-HHmm");
-const fname  = `${stamp}-${slug}.md`;
+const fname  = `${stamp}-${slug}`;
 const target = `Permanent Notes/${fname}`;
 
 /*------------------------------------------------------------------
