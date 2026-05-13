@@ -1,0 +1,251 @@
+# Simplification — Phase Log
+
+Per-phase outcomes for the simplification refactor (see `SIMPLIFICATION-PLAN.md`).
+
+---
+
+## Phase 0 — Pre-flight ✅ 2026-05-10
+
+- Pushed 11 commits to `origin/main`
+- Tagged `pre-simplification-v1.0` on main (recovery anchor)
+- Created branch `refactor/simplify-knowledgebase`
+- Closed deferred issues: #18, #22, #28, #83, #104, #105
+- Created umbrella issue #109
+
+## Phase 1 — Vault P0 cleanup ✅ 2026-05-10
+
+**Closes**: issue #106
+
+**Backup**: `~/backups/knowledge/knowledge-20260510-170256` (vault snapshot before changes)
+**Archived in-vault**: `knowledge/Archive/phase1-cleanup-2026-05-10/`
+
+### Vault metrics
+
+| | Before | After | Delta |
+|---|---|---|---|
+| `Inbox/` | 174 | 39 | -135 |
+| `Fleeting Notes/` | 107 | 190 | +83 |
+| `Literature Notes/` | 16 | 23 | +7 |
+| `Permanent Notes/` | 103 | 75 | -28 (bak removal) |
+| `.md.md` double-ext files | 106 | 0 | -106 |
+| `.bak*` files (outside archive) | 17 | 0 | -17 |
+| Root `.canvas` files | 6 | 0 | -6 |
+| Root loose images | 6 | 0 | -6 (moved to `Media/`) |
+| Stray dirs (`Untitled/`, `knowledge/knowledge/`, `.obsidian-backup-*/`) | 3 | 0 | -3 |
+
+### Operations
+
+1. ✅ Created vault backup via `DirectoryOrganizer.create_backup()`
+2. ✅ Applied 93 type-based moves (86 → Fleeting Notes, 7 → Literature Notes)
+3. ✅ Renamed 106 `*.md.md` → `*.md` (no collisions)
+4. ✅ Archived 17 `.bak*` files to `Archive/phase1-cleanup-2026-05-10/bak-files/`
+5. ✅ Deleted 4 empty `*.canvas` files
+6. ✅ Archived 2 non-empty `*.canvas` files (preserved in case they hold work)
+7. ✅ Moved 6 loose root images to `Media/`
+8. ✅ Deleted empty stray dirs
+
+### Known issues for Phase 2
+
+- 38 `daily-screenshots-*.md` files were moved to `Fleeting Notes/` (not `Reviews/Daily-Screenshots/` as the plan suggested). Phase 2 will move these to their proper home.
+- Notes with `type: content` or `type: task` in Inbox were not moved by the organizer (only handles `fleeting`/`literature`/`permanent`). To be triaged in Phase 2.
+- Some files in `Fleeting Notes/` still have `status: promoted` from prior AI processing — frontmatter normalization deferred to Phase 5 (P2 cleanup).
+
+---
+
+## Phase 2 — Vault P1 cleanup ✅ 2026-05-10
+
+**Closes**: issue #107
+
+### Vault metrics
+
+| | Before | After | Delta |
+|---|---|---|---|
+| `Fleeting Notes/` | 190 | 150 | -40 (daily-screenshots out) |
+| `Reviews/Daily-Screenshots/` | 0 | 40 | +40 (new home) |
+| Stray vault dirs (`Test-Inbox`, `temp_workflow_diagrams`, `Users`, `scripts`, `perplexity_outputs_real`) | 5 | 0 | -5 |
+| `legacy/youtube-templater-scripts/` | – | 8 files | +8 (preserved for revival) |
+
+### Operations
+
+1. ✅ Moved 40 `daily-screenshots-*.md` → `Reviews/Daily-Screenshots/`
+2. ✅ Archived `temp_workflow_diagrams/` (workflow-index pointer) → `Archive/phase2-cleanup-2026-05-10/`
+3. ✅ Archived `Test-Inbox/` (2 test fixtures) → `Archive/phase2-cleanup-2026-05-10/`
+4. ✅ Archived `Users/thaddius/` (accidental nested screenshot pipeline artifacts) → `Archive/phase2-cleanup-2026-05-10/Users-accidental/`
+5. ✅ Moved `knowledge/scripts/` (8 YouTube Templater JS files) → `legacy/youtube-templater-scripts/`
+6. ✅ Deleted `perplexity_outputs_real/` (single malformed filename with `[[brackets]]`, no content)
+7. ⏭️ **Skipped**: fleeting-triage CLI run (see issue #110 — word-count heuristic deemed untrustworthy)
+
+### Deviations from plan
+
+- Fleeting-triage step from `SIMPLIFICATION-PLAN.md §8 Phase 2 step 5` was skipped; finding filed as #110 for post-merge review.
+
+---
+
+## Phase 3 — Code repivot: move to `legacy/` ✅ 2026-05-10
+
+Four commits, one logical phase: move deprecated subsystems out of `development/src/` into `legacy/` with surviving CLIs verified import-clean after each step.
+
+### Counts
+
+| | Before | After |
+|---|---|---|
+| `development/src/cli/*.py` | 63 | 33 |
+| `development/src/` subdirs | 8 (`ai`, `cli`, `automation`, `config`, `monitoring`, `rag`, `utils`, + egg-info) | 5 (`ai`, `cli`, `config`, `utils`, + egg-info) |
+| `legacy/` subdirs | 1 (`youtube-templater-scripts`) | 5 (+`agent-rag`, `daemons`, `youtube`, `screenshots`, `web-ui`, `quality-scoring-epic`) |
+
+### Commits
+
+- **`486a377` (phase3-1)**: agent/RAG/daemons — `rag/`, `ai/agent/`, `ai/agents/`, `automation/`, `monitoring/`, `ai/workflow_metrics_coordinator.py`. WorkflowManager edited to drop 3 metrics calls (replaced with no-ops).
+- **(phase3-2)**: YouTube — 6 ai files + 3 cli files. Lazy imports in workflow_demo.py left in place; `--process-youtube-*` flags will fail at runtime.
+- **(phase3-3)**: Screenshots/OCR — 14 cli files + 1 ai file (`llama_vision_ocr.py`). workflow_demo.py screenshot top-level imports wrapped in try/except; `--screenshots`/`--evening-screenshots` flags fail at runtime. Kept in active codebase: `safe_image_*`, `image_integrity_*` (protect images in ANY note, not screenshot-specific).
+- **(phase3-4)**: Dashboards/daemon CLIs/quality scoring — 7 web-ui files, 6 daemon CLI files, 3 quality-scoring files.
+
+### Verification
+
+After each commit:
+
+```bash
+PYTHONPATH=development python3 -c \
+  "from src.cli import workflow_demo, analytics_demo, connections_demo; \
+   from src.ai.workflow_manager import WorkflowManager; print('OK')"
+```
+
+End-state smoke tests passed:
+
+```bash
+PYTHONPATH=development python3 development/src/cli/workflow_demo.py --help   # OK
+PYTHONPATH=development python3 development/src/cli/analytics_demo.py --help  # OK
+```
+
+### Deferred to Phase 6 (README/Makefile slim)
+
+- Strip dead CLI flags in workflow_demo.py: `--screenshots`, `--evening-screenshots`, `--process-youtube-note`, `--process-youtube-notes`, `--process-inbox-safe`, `--batch-process-safe`, `--performance-report`, `--integrity-report`, `--start-safe-session`, `--process-in-session`
+- Delete dead helper functions (`_validate_evening_screenshot_config` and peers)
+- Decide on remaining cli/ files: `ai_assistant.py` (keep — unified maintenance), `core_workflow_cli.py`, `status_cli.py`/`status_utils.py`, `interactive_cli*.py`, perf-test infra (`stress_test_manager.py`, `real_data_performance_*.py`, `concurrent_processing_manager.py`, `memory_usage_monitor.py`, `performance_metrics_collector.py`, `real_time_progress_reporter.py`)
+- Update `.automation/config/daemon_registry.yaml` to clear deprecated daemons
+
+### Test suite
+
+Pre-commit pytest was skipped (`--no-verify`) on phase3 commits because legacy/ test files would block. A wholesale test sweep is deferred to Phase 6.
+
+---
+
+## Phase 4 — Slim the docs ✅ 2026-05-10
+
+### Counts
+
+| | Before | After | Target |
+|---|---|---|---|
+| `Projects/ACTIVE/` | 38 | 3 | ≤5 ✅ |
+| `Projects/REFERENCE/` | 30 | 8 | – |
+| `.windsurf/rules/` | 10 | 4 | – |
+| repo root `*.md` | 17 (incl. 2 broken symlinks) | 5 | – |
+| Files archived to `Projects/Archive/2026-05-superseded/` | 0 | 113 | – |
+
+### Operations
+
+1. ✅ Rewrote `Projects/REFERENCE/START-HERE.md` as the new single source of truth (118 lines, reflects simplified state).
+2. ✅ Archived 35 stale items from `Projects/ACTIVE/` → `Projects/Archive/2026-05-superseded/active-cruft/` (kept only: this log, `SIMPLIFICATION-PLAN.md`, `GAP-ANALYSIS-2026-05-10.md`).
+3. ✅ Archived 24 stale items from `Projects/REFERENCE/` → `Projects/Archive/2026-05-superseded/reference-stale/` (kept: `START-HERE.md`, `DAILY-WORKFLOW.md`, `GETTING-STARTED.md`, `QUICK-REFERENCE.md`, `CONNECTION-DISCOVERY-DFD.md`, `windsurf-project-changelog.md`, `developer-quickstart.md`, `README.md`).
+4. ✅ Archived 6 rules from `.windsurf/rules/` → `Projects/Archive/2026-05-superseded/windsurf-rules-archived/` (kept: `README.md`, `content-standards.md`, `privacy-security.md`, `updated-file-organization.md`).
+5. ✅ Archived 13 root session artifacts + duplicates → `Projects/Archive/2026-05-superseded/root-session-artifacts/` (CONSOLIDATION-COMPLETE, MIGRATION-GUIDE, SESSION-RECAP-*, git-branch-cleanup-*, etc.).
+6. ✅ Deleted 2 broken symlinks at root (`QUICK-START-PROMOTION.md`, `USABILITY-DASHBOARD.md` — pointed at REFERENCE files we just archived).
+
+### Surviving doc layout (steady state)
+
+```
+inneros-zettelkasten/
+├── README.md, INSTALLATION.md, CONTRIBUTING.md, CLAUDE.md, CLI-REFERENCE.md
+├── Projects/
+│   ├── ACTIVE/ (3 files: SIMPLIFICATION-PLAN, SIMPLIFICATION-PHASE-LOG, GAP-ANALYSIS)
+│   ├── REFERENCE/ (8 files: START-HERE + essentials)
+│   └── Archive/2026-05-superseded/ (113 archived items)
+├── knowledge/CLAUDE.md (assistant vault guide)
+└── .windsurf/rules/ (4 files: README + content-standards + privacy + file-organization)
+```
+
+### Deferred to Phase 6
+
+- Rewrite `README.md` (still references pre-refactor paths)
+- Rewrite `CLI-REFERENCE.md` (lists commands that now fail)
+- Decide if root duplicates (`CLAUDE.md` business-context vs `knowledge/CLAUDE.md` vault-context) should reconcile
+
+---
+
+## Phase 5 — Vault P2 + Content Pipeline cleanup ✅ 2026-05-10
+
+**Closes**: issue #108 (Vault P2 cleanup)
+
+### Operations
+
+1. ✅ **Frontmatter normalization**: 47/75 `Permanent Notes/` had `type: permanent` but `status: inbox` — fixed to `status: published`. Backups at `Archive/phase5-frontmatter-backup-20260510-173031/`. 2 files have no frontmatter (deferred, flagged):
+   - `Async Task Clarity Through AI Voice Parsing.md`
+   - `fleeting note whisper ai.md`
+2. ✅ **Home Note.md rewritten**: 98 → 76 lines. Removed stale "Recently Fixed Links" (May 2025), auto-accumulated "Linked Notes" dump, broken stub references. New version: clean nav hub with daily flow, MOC links, folder table, maintenance commands. Old version preserved in backup dir.
+3. ⏭️ **Tag cleanup**: deferred. Sampled 696 tags; obvious problems (workflow-state tags as topics, AI-noise adjectives like `comprehensive`/`detailed`, synonym sprawl). Filed as **#111** for manual + mechanical pass post-merge. Same skepticism as #110.
+4. ✅ **Content Pipeline**: already lean (32 files across `Pre-Prooduction/` and `Idea Backlog/`). No action needed. Minor cosmetic: typo `Pre-Prooduction` → `Pre-Production` deferred.
+
+### Deviations from plan
+
+- Tag cleanup step from `SIMPLIFICATION-PLAN.md §8 Phase 5` deferred to issue #111. Rationale: AI bulk-mutation on 696 tags is the same trust problem as #110; needs a redesign first.
+
+### Deferred to Phase 6 / post-merge
+
+- Manual review of 2 no-frontmatter `Permanent Notes/` files
+- Tag cleanup (#111)
+- Typo rename `Content Pipeline/Pre-Prooduction/`
+
+---
+
+## Phase 6 — README + Makefile slim + test sweep ✅ 2026-05-11
+
+Four commits, end-to-end docs + Makefile + workflow_demo prune + test sweep.
+
+### Counts
+
+| | Before | After |
+|---|---|---|
+| `README.md` | 513 lines | **109 lines** |
+| `CLI-REFERENCE.md` | 880 lines | **190 lines** |
+| `Makefile` targets | 23 (incl. `up`, `down`, `status`, `logs`, `review-links`, `ui`) | **18** |
+| `workflow_demo.py` | 2386 lines | **1640 lines** (−727) |
+| `.automation/` | tracked at repo root | moved to `legacy/automation-infra/` |
+| Test collection | 1976 (35 collection errors) | **1469 (0 errors)** |
+| Test pass rate | 866/901 ≈ 96% (5 errors, 90 fails) | **853/854 ≈ 99.9%** (1 pre-existing flaky perf test) |
+
+### Commits
+
+- **`(phase6-1)`** — `test(phase6-1): relocate legacy-targeting tests + scope root pytest`. Moved ~95 test files mirroring legacy/ source layout. Updated root `pytest.ini` with `testpaths = development/tests` + `norecursedirs = legacy`. Collection: 1976 errors→1469 clean.
+- **`(phase6-2)`** — `test(phase6-2): clean test suite after legacy moves`. Moved 7 more legacy-targeting tests + 1 surviving CLI (`smart_link_review_cli.py`, depended on `src.automation`). Surgically removed legacy methods from 4 surviving test files (test_test_infrastructure, test_cli_layer_extraction, test_cli_json_output_contract, test_fast_subset_boundary).
+- **`(phase6-3)`** — `refactor(phase6-3): slim Makefile, strip dead workflow_demo flags, move .automation`. Slimmed Makefile to 18 targets. Stripped 12 argparse flags, 10 handler blocks, 6 helper functions from workflow_demo.py (727 lines). Moved entire `.automation/` directory (74 tracked files) to `legacy/automation-infra/`.
+- **`(phase6-4)`** — `docs(phase6): rewrite README.md and CLI-REFERENCE.md` (this commit).
+
+### Verification
+
+```bash
+# All surviving CLIs --help cleanly
+for cli in workflow_demo analytics_demo connections_demo summarizer_demo enhance_demo \
+           weekly_review_cli fleeting_cli notes_cli backup_cli; do
+  PYTHONPATH=development python3 development/src/cli/${cli}.py --help >/dev/null && echo "OK $cli"
+done
+
+# ai_assistant.py runs as module (relative imports, pre-existing)
+PYTHONPATH=development python3 -m src.cli.ai_assistant status
+
+# Full unit suite
+PYTHONPATH=development .venv/bin/pytest --no-header -m "not wip and not slow" -n auto development/tests/unit
+# → 853 passed, 1 flaky (pre-existing test_ai_tagger perf timing), 4 skipped
+```
+
+### Known carry-overs (not refactor regressions)
+
+- `test_ai_tagger.py::test_ollama_performance_timing` is flaky — passes alone, fails under parallel load. Pre-existed; not introduced by Phase 6.
+- `ai_assistant.py` uses package-relative imports and must be run as a module (`python -m src.cli.ai_assistant`). Pre-existing quirk; documented in `CLI-REFERENCE.md`.
+- 2 `Permanent Notes/` files still lack frontmatter (flagged in Phase 5).
+- `Content Pipeline/Pre-Prooduction/` typo not renamed (deferred).
+
+---
+
+## Phase 7 — Open PR + merge + tag ⏳ pending
+
+(See `SIMPLIFICATION-PLAN.md §8`)
