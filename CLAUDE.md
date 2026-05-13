@@ -70,11 +70,12 @@ Triage criteria: strategic fit, uniqueness, concrete next actions, reusable refe
 
 - Several notes in `Permanent Notes/` still have `status: inbox` — they haven't been fully processed.
 - Some notes in `Permanent Notes/` are empty or near-empty (e.g., `TDD Ritual for AI Tools.md`).
-- Some files in `Content Pipeline/Idea Backlog/` have double extensions (`.md.md`) — likely a capture automation bug.
 - `Concepts MOC.md` and `Books MOC.md` are auto-generated stubs with no real content.
 - `Questions about.md` at the root is unclear/junk.
 - `Permanent Notes/qr link.md` appears to be a junk note.
 - Internal `[[wiki-links]]` reference notes that don't always exist in the `knowledge/` directory (some were moved or renamed).
+- **Repo root**: 8 loose `.sh` scripts (`inneros.sh`, `status.sh`, `archive_active_projects.sh`, etc.) have no designated home — candidates for `development/scripts/` or deletion.
+- `knowledge/scripts/` — JS Templater helper scripts living inside the vault; should move to repo level.
 
 ## Content Pipeline File Naming
 
@@ -98,12 +99,38 @@ Pre-Production uses: descriptive kebab-case filenames
 - `Permanent Notes/bridge-ai-automation-patterns-for-small-business-revenue.md` — core business strategy synthesis
 - `Permanent Notes/bridge-content-to-revenue-pipeline-strategy.md` — content-to-revenue strategy
 
+## Obsidian Templater — File Naming Rules
+
+**Never include `.md` in `fname` when calling `tp.file.rename()` or `tp.file.move()`.**
+
+Templater/Obsidian appends `.md` automatically. Passing a name that already ends in `.md` produces double-extension files (`.md.md`). This is invisible at write time — the bug only surfaces when a note is actually created.
+
+```js
+// WRONG — produces .md.md
+const fname = `lit-${stamp}-${slug}.md`;
+
+// CORRECT
+const fname = `lit-${stamp}-${slug}`;
+```
+
+When auditing or writing templates, verify that `fname` is extension-free before any `rename` or `move` call. Reference `fleeting.md` and `chatgpt-prompt.md` as correct examples. Fixed in issue #124 (affected: `literature.md`, `permanent.md`, `idea.md`).
+
 ## Automation Scripts (Repo-Level)
 
 Located in `../.automation/` and `../development/` (outside `knowledge/`):
 - `validate_notes.py` — validates note frontmatter
 - `migrate_templates.py` — template migration
 - Backups stored in `.automation/backups/`
+
+### Media Audit
+
+Detect broken image embeds and orphaned files in `Media/`:
+
+```bash
+cd development && python -m src.utils.media_audit ../knowledge/
+```
+
+Output: broken `![[embed]]` refs grouped by folder severity (Permanent Notes → Content Pipeline → Archive), plus orphaned files in `Media/` with no referencing note. Run before any large migration. See issue #123 for the current known-broken list.
 
 ## Development Approach — Test Driven Development (TDD)
 
@@ -141,9 +168,9 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #117 | Gitignore `.embedding_cache/` | Done — already in .gitignore, never tracked |
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
-| #120 | Collapse `development/src/ai/` ~50 files → 8 modules | Open — blocked on #119 |
-| #121 | Reduce CLI from 34 entry points → 5 commands | Open — blocked on #120 |
-| #122 | Split `development/` into its own repo (or enforce isolation) | Open — blocked on #120, #121 |
+| #120 | Collapse `development/src/ai/` ~50 files → 10 modules | **In Progress** — 1/10 done (`llm_client.py` committed `54208fd`) |
+| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
+| #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
 ### Blocked Work
 

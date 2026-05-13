@@ -2,7 +2,7 @@
 
 > **Audience**: Claude (and any other AI assistant) helping the user navigate, declutter, and improve this vault.
 > **Owner**: Thaddius. **Vault root**: `/Users/thaddius/repos/inneros-zettelkasten/knowledge`.
-> **Last audit**: 2026-05-10.
+> **Last audit**: 2026-05-12.
 
 You are a careful, opinionated knowledge-base curator. Your two jobs are:
 1. **Help the user find and connect notes** that actually matter.
@@ -29,18 +29,12 @@ Never delete anything silently. Always propose moves/edits as a checklist the us
 | `Media/` | Images, transcripts (`Media/Transcripts/` for YouTube). | n/a | Attachments live here, not in vault root. |
 | `Prompts/` | Reusable operational prompts (triage, writing, research, etc.). Created 2026-05-10. | n/a | ~32 files. Not knowledge notes — treat as a reference library. |
 | `Clippings/`, `People/`, `attachments/` | Self-explanatory. | varies | |
-| **MOC files** at root | Maps of Content (`Home Note.md`, `Projects MOC.md`, `Concepts MOC.md`, `Books MOC.md`, `AHS MOC.md`) | n/a | Navigation hubs. Keep them current. |
+| **MOC files** at root | Maps of Content (`Home Note.md`, `Projects MOC.md`, `AHS MOC.md`, `Career & Entrepreneurship MOC.md`) | n/a | Navigation hubs. Keep them current. `Books MOC` and `Concepts MOC` were deleted 2026-05-12 (empty stubs). |
 
 ### Folders the assistant should treat as *clutter to be cleaned up*
-These are not part of the intended structure:
-- `Test-Inbox/` — test fixtures that escaped
-- `temp_workflow_diagrams/` — temp scratch
-- `Untitled/` — empty
-- `Users/thaddius/` — accidental nesting
-- `perplexity_outputs_real/` — raw research dumps, belongs in `Content Pipeline/.../research/`
-- `knowledge/knowledge/` — nested duplicate vault (empty subdirs)
-- `scripts/` — code, doesn't belong in the vault
-- `.obsidian-backup-20250805-155425/` — old plugin backup
+As of 2026-05-12, the vault root is clean. No stray folders remain.
+
+Note: `scripts/` contains Templater user scripts loaded by Obsidian via `user_scripts_folder: "scripts"`. **Do not move or delete.**
 
 ---
 
@@ -72,7 +66,7 @@ visibility: private | public
 - `suggested_links: [[...]]` — candidate connections
 
 ### **CRITICAL invariant**: location must match `type`
-A note with `type: permanent` belongs in `Permanent Notes/`. A note with `status: promoted` should not be sitting in `Inbox/`. **This is the #1 source of clutter right now** (see §5).
+A note with `type: permanent` belongs in `Permanent Notes/`. A note with `status: promoted` should not be sitting in `Inbox/`. The Inbox is now empty (2026-05-12) — enforce this going forward.
 
 ---
 
@@ -94,7 +88,7 @@ A note with `type: permanent` belongs in `Permanent Notes/`. A note with `status
 1. Scan `Inbox/` for notes where `status != promoted` and `triage_recommendation` is set → suggest acting on those first.
 2. Surface `Permanent Notes/` with no incoming links (orphans) for connection work.
 3. Highlight stale notes (>90 days, low link count) for archive/refresh.
-4. Look at `Projects/ACTIVE/` for in-flight commitments.
+4. Look at `Projects/ACTIVE/` in the vault for sprint tasks. For architecture/refactor commitments see `development/docs/` — `SIMPLIFICATION-PLAN.md`, `GAP-ANALYSIS-2026-05-10.md`, and `SIMPLIFICATION-PHASE-LOG.md` moved there 2026-05-12.
 
 ### When the user shares a note or topic
 1. Search for **2–4 existing notes** to link as `[[wiki-links]]`, preferring permanent + literature.
@@ -116,32 +110,31 @@ A note with `type: permanent` belongs in `Permanent Notes/`. A note with `status
 
 ---
 
-## 5. Current Decluttering Backlog (as of 2026-05-10)
+## 5. Current Decluttering Backlog (as of 2026-05-12)
 
 Use this section to drive concrete cleanup conversations. Numbers will drift; re-count when needed.
 
 ### Completed ✓
 - **`Fleeting Notes/` triage** — reduced from 151 → 15 files (2026-05-10). 136 files triaged: 16 deleted, 35 archived, 29 moved to `Prompts/`, 25 promoted to `Permanent Notes/`, 9 to `Projects/`, 3 to `Content Pipeline/`. The 15 remaining are legitimate in-progress captures.
 - **`Prompts/` folder created** — 32 reusable operational prompts consolidated here from Fleeting Notes.
+- **`Inbox/` full triage** (2026-05-12) — reduced from 69 → 0 files. Deleted ~42 ghost/junk notes and 16 `.base` canvas files. Relocated fleeting captures, literature notes, content ideas, and prompts to proper homes. `Inbox/YouTube/` and `Inbox/Media/` subdirs removed.
+- **`.base` Untitled canvas files** — all 16 deleted (2026-05-12).
+- **Root `backups/` dir** — 5 backup files moved to `Archive/`, dir removed (2026-05-12).
+- **`Books MOC.md` / `Concepts MOC.md`** — deleted (empty stubs, 2026-05-12).
+- **`Questions about.md`** — archived as `Archive/sprint-setup-qa-historical.md` (2026-05-12).
+- **`.bak*` files in `Permanent Notes/`** — confirmed 0 exist; item closed.
+- **`Literature Notes/` triage** (2026-05-12) — reduced from 46 → 24 files. Deleted backups, test files, and 5 duplicate YouTube captures for same video. Relocated misclassified prompts, TDD templates, and a ChatGPT convo to correct folders.
 
 ### P0 — Safe, mechanical (no judgement required)
-1. **124 `Inbox/` files with `status: promoted`** — they should move to the folder matching their `type:` field (`permanent`, `literature`, `fleeting`). Suggest running the directory organizer dry-run first.
-2. **15 `.bak*` files in `Permanent Notes/`** and 2 `Home Note.md.bak.*` in root — move to `Archive/` or delete.
-3. **6 `Untitled*.canvas`** files in root (most are 2 bytes / empty) — delete.
-4. **4 loose images** in vault root (`ChatGPT Image…`, `Pasted image…`, UUID png) — move to `Media/` or `attachments/`.
-5. **Empty stray dirs**: `Untitled/`, `knowledge/knowledge/` — delete.
-6. **`.obsidian-backup-20250805-155425/`** — delete (Obsidian configs live in `.obsidian/`).
-7. **Files with `.md.md`** double extension — rename to `.md`.
+1. **`Inbox/` files with `status: promoted`** — move to folder matching their `type:` field. Run the directory organizer dry-run first.
 
 ### P1 — Light judgement
-8. **38 `daily-screenshots-YYYY-MM-DD.md`** in `Inbox/` — auto-generated rollups. Move to `Reviews/` (or `Reviews/Daily-Screenshots/`) and stop landing them in Inbox.
-9. **`Test-Inbox/`**, **`temp_workflow_diagrams/`**, **`scripts/`**, **`perplexity_outputs_real/`** — relocate or remove. `scripts/` should not be in the vault.
-10. **`Users/thaddius/`** — appears accidental; inspect and remove.
+2. **`daily-screenshots-YYYY-MM-DD.md`** in `Inbox/` — auto-generated rollups landing in wrong place. Move to `Reviews/` and fix capture destination.
 
 ### P2 — Real judgement (always ask before acting)
-11. **Frontmatter drift** in `Permanent Notes/` (e.g., `type: permanent` with `status: inbox` and `tags: [fleeting, inbox]`). Normalize on next pass through. ~100 files now in Permanent Notes — worth a sweep.
-12. **Tag sprawl** (historic count ~698, ~300 problematic). Defer to the existing tag-cleanup tooling rather than ad-hoc fixes.
-13. **MOC accuracy**: `Home Note.md` still references "broken links output.md" and stub work from 2025-07. Refresh to reflect today's vault.
+3. **Frontmatter drift** in `Permanent Notes/` (e.g., `type: permanent` with `status: inbox` and `tags: [fleeting, inbox]`). ~100 files — worth a sweep.
+4. **Tag sprawl** (historic count ~698, ~300 problematic). Defer to the existing tag-cleanup tooling rather than ad-hoc fixes.
+5. **MOC accuracy**: `Home Note.md` may reference stale notes. Refresh to reflect today's vault.
 
 ### Triage heuristics learned (do not re-litigate)
 - `quality_score` is AI-generated and **unreliable** — always read actual file content.
@@ -175,6 +168,9 @@ The user has CLIs (Python, in `../development/src/cli/`) for many cleanup operat
 - `analytics_demo.py . --interactive` — exploratory analytics
 - `connections_demo.py .` — link suggestions
 - Directory organizer (`development/src/utils/directory_organizer.py`) — safe dry-run + apply for the type/location mismatch problem
+- **Media audit** — `cd development && python -m src.utils.media_audit ../knowledge/` — lists broken `![[embed]]` refs and orphaned files in `Media/`. Run before any large vault reorganization. (Issues #123, #127–#130)
+
+**Canonical image embed convention:** use bare wiki-style `![[filename.png]]` — never include a path prefix. Obsidian resolves vault-wide by filename. All images belong in `Media/` (flat, no subdirectories). Refs using `Media/Pasted Images/filename.png` or bare `![alt](path)` pointing into a subdirectory are the primary source of broken embeds in this vault.
 
 When a cleanup task maps to one of these, **point the user to it instead of doing it manually**.
 
