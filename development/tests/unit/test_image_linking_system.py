@@ -336,6 +336,51 @@ status: inbox
 
 
 # ============================================================================
+# WIKI LINK VALIDATION — vault-wide resolution tests (Phase 1, issue #127)
+# ============================================================================
+
+
+def test_wiki_link_validation_finds_images_in_media_dir():
+    """
+    Validator resolves ![[filename]] by searching Media/ (flat), not just attachments/.
+    A wiki embed pointing to an image that exists in Media/ must NOT appear as broken.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base_path = Path(tmpdir) / "knowledge"
+        media_dir = base_path / "Media"
+        media_dir.mkdir(parents=True)
+        (media_dir / "Pasted image 20260212115004.png").write_bytes(b"fake")
+
+        note_path = base_path / "Permanent Notes" / "some-note.md"
+        note_content = "# Note\n\n![[Pasted image 20260212115004.png]]\n"
+
+        manager = ImageLinkManager(base_path=base_path)
+        broken = manager.validate_image_links(note_path, note_content)
+
+        assert broken == [], f"Expected no broken links, got: {broken}"
+
+
+def test_wiki_link_validation_reports_missing_image():
+    """
+    Validator reports a broken link when ![[filename]] target is absent from entire vault.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base_path = Path(tmpdir) / "knowledge"
+        (base_path / "Media").mkdir(parents=True)
+
+        note_path = base_path / "Permanent Notes" / "some-note.md"
+        note_content = "# Note\n\n![[ghost-image.png]]\n"
+
+        manager = ImageLinkManager(base_path=base_path)
+        broken = manager.validate_image_links(note_path, note_content)
+
+        assert len(broken) == 1
+        assert broken[0]["image_path"] == "ghost-image.png"
+        assert broken[0]["link_type"] == "wiki"
+        assert broken[0]["exists"] is False
+
+
+# ============================================================================
 # PERFORMANCE TESTS
 # ============================================================================
 

@@ -621,6 +621,22 @@ class DirectoryOrganizer:
                 )
                 self.logger.debug(f"Full path: {move.source} → {move.target}")
 
+                # Pre-flight: warn on broken image embeds before moving (issue #129)
+                if self.image_manager and move.source.suffix == ".md":
+                    try:
+                        pre_content = move.source.read_text(encoding="utf-8")
+                        broken = self.image_manager.validate_image_links(
+                            move.source, pre_content
+                        )
+                        if broken:
+                            self.logger.warning(
+                                f"Broken image refs in {move.source.name} "
+                                f"({len(broken)} ref(s)): "
+                                + ", ".join(b["image_path"] for b in broken)
+                            )
+                    except Exception as pre_err:
+                        self.logger.debug(f"Pre-flight image check skipped: {pre_err}")
+
                 # TDD Iteration 10: Preserve image links before move
                 if self.image_manager and move.source.suffix == ".md":
                     try:

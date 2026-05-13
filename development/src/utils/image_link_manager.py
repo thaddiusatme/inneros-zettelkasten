@@ -121,6 +121,13 @@ class ImageLinkManager:
                 # Resolve markdown path relative to note
                 image_path_str = link["path"]
 
+                # Skip external URLs, data URIs, and template placeholders —
+                # these are valid non-local references, not broken local paths.
+                if image_path_str.startswith(
+                    ("http://", "https://", "data:", "//")
+                ) or image_path_str.startswith("${"):
+                    continue
+
                 # Calculate absolute path for validation
                 if image_path_str.startswith("../"):
                     # Relative path - resolve from note's directory
@@ -143,25 +150,20 @@ class ImageLinkManager:
                     )
 
             elif link["type"] == "wiki":
-                # For wiki links, check in attachments/ directory
-                # This is a simplified check - full resolution would need vault scanning
+                # Wiki links are resolved vault-wide by filename (Obsidian semantics).
+                # Search order mirrors how Obsidian resolves: Media/ first, then
+                # attachments/ month-folders, then anywhere in the vault.
                 if self.base_path:
-                    attachments_dir = self.base_path / "attachments"
-                    # Search for file in all month folders
-                    found = False
-                    if attachments_dir.exists():
-                        for month_folder in attachments_dir.iterdir():
-                            if month_folder.is_dir():
-                                image_file = month_folder / link["filename"]
-                                if image_file.exists():
-                                    found = True
-                                    break
+                    filename = link["filename"]
+                    found = (self.base_path / "Media" / filename).exists() or any(
+                        self.base_path.rglob(filename)
+                    )
 
                     if not found:
                         broken_links.append(
                             {
                                 "note_path": str(note_path),
-                                "image_path": link["filename"],
+                                "image_path": filename,
                                 "line_number": link["line_number"],
                                 "link_type": "wiki",
                                 "exists": False,

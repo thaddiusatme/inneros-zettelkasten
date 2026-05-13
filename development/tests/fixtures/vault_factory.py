@@ -24,6 +24,7 @@ STANDARD_VAULT_DIRS: List[str] = [
     "Permanent Notes",
     "Fleeting Notes",
     "Literature Notes",
+    "Media",
 ]
 
 
