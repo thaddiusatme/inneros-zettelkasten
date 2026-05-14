@@ -168,7 +168,7 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #117 | Gitignore `.embedding_cache/` | Done — already in .gitignore, never tracked |
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
-| #120 | Collapse `development/src/ai/` ~50 files → 10 modules | **In Progress** — 1/10 done (`llm_client.py` committed `54208fd`) |
+| #120 | Collapse `development/src/ai/` ~50 files → 10 modules | **In Progress** — 2/10 done (`llm_client.py` `54208fd`, `analytics.py` `8385321`) |
 | #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
