@@ -189,8 +189,8 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | `connections_discovery.py` | ✅ Done | commit `6725923` |
 | `connections_insertion.py` | ✅ Done | commit `59f216f` |
 | `lifecycle.py` | ✅ Done | commit `acf5d36` |
-| `batch.py` | **Next** | |
-| `media.py` | Pending | |
+| `batch.py` | ✅ Done | commit pending |
+| `media.py` | **Next** | |
 
 ### Blocked Work
 
