@@ -186,9 +186,9 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | `enrichment.py` | ✅ Done | commit `e47df7b` |
 | `tags.py` | ❌ Deleted | All 8 tag files removed in #133 — never wired to any pipeline |
 | `automation.py` | ❌ Deleted | Source files (`auto_processor.py`, `daily_content_pull.py`) removed in #133 — no production wiring |
-| `connections_discovery.py` | ✅ Done | commit pending |
-| `connections_insertion.py` | **Next** | |
-| `lifecycle.py` | Pending | |
+| `connections_discovery.py` | ✅ Done | commit `6725923` |
+| `connections_insertion.py` | ✅ Done | commit `59f216f` |
+| `lifecycle.py` | **Next** | |
 | `batch.py` | Pending | |
 | `media.py` | Pending | |
 
