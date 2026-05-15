@@ -157,7 +157,7 @@ All code changes in this repo follow a strict TDD cycle. Claude must adhere to t
 - Write tests against that interface first.
 - The test file is the spec — the implementation must conform to it.
 
-## Active Refactor — Issue #116 (as of 2026-05-14)
+## Active Refactor — Issue #116 (as of 2026-05-15)
 
 A wide-sweeping architecture simplification is in progress. **Do not suggest edits to `development/src/ai/` or `development/src/cli/` outside of this sequence** — those files are being eliminated.
 
