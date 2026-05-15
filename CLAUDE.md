@@ -173,8 +173,8 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
 | #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
-| #120 | Collapse `development/src/ai/` live files → 10 modules | **In Progress** — 7/8 done (batch.py in parallel) |
-| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
+| #120 | Collapse `development/src/ai/` live files → 10 modules | **Phase 1 Done** — all 8 modules created; Phase 2 (delete old files, update imports) pending |
+| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 Phase 2 |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
 ### #120 Module Progress
@@ -189,7 +189,7 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | `connections_discovery.py` | ✅ Done | commit `6725923` |
 | `connections_insertion.py` | ✅ Done | commit `59f216f` |
 | `lifecycle.py` | ✅ Done | commit `acf5d36` |
-| `batch.py` | ✅ Done | commit pending (separate agent) |
+| `batch.py` | ✅ Done | commit `8ef20e3` |
 | `media.py` | ✅ Done | commit `1c6b9a4` |
 
 ### Blocked Work
