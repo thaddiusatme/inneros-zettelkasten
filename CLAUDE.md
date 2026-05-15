@@ -157,9 +157,13 @@ All code changes in this repo follow a strict TDD cycle. Claude must adhere to t
 - Write tests against that interface first.
 - The test file is the spec — the implementation must conform to it.
 
-## Active Refactor — Issue #116 (as of 2026-05-12)
+## Active Refactor — Issue #116 (as of 2026-05-14)
 
 A wide-sweeping architecture simplification is in progress. **Do not suggest edits to `development/src/ai/` or `development/src/cli/` outside of this sequence** — those files are being eliminated.
+
+### Revised Direction (2026-05-14)
+
+**Don't collapse dead code — delete it.** Audit found 11 src/ai/ files and 25 src/cli/ files with zero production wiring. Deleted in #133 (2026-05-15). After deletion, the live production chain is: 3 Makefile CLI targets → 4 CLI helpers → workflow_manager + workflow_manager_adapter → ~14 ai modules. Only these live modules get collapsed into the 10-module target.
 
 ### Sub-issue Sequence
 
@@ -168,9 +172,25 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #117 | Gitignore `.embedding_cache/` | Done — already in .gitignore, never tracked |
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
-| #120 | Collapse `development/src/ai/` ~50 files → 10 modules | **In Progress** — 2/10 done (`llm_client.py` `54208fd`, `analytics.py` `8385321`) |
+| #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
+| #120 | Collapse `development/src/ai/` live files → 10 modules | **Next** — 3/10 done (`llm_client.py`, `analytics.py`, `enrichment.py`) |
 | #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
+
+### #120 Module Progress
+
+| Module | Status | Notes |
+|---|---|---|
+| `llm_client.py` | ✅ Done | commit `54208fd` |
+| `analytics.py` | ✅ Done | commit `8385321` |
+| `enrichment.py` | ✅ Done | commit `e47df7b` |
+| `tags.py` | ⏭ Deferred | 8 files, 4681 lines — never wired to any pipeline. Skip until #133 decides fate. |
+| `connections_discovery.py` | Pending | |
+| `connections_insertion.py` | Pending | |
+| `lifecycle.py` | Pending | |
+| `batch.py` | Pending | |
+| `automation.py` | Pending | |
+| `media.py` | Pending | |
 
 ### Blocked Work
 
