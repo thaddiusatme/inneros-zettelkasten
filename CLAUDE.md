@@ -173,7 +173,7 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
 | #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
-| #120 | Collapse `development/src/ai/` live files → 10 modules | **Next** — 3/10 done (`llm_client.py`, `analytics.py`, `enrichment.py`) |
+| #120 | Collapse `development/src/ai/` live files → 10 modules | **In Progress** — 6/10 done |
 | #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
@@ -188,8 +188,8 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | `automation.py` | ❌ Deleted | Source files (`auto_processor.py`, `daily_content_pull.py`) removed in #133 — no production wiring |
 | `connections_discovery.py` | ✅ Done | commit `6725923` |
 | `connections_insertion.py` | ✅ Done | commit `59f216f` |
-| `lifecycle.py` | **Next** | |
-| `batch.py` | Pending | |
+| `lifecycle.py` | ✅ Done | commit `acf5d36` |
+| `batch.py` | **Next** | |
 | `media.py` | Pending | |
 
 ### Blocked Work
