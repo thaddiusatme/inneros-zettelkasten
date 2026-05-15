@@ -1,4 +1,4 @@
-.PHONY: setup lint format type test test-fast test-unit unit unit-all integ cov run review fleeting inbox inbox-safe smoke clean-venv
+.PHONY: setup lint format type test test-fast test-unit unit unit-all integ cov run review fleeting inbox inbox-safe smoke clean-venv backup
 
 # Venv configuration - ensures reproducible tooling
 VENV := .venv
@@ -20,7 +20,11 @@ fleeting:
 	@echo "📊 Checking fleeting notes health..."
 	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault $(VAULT) fleeting-health
 
-inbox:
+backup:
+	@echo "📦 Creating vault backup..."
+	PYTHONPATH=development python3 development/src/cli/backup_cli.py --vault $(VAULT) backup
+
+inbox: backup
 	@echo "📥 Processing unprocessed inbox notes..."
 	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('$(VAULT)/Inbox')); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
 

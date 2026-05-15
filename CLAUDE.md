@@ -184,12 +184,12 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | `llm_client.py` | ✅ Done | commit `54208fd` |
 | `analytics.py` | ✅ Done | commit `8385321` |
 | `enrichment.py` | ✅ Done | commit `e47df7b` |
-| `tags.py` | ⏭ Deferred | 8 files, 4681 lines — never wired to any pipeline. Skip until #133 decides fate. |
-| `connections_discovery.py` | Pending | |
+| `tags.py` | ❌ Deleted | All 8 tag files removed in #133 — never wired to any pipeline |
+| `automation.py` | ❌ Deleted | Source files (`auto_processor.py`, `daily_content_pull.py`) removed in #133 — no production wiring |
+| `connections_discovery.py` | **Next** | |
 | `connections_insertion.py` | Pending | |
 | `lifecycle.py` | Pending | |
 | `batch.py` | Pending | |
-| `automation.py` | Pending | |
 | `media.py` | Pending | |
 
 ### Blocked Work
