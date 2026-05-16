@@ -37,7 +37,7 @@ from typing import Optional
 # Add development directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.ai.workflow_manager import WorkflowManager
+from src.ai.batch import WorkflowManager
 from src.cli.weekly_review_formatter import WeeklyReviewFormatter
 from src.cli.cli_output_contract import build_json_response
 

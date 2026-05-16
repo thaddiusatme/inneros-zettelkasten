@@ -199,7 +199,7 @@ class TestBatchProcessInbox:
         from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox
 
         # Mock the actual processing to avoid AI calls
-        with patch("src.ai.batch_inbox_processor.process_single_note") as mock_process:
+        with patch("src.ai.batch.process_single_note") as mock_process:
             mock_process.return_value = {
                 "success": True,
                 "triage_recommendation": "promote_to_permanent",
@@ -252,7 +252,7 @@ Content
 
         from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox
 
-        with patch("src.ai.batch_inbox_processor.process_single_note") as mock_process:
+        with patch("src.ai.batch.process_single_note") as mock_process:
             mock_process.return_value = {"success": True}
             result = batch_process_unprocessed_inbox(inbox, dry_run=False)
 
@@ -273,7 +273,7 @@ class TestTriageBreakdown:
 
         from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox
 
-        with patch("src.ai.batch_inbox_processor.process_single_note") as mock_process:
+        with patch("src.ai.batch.process_single_note") as mock_process:
             # Simulate different recommendations
             mock_process.side_effect = [
                 {"success": True, "triage_recommendation": "promote_to_permanent"},
@@ -300,7 +300,7 @@ class TestErrorHandling:
 
         from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox
 
-        with patch("src.ai.batch_inbox_processor.process_single_note") as mock_process:
+        with patch("src.ai.batch.process_single_note") as mock_process:
             mock_process.side_effect = Exception("AI service unavailable")
 
             result = batch_process_unprocessed_inbox(inbox, dry_run=False)
@@ -319,7 +319,7 @@ class TestErrorHandling:
 
         from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox
 
-        with patch("src.ai.batch_inbox_processor.process_single_note") as mock_process:
+        with patch("src.ai.batch.process_single_note") as mock_process:
             # First note fails, second succeeds
             mock_process.side_effect = [
                 Exception("Failed"),
