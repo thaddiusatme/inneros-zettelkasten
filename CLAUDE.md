@@ -175,7 +175,7 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
 | #120 | Collapse `development/src/ai/` live files → 10 modules | **Done (2026-05-15)** — Phase 1 (8 modules inlined) + Phase 2 (shims + dead-code delete) complete; commit `b525444` |
 | #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Done (2026-05-15)** — `inneros.py` unified entry point; commit `352cafc` |
-| #122 | Same-repo isolation for `development/` (Option A chosen) | **Next** — unblocked |
+| #122 | Same-repo isolation for `development/` (Option A chosen) | **Done (2026-05-15)** — sys.path hacks removed, enforcement in Makefile lint target |
 
 ### Current src/ai/ State (post #120)
 
@@ -192,6 +192,13 @@ All old filenames still importable via shims. Test baseline: **932 passing, 26 p
 9 files: `inneros.py` (unified entry point), `backup_cli.py`, `fleeting_cli.py`, `weekly_review_cli.py`, `cli_logging.py`, `cli_output_contract.py`, `fleeting_formatter.py`, `weekly_review_formatter.py`, `__pycache__/`
 
 All Makefile targets use `inneros.py`. Old CLI files are kept as importable modules for backward compat.
+
+### development/ Isolation Boundary (post #122)
+
+- **Runner pattern**: `PYTHONPATH=development make <target>` — never add `sys.path.insert`/`sys.path.append` to any file in `development/src/`
+- **Enforcement**: `make lint` grep-checks `development/src/` and fails on any `sys.path` mutation
+- **Installable**: `pip install -e development/` also works (pyproject.toml defines `[project.scripts] inneros = "cli.inneros:main"`)
+- `knowledge/` files must never import from `development/`
 
 ### Blocked Work
 
