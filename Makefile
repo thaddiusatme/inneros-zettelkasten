@@ -12,25 +12,27 @@ VAULT ?= knowledge
 # USER COMMANDS (daily vault maintenance)
 # ============================================
 
+INNEROS := PYTHONPATH=development python3 development/src/cli/inneros.py
+
 review:
 	@echo "📋 Generating weekly review..."
-	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py --vault $(VAULT) weekly-review --preview
+	$(INNEROS) --vault $(VAULT) review --preview
 
 fleeting:
 	@echo "📊 Checking fleeting notes health..."
-	PYTHONPATH=development python3 development/src/cli/fleeting_cli.py --vault $(VAULT) fleeting-health
+	$(INNEROS) --vault $(VAULT) fleeting health
 
 backup:
 	@echo "📦 Creating vault backup..."
-	PYTHONPATH=development python3 development/src/cli/backup_cli.py --vault $(VAULT) backup
+	$(INNEROS) --vault $(VAULT) backup
 
 inbox: backup
 	@echo "📥 Processing unprocessed inbox notes..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('$(VAULT)/Inbox')); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
+	$(INNEROS) --vault $(VAULT) inbox
 
 inbox-safe:
 	@echo "📥 [DRY-RUN] Scanning inbox (no changes will be made)..."
-	PYTHONPATH=development python3 -c "from src.ai.batch_inbox_processor import batch_process_unprocessed_inbox; from pathlib import Path; import json, sys; r = batch_process_unprocessed_inbox(Path('$(VAULT)/Inbox'), dry_run=True); print(json.dumps(r, indent=2)); sys.exit(1 if r.get('errors', 0) > 0 else 0)"
+	$(INNEROS) --vault $(VAULT) inbox --dry-run
 
 smoke:
 	@echo "🔥 Running usability smoke test..."
@@ -95,4 +97,4 @@ cov: $(VENV)/bin/activate
 test: lint type unit
 
 run:
-	PYTHONPATH=development python3 development/src/cli/weekly_review_cli.py weekly-review
+	$(INNEROS) --vault $(VAULT) review
