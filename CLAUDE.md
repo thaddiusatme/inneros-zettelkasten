@@ -174,8 +174,8 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
 | #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
 | #120 | Collapse `development/src/ai/` live files → 10 modules | **Done (2026-05-15)** — Phase 1 (8 modules inlined) + Phase 2 (shims + dead-code delete) complete; commit `b525444` |
-| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 ✅ |
-| #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
+| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Done (2026-05-15)** — `inneros.py` unified entry point; commit `352cafc` |
+| #122 | Same-repo isolation for `development/` (Option A chosen) | **Next** — unblocked |
 
 ### Current src/ai/ State (post #120)
 
@@ -187,9 +187,11 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 
 All old filenames still importable via shims. Test baseline: **932 passing, 26 pre-existing failures** (all 26 target non-existent CLI files — not caused by #120 work).
 
-### Current src/cli/ State (post #133)
+### Current src/cli/ State (post #121)
 
-8 files: `backup_cli.py`, `fleeting_cli.py`, `weekly_review_cli.py`, `cli_logging.py`, `cli_output_contract.py`, `fleeting_formatter.py`, `weekly_review_formatter.py`, `__pycache__/`
+9 files: `inneros.py` (unified entry point), `backup_cli.py`, `fleeting_cli.py`, `weekly_review_cli.py`, `cli_logging.py`, `cli_output_contract.py`, `fleeting_formatter.py`, `weekly_review_formatter.py`, `__pycache__/`
+
+All Makefile targets use `inneros.py`. Old CLI files are kept as importable modules for backward compat.
 
 ### Blocked Work
 
