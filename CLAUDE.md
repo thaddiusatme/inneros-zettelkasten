@@ -173,8 +173,8 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
 | #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
-| #120 | Collapse `development/src/ai/` live files → 10 modules | **Phase 1 Done** — all 8 modules created; Phase 2 (delete old files, update imports) pending |
-| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 Phase 2 |
+| #120 | Collapse `development/src/ai/` live files → 10 modules | **Done (2026-05-15)** — Phase 1 (8 modules inlined) + Phase 2 (shims + dead-code delete) complete; commit `b525444` |
+| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 ✅ |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
 ### #120 Module Progress
