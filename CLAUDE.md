@@ -157,9 +157,13 @@ All code changes in this repo follow a strict TDD cycle. Claude must adhere to t
 - Write tests against that interface first.
 - The test file is the spec — the implementation must conform to it.
 
-## Active Refactor — Issue #116 (as of 2026-05-12)
+## Active Refactor — Issue #116 (as of 2026-05-15)
 
 A wide-sweeping architecture simplification is in progress. **Do not suggest edits to `development/src/ai/` or `development/src/cli/` outside of this sequence** — those files are being eliminated.
+
+### Revised Direction (2026-05-14)
+
+**Don't collapse dead code — delete it.** Audit found 11 src/ai/ files and 25 src/cli/ files with zero production wiring. Deleted in #133 (2026-05-15). After deletion, the live production chain is: 3 Makefile CLI targets → 4 CLI helpers → `batch.WorkflowManager` → 8 consolidated ai modules. All old files now exist as thin backward-compat shims.
 
 ### Sub-issue Sequence
 
@@ -168,10 +172,25 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #117 | Gitignore `.embedding_cache/` | Done — already in .gitignore, never tracked |
 | #118 | Archive/delete `legacy/` | Done — deleted 2026-05-12, recovery at `pre-simplification-v1.0` tag |
 | #119 | Design 10 target modules for `development/src/ai/` (no code) | Done — see `development/docs/issue-119-module-design.md` |
-| #120 | Collapse `development/src/ai/` ~50 files → 10 modules | **In Progress** — 1/10 done (`llm_client.py` committed `54208fd`) |
-| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | Open — blocked on #120 |
+| #133 | Eliminate dead-code bloat in `src/ai/` and `src/cli/` before collapsing | **Done (2026-05-15)** — 11 ai + 25 cli + 16 tests deleted, commit `f164745` |
+| #120 | Collapse `development/src/ai/` live files → 10 modules | **Done (2026-05-15)** — Phase 1 (8 modules inlined) + Phase 2 (shims + dead-code delete) complete; commit `b525444` |
+| #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 ✅ |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
+
+### Current src/ai/ State (post #120)
+
+44 files total: 8 consolidated modules + `__init__.py` + 35 backward-compat shims.
+
+**8 canonical modules:**
+- `llm_client.py`, `analytics.py`, `enrichment.py`, `connections_discovery.py`
+- `connections_insertion.py`, `lifecycle.py`, `batch.py`, `media.py`
+
+All old filenames still importable via shims. Test baseline: **932 passing, 26 pre-existing failures** (all 26 target non-existent CLI files — not caused by #120 work).
+
+### Current src/cli/ State (post #133)
+
+8 files: `backup_cli.py`, `fleeting_cli.py`, `weekly_review_cli.py`, `cli_logging.py`, `cli_output_contract.py`, `fleeting_formatter.py`, `weekly_review_formatter.py`, `__pycache__/`
 
 ### Blocked Work
 
-**#114 (wire LLM triage into CLI)** — do NOT start until #121 is closed. It targets `note_processing_coordinator.py` and `workflow_demo.py`, both of which will be eliminated by #120/#121.
+**#114 (wire LLM triage into CLI)** — do NOT start until #121 is closed.

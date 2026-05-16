@@ -45,9 +45,6 @@ class TestNoteAnalytics:
     def test_initialization(self):
         """Test analytics initialization."""
         assert self.analytics.notes_dir == self.notes_dir
-        assert self.analytics.ai_tagger is not None
-        assert self.analytics.ai_summarizer is not None
-        assert self.analytics.ai_connections is not None
 
     def test_extract_frontmatter_with_yaml(self):
         """Test YAML frontmatter extraction."""

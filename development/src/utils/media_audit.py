@@ -48,8 +48,18 @@ def audit_vault(vault_path: Path) -> AuditResult:
 
     referenced_filenames: set[str] = set()
 
+    # Directories that contain configuration/documentation, not vault notes.
+    # Scanning these produces false positives from code examples.
+    _SKIP_DIRS = {".obsidian", "Templates", "scripts"}
+
     # Walk all notes, collect broken embeds and referenced filenames
     for note in vault_path.rglob("*.md"):
+        # Skip CLAUDE.md files (documentation with embed syntax examples)
+        if note.name == "CLAUDE.md":
+            continue
+        # Skip known non-content directories
+        if any(part in _SKIP_DIRS for part in note.parts):
+            continue
         try:
             content = note.read_text(encoding="utf-8", errors="ignore")
         except OSError:
