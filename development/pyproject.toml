@@ -5,6 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "inneros-dev-tools"
 version = "0.0.1"
+requires-python = ">=3.10"
+
+[project.scripts]
+inneros = "cli.inneros:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+src = ["src"]
+
+[tool.ruff.lint]
+# Boundary rule: no sys.path mutation in this package.
+# All scripts run via `PYTHONPATH=development make <target>` — sys.path hacks are banned.
+# Use `make <target>` or `pip install -e development/` for editable installs.
+extend-select = ["E401"]
+# E401 = multiple imports on one line (catches accidental import collapsing)
+# sys.path mutations are caught in CI via: grep -r "sys.path" development/src/ (see Makefile `lint` target)

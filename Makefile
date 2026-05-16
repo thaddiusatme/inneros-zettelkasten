@@ -61,6 +61,10 @@ setup: $(VENV)/bin/activate
 lint: $(VENV)/bin/activate
 	$(PYTHON) -m ruff check development/src development/tests --select E,F,W --ignore E402,E501,E712,W291,W293,F401,F841
 	$(PYTHON) -m black --check development/src development/tests
+	@if grep -rn "sys\.path\.insert\|sys\.path\.append" development/src/ --include="*.py" 2>/dev/null | grep -v "^Binary"; then \
+		echo "❌ sys.path mutation banned in development/src/ — use PYTHONPATH=development or pip install -e development/"; \
+		exit 1; \
+	fi
 
 format: $(VENV)/bin/activate
 	@echo "🔧 Auto-formatting code..."
