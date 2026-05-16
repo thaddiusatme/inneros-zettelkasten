@@ -128,11 +128,11 @@ class TestFleetingSubcommand:
         )
         assert args.quality_threshold == pytest.approx(0.8)
 
-    def test_fleeting_triage_has_fast_flag(self):
+    def test_fleeting_triage_has_mutate_flag(self):
         args = self.parser.parse_args(
-            ["--vault", "/tmp", "fleeting", "triage", "--fast"]
+            ["--vault", "/tmp", "fleeting", "triage", "--mutate"]
         )
-        assert args.fast is True
+        assert args.mutate is True
 
 
 # ---------------------------------------------------------------------------

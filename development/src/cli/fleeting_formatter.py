@@ -157,16 +157,19 @@ class FleetingFormatter:
             action_groups[action].append(rec)
 
         for action, recs in action_groups.items():
+            action_lower = action.lower()
             action_emoji = (
                 "✅"
-                if "Promote" in action
-                else "⚠️" if "Enhancement" in action else "🚨"
+                if "promot" in action_lower
+                else "⚠️" if "enhanc" in action_lower else "🚨"
             )
             lines.append(f"   {action_emoji} {action}: {len(recs)} notes")
             for rec in recs[:3]:  # Show top 3 per category
                 note_name = Path(rec["note_path"]).stem
-                quality = rec["quality_score"]
-                lines.append(f"      📄 {note_name} (quality: {quality:.2f})")
+                reasoning = rec.get("reasoning") or ""
+                quality = rec.get("quality_score", 0.0)
+                detail = reasoning[:60] if reasoning else f"quality: {quality:.2f}"
+                lines.append(f"      📄 {note_name} — {detail}")
             if len(recs) > 3:
                 lines.append(f"      ... and {len(recs) - 3} more")
 

@@ -10,7 +10,7 @@ Usage:
     inneros --vault /path/to/vault backup
     inneros --vault /path/to/vault backup prune [--keep N] [--dry-run]
     inneros --vault /path/to/vault fleeting health [--format json]
-    inneros --vault /path/to/vault fleeting triage [--quality-threshold 0.8] [--fast]
+    inneros --vault /path/to/vault fleeting triage [--quality-threshold 0.8] [--mutate]
     inneros --vault /path/to/vault review [--preview] [--export] [--format json]
     inneros --vault /path/to/vault review metrics [--format json]
     inneros --vault /path/to/vault inbox [--dry-run] [--format json]
@@ -75,10 +75,15 @@ def _add_fleeting_subcommand(subparsers):
     health.add_argument("--format", choices=["text", "json"], default="text")
     health.add_argument("--export", metavar="FILE", help="Export report to file")
 
-    triage = fleeting_sub.add_parser("triage", help="AI-powered fleeting note triage")
+    triage = fleeting_sub.add_parser(
+        "triage",
+        help="Triage fleeting notes via LLM (read-only by default)",
+    )
     triage.add_argument("--quality-threshold", type=float, default=0.6)
     triage.add_argument(
-        "--fast", action="store_true", help="Skip AI scoring, use heuristics"
+        "--mutate",
+        action="store_true",
+        help="Write triage_recommendation to note frontmatter (default: read-only)",
     )
     triage.add_argument("--format", choices=["text", "json"], default="text")
 
@@ -136,7 +141,7 @@ def _run_fleeting(args) -> int:
         return cli.fleeting_triage(
             output_format=getattr(args, "format", "normal"),
             quality_threshold=getattr(args, "quality_threshold", 0.6),
-            fast=getattr(args, "fast", False),
+            mutate=getattr(args, "mutate", False),
         )
     return cli.fleeting_health(output_format=getattr(args, "format", "normal"))
 

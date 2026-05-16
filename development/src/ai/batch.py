@@ -2152,11 +2152,13 @@ class WorkflowManager:
         return self.fleeting_analysis_coordinator.generate_fleeting_health_report()
 
     def generate_fleeting_triage_report(
-        self, quality_threshold: Optional[float] = None, fast: bool = False
+        self,
+        quality_threshold: Optional[float] = None,
+        mutate: bool = False,
     ) -> Dict:
-        """Generate AI-powered triage report for fleeting notes with quality assessment."""
+        """Generate LLM-powered triage report for fleeting notes."""
         return self.review_triage_coordinator.generate_fleeting_triage_report(
-            quality_threshold, fast
+            quality_threshold=quality_threshold, mutate=mutate
         )
 
     def promote_fleeting_note(

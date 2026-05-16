@@ -268,7 +268,9 @@ class TestFleetingTriageReport:
             assert len(report["recommendations"]) == 1
 
     def test_triage_report_categorizes_by_quality_score(self):
-        """Test triage report categorizes notes by quality thresholds."""
+        """Test triage report categorizes notes by LLM action into quality tiers."""
+        import json
+        from unittest.mock import patch
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -276,37 +278,56 @@ class TestFleetingTriageReport:
             fleeting = vault / "Fleeting Notes"
             fleeting.mkdir()
 
-            # High quality note
             (fleeting / "high.md").write_text(
                 "---\ntitle: High\ntype: fleeting\n---\nContent"
             )
-            # Medium quality note
             (fleeting / "med.md").write_text(
                 "---\ntitle: Med\ntype: fleeting\n---\nContent"
             )
-            # Low quality note
             (fleeting / "low.md").write_text(
                 "---\ntitle: Low\ntype: fleeting\n---\nContent"
             )
 
-            workflow_manager = Mock()
-            # Return different quality scores for each note
-            workflow_manager.process_inbox_note.side_effect = [
-                {"quality_score": 0.8, "ai_tags": [], "metadata": {}},  # High
-                {"quality_score": 0.5, "ai_tags": [], "metadata": {}},  # Medium
-                {"quality_score": 0.2, "ai_tags": [], "metadata": {}},  # Low
+            coordinator = ReviewTriageCoordinator(vault, Mock())
+
+            llm_responses = [
+                json.dumps(
+                    {
+                        "action": "promote_to_permanent",
+                        "reasoning": "good",
+                        "confidence": "high",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "action": "needs_enhancement",
+                        "reasoning": "ok",
+                        "confidence": "medium",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "action": "consider_archiving",
+                        "reasoning": "weak",
+                        "confidence": "low",
+                    }
+                ),
             ]
 
-            coordinator = ReviewTriageCoordinator(vault, workflow_manager)
-
-            report = coordinator.generate_fleeting_triage_report()
+            with patch("src.ai.lifecycle.OllamaClient") as MockOllama:
+                instance = MockOllama.return_value
+                instance.health_check.return_value = True
+                instance.generate_completion.side_effect = llm_responses
+                report = coordinator.generate_fleeting_triage_report()
 
             assert report["quality_distribution"]["high"] == 1
             assert report["quality_distribution"]["medium"] == 1
             assert report["quality_distribution"]["low"] == 1
 
     def test_triage_report_filters_by_quality_threshold(self):
-        """Test triage report can filter notes by minimum quality threshold."""
+        """Test triage report filters notes by minimum quality threshold."""
+        import json
+        from unittest.mock import patch
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -321,22 +342,41 @@ class TestFleetingTriageReport:
                 "---\ntitle: Low\ntype: fleeting\n---\nContent"
             )
 
-            workflow_manager = Mock()
-            workflow_manager.process_inbox_note.side_effect = [
-                {"quality_score": 0.8, "ai_tags": [], "metadata": {}},
-                {"quality_score": 0.3, "ai_tags": [], "metadata": {}},
+            coordinator = ReviewTriageCoordinator(vault, Mock())
+
+            llm_responses = [
+                json.dumps(
+                    {
+                        "action": "promote_to_permanent",
+                        "reasoning": "good",
+                        "confidence": "high",
+                    }
+                ),
+                json.dumps(
+                    {
+                        "action": "consider_archiving",
+                        "reasoning": "weak",
+                        "confidence": "low",
+                    }
+                ),
             ]
 
-            coordinator = ReviewTriageCoordinator(vault, workflow_manager)
+            with patch("src.ai.lifecycle.OllamaClient") as MockOllama:
+                instance = MockOllama.return_value
+                instance.health_check.return_value = True
+                instance.generate_completion.side_effect = llm_responses
+                report = coordinator.generate_fleeting_triage_report(
+                    quality_threshold=0.7
+                )
 
-            report = coordinator.generate_fleeting_triage_report(quality_threshold=0.7)
-
-            # Only high quality note should be in recommendations
+            # Only promote_to_permanent (high tier, score=0.8) passes threshold 0.7
             assert len(report["recommendations"]) == 1
             assert report["filtered_count"] == 1
 
-    def test_triage_report_respects_fast_mode(self):
-        """Test fast mode skips external AI calls for speed."""
+    def test_triage_report_read_only_by_default(self):
+        """Triage without mutate=True must not modify any files."""
+        import json
+        from unittest.mock import patch
         from src.ai.review_triage_coordinator import ReviewTriageCoordinator
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -344,25 +384,25 @@ class TestFleetingTriageReport:
             fleeting = vault / "Fleeting Notes"
             fleeting.mkdir()
 
-            (fleeting / "note.md").write_text(
-                "---\ntitle: Note\ntype: fleeting\n---\nContent"
-            )
+            note = fleeting / "note.md"
+            note.write_text("---\ntitle: Note\ntype: fleeting\n---\nContent")
+            original = note.read_text()
 
-            workflow_manager = Mock()
-            workflow_manager.process_inbox_note.return_value = {
-                "quality_score": 0.7,
-                "ai_tags": [],
-                "metadata": {},
-            }
+            coordinator = ReviewTriageCoordinator(vault, Mock())
 
-            coordinator = ReviewTriageCoordinator(vault, workflow_manager)
+            with patch("src.ai.lifecycle.OllamaClient") as MockOllama:
+                instance = MockOllama.return_value
+                instance.health_check.return_value = True
+                instance.generate_completion.return_value = json.dumps(
+                    {
+                        "action": "promote_to_permanent",
+                        "reasoning": "ok",
+                        "confidence": "high",
+                    }
+                )
+                coordinator.generate_fleeting_triage_report(mutate=False)
 
-            coordinator.generate_fleeting_triage_report(fast=True)
-
-            # Verify process_inbox_note was called with fast=True
-            workflow_manager.process_inbox_note.assert_called()
-            call_kwargs = workflow_manager.process_inbox_note.call_args[1]
-            assert call_kwargs.get("fast") is True
+            assert note.read_text() == original
 
     def test_triage_report_includes_processing_time(self):
         """Test triage report includes total processing time."""
