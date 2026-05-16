@@ -163,7 +163,7 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 
 ### Revised Direction (2026-05-14)
 
-**Don't collapse dead code — delete it.** Audit found 11 src/ai/ files and 25 src/cli/ files with zero production wiring. Deleted in #133 (2026-05-15). After deletion, the live production chain is: 3 Makefile CLI targets → 4 CLI helpers → workflow_manager + workflow_manager_adapter → ~14 ai modules. Only these live modules get collapsed into the 10-module target.
+**Don't collapse dead code — delete it.** Audit found 11 src/ai/ files and 25 src/cli/ files with zero production wiring. Deleted in #133 (2026-05-15). After deletion, the live production chain is: 3 Makefile CLI targets → 4 CLI helpers → `batch.WorkflowManager` → 8 consolidated ai modules. All old files now exist as thin backward-compat shims.
 
 ### Sub-issue Sequence
 
@@ -177,21 +177,20 @@ A wide-sweeping architecture simplification is in progress. **Do not suggest edi
 | #121 | Reduce CLI from 34 entry points → 5 commands + subcommands | **Next** — blocked on #120 ✅ |
 | #122 | Same-repo isolation for `development/` (Option A chosen) | Open — blocked on #120, #121 |
 
-### #120 Module Progress
+### Current src/ai/ State (post #120)
 
-| Module | Status | Notes |
-|---|---|---|
-| `llm_client.py` | ✅ Done | commit `54208fd` |
-| `analytics.py` | ✅ Done | commit `8385321` |
-| `enrichment.py` | ✅ Done | commit `e47df7b` |
-| `tags.py` | ❌ Deleted | All 8 tag files removed in #133 — never wired to any pipeline |
-| `automation.py` | ❌ Deleted | Source files (`auto_processor.py`, `daily_content_pull.py`) removed in #133 — no production wiring |
-| `connections_discovery.py` | ✅ Done | commit `6725923` |
-| `connections_insertion.py` | ✅ Done | commit `59f216f` |
-| `lifecycle.py` | ✅ Done | commit `acf5d36` |
-| `batch.py` | ✅ Done | commit `8ef20e3` |
-| `media.py` | ✅ Done | commit `1c6b9a4` |
+44 files total: 8 consolidated modules + `__init__.py` + 35 backward-compat shims.
+
+**8 canonical modules:**
+- `llm_client.py`, `analytics.py`, `enrichment.py`, `connections_discovery.py`
+- `connections_insertion.py`, `lifecycle.py`, `batch.py`, `media.py`
+
+All old filenames still importable via shims. Test baseline: **932 passing, 26 pre-existing failures** (all 26 target non-existent CLI files — not caused by #120 work).
+
+### Current src/cli/ State (post #133)
+
+8 files: `backup_cli.py`, `fleeting_cli.py`, `weekly_review_cli.py`, `cli_logging.py`, `cli_output_contract.py`, `fleeting_formatter.py`, `weekly_review_formatter.py`, `__pycache__/`
 
 ### Blocked Work
 
-**#114 (wire LLM triage into CLI)** — do NOT start until #121 is closed. It targets `note_processing_coordinator.py` and `workflow_demo.py`, both of which will be eliminated by #120/#121.
+**#114 (wire LLM triage into CLI)** — do NOT start until #121 is closed.
