@@ -121,16 +121,12 @@ def _run_backup(args) -> int:
     cli = BackupCLI(vault_path=args.vault)
     subcommand = getattr(args, "subcommand", None)
     if subcommand == "prune":
-        result = cli.prune_backups(
+        return cli.prune_backups(
             keep=args.keep,
             dry_run=args.dry_run,
-            output_format=getattr(args, "format", "text"),
+            output_format=getattr(args, "format", "normal"),
         )
-    else:
-        result = cli.create_backup(
-            output_format=getattr(args, "format", "text"),
-        )
-    return 0 if result.get("status") in ("success", "ok", None) else 1
+    return cli.backup(output_format=getattr(args, "format", "normal"))
 
 
 def _run_fleeting(args) -> int:
@@ -139,16 +135,12 @@ def _run_fleeting(args) -> int:
     cli = FleetingCLI(vault_path=args.vault)
     subcommand = getattr(args, "subcommand", "health")
     if subcommand == "triage":
-        result = cli.fleeting_triage(
-            output_format=getattr(args, "format", "text"),
+        return cli.fleeting_triage(
+            output_format=getattr(args, "format", "normal"),
             quality_threshold=getattr(args, "quality_threshold", 0.6),
             fast=getattr(args, "fast", False),
         )
-    else:
-        result = cli.fleeting_health(
-            output_format=getattr(args, "format", "text"),
-        )
-    return 0 if result.get("status") in ("success", "ok", None) else 1
+    return cli.fleeting_health(output_format=getattr(args, "format", "normal"))
 
 
 def _run_review(args) -> int:
@@ -157,16 +149,11 @@ def _run_review(args) -> int:
     cli = WeeklyReviewCLI(vault_path=args.vault)
     subcommand = getattr(args, "subcommand", None)
     if subcommand == "metrics":
-        result = cli.enhanced_metrics(
-            output_format=getattr(args, "format", "text"),
-        )
-    else:
-        result = cli.weekly_review(
-            output_format=getattr(args, "format", "text"),
-            preview=getattr(args, "preview", False),
-            export_checklist=getattr(args, "export", False),
-        )
-    return 0 if result.get("status") in ("success", "ok", None) else 1
+        return cli.enhanced_metrics(output_format=getattr(args, "format", "normal"))
+    return cli.weekly_review(
+        output_format=getattr(args, "format", "normal"),
+        preview=getattr(args, "preview", False),
+    )
 
 
 def _run_inbox(args) -> int:
