@@ -164,16 +164,16 @@ class FleetingCLI:
     def fleeting_triage(
         self,
         quality_threshold: Optional[float] = 0.7,
-        fast: bool = True,
+        mutate: bool = False,
         output_format: str = "normal",
         export_path: Optional[str] = None,
     ) -> int:
         """
-        Generate AI-powered fleeting notes triage report
+        Generate LLM-powered fleeting notes triage report.
 
         Args:
             quality_threshold: Minimum quality score (0.0-1.0)
-            fast: Use fast mode for better performance
+            mutate: Write triage_recommendation back to frontmatter (default: read-only)
             output_format: 'normal' or 'json'
             export_path: Optional path to export report
 
@@ -193,17 +193,17 @@ class FleetingCLI:
             return 1
 
         logger.info(
-            f"cli=fleeting_cli subcommand=fleeting-triage vault={self.vault_path} format={output_format} quality_threshold={quality_threshold} fast={fast}"
+            f"cli=fleeting_cli subcommand=fleeting-triage vault={self.vault_path} format={output_format} quality_threshold={quality_threshold} mutate={mutate}"
         )
 
         try:
             # Display header
             if not quiet:
-                print("📊 Generating AI-powered fleeting notes triage report...")
+                print("📊 Generating fleeting notes triage report...")
 
             # Generate triage report
             triage_report = self.workflow.generate_fleeting_triage_report(
-                quality_threshold=quality_threshold, fast=fast
+                quality_threshold=quality_threshold, mutate=mutate
             )
 
             # Format and display output

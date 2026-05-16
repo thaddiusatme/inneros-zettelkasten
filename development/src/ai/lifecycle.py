@@ -29,6 +29,8 @@ import time
 import logging
 from pathlib import Path
 
+from src.ai.llm_client import OllamaClient
+
 
 @dataclass
 class ImportItem:
@@ -2012,6 +2014,21 @@ class FleetingNoteCoordinator:
 
 from src.utils.tags import sanitize_tags
 
+# Prompt used when vault's fleeting-triage-llm-prompt file is absent.
+_DEFAULT_TRIAGE_SYSTEM_PROMPT = """\
+You are a Zettelkasten triage assistant. Evaluate the fleeting note provided \
+and return a JSON object with exactly three keys:
+  "action"     — one of: "promote_to_permanent", "needs_enhancement", "consider_archiving"
+  "reasoning"  — 1–2 sentences explaining your recommendation
+  "confidence" — one of: "high", "medium", "low"
+
+Criteria: clarity of insight, uniqueness, actionability, connection potential.
+Return ONLY valid JSON. No preamble, no markdown fences.\
+"""
+
+# Relative path inside the vault root where the validated prompt may live.
+_VAULT_TRIAGE_PROMPT_PATH = "knowledge/Prompts/fleeting-triage-llm-prompt-20260511.md"
+
 
 class ReviewTriageCoordinator:
     """
@@ -2329,22 +2346,67 @@ class ReviewTriageCoordinator:
             "metadata": metadata,
         }
 
-    def generate_fleeting_triage_report(
-        self, quality_threshold: Optional[float] = None, fast: bool = False
-    ) -> Dict:
+    def _load_triage_system_prompt(self) -> str:
+        """Return the validated triage prompt from the vault, or the built-in default."""
+        vault_root = (
+            self.base_dir.parent
+        )  # base_dir is knowledge/, vault root is one up
+        prompt_path = vault_root / _VAULT_TRIAGE_PROMPT_PATH
+        if prompt_path.exists():
+            try:
+                return prompt_path.read_text(encoding="utf-8").strip()
+            except OSError:
+                pass
+        return _DEFAULT_TRIAGE_SYSTEM_PROMPT
+
+    def _score_note_with_llm(
+        self, note_path: Path, content: str, ollama: OllamaClient, system_prompt: str
+    ) -> Dict[str, Any]:
+        """Call Ollama with the triage prompt and return parsed JSON result.
+
+        Raises ValueError on malformed JSON so the caller surfaces it loudly.
         """
-        Generate AI-powered triage report for fleeting notes with quality assessment.
+        raw = ollama.generate_completion(prompt=content, system_prompt=system_prompt)
+        try:
+            result = json.loads(raw)
+        except (json.JSONDecodeError, ValueError):
+            raise ValueError(
+                f"LLM returned malformed JSON for '{note_path.name}': {raw[:120]!r}"
+            )
+        if "action" not in result or "reasoning" not in result:
+            raise ValueError(
+                f"LLM JSON missing required keys for '{note_path.name}': {result}"
+            )
+        return result
+
+    def generate_fleeting_triage_report(
+        self, quality_threshold: Optional[float] = None, mutate: bool = False
+    ) -> Dict:
+        """Generate LLM-powered triage report for fleeting notes.
 
         Args:
-            quality_threshold: Optional minimum quality threshold (0.0-1.0) for filtering
-            fast: If True, use fast mode to skip external AI calls for speed
+            quality_threshold: Optional minimum quality filter (0.0-1.0).
+            mutate: If True, write triage_recommendation back to note frontmatter.
+                    Default False — read-only (never modifies files).
 
-        Returns:
-            Dict: Triage report with quality assessment and recommendations
+        Raises:
+            RuntimeError: If Ollama is unavailable (no silent fallback).
+            ValueError: If any note returns malformed JSON from the LLM.
         """
+        from src.utils.frontmatter import parse_frontmatter, build_frontmatter
+        from src.utils.io import safe_write
+
         start_time = time.time()
 
-        # Get fleeting notes for processing
+        # Pre-flight: fail loudly if Ollama is down.
+        ollama = OllamaClient()
+        if not ollama.health_check():
+            raise RuntimeError(
+                "Ollama service is not available. "
+                "Run `ollama serve` and ensure your model is pulled, then retry."
+            )
+
+        system_prompt = self._load_triage_system_prompt()
         fleeting_notes = self._find_fleeting_notes()
 
         if not fleeting_notes:
@@ -2356,81 +2418,63 @@ class ReviewTriageCoordinator:
                 "quality_threshold": quality_threshold,
             }
 
-        # Process each note for quality assessment
-        recommendations = []
-        quality_scores = []
+        recommendations: List[Dict] = []
+        action_counts: Dict[str, int] = {"high": 0, "medium": 0, "low": 0}
 
         for note_path in fleeting_notes:
-            try:
-                # Use existing AI infrastructure for processing
-                result = self.workflow_manager.process_inbox_note(note_path, fast=fast)
+            content = note_path.read_text(encoding="utf-8")
+            llm_result = self._score_note_with_llm(
+                note_path, content, ollama, system_prompt
+            )
 
-                quality_score = result.get("quality_score", 0.5)
-                quality_scores.append(quality_score)
+            action = llm_result.get("action", "needs_enhancement")
+            reasoning = llm_result.get("reasoning", "")
+            confidence = llm_result.get("confidence", "medium")
 
-                # Generate recommendation based on quality
-                if quality_score >= 0.7:
-                    action = "Promote to Permanent"
-                    rationale = "High quality content with clear insights and good structure. Ready for promotion."
-                elif quality_score >= 0.4:
-                    action = "Needs Enhancement"
-                    rationale = "Medium quality with potential. Consider adding more detail or connections."
-                else:
-                    action = "Consider Archiving"
-                    rationale = "Low quality content. May need significant work or could be archived."
+            # Map action to a quality tier for distribution tracking.
+            if action == "promote_to_permanent":
+                tier = "high"
+            elif action == "consider_archiving":
+                tier = "low"
+            else:
+                tier = "medium"
+            action_counts[tier] += 1
 
-                # Apply quality threshold filter if specified
-                if quality_threshold is None or quality_score >= quality_threshold:
-                    recommendations.append(
-                        {
-                            "note_path": str(note_path),
-                            "quality_score": quality_score,
-                            "action": action,
-                            "rationale": rationale,
-                            "ai_tags": result.get("ai_tags", []),
-                            "created": result.get("metadata", {}).get(
-                                "created", "Unknown"
-                            ),
-                        }
+            # Write recommendation back to frontmatter only when explicitly requested.
+            if mutate:
+                try:
+                    frontmatter, body = parse_frontmatter(content)
+                    frontmatter["triage_recommendation"] = action
+                    safe_write(note_path, build_frontmatter(frontmatter, body))
+                except Exception as write_err:
+                    logging.getLogger(__name__).warning(
+                        "triage: failed to write frontmatter for %s: %s",
+                        note_path.name,
+                        write_err,
                     )
 
-            except Exception as e:
-                # Handle individual note processing errors gracefully
-                recommendations.append(
-                    {
-                        "note_path": str(note_path),
-                        "quality_score": 0.0,
-                        "action": "Processing Error",
-                        "rationale": f"Error processing note: {str(e)}",
-                        "ai_tags": [],
-                        "created": "Unknown",
-                    }
-                )
+            quality_score = {"high": 0.8, "medium": 0.5, "low": 0.2}[tier]
+            rec = {
+                "note_path": str(note_path),
+                "action": action,
+                "reasoning": reasoning,
+                "confidence": confidence,
+                "tier": tier,
+                "quality_score": quality_score,
+            }
+            if quality_threshold is None or quality_score >= (quality_threshold or 0.0):
+                recommendations.append(rec)
 
-        # Calculate quality distribution
-        quality_distribution = {"high": 0, "medium": 0, "low": 0}
-        for score in quality_scores:
-            if score >= 0.7:
-                quality_distribution["high"] += 1
-            elif score >= 0.4:
-                quality_distribution["medium"] += 1
-            else:
-                quality_distribution["low"] += 1
-
-        # Sort recommendations by quality score (highest first)
-        recommendations.sort(key=lambda x: x["quality_score"], reverse=True)
-
-        processing_time = time.time() - start_time
-        total_processed = len(fleeting_notes)
-        filtered_count = (
-            total_processed - len(recommendations) if quality_threshold else 0
+        filtered_count = len(fleeting_notes) - len(recommendations)
+        recommendations.sort(
+            key=lambda r: ("low", "medium", "high").index(r["tier"]), reverse=True
         )
 
         return {
-            "total_notes_processed": total_processed,
-            "quality_distribution": quality_distribution,
+            "total_notes_processed": len(fleeting_notes),
+            "quality_distribution": action_counts,
             "recommendations": recommendations,
-            "processing_time": processing_time,
+            "processing_time": time.time() - start_time,
             "quality_threshold": quality_threshold,
             "filtered_count": filtered_count,
         }

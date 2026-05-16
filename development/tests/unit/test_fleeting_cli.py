@@ -60,17 +60,29 @@ class TestDedicatedFleetingCLI:
         assert exit_code == 0
 
     def test_fleeting_triage_command_execution(self):
-        """TEST 3: Verify fleeting-triage command executes successfully."""
+        """TEST 3: Verify fleeting-triage command executes successfully (LLM mocked)."""
+        import json
+        from unittest.mock import patch
         from src.cli.fleeting_cli import FleetingCLI
 
         cli = FleetingCLI(vault_path=str(self.base_dir))
 
-        # Execute fleeting triage command
-        exit_code = cli.fleeting_triage(
-            quality_threshold=0.7, fast=True, output_format="normal"
+        llm_response = json.dumps(
+            {
+                "action": "promote_to_permanent",
+                "reasoning": "Clear, actionable insight.",
+                "confidence": "high",
+            }
         )
 
-        # Should execute without errors
+        with patch("src.ai.lifecycle.OllamaClient") as MockOllama:
+            instance = MockOllama.return_value
+            instance.health_check.return_value = True
+            instance.generate_completion.return_value = llm_response
+            exit_code = cli.fleeting_triage(
+                quality_threshold=0.7, mutate=False, output_format="normal"
+            )
+
         assert exit_code == 0
 
     def test_bug_3_fixed_no_attributeerror(self):
